@@ -1,0 +1,109 @@
+# Language ast translations for retrace-server package.
+# Copyright (C) 2011 THE retrace-server'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the retrace-server package.
+# Michal Toman <mtoman@redhat.com>, 2011.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: retrace-server 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-05-17 09:52+0200\n"
+"PO-Revision-Date: 2011-05-17 09:53+0200\n"
+"Last-Translator: Michal Toman <mtoman@redhat.com>\n"
+"Language-Team: Language ast\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../src/backtrace.wsgi:17 ../src/log.wsgi:17 ../src/status.wsgi:17
+msgid "Invalid URL"
+msgstr ""
+
+#: ../src/backtrace.wsgi:23 ../src/log.wsgi:23 ../src/status.wsgi:23
+msgid "There is no such task"
+msgstr ""
+
+#: ../src/backtrace.wsgi:32 ../src/log.wsgi:32 ../src/status.wsgi:32
+msgid "Unable to verify password"
+msgstr ""
+
+#: ../src/backtrace.wsgi:37 ../src/log.wsgi:37 ../src/status.wsgi:37
+msgid "Invalid password"
+msgstr ""
+
+#: ../src/backtrace.wsgi:42
+msgid "There is no backtrace for the specified task"
+msgstr ""
+
+#: ../src/backtrace.wsgi:50
+msgid "Unable to read backtrace file"
+msgstr ""
+
+#: ../src/create.wsgi:17
+msgid "You must use HTTPS"
+msgstr ""
+
+#: ../src/create.wsgi:21
+msgid "Retrace server is fully loaded at the moment"
+msgstr ""
+
+#: ../src/create.wsgi:25
+msgid "You must use POST method"
+msgstr ""
+
+#: ../src/create.wsgi:29
+msgid "Specified archive format is not supported"
+msgstr ""
+
+#: ../src/create.wsgi:33
+msgid "You need to set Content-Length header properly"
+msgstr ""
+
+#: ../src/create.wsgi:37
+msgid "Specified archive is too large"
+msgstr ""
+
+#: ../src/create.wsgi:49
+msgid "Unable to create working directory"
+msgstr ""
+
+#: ../src/create.wsgi:55
+msgid "Unable to obtain disk free space"
+msgstr ""
+
+#: ../src/create.wsgi:59 ../src/create.wsgi:83
+msgid "There is not enough storage space on the server"
+msgstr ""
+
+#: ../src/create.wsgi:67
+msgid "Unable to save archive"
+msgstr ""
+
+#: ../src/create.wsgi:73
+msgid "Unable to obtain unpacked size"
+msgstr ""
+
+#: ../src/create.wsgi:78
+msgid "Specified archive's content is too large"
+msgstr ""
+
+#: ../src/create.wsgi:88
+msgid "Unable to create new task"
+msgstr ""
+
+#: ../src/create.wsgi:102
+msgid "Unable to unpack archive"
+msgstr ""
+
+#: ../src/create.wsgi:111
+#, c-format
+msgid "Required file \"%s\" is missing"
+msgstr ""
+
+#: ../src/log.wsgi:42
+msgid "There is no log for the specified task"
+msgstr ""
+
+#: ../src/log.wsgi:50
+msgid "Unable to read log file"
+msgstr ""
