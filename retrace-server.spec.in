@@ -44,6 +44,7 @@ make %{?_smp_mflags}
 make install DESTDIR=${RPM_BUILD_ROOT} mandir=%{_mandir}
 
 mkdir -p ${RPM_BUILD_ROOT}/%{_localstatedir}/cache/%{name}
+mkdir -p ${RPM_BUILD_ROOT}/%{_localstatedir}/log/%{name}
 mkdir -p ${RPM_BUILD_ROOT}/%{_localstatedir}/spool/%{name}
 mkdir -p ${RPM_BUILD_ROOT}/%{_datadir}/%{name}
 
@@ -52,7 +53,7 @@ rm -f ${RPM_BUILD_ROOT}%{_infodir}/dir
 %{find_lang} %{name}
 
 %pre
-#redtace uid/gid reserved in setup, rhbz #706012
+#retrace uid/gid reserved in setup, rhbz #706012
 %define retrace_gid_uid 174
 getent group retrace > /dev/null || groupadd -f -g %{retrace_gid_uid} --system retrace
 getent passwd retrace > /dev/null || useradd --system -g retrace -u %{retrace_gid_uid} -d %{_datadir}/%{name} -s /sbin/nologin retrace
@@ -74,6 +75,7 @@ fi
 %config(noreplace) %{_sysconfdir}/%{name}.conf
 %config(noreplace) %{_sysconfdir}/yum.repos.d/%{name}.repo
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}
+%dir %attr(0755,retrace,retrace) %{_localstatedir}/log/%{name}
 %dir %attr(0775,apache,retrace) %{_localstatedir}/spool/%{name}
 %dir %{_datadir}/%{name}
 %caps(cap_setuid=ep) %{_bindir}/%{name}-worker
