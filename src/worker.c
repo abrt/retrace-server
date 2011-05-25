@@ -1,3 +1,4 @@
+#include <config.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <pwd.h>
@@ -5,18 +6,14 @@
 #include <unistd.h>
 
 /*
-  Launches Retrace Server worker (worker.py) with root permissions.
-  Binary needs to be owned by root and needs to set SUID bit.
-*/
+ * Launches Retrace Server worker (worker.py) with root permissions.
+ */
 
 int main(int argc, char **argv)
 {
-  char command[256];
-  FILE *pipe;
-  int i;
-  struct passwd *apache_user;
-  const char *apache_username = "apache";
-  pid_t pid;
+#if HAVE_STDLIB_H
+  puts(PACKAGE);
+#endif
 
   if (argc != 2)
   {
@@ -30,6 +27,7 @@ int main(int argc, char **argv)
     return 2;
   }
 
+  int i;
   for (i = 0; argv[1][i]; ++i)
     if (!isdigit(argv[1][i]))
     {
@@ -37,22 +35,24 @@ int main(int argc, char **argv)
       return 3;
     }
 
-  apache_user = getpwnam(apache_username);
+  const char *apache_username = "apache";
+  struct passwd *apache_user = getpwnam(apache_username);
   if (!apache_user)
   {
     fprintf(stderr, "User \"%s\" not found.\n", apache_username);
     return 4;
   }
 
-  sprintf(command, "%d", apache_user->pw_uid);
+  char uid[16];
+  sprintf(uid, "%d", apache_user->pw_uid);
 
   setenv("SUDO_USER", apache_username, 1);
-  setenv("SUDO_UID", command, 1);
+  setenv("SUDO_UID", uid, 1);
   /* required by mock to be able to write into result directory */
   setenv("SUDO_GID", "0", 1);
 
   /* fork and launch worker.py */
-  pid = fork();
+  pid_t pid = fork();
 
   if (pid < 0)
   {
@@ -64,14 +64,10 @@ int main(int argc, char **argv)
   if (pid > 0)
       return 0;
 
-  /* child */
-  sprintf(command, "/usr/bin/python /usr/share/retrace-server/worker.py \"%s\"", argv[1]);
-  pipe = popen(command, "r");
-  if (pipe == NULL)
-  {
-    fputs("Unable to run 'worker.py'.", stderr);
-    return 5;
-  }
+  /* child - execute worker.py */
+  execlp("/usr/bin/python", "/usr/bin/python", "/usr/share/retrace-server/worker.py", argv[1], NULL);
 
-  return pclose(pipe) >> 8;
+  /* execlp failed */
+  fputs("execlp failed.", stderr);
+  return 5;
 }
