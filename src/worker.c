@@ -11,10 +11,6 @@
 
 int main(int argc, char **argv)
 {
-#if HAVE_STDLIB_H
-  puts(PACKAGE);
-#endif
-
   if (argc != 2)
   {
     fprintf(stderr, "Usage: %s task_id\n", argv[0]);
