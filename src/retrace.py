@@ -112,22 +112,22 @@ def read_config():
             pass
 
 def free_space(path):
-    child = Popen([DF_BIN, path], stdout=PIPE)
+    child = Popen([DF_BIN, "-B", "1", path], stdout=PIPE)
     lines = child.communicate()[0].split("\n")
     for line in lines:
         match = DF_OUTPUT_PARSER.match(line)
         if match:
-            return 1024 * int(match.group(4))
+            return int(match.group(4))
 
     return None
 
 def dir_size(path):
-    child = Popen([DU_BIN, "-s", path], stdout=PIPE)
+    child = Popen([DU_BIN, "-sb", path], stdout=PIPE)
     lines = child.communicate()[0].split("\n")
     for line in lines:
         match = DU_OUTPUT_PARSER.match(line)
         if match:
-            return 1024 * int(match.group(1))
+            return int(match.group(1))
 
     return 0
 
