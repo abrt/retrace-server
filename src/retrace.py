@@ -112,43 +112,39 @@ def read_config():
             pass
 
 def free_space(path):
-    pipe = Popen([DF_BIN, path], stdout=PIPE).stdout
-    for line in pipe.readlines():
+    child = Popen([DF_BIN, path], stdout=PIPE)
+    lines = child.communicate()[0].split("\n")
+    for line in lines:
         match = DF_OUTPUT_PARSER.match(line)
         if match:
-            pipe.close()
             return 1024 * int(match.group(4))
 
-    pipe.close()
     return None
 
 def dir_size(path):
-    pipe = Popen([DU_BIN, "-s", path], stdout=PIPE).stdout
-    for line in pipe.readlines():
+    child = Popen([DU_BIN, "-s", path], stdout=PIPE)
+    lines = child.communicate()[0].split("\n")
+    for line in lines:
         match = DU_OUTPUT_PARSER.match(line)
         if match:
-            pipe.close()
             return 1024 * int(match.group(1))
 
-    pipe.close()
     return 0
 
 def unpacked_size(archive, mime):
     command, parser = HANDLE_ARCHIVE[mime]["size"]
-    pipe = Popen(command + [archive], stdout=PIPE).stdout
-    for line in pipe.readlines():
+    child = Popen(command + [archive], stdout=PIPE)
+    lines = child.communicate()[0].split("\n")
+    for line in lines:
         match = parser.match(line)
         if match:
-            pipe.close()
             return int(match.group(1))
 
-    pipe.close()
     return None
 
 def guess_arch(coredump_path):
-    pipe = Popen(["file", coredump_path], stdout=PIPE).stdout
-    output = pipe.read()
-    pipe.close()
+    child = Popen(["file", coredump_path], stdout=PIPE)
+    output = child.communicate()[0]
 
     if "x86-64" in output:
         return "x86_64"
@@ -176,27 +172,26 @@ def run_gdb(savedir):
 
     mockr = "../../%s/mock" % savedir
 
-    chmod = Popen(["mock", "shell", "-r", mockr, "--",
-                   "/bin/chmod", "777", executable])
-    if chmod.wait() != 0:
+    chmod = call(["mock", "shell", "-r", mockr, "--",
+                  "/bin/chmod", "777", executable])
+    if chmod != 0:
         return ""
 
-    pipe = Popen(["mock", "shell", "-r", mockr, "--",
-                  "su", "mockbuild", "-c",
-                  "\" gdb -batch"
-                  " -ex 'file %s'"
-                  " -ex 'core-file /var/spool/abrt/crash/coredump'"
-                  " -ex 'thread apply all backtrace 2048 full'"
-                  " -ex 'info sharedlib'"
-                  " -ex 'print (char*)__abort_msg'"
-                  " -ex 'print (char*)__glib_assert_msg'"
-                  " -ex 'info registers'"
-                  " -ex 'disassemble' \"" % executable,
-                  # redirect GDB's stderr, ignore mock's stderr
-                  "2>&1"], stdout=PIPE).stdout
+    child = Popen(["mock", "shell", "-r", mockr, "--",
+                   "su", "mockbuild", "-c",
+                   "\" gdb -batch"
+                   " -ex 'file %s'"
+                   " -ex 'core-file /var/spool/abrt/crash/coredump'"
+                   " -ex 'thread apply all backtrace 2048 full'"
+                   " -ex 'info sharedlib'"
+                   " -ex 'print (char*)__abort_msg'"
+                   " -ex 'print (char*)__glib_assert_msg'"
+                   " -ex 'info registers'"
+                   " -ex 'disassemble' \"" % executable,
+                   # redirect GDB's stderr, ignore mock's stderr
+                   "2>&1"], stdout=PIPE)
 
-    backtrace = pipe.read()
-    pipe.close()
+    backtrace = child.communicate()[0]
 
     return backtrace
 
@@ -238,9 +233,8 @@ def new_task():
         return None, None, None
 
 def unpack(archive, mime):
-    pipe = Popen(HANDLE_ARCHIVE[mime]["unpack"] + [archive])
-    pipe.wait()
-    return pipe.returncode
+    retcode = call(HANDLE_ARCHIVE[mime]["unpack"] + [archive])
+    return retcode
 
 def response(start_response, status, body="", extra_headers=[]):
     start_response(status, [("Content-Type", "text/plain"), ("Content-Length", "%d" % len(body))] + extra_headers)
@@ -269,9 +263,8 @@ def get_active_tasks():
     return tasks
 
 def run_ps():
-    pipe = Popen(["ps", "-eo", "pid,ppid,etime,cmd"], stdout=PIPE).stdout
-    lines = pipe.readlines()
-    pipe.close()
+    child = Popen(["ps", "-eo", "pid,ppid,etime,cmd"], stdout=PIPE)
+    lines = child.communicate()[0].split("\n")
 
     return lines
 

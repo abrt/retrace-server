@@ -33,15 +33,13 @@ def fail(exitcode):
 def retrace_run(errorcode, cmd):
     "Runs cmd using subprocess.Popen and kills script with errorcode on failure"
     try:
-        process = Popen(cmd, stdout=PIPE, stderr=STDOUT)
-        process.wait()
-        output = process.stdout.read()
-        process.stdout.close()
+        child = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+        output = child.communicate()[0]
     except Exception as ex:
-        process = None
+        child = None
         output = "An unhandled exception occured: %s" % ex
 
-    if not process or process.returncode != 0:
+    if not child or child.returncode != 0:
         LOG.write("Error %d:\n=== OUTPUT ===\n%s\n" % (errorcode, output))
         fail(errorcode)
 
@@ -145,13 +143,14 @@ if __name__ == "__main__":
     # read required packages from coredump
     try:
         # ToDo: deal with not found build-ids
-        pipe = Popen(["coredump2packages", "%s/crash/coredump" % savedir,
-                      "--repos=retrace-%s-%s-%s*" % (distribution, version, arch)],
-                     stdout=PIPE).stdout
+        child = Popen(["coredump2packages", "%s/crash/coredump" % savedir,
+                       "--repos=retrace-%s-%s-%s*" % (distribution, version, arch)],
+                      stdout=PIPE)
         section = 0
         crash_package_or_component = None
-        for line in pipe.readlines():
-            if line == "\n":
+        lines = child.communicate()[0].split("\n")
+        for line in lines:
+            if line == "":
                 section += 1
                 continue
             elif 0 == section:
@@ -161,7 +160,6 @@ if __name__ == "__main__":
             elif 2 == section:
                 # Missing build ids
                 pass
-        pipe.close()
     except Exception as ex:
         LOG.write("Unable to obtain packages from 'coredump' file: %s.\n" % ex)
         fail(20)
