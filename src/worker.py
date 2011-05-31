@@ -240,7 +240,7 @@ if __name__ == "__main__":
     set_status(STATUS_CLEANUP)
 
     retrace_run(31, ["mock", "-r", mockr, "--scrub=all"])
-    retrace_run(32, ["rm", "-rf", "%s/mock.cfg" % savedir, "%s/crash" % savedir])
+    cleanup_task(taskid_int, False)
 
     # ignore error: workdir = savedir => workdir is not empty
     if CONFIG["UseWorkDir"]:

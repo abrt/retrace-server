@@ -95,7 +95,7 @@ def application(environ, start_response):
             raise Exception
     except:
         os.chdir("/")
-        Popen(["rm", "-rf", taskdir])
+        shutil.rmtree(taskdir)
         return response(start_response, "500 Internal Server Error",
                         _("Unable to unpack archive"))
 
@@ -104,7 +104,7 @@ def application(environ, start_response):
     for required_file in REQUIRED_FILES:
         if not required_file in files:
             os.chdir("/")
-            Popen(["rm", "-rf", taskdir])
+            shutil.rmtree(taskdir)
             return response(start_response, "403 Forbidden",
                             _("Required file \"%s\" is missing") % required_file)
 

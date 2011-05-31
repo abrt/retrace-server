@@ -3,6 +3,7 @@ import gettext
 import os
 import re
 import random
+import shutil
 import sqlite3
 from webob import Request
 from subprocess import *
@@ -225,7 +226,7 @@ def new_task():
         os.mkdir(newdir)
         taskpass = gen_task_password(newdir)
         if not taskpass:
-            Popen(["rm", "-rf", newdir])
+            shutil.rmtree(newdir)
             raise Exception
 
         return taskid, taskpass, newdir
@@ -316,8 +317,8 @@ def cleanup_task(taskid, gc=True):
         call(["mock", "-r", "../../%s/mock" % savedir, "--scrub=all"],
              stdout=null, stderr=null)
 
-    call(["rm", "-rf", "%s/crash" % savedir, "%s/mock.cfg" % savedir],
-         stdout=null, stderr=null)
+    shutil.rmtree("%s/crash" % savedir)
+    os.remove("%s/mock.cfg" % savedir)
 
     rawlog = "%s/log" % savedir
     newlog = "%s/retrace_log" % savedir
