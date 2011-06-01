@@ -160,14 +160,13 @@ the method is not POST, the server returns the @code{405 Method Not
 Allowed} HTTP error code. If the @var{Content-Length} field is missing,
 the server returns the @code{411 Length Required} HTTP error code. If an
 @var{Content-Type} other than @samp{application/x-tar},
-@samp{application/x-gzip}, @samp{application/x-xz} is used, the server
-returns the @code{415 unsupported Media Type} HTTP error code. If the
-@var{Content-Length} value is greater than a limit set by
+@samp{application/x-gzip}, @samp{application/x-xz-compressed-tar} is used,
+the server returns the @code{415 unsupported Media Type} HTTP error code.
+If the @var{Content-Length} value is greater than a limit set by
 @var{MaxPackedSize} option in the server configuration file (50 MB by
-default), or the real HTTP request size gets larger than the limit + 10
-KB for headers, then the server returns the @code{413 Request Entity Too
-Large} HTTP error code, and provides an explanation. The limit can be checked
-by calling @indicateurl{https://server/settings}. The limit is changeable
+default), then the server returns the @code{413 Request Entity Too
+Large} HTTP error code. The limit can be checked by calling
+@indicateurl{https://server/settings}. The limit is changeable
 from the server configuration file.
 
 If unpacking the archive would result in having the free disk space
@@ -178,14 +177,13 @@ configuration file, and it is set to 1024 MB by default.
 
 If the data from the received archive would take more than 1024 MB of
 disk space when uncompressed, the server returns the @code{413 Request
-Entity Too Large} HTTP error code, and provides an explanation. The limit
-can be checked by calling @indicateurl{https://server/settings}. The size
-limit is changeable by the @var{MaxUnpackedSize} option in the server
-configuration file. It can be set pretty high because coredumps, that
-take most disk space, are stored on the server only temporarily until
-the backtrace is generated. When the backtrace is generated the coredump
-is deleted by the @command{retrace-server-worker}, so most disk space
-is released.
+Entity Too Large} HTTP error code. The limit can be checked by calling
+@indicateurl{https://server/settings}. The limit is changeable by
+the @var{MaxUnpackedSize} option in the server configuration file.
+It can be set pretty high because coredumps, that take most disk space,
+are stored on the server only temporarily until the backtrace is generated.
+When the backtrace is generated the coredump is deleted by
+the @command{retrace-server-worker}, so most disk space is released.
 
 The uncompressed data size for xz archives is obtained by calling
 @code{`xz --list file.tar.xz`}. The @option{--list} option has been
@@ -202,8 +200,11 @@ response. After that it spawns a subprocess with
 
 The following files from the local crash directory are required to be
 present in the archive: @file{coredump}, @file{executable},
-@file{package}, @file{release}. If one or more files are not present in
+@file{package}. If one or more files are not present in
 the archive, the server returns the @code{403 Forbidden} HTTP error code.
+The @file{release} file is not required, but strongly recommended to include.
+Without this one the server tries to guess release, but the client can not
+rely on a correct identification of its system.
 
 If the file check succeeds, the server HTTP response has the @code{201
 Created} HTTP code. The response includes the following HTTP header
@@ -245,9 +246,9 @@ content must match the password stored in the
 not valid, the server returns the @code{403 Forbidden} HTTP error code.
 
 If the checks pass, the server returns the @code{200 OK} HTTP code, and
-includes a field @var{X-Task-Status} containing one of the following
+includes a @var{X-Task-Status} header containing one of the following
 values: @samp{FINISHED_SUCCESS}, @samp{FINISHED_FAILURE},
-@samp{PENDING}.
+@samp{PENDING}. The response body contains a more detailed status message.
 
 The field contains @samp{FINISHED_SUCCESS} if the file
 @file{/var/spool/retrace-server/@var{id}/retrace_backtrace} exists.
@@ -608,21 +609,20 @@ server's environment.
 @c We should consider setting a disk quota to every chroot directory,
 @c and limit the GDB access to resources using cgroups.
 
-SELinux policy exists for both the retrace server's HTTP interface, and
-for the retrace worker.
+SELinux policy exists for the retrace worker.
 
 @node Clients
 @section Clients
 
-It is expected that the clients, which are using the retrace server and
+It is expected that the clients, which are using the Retrace server and
 sending coredumps to it, trust the retrace server administrator. The
 server administrator must not try to get sensitive data from client
-coredumps. This is a major bottleneck of the retrace server. However,
+coredumps. This is a major bottleneck of the Retrace server. However,
 users of an operating system already trust the operating system provider
-in various important matters. So when the retrace server is operated by
+in various important matters. So when the Retrace server is operated by
 the OS provider, that might be acceptable for users.
 
-Sending clients' coredumps to the retrace server cannot be avoided if we
+Sending client's coredumps to the Retrace server cannot be avoided if we
 want to generate good backtraces containing the values of
 variables. Minidumps lower the quality of the resulting backtraces,
 while not improving user security.
@@ -634,7 +634,7 @@ Users can never be allowed to provide custom packages/debuginfo together
 with a coredump. Packages need to be installed to the environment, and
 installing untrusted programs is insecure.
 
-As for attacker trying to steal users' backtraces from the retrace
+As for attacker trying to steal user's backtraces from the retrace
 server, the passwords protecting the backtraces in the
 @var{X-Task-Password} header are random alphanumeric
 (@samp{[a-zA-Z0-9]}) sequences 32 characters long. 32 alphanumeric
