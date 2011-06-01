@@ -92,5 +92,16 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Wed Jun 01 2011 Michal Toman <mtoman@redhat.com> 1.1-1
+- add logrotate script
+- add asciidoc support and manpages
+- replace rm by os.remove() and shutil.rmtree()
+- call du and df without block factor
+- use communicate() instead of .stdout.read()
+- replace popen by execlp
+- import manual from ABRT git, minor changes
+- create log directory
+- use 'retrace' user and group
+
 * Wed May 18 2011 Michal Toman <mtoman@redhat.com> 1.0-1
 - initial packaging
