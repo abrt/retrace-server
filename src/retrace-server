@@ -1,0 +1,5 @@
+/var/log/retrace-server/* {
+    missingok
+    notifempty
+    weekly
+}
