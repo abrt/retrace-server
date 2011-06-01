@@ -1,5 +1,21 @@
 SUBDIRS = plugins
 
+MAN_TXT = \
+    retrace-server-cleanup.txt \
+    retrace-server-reposync.txt \
+    retrace-server-worker.txt
+
+#Manual pages are generated from .txt via Docbook
+man1_MANS = ${MAN_TXT:%.txt=%.1}
+
+%.1 %.5 %.7: %.xml
+	$(XMLTO_SILENT) xmlto man $< 2>&1 | sed '/Note/d'
+
+%.xml: %.txt ../asciidoc.conf
+	$(ASCIIDOC_SILENT) asciidoc --backend=docbook --doctype=manpage --conf-file ../asciidoc.conf -a rs_version=$(PACKAGE_VERSION) -o $@ $<
+
+CLEANFILES = $(man1_MANS)
+
 bin_PROGRAMS = retrace-server-worker
 retrace_server_worker_SOURCES = worker.c
 
@@ -23,7 +39,7 @@ retraceconfdir = ${sysconfdir}
 httpdconf_DATA = retrace-server-httpd.conf
 httpdconfdir = ${sysconfdir}/httpd/conf.d
 
-EXTRA_DIST = retrace-server.conf retrace-server-httpd.conf retrace-server.repo
+EXTRA_DIST = $(man1_MANS) retrace-server.conf retrace-server-httpd.conf retrace-server.repo
 
 # Apache config files can be owned by root, httpd just needs read
 # access.

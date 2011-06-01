@@ -66,7 +66,7 @@ exit 0
 %preun
 if [ "$1" = 0 ]
 then
-    /sbin/install-info --delete %{_infodir}/abrt-retrace-server %{_infodir}/dir 2> /dev/null || :
+    /sbin/install-info --delete %{_infodir}/retrace-server %{_infodir}/dir 2> /dev/null || :
 fi
 
 %files -f %{name}.lang
@@ -76,7 +76,7 @@ fi
 %config(noreplace) %{_sysconfdir}/yum.repos.d/%{name}.repo
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/log/%{name}
-%dir %attr(0775,apache,retrace) %{_localstatedir}/spool/%{name}
+%dir %attr(0775,retrace,apache) %{_localstatedir}/spool/%{name}
 %dir %{_datadir}/%{name}
 %caps(cap_setuid=ep) %{_bindir}/%{name}-worker
 %{_bindir}/%{name}-cleanup
@@ -84,6 +84,9 @@ fi
 %{_bindir}/coredump2packages
 %{python_site}/retrace.py*
 %{_datadir}/%{name}/*
+%doc %{_mandir}/man1/%{name}-cleanup.1.gz
+%doc %{_mandir}/man1/%{name}-reposync.1.gz
+%doc %{_mandir}/man1/%{name}-worker.1.gz
 %doc %{_infodir}/%{name}*
 %doc COPYING INSTALL README TODO
 
