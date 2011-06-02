@@ -3,7 +3,7 @@
 Summary: Application for remote coredump analysis
 Name: retrace-server
 Version: @PACKAGE_VERSION@
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPLv2+
 Group: Applications/System
 URL: https://fedorahosted.org/abrt/wiki/AbrtRetraceServer
@@ -12,6 +12,8 @@ Source: https://fedorahosted.org/released/%{name}/%{name}-%{version}.tar.gz
 BuildRequires: intltool
 BuildRequires: libtool
 BuildRequires: texinfo
+BuildRequires: asciidoc
+BuildRequires: xmlto
 
 %{?el6:Requires: python-argparse}
 Requires: rsync
@@ -92,6 +94,8 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Wed Jun 01 2011 Scott Dodson <sdodson@redhat.com> 1.1-2
+- Add asciidocs xmlto to BuildRequires
 * Wed Jun 01 2011 Michal Toman <mtoman@redhat.com> 1.1-1
 - add logrotate script
 - add asciidoc support and manpages
