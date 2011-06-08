@@ -182,7 +182,7 @@ if __name__ == "__main__":
         mockcfg.write("logfile=/var/log/yum.log\n")
         mockcfg.write("retries=20\n")
         mockcfg.write("obsoletes=1\n")
-        mockcfg.write("gpgcheck=0\n")
+        mockcfg.write("gpgcheck=1\n")
         mockcfg.write("assumeyes=1\n")
         mockcfg.write("syslog_ident=mock\n")
         mockcfg.write("syslog_device=\n")
@@ -193,6 +193,7 @@ if __name__ == "__main__":
         mockcfg.write("name=%s\n" % distribution)
         mockcfg.write("baseurl=file://%s/%s-%s-%s/\n" % (CONFIG["RepoDir"], distribution, version, arch))
         mockcfg.write("failovermethod=priority\n")
+        mockcfg.write("gpgkey=file:///usr/share/retrace-server/gpg/%s-%s\n" % (distribution, version))
         mockcfg.write("\"\"\"\n")
         mockcfg.close()
     except Exception as ex:
