@@ -3,5 +3,18 @@ How to install
 
 1. ./autogen.sh
 2. ./configure
-3. make
-4. make install
+3. make rpm
+4. rpm -ivh $HOSTTYPE/retrace-server-*.rpm
+
+How to deploy
+=============
+
+1.     Install retrace-server RPM
+  1.1    (Optional) Add custom plugins
+2.     Run retrace-server-reposync
+3.     If firewall is enabled, open port 443
+4.     Restart httpd
+5.     (Temporary) Disable SELinux
+6.     Retrace server is ready
+
+See README for more information
