@@ -215,10 +215,10 @@ if __name__ == "__main__":
     # generate backtrace
     set_status(STATUS_BACKTRACE)
 
-    backtrace = run_gdb(savedir)
-
-    if not backtrace:
-        LOG.write("Error\n")
+    try:
+        backtrace = run_gdb(savedir)
+    except Exception, ex:
+        LOG.write("Error: %s\n" % ex)
         fail(29)
 
     try:

@@ -185,19 +185,21 @@ def parse_http_gettext(lang, charset):
     return result
 
 def run_gdb(savedir):
-    try:
-        exec_file = open("%s/crash/executable" % savedir, "r")
-        executable = exec_file.read().replace("'", "").replace("\"", "")
-        exec_file.close()
-    except:
-        return ""
+    #exception is caught on the higher level
+    exec_file = open("%s/crash/executable" % savedir, "r")
+    executable = exec_file.read()
+    exec_file.close()
+
+    if '"' in executable or "'" in executable:
+        raise Exception, "Executable contains forbidden characters"
 
     mockr = "../../%s/mock" % savedir
 
     chmod = call(["mock", "shell", "-r", mockr, "--",
-                  "/bin/chmod", "777", executable])
+                  "/bin/chmod", "777", "'%s'" % executable])
+
     if chmod != 0:
-        return ""
+        raise Exception, "Unable to chmod the executable"
 
     child = Popen(["mock", "shell", "-r", mockr, "--",
                    "su", "mockbuild", "-c",
