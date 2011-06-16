@@ -11,6 +11,7 @@ from subprocess import *
 GETTEXT_DOMAIN = "retrace-server"
 
 REQUIRED_FILES = ["coredump", "executable", "package"]
+ALLOWED_FILES = ["coredump", "executable", "package", "os_release", "release"]
 
 DF_BIN = "/bin/df"
 DU_BIN = "/usr/bin/du"

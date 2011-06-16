@@ -98,12 +98,28 @@ def application(environ, start_response):
 
     files = os.listdir(".")
 
+    for file in files:
+        if not file in ALLOWED_FILES:
+            os.chdir("/")
+            shutil.rmtree(taskdir)
+            return response(start_response, "403 Forbidden",
+                            _("File '%s' is not allowed to be in" \
+                              " the archive") % file)
+
+        if os.path.islink(file):
+            os.chdir("/")
+            shutil.rmtree(taskdir)
+            return response(start_response, "403 Forbidden",
+                            _("Symlinks are not allowed to be in" \
+                              " the archive"))
+
+
     for required_file in REQUIRED_FILES:
         if not required_file in files:
             os.chdir("/")
             shutil.rmtree(taskdir)
             return response(start_response, "403 Forbidden",
-                            _("Required file \"%s\" is missing") % required_file)
+                            _("Required file '%s' is missing") % required_file)
 
     call(["/usr/bin/retrace-server-worker", "%d" % taskid])
 
