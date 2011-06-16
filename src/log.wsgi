@@ -3,11 +3,8 @@ from retrace import *
 def application(environ, start_response):
     request = Request(environ)
 
-    try:
-        _ = gettext.translation(GETTEXT_DOMAIN, languages=["%s" % request.accept_language],
-                                codeset="%s" % request.accept_charset).gettext
-    except:
-        _ = lambda x: x
+    _ = parse_http_gettext("%s" % request.accept_language,
+                           "%s" % request.accept_charset)
 
     match = URL_PARSER.match(request.script_name)
     if not match:

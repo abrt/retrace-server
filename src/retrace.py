@@ -18,7 +18,13 @@ GZIP_BIN = "/usr/bin/gzip"
 TAR_BIN = "/bin/tar"
 XZ_BIN = "/usr/bin/xz"
 
+#characters, numbers, dash (utf-8, iso-8859-2 etc.)
+INPUT_CHARSET_PARSER = re.compile("^([a-zA-Z0-9\-]+)(,.*)?$")
+#en_GB, sk-SK, cs, fr etc.
+INPUT_LANG_PARSER = re.compile("^([a-z]{2}([_\-][A-Z]{2})?)(,.*)?$")
+#characters allowed by Fedora Naming Guidelines
 INPUT_PACKAGE_PARSER = re.compile("^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\-\.\_\+]+$")
+
 PACKAGE_PARSER = re.compile("^(.+)-([0-9]+(\.[0-9]+)*-[0-9]+)\.([^-]+)$")
 DF_OUTPUT_PARSER = re.compile("^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
 DU_OUTPUT_PARSER = re.compile("^([0-9]+)")
@@ -162,6 +168,20 @@ def guess_release(package, plugins):
             return plugin.distribution, match.group(1)
 
     return None, None
+
+def parse_http_gettext(lang, charset):
+    result = lambda x: x
+    lang_match = INPUT_LANG_PARSER.match(lang)
+    charset_match = INPUT_CHARSET_PARSER.match(charset)
+    if lang_match and charset_match:
+        try:
+            result = gettext.translation(GETTEXT_DOMAIN,
+                                         languages=[lang_match.group(1)],
+                                         codeset=charset_match.group(1)).gettext
+        except:
+            pass
+
+    return result
 
 def run_gdb(savedir):
     try:
