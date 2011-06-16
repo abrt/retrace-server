@@ -18,7 +18,6 @@ GZIP_BIN = "/usr/bin/gzip"
 TAR_BIN = "/bin/tar"
 XZ_BIN = "/usr/bin/xz"
 
-TASKID_PARSER = re.compile("^.*/([0-9]+)/*$")
 PACKAGE_PARSER = re.compile("^(.+)-([0-9]+(\.[0-9]+)*-[0-9]+)\.([^-]+)$")
 DF_OUTPUT_PARSER = re.compile("^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
 DU_OUTPUT_PARSER = re.compile("^([0-9]+)")
