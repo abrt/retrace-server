@@ -162,7 +162,7 @@ if __name__ == "__main__":
 
     # create mock config file
     try:
-        mockcfg = open("%s/mock.cfg" % savedir, "w")
+        mockcfg = open("%s/default.cfg" % savedir, "w")
         mockcfg.write("config_opts['root'] = '%s'\n" % taskid)
         mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
         mockcfg.write("config_opts['chroot_setup_cmd'] = '--skip-broken install %s shadow-utils gdb rpm'\n" % packages)
@@ -192,6 +192,9 @@ if __name__ == "__main__":
         mockcfg.write("gpgkey=file:///usr/share/retrace-server/gpg/%s-%s\n" % (distribution, version))
         mockcfg.write("\"\"\"\n")
         mockcfg.close()
+        # symlink defaults from /etc/mock
+        os.symlink("/etc/mock/site-defaults.cfg", os.path.join(savedir, "site-defaults.cfg"))
+        os.symlink("/etc/mock/logging.ini", os.path.join(savedir, "logging.ini"))
     except Exception as ex:
         LOG.write("Unable to create mock config file: %s.\n" % ex)
         fail(21)
@@ -202,13 +205,13 @@ if __name__ == "__main__":
     prerunning = len(get_active_tasks()) - 1
 
     # run retrace
-    mockr = "../../%s/mock" % savedir
-
     set_status(STATUS_INIT)
 
-    retrace_run(25, ["mock", "init", "-r", mockr])
-    retrace_run(26, ["mock", "-r", mockr, "--copyin", "%s/crash" % savedir, "/var/spool/abrt/crash"])
-    retrace_run(27, ["mock", "-r", mockr, "shell", "--", "chgrp", "-R", "mockbuild", "/var/spool/abrt/crash"])
+    retrace_run(25, ["mock", "init", "--configdir", savedir])
+    retrace_run(26, ["mock", "--configdir", savedir, "--copyin",
+                     "%s/crash" % savedir, "/var/spool/abrt/crash"])
+    retrace_run(27, ["mock", "--configdir", savedir, "shell",
+                     "--", "chgrp", "-R", "mockbuild", "/var/spool/abrt/crash"])
 
     LOG.write("OK\n")
 
@@ -236,7 +239,7 @@ if __name__ == "__main__":
     # clean up temporary data
     set_status(STATUS_CLEANUP)
 
-    retrace_run(31, ["mock", "-r", mockr, "--scrub=all"])
+    retrace_run(31, ["mock", "--configdir", savedir, "--scrub=all"])
     cleanup_task(taskid_int, False)
 
     # ignore error: workdir = savedir => workdir is not empty

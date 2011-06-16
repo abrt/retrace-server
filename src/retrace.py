@@ -193,16 +193,14 @@ def run_gdb(savedir):
     if '"' in executable or "'" in executable:
         raise Exception, "Executable contains forbidden characters"
 
-    mockr = "../../%s/mock" % savedir
-
-    chmod = call(["mock", "shell", "-r", mockr, "--",
-                  "/bin/chmod", "777", "'%s'" % executable])
+    chmod = call(["mock", "shell", "--configdir", savedir,
+                  "--", "/bin/chmod", "777", "'%s'" % executable])
 
     if chmod != 0:
         raise Exception, "Unable to chmod the executable"
 
-    child = Popen(["mock", "shell", "-r", mockr, "--",
-                   "su", "mockbuild", "-c",
+    child = Popen(["mock", "shell", "--configdir", savedir,
+                   "--", "su", "mockbuild", "-c",
                    "\" gdb -batch"
                    " -ex 'file %s'"
                    " -ex 'core-file /var/spool/abrt/crash/coredump'"
@@ -336,25 +334,28 @@ def cleanup_task(taskid, gc=True):
     null = open("/dev/null", "w")
 
     savedir = "%s/%d" % (CONFIG["SaveDir"], taskid)
-    if os.path.isfile("%s/mock.cfg" % savedir):
-        call(["mock", "-r", "../../%s/mock" % savedir, "--scrub=all"],
+    if os.path.isfile("%s/defaults.cfg" % savedir):
+        call(["mock", "--configdir", savedir, "--scrub=all"],
              stdout=null, stderr=null)
 
     try:
         shutil.rmtree("%s/crash" % savedir)
-        os.remove("%s/mock.cfg" % savedir)
+        os.remove("%s/site-defaults.cfg" % savedir)
+        os.remove("%s/default.cfg" % savedir)
+        os.remove("%s/logging.ini" % savedir)
     except:
         pass
 
-    rawlog = "%s/log" % savedir
-    newlog = "%s/retrace_log" % savedir
-    if os.path.isfile(rawlog):
-        try:
-            os.rename(rawlog, newlog)
-        except:
-            pass
 
     if gc:
+        rawlog = "%s/log" % savedir
+        newlog = "%s/retrace_log" % savedir
+        if os.path.isfile(rawlog):
+            try:
+                os.rename(rawlog, newlog)
+            except:
+                pass
+
         try:
             log = open(newlog, "a")
             log.write("Killed by garbage collector\n")
