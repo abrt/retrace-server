@@ -18,6 +18,7 @@ GZIP_BIN = "/usr/bin/gzip"
 TAR_BIN = "/bin/tar"
 XZ_BIN = "/usr/bin/xz"
 
+INPUT_PACKAGE_PARSER = re.compile("^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\-\.\_\+]+$")
 PACKAGE_PARSER = re.compile("^(.+)-([0-9]+(\.[0-9]+)*-[0-9]+)\.([^-]+)$")
 DF_OUTPUT_PARSER = re.compile("^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
 DU_OUTPUT_PARSER = re.compile("^([0-9]+)")
@@ -316,8 +317,11 @@ def cleanup_task(taskid, gc=True):
         call(["mock", "-r", "../../%s/mock" % savedir, "--scrub=all"],
              stdout=null, stderr=null)
 
-    shutil.rmtree("%s/crash" % savedir)
-    os.remove("%s/mock.cfg" % savedir)
+    try:
+        shutil.rmtree("%s/crash" % savedir)
+        os.remove("%s/mock.cfg" % savedir)
+    except:
+        pass
 
     rawlog = "%s/log" % savedir
     newlog = "%s/retrace_log" % savedir

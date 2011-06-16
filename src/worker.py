@@ -98,6 +98,11 @@ if __name__ == "__main__":
         LOG.write("Unable to read crash package from 'package' file: %s.\n" % ex)
         fail(17)
 
+    # read package file
+    if not INPUT_PACKAGE_PARSER.match(crash_package):
+        LOG.write("Invalid package name: %s.\n" % crash_package)
+        fail(19)
+
     # read release, distribution and version from release file
     release_path = "%s/crash/os_release" % savedir
     if not os.path.isfile(release_path):
@@ -128,15 +133,6 @@ if __name__ == "__main__":
         else:
             LOG.write("Failure\n")
             fail(18)
-
-    # read package file
-    try:
-        package_file = open("%s/crash/package" % savedir, "r")
-        crash_package = package_file.read()
-        package_file.close()
-    except Exception as ex:
-        LOG.write("Unable to read crash package from 'package' file: %s.\n" % ex)
-        fail(19)
 
     packages = crash_package
 
