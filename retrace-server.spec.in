@@ -63,7 +63,7 @@ exit 0
 
 %post
 /sbin/install-info %{_infodir}/%{name} %{_infodir}/dir 2> /dev/null || :
-/usr/sbin/usermod -G mock apache 2> /dev/null || :
+/usr/sbin/usermod -a -G mock apache 2> /dev/null || :
 
 %preun
 if [ "$1" = 0 ]
