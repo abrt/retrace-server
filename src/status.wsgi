@@ -11,38 +11,27 @@ def application(environ, start_response):
         return response(start_response, "404 Not Found",
                         _("Invalid URL"))
 
-    taskdir = "%s/%s" % (CONFIG["SaveDir"], match.group(1))
-
-    if not os.path.isdir(taskdir):
+    try:
+        task = RetraceTask(int(match.group(1)))
+    except:
         return response(start_response, "404 Not Found",
                         _("There is no such task"))
 
-    pwdpath = "%s/password" % taskdir
-    try:
-        pwdfile = open(pwdpath, "r")
-        pwd = pwdfile.read()
-        pwdfile.close()
-    except:
-        return response(start_response, "500 Internal Server Error",
-                        _("Unable to verify password"))
-
     if not "X-Task-Password" in request.headers or \
-       request.headers["X-Task-Password"] != pwd:
+       not task.verify_password(request.headers["X-Task-Password"]):
         return response(start_response, "403 Forbidden",
                         _("Invalid password"))
 
     status = "PENDING"
-    if os.path.isfile("%s/retrace_log" % taskdir):
-        if os.path.isfile("%s/retrace_backtrace" % taskdir):
+    if task.has_log():
+        if task.has_backtrace():
             status = "FINISHED_SUCCESS"
         else:
             status = "FINISHED_FAILURE"
 
     statusmsg = status
     try:
-        statusfile = open("%s/status" % taskdir, "r")
-        statusmsg = _(STATUS[int(statusfile.read())])
-        statusfile.close()
+        statusmsg = _(STATUS[task.get_status()])
     except:
         pass
 

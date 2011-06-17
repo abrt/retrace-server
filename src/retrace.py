@@ -5,6 +5,7 @@ import re
 import random
 import shutil
 import sqlite3
+import time
 from webob import Request
 from subprocess import *
 
@@ -235,27 +236,14 @@ def gen_task_password(taskdir):
 def get_task_est_time(taskdir):
     return 180
 
-def new_task():
-    i = 0
-    newdir = CONFIG["SaveDir"]
-    while os.path.exists(newdir) and i < 50:
-        i += 1
-        taskid = random.randint(pow(10, CONFIG["TaskIdLength"] - 1), pow(10, CONFIG["TaskIdLength"]) - 1)
-        newdir = "%s/%d" % (CONFIG["SaveDir"], taskid)
+def unpack(archive, mime, targetdir=None):
+    cmd = list(HANDLE_ARCHIVE[mime]["unpack"])
+    cmd.append(archive)
+    if not targetdir is None:
+        cmd.append("--directory")
+        cmd.append(targetdir)
 
-    try:
-        os.mkdir(newdir)
-        taskpass = gen_task_password(newdir)
-        if not taskpass:
-            shutil.rmtree(newdir)
-            raise Exception
-
-        return taskid, taskpass, newdir
-    except:
-        return None, None, None
-
-def unpack(archive, mime):
-    retcode = call(HANDLE_ARCHIVE[mime]["unpack"] + [archive])
+    retcode = call(cmd)
     return retcode
 
 def response(start_response, status, body="", extra_headers=[]):
@@ -330,41 +318,6 @@ def kill_process_and_childs(process_id, ps_output=None):
 
     return result
 
-def cleanup_task(taskid, gc=True):
-    null = open("/dev/null", "w")
-
-    savedir = "%s/%d" % (CONFIG["SaveDir"], taskid)
-    if os.path.isfile("%s/defaults.cfg" % savedir):
-        call(["mock", "--configdir", savedir, "--scrub=all"],
-             stdout=null, stderr=null)
-
-    try:
-        shutil.rmtree("%s/crash" % savedir)
-        os.remove("%s/site-defaults.cfg" % savedir)
-        os.remove("%s/default.cfg" % savedir)
-        os.remove("%s/logging.ini" % savedir)
-    except:
-        pass
-
-
-    if gc:
-        rawlog = "%s/log" % savedir
-        newlog = "%s/retrace_log" % savedir
-        if os.path.isfile(rawlog):
-            try:
-                os.rename(rawlog, newlog)
-            except:
-                pass
-
-        try:
-            log = open(newlog, "a")
-            log.write("Killed by garbage collector\n")
-            log.close()
-        except:
-            pass
-
-    null.close()
-
 def init_crashstats_db():
     try:
         con = sqlite3.connect("%s/%s" % (CONFIG["SaveDir"], CONFIG["DBFile"]))
@@ -411,6 +364,195 @@ def save_crashstats(crashstats):
         return True
     except:
         return False
+
+class RetraceTask:
+    """Represents Retrace server's task."""
+
+    BACKTRACE_FILE = "retrace_backtrace"
+    LOG_FILE = "retrace_log"
+    PASSWORD_FILE = "password"
+    STATUS_FILE = "status"
+
+    def __init__(self, taskid=None):
+        """Creates a new task if taskid is None,
+        loads the task with given ID otherwise."""
+
+        if taskid is None:
+            # create a new task
+            self._taskid = None
+            generator = random.SystemRandom()
+            for i in xrange(50):
+               taskid = generator.randint(pow(10, CONFIG["TaskIdLength"] - 1),
+                                          pow(10, CONFIG["TaskIdLength"]) - 1)
+               taskdir = os.path.join(CONFIG["SaveDir"], "%d" % taskid)
+               if not os.path.isdir(taskdir):
+                   self._taskid = taskid
+                   self._savedir = taskdir
+                   break
+
+            if self._taskid is None:
+                raise Exception, "Unable to create new task"
+
+            os.mkdir(self._savedir)
+            pwdfilepath = os.path.join(self._savedir, RetraceTask.PASSWORD_FILE)
+            with open(pwdfilepath, "w") as pwdfile:
+                for i in xrange(CONFIG["TaskPassLength"]):
+                    pwdfile.write(generator.choice(TASKPASS_ALPHABET))
+
+        else:
+            # existing task
+            self._taskid = int(taskid)
+            self._savedir = os.path.join(CONFIG["SaveDir"], "%d" % self._taskid)
+            if not os.path.isdir(self._savedir):
+                raise Exception, "The task %d does not exist" % self._taskid
+
+    def get_taskid(self):
+        """Returns task's ID"""
+        return self._taskid
+
+    def get_savedir(self):
+        """Returns task's savedir"""
+        return self._savedir
+
+    def get_password(self):
+        """Returns task's password"""
+        pwdfilename = os.path.join(self._savedir, RetraceTask.PASSWORD_FILE)
+        with open(pwdfilename, "r") as pwdfile:
+            pwd = pwdfile.read()
+
+        return pwd
+
+    def verify_password(self, password):
+        """Verifies if the given password matches task's password."""
+        return self.get_password() == password
+
+    def get_age(self):
+        """Returns the age of the task in hours."""
+        return int(time.time() - os.path.getatime(self._savedir)) / 3600
+
+    def has_backtrace(self):
+        """Verifies whether BACKTRACE_FILE is present in the task directory."""
+        return os.path.isfile(os.path.join(self._savedir,
+                                           RetraceTask.BACKTRACE_FILE))
+
+    def get_backtrace(self):
+        """Returns None if there is no BACKTRACE_FILE in the task directory,
+        BACKTRACE_FILE's contents otherwise."""
+        if not self.has_backtrace():
+            return None
+
+        btfilename = os.path.join(self._savedir, RetraceTask.BACKTRACE_FILE)
+        with open(btfilename, "r") as btfile:
+            bt = btfile.read()
+
+        return bt
+
+    def set_backtrace(self, backtrace):
+        """Atomically writes given string into BACKTRACE_FILE."""
+        tmpfilename = os.path.join(self._savedir,
+                                   "%s.tmp" % RetraceTask.BACKTRACE_FILE)
+        btfilename = os.path.join(self._savedir,
+                                   RetraceTask.BACKTRACE_FILE)
+
+        with open(tmpfilename, "w") as tmpfile:
+            tmpfile.write(backtrace)
+
+        os.rename(tmpfilename, btfilename)
+
+    def has_log(self):
+        """Verifies whether LOG_FILE is present in the task directory."""
+        return os.path.isfile(os.path.join(self._savedir,
+                                           RetraceTask.LOG_FILE))
+
+    def get_log(self):
+        """Returns None if there is no LOG_FILE in the task directory,
+        LOG_FILE's contents otherwise."""
+        if not self.has_log():
+            return None
+
+        logfilename = os.path.join(self._savedir, RetraceTask.LOG_FILE)
+        with open(logfilename, "r") as logfile:
+            log = logfile.read()
+
+        return log
+
+    def set_log(self, log, append=False):
+        """Atomically writes or appends given string into LOG_FILE."""
+        tmpfilename = os.path.join(self._savedir,
+                                   "%s.tmp" % RetraceTask.LOG_FILE)
+        logfilename = os.path.join(self._savedir,
+                                   RetraceTask.LOG_FILE)
+
+        if append:
+            if os.path.isfile(logfilename):
+                shutil.copyfile(logfilename, tmpfilename)
+
+            with open(tmpfilename, "a") as tmpfile:
+                tmpfile.write(log)
+        else:
+            with open(tmpfilename, "w") as tmpfile:
+                tmpfile.write(log)
+
+        os.rename(tmpfilename, logfilename)
+
+    def has_status(self):
+        """Verifies whether STATUS_FILE is present in the task directory."""
+        return os.path.isfile(os.path.join(self._savedir,
+                                           RetraceTask.STATUS_FILE))
+
+    def get_status(self):
+        """Returns None if there is no STATUS_FILE in the task directory,
+        an integer status code otherwise."""
+        if not self.has_status():
+            return None
+
+        statusfilename = os.path.join(self._savedir, RetraceTask.STATUS_FILE)
+        with open(statusfilename, "r") as statusfile:
+            status = statusfile.read()
+
+        return int(status)
+
+    def set_status(self, statuscode):
+        """Atomically writes given statuscode into STATUS_FILE."""
+        tmpfilename = os.path.join(self._savedir,
+                                   "%s.tmp" % RetraceTask.STATUS_FILE)
+        statusfilename = os.path.join(self._savedir,
+                                      RetraceTask.STATUS_FILE)
+
+        with open(tmpfilename, "w") as tmpfile:
+            tmpfile.write("%d" % statuscode)
+
+        os.rename(tmpfilename, statusfilename)
+
+    def clean(self):
+        """Removes all files and directories except for BACKTRACE_FILE,
+        LOG_FILE, PASSWORD_FILE and STATUS_FILE from the task directory."""
+        with open("/dev/null", "w") as null:
+            if os.path.isfile(os.path.join(self._savedir, "default.cfg")) and \
+               os.path.isfile(os.path.join(self._savedir, "site-defaults.cfg")) and \
+               os.path.isfile(os.path.join(self._savedir, "logging.ini")):
+                retcode = call(["mock", "--configdir", self._savedir, "--scrub=all"],
+                               stdout=null, stderr=null)
+
+        for f in os.listdir(self._savedir):
+            if f != RetraceTask.BACKTRACE_FILE and \
+               f != RetraceTask.LOG_FILE and \
+               f != RetraceTask.PASSWORD_FILE and \
+               f != RetraceTask.STATUS_FILE:
+                path = os.path.join(self._savedir, f)
+                try:
+                    if os.path.isdir(path):
+                        shutil.rmtree(path)
+                    else:
+                        os.remove(path)
+                except:
+                    # clean as much as possible
+                    # ToDo advanced handling
+                    pass
+
+    def remove(self):
+        """Completely removes the task directory."""
+        shutil.rmtree(self._savedir)
 
 class logger():
     def __init__(self, taskid):

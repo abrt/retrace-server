@@ -2,59 +2,54 @@
 
 import os
 import sys
-import time
 from retrace import *
 
 if __name__ == "__main__":
-    now = int(time.time())
+    logfile = os.path.join(CONFIG["LogDir"], "cleanup.log")
 
-    logfile = "%s/cleanup.log" % CONFIG["LogDir"]
+    with open(logfile, "a") as log:
+        log.write(time.strftime("[%Y-%m-%d %H:%M:%S] Running cleanup\n"))
 
-    try:
-        log = open(logfile, "a")
-    except IOError, ex:
-        print "Error opening log file: %s" % ex
-        sys.exit(1)
+        # kill tasks running > 1 hour
+        ps_output = run_ps()
+        running_tasks = get_running_tasks(ps_output)
+        for pid, taskid, runtime in running_tasks:
+            # ToDo: 5 = mm:ss, >5 = hh:mm:ss
+            if len(runtime) > 5:
+                log.write("Killing task %d running for %s\n" % (taskid, runtime))
+                kill_process_and_childs(pid, ps_output)
 
-    log.write(time.strftime("[%Y-%m-%d %H:%M:%S] Running cleanup\n"))
+        # kill orphaned tasks
+        running_tasks = get_running_tasks()
+        running_ids = []
+        for pid, taskid, runtime in running_tasks:
+            running_ids.append(taskid)
 
-    # kill tasks running > 1 hour
-    ps_output = run_ps()
-    running_tasks = get_running_tasks(ps_output)
-    for pid, taskid, runtime in running_tasks:
-        # ToDo: 5 = mm:ss, >5 = hh:mm:ss
-        if len(runtime) > 5:
-            log.write("Killing task %d running for %s\n" % (taskid, runtime))
-            kill_process_and_childs(pid, ps_output)
+        for taskid in get_active_tasks():
+            if not taskid in running_ids:
+                log.write("Cleaning up orphaned task %d\n" % taskid)
+                try:
+                    task = RetraceTask(taskid)
+                except:
+                    log.write("Unable to create RetraceTask object for task %d\n" % taskid)
+                    continue
 
-    # kill orphaned tasks
-    running_tasks = get_running_tasks()
-    running_ids = []
-    for pid, taskid, runtime in running_tasks:
-        running_ids.append(taskid)
+                task.clean()
+                task.set_log("Killed by garbage collector", True)
 
-    for task in get_active_tasks():
-        if not task in running_ids:
-            log.write("Cleaning up orphaned task %d\n" % task)
-            cleanup_task(task)
-
-    # clean up old tasks
-    try:
-        files = os.listdir(CONFIG["SaveDir"])
-    except OSError, ex:
-        files = []
-        log.write("Error listing task directory: %s\n" % ex)
-
-    for filename in files:
+        # clean up old tasks
         try:
-            taskid = int(filename)
-        except:
-            continue
+            files = os.listdir(CONFIG["SaveDir"])
+        except OSError, ex:
+            files = []
+            log.write("Error listing task directory: %s\n" % ex)
 
-        dirpath = "%s/%s" % (CONFIG["SaveDir"], filename)
-        if os.path.isdir(dirpath) and \
-           (now - os.path.getatime(dirpath)) / 3600 >= CONFIG["DeleteTaskAfter"]:
-            log.write("Deleting old task %s\n" % filename)
-            shutil.rmtree(dirpath)
+        for filename in files:
+            try:
+                task = RetraceTask(int(filename))
+            except:
+                continue
 
-    log.close()
+            if task.get_age() >= CONFIG["DeleteTaskAfter"]:
+                log.write("Deleting old task %s\n" % filename)
+                task.remove()

@@ -11,37 +11,21 @@ def application(environ, start_response):
         return response(start_response, "404 Not Found",
                         _("Invalid URL"))
 
-    taskdir = "%s/%s" % (CONFIG["SaveDir"], match.group(1))
-
-    if not os.path.isdir(taskdir):
+    try:
+        task = RetraceTask(int(match.group(1)))
+    except:
         return response(start_response, "404 Not Found",
                         _("There is no such task"))
 
-    pwdpath = "%s/password" % taskdir
-    try:
-        pwdfile = open(pwdpath, "r")
-        pwd = pwdfile.read()
-        pwdfile.close()
-    except:
-        return response(start_response, "500 Internal Server Error",
-                        _("Unable to verify password"))
-
     if not "X-Task-Password" in request.headers or \
-       request.headers["X-Task-Password"] != pwd:
+       not task.verify_password(request.headers["X-Task-Password"]):
         return response(start_response, "403 Forbidden",
                         _("Invalid password"))
 
-    btpath = "%s/retrace_backtrace" % taskdir
-    if not os.path.isfile(btpath):
+    if not task.has_backtrace():
         return response(start_response, "404 Not Found",
                         _("There is no backtrace for the specified task"))
 
-    try:
-        btfile = open(btpath, "r")
-        output = btfile.read()
-        btfile.close()
-    except:
-        return response(start_response, "500 Internal Server Error",
-                        _("Unable to read backtrace file"))
+    bt = task.get_backtrace()
 
-    return response(start_response, "200 OK", output)
+    return response(start_response, "200 OK", bt)

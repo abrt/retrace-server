@@ -77,38 +77,36 @@ def application(environ, start_response):
         return response(start_response, "507 Insufficient Storage",
                         _("There is not enough storage space on the server"))
 
-    taskid, taskpass, taskdir = new_task()
-    if not taskid or not taskpass or not taskdir:
+    try:
+        task = RetraceTask()
+    except:
         return response(start_response, "500 Internal Server Error",
                         _("Unable to create new task"))
 
     try:
-        os.mkdir("%s/crash/" % taskdir)
-        os.chdir("%s/crash/" % taskdir)
-        unpack_retcode = unpack(archive.name, request.content_type)
+        crashdir = os.path.join(task.get_savedir(), "crash")
+        os.mkdir(crashdir)
+        unpack_retcode = unpack(archive.name, request.content_type, crashdir)
         os.unlink(archive.name)
 
         if unpack_retcode != 0:
             raise Exception
     except:
-        os.chdir("/")
-        shutil.rmtree(taskdir)
+        task.remove()
         return response(start_response, "500 Internal Server Error",
                         _("Unable to unpack archive"))
 
-    files = os.listdir(".")
+    files = os.listdir(crashdir)
 
-    for file in files:
-        if not file in ALLOWED_FILES:
-            os.chdir("/")
-            shutil.rmtree(taskdir)
+    for f in files:
+        if not f in ALLOWED_FILES:
+            task.remove()
             return response(start_response, "403 Forbidden",
                             _("File '%s' is not allowed to be in" \
-                              " the archive") % file)
+                              " the archive") % f)
 
-        if os.path.islink(file):
-            os.chdir("/")
-            shutil.rmtree(taskdir)
+        if os.path.islink(os.path.join(crashdir, f)):
+            task.remove()
             return response(start_response, "403 Forbidden",
                             _("Symlinks are not allowed to be in" \
                               " the archive"))
@@ -116,13 +114,12 @@ def application(environ, start_response):
 
     for required_file in REQUIRED_FILES:
         if not required_file in files:
-            os.chdir("/")
-            shutil.rmtree(taskdir)
+            task.remove()
             return response(start_response, "403 Forbidden",
                             _("Required file '%s' is missing") % required_file)
 
-    call(["/usr/bin/retrace-server-worker", "%d" % taskid])
+    call(["/usr/bin/retrace-server-worker", "%d" % task.get_taskid()])
 
     return response(start_response, "201 Created", "",
-                    [("X-Task-Id", "%d" % taskid),
-                     ("X-Task-Password", taskpass)])
+                    [("X-Task-Id", "%d" % task.get_taskid()),
+                     ("X-Task-Password", task.get_password())])
