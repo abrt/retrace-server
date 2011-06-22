@@ -66,6 +66,7 @@ CONFIG = {
   "SaveDir": "/var/spool/retrace-server",
   "WorkDir": "/tmp/retrace-server",
   "UseWorkDir": False,
+  "RequireHTTPS": True,
   "DBFile": "stats.db",
 }
 

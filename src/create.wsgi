@@ -7,7 +7,7 @@ def application(environ, start_response):
     _ = parse_http_gettext("%s" % request.accept_language,
                            "%s" % request.accept_charset)
 
-    if request.scheme != "https":
+    if CONFIG["RequireHTTPS"] and request.scheme != "https":
         return response(start_response, "403 Forbidden",
                         _("You must use HTTPS"))
 
