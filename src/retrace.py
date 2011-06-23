@@ -327,16 +327,16 @@ def init_crashstats_db():
         query.execute("""
           CREATE TABLE IF NOT EXISTS
           retracestats(
-            taskid INT NOT NULL,
-            package VARCHAR(255) NOT NULL,
-            version VARCHAR(16) NOT NULL,
-            release VARCHAR(16) NOT NULL,
-            arch VARCHAR(8) NOT NULL,
-            starttime INT NOT NULL,
-            duration INT NOT NULL,
-            prerunning TINYINT NOT NULL,
-            postrunning TINYINT NOT NULL,
-            chrootsize BIGINT NOT NULL
+            taskid NOT NULL,
+            package NOT NULL,
+            version NOT NULL,
+            release NOT NULL,
+            arch NOT NULL,
+            starttime NOT NULL,
+            duration NOT NULL,
+            prerunning NOT NULL,
+            postrunning NOT NULL,
+            chrootsize NOT NULL
           )
         """)
         con.commit()
