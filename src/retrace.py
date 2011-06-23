@@ -67,6 +67,7 @@ CONFIG = {
   "WorkDir": "/tmp/retrace-server",
   "UseWorkDir": False,
   "RequireHTTPS": True,
+  "RequireGPGCheck": True,
   "DBFile": "stats.db",
 }
 
