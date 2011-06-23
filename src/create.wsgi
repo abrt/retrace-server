@@ -54,45 +54,47 @@ def application(environ, start_response):
                         _("There is not enough storage space on the server"))
 
     try:
-        archive = NamedTemporaryFile(mode="wb", delete=False, suffix=".tar.xz")
-        archive.write(request.body)
-        archive.close()
-    except:
-        return response(start_response, "500 Internal Server Error",
-                        _("Unable to save archive"))
-
-    size = unpacked_size(archive.name, request.content_type)
-    if not size:
-        os.unlink(archive.name)
-        return response(start_response, "500 Internal Server Error",
-                        _("Unable to obtain unpacked size"))
-
-    if size > CONFIG["MaxUnpackedSize"] * 1048576:
-        os.unlink(archive.name)
-        return response(start_response, "413 Request Entity Too Large",
-                        _("Specified archive's content is too large"))
-
-    if space - size < CONFIG["MinStorageLeft"] * 1048576:
-        os.unlink(archive.name)
-        return response(start_response, "507 Insufficient Storage",
-                        _("There is not enough storage space on the server"))
-
-    try:
         task = RetraceTask()
     except:
         return response(start_response, "500 Internal Server Error",
                         _("Unable to create new task"))
 
     if len(get_active_tasks()) > CONFIG["MaxParallelTasks"]:
+        os.unlink(archive.name)
         task.remove()
         return response(start_response, "503 Service Unavailable",
                         _("Retrace server is fully loaded at the moment"))
 
     try:
+        archive = NamedTemporaryFile(mode="wb", suffix=".tar.xz",
+                                     delete=False, dir=task.get_savedir())
+        archive.write(request.body)
+        archive.close()
+    except:
+        task.remove()
+        return response(start_response, "500 Internal Server Error",
+                        _("Unable to save archive"))
+
+    size = unpacked_size(archive.name, request.content_type)
+    if not size:
+        task.remove()
+        return response(start_response, "500 Internal Server Error",
+                        _("Unable to obtain unpacked size"))
+
+    if size > CONFIG["MaxUnpackedSize"] * 1048576:
+        task.remove()
+        return response(start_response, "413 Request Entity Too Large",
+                        _("Specified archive's content is too large"))
+
+    if space - size < CONFIG["MinStorageLeft"] * 1048576:
+        task.remove()
+        return response(start_response, "507 Insufficient Storage",
+                        _("There is not enough storage space on the server"))
+
+    try:
         crashdir = os.path.join(task.get_savedir(), "crash")
         os.mkdir(crashdir)
         unpack_retcode = unpack(archive.name, request.content_type, crashdir)
-        os.unlink(archive.name)
 
         if unpack_retcode != 0:
             raise Exception
@@ -100,6 +102,8 @@ def application(environ, start_response):
         task.remove()
         return response(start_response, "500 Internal Server Error",
                         _("Unable to unpack archive"))
+
+    os.unlink(archive.name)
 
     files = os.listdir(crashdir)
 
@@ -115,7 +119,6 @@ def application(environ, start_response):
             return response(start_response, "403 Forbidden",
                             _("Symlinks are not allowed to be in" \
                               " the archive"))
-
 
     for required_file in REQUIRED_FILES:
         if not required_file in files:
