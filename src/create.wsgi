@@ -83,6 +83,11 @@ def application(environ, start_response):
         return response(start_response, "500 Internal Server Error",
                         _("Unable to create new task"))
 
+    if len(get_active_tasks()) > CONFIG["MaxParallelTasks"]:
+        task.remove()
+        return response(start_response, "503 Service Unavailable",
+                        _("Retrace server is fully loaded at the moment"))
+
     try:
         crashdir = os.path.join(task.get_savedir(), "crash")
         os.mkdir(crashdir)
