@@ -220,21 +220,6 @@ def run_gdb(savedir):
 
     return backtrace
 
-def gen_task_password(taskdir):
-    generator = random.SystemRandom()
-    taskpass = ""
-    for j in xrange(CONFIG["TaskPassLength"]):
-        taskpass += generator.choice(TASKPASS_ALPHABET)
-
-    try:
-        passfile = open("%s/password" % taskdir, "w")
-        passfile.write(taskpass)
-        passfile.close()
-    except:
-        return None
-
-    return taskpass
-
 def get_task_est_time(taskdir):
     return 180
 
