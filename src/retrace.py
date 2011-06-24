@@ -27,6 +27,7 @@ INPUT_LANG_PARSER = re.compile("^([a-z]{2}([_\-][A-Z]{2})?)(,.*)?$")
 #characters allowed by Fedora Naming Guidelines
 INPUT_PACKAGE_PARSER = re.compile("^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\-\.\_\+]+$")
 
+CORE_ARCH_PARSER = re.compile("core file .*(x86-64|80386)")
 PACKAGE_PARSER = re.compile("^(.+)-([0-9]+(\.[0-9]+)*-[0-9]+)\.([^-]+)$")
 DF_OUTPUT_PARSER = re.compile("^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
 DU_OUTPUT_PARSER = re.compile("^([0-9]+)")
@@ -156,12 +157,12 @@ def unpacked_size(archive, mime):
 def guess_arch(coredump_path):
     child = Popen(["file", coredump_path], stdout=PIPE)
     output = child.communicate()[0]
-
-    if "x86-64" in output:
-        return "x86_64"
-
-    if "80386" in output:
-        return "i386"
+    match = CORE_ARCH_PARSER.search(output)
+    if match:
+        if match.group(1) == "80386":
+            return "i386"
+        elif match.group(1) == "x86-64":
+            return "x86_64"
 
     return None
 
