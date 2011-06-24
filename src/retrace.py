@@ -239,23 +239,18 @@ def response(start_response, status, body="", extra_headers=[]):
 
 def get_active_tasks():
     tasks = []
-    if CONFIG["UseWorkDir"]:
-        tasksdir = CONFIG["WorkDir"]
-    else:
-        tasksdir = CONFIG["SaveDir"]
 
-    for filename in os.listdir(tasksdir):
+    for filename in os.listdir(CONFIG["SaveDir"]):
         if len(filename) != CONFIG["TaskIdLength"]:
             continue
 
         try:
-            taskid = int(filename)
+            task = RetraceTask(int(filename))
         except:
             continue
 
-        path = "%s/%s" % (tasksdir, filename)
-        if os.path.isdir(path) and not os.path.isfile("%s/retrace_log" % path):
-            tasks.append(taskid)
+        if not task.has_log():
+            tasks.append(task.get_taskid())
 
     return tasks
 
