@@ -12,7 +12,14 @@ from subprocess import *
 GETTEXT_DOMAIN = "retrace-server"
 
 REQUIRED_FILES = ["coredump", "executable", "package"]
-ALLOWED_FILES = ["coredump", "executable", "package", "os_release", "release"]
+# filename: max_size (<= 0 unlimited)
+ALLOWED_FILES = {
+  "coredump": 0,
+  "executable": 64,
+  "package": 128,
+  "os_release": 128,
+  "release": 128,
+}
 
 DF_BIN = "/bin/df"
 DU_BIN = "/usr/bin/du"

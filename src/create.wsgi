@@ -108,17 +108,32 @@ def application(environ, start_response):
     files = os.listdir(crashdir)
 
     for f in files:
-        if not f in ALLOWED_FILES:
-            task.remove()
-            return response(start_response, "403 Forbidden",
-                            _("File '%s' is not allowed to be in" \
-                              " the archive") % f)
+        filepath = os.path.join(crashdir, f)
 
-        if os.path.islink(os.path.join(crashdir, f)):
+        if os.path.islink(filepath):
             task.remove()
             return response(start_response, "403 Forbidden",
                             _("Symlinks are not allowed to be in" \
                               " the archive"))
+
+        allowed = False
+        for filename in ALLOWED_FILES.keys():
+            if f != filename:
+                continue
+
+            allowed = True
+            maxsize = ALLOWED_FILES[filename]
+
+            if maxsize > 0 and os.path.getsize(filepath) > maxsize:
+                task.remove()
+                return response(start_response, "403 Forbidden",
+                                _("The '%s' file is larger than expected") % f)
+
+        if not allowed:
+            task.remove()
+            return response(start_response, "403 Forbidden",
+                            _("File '%s' is not allowed to be in" \
+                              " the archive") % f)
 
     for required_file in REQUIRED_FILES:
         if not required_file in files:
