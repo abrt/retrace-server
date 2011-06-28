@@ -9,6 +9,8 @@ Group: Applications/System
 URL: https://fedorahosted.org/abrt/wiki/AbrtRetraceServer
 Source: https://fedorahosted.org/released/%{name}/%{name}-%{version}.tar.gz
 
+BuildArch: noarch
+
 BuildRequires: intltool
 BuildRequires: libtool
 BuildRequires: texinfo
