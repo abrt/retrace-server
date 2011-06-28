@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import sys
 from retrace import *
 
@@ -51,6 +53,18 @@ if __name__ == "__main__":
         sys.stderr.write("Task '%s' does not exist.\n" % taskid)
         sys.exit(13)
 
+    # fork to background
+    try:
+        pid = os.fork()
+    except:
+        sys.stderr.write("Unable to fork")
+        sys.exit(14)
+
+    # parent - kill
+    if pid != 0:
+        sys.exit(0)
+
+    # child - continue
     task.set_status(STATUS_ANALYZE)
     log += "%s " % STATUS[STATUS_ANALYZE]
 
@@ -190,10 +204,10 @@ if __name__ == "__main__":
     task.set_status(STATUS_INIT)
     log += "%s " % STATUS[STATUS_INIT]
 
-    retrace_run(25, ["mock", "init", "--configdir", task.get_savedir()])
-    retrace_run(26, ["mock", "--configdir", task.get_savedir(), "--copyin",
+    retrace_run(25, ["/usr/bin/mock", "init", "--configdir", task.get_savedir()])
+    retrace_run(26, ["/usr/bin/mock", "--configdir", task.get_savedir(), "--copyin",
                      crashdir, "/var/spool/abrt/crash"])
-    retrace_run(27, ["mock", "--configdir", task.get_savedir(), "shell",
+    retrace_run(27, ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell",
                      "--", "chgrp", "-R", "mockbuild", "/var/spool/abrt/crash"])
 
     log += "OK\n"

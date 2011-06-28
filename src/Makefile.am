@@ -16,15 +16,9 @@ man1_MANS = ${MAN_TXT:%.txt=%.1}
 
 CLEANFILES = $(man1_MANS)
 
-bin_PROGRAMS = retrace-server-worker
-retrace_server_worker_SOURCES = worker.c
-
-dist_bin_SCRIPTS = retrace-server-cleanup retrace-server-reposync coredump2packages
+dist_bin_SCRIPTS = retrace-server-cleanup retrace-server-reposync retrace-server-worker coredump2packages
 
 python_PYTHON = retrace.py
-
-worker_PYTHON = worker.py
-workerdir = $(datadir)/retrace-server
 
 interface_PYTHON = backtrace.wsgi create.wsgi log.wsgi settings.wsgi status.wsgi
 # interfacedir should probably be $$(pkgdatadir)/retrace

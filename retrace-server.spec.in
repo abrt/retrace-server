@@ -81,7 +81,7 @@ fi
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/log/%{name}
 %dir %attr(0775,retrace,apache) %{_localstatedir}/spool/%{name}
 %dir %{_datadir}/%{name}
-%caps(cap_setuid=ep) %{_bindir}/%{name}-worker
+%{_bindir}/%{name}-worker
 %{_bindir}/%{name}-cleanup
 %{_bindir}/%{name}-reposync
 %{_bindir}/coredump2packages

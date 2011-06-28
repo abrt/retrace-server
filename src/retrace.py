@@ -204,13 +204,13 @@ def run_gdb(savedir):
     if '"' in executable or "'" in executable:
         raise Exception, "Executable contains forbidden characters"
 
-    chmod = call(["mock", "shell", "--configdir", savedir,
+    chmod = call(["/usr/bin/mock", "shell", "--configdir", savedir,
                   "--", "/bin/chmod", "777", "'%s'" % executable])
 
     if chmod != 0:
         raise Exception, "Unable to chmod the executable"
 
-    child = Popen(["mock", "shell", "--configdir", savedir,
+    child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
                    "--", "su", "mockbuild", "-c",
                    "\" gdb -batch"
                    " -ex 'file %s'"
@@ -521,7 +521,7 @@ class RetraceTask:
             if os.path.isfile(os.path.join(self._savedir, "default.cfg")) and \
                os.path.isfile(os.path.join(self._savedir, "site-defaults.cfg")) and \
                os.path.isfile(os.path.join(self._savedir, "logging.ini")):
-                retcode = call(["mock", "--configdir", self._savedir, "--scrub=all"],
+                retcode = call(["/usr/bin/mock", "--configdir", self._savedir, "--scrub=all"],
                                stdout=null, stderr=null)
 
         for f in os.listdir(self._savedir):
