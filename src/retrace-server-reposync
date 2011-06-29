@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import grp
 import pwd
 import sys
 from retrace import *
@@ -10,6 +11,7 @@ sys.path.insert(0, "/usr/share/retrace-server")
 from plugins import *
 
 TARGET_USER = "retrace"
+TARGET_GROUP = "retrace"
 
 if __name__ == "__main__":
     # parse arguments
@@ -28,14 +30,14 @@ if __name__ == "__main__":
 
     # drop privilegies if possible
     try:
+        gr = grp.getgrnam(TARGET_GROUP)
+        os.setgid(gr.gr_gid)
         pw = pwd.getpwnam(TARGET_USER)
-        os.setgid(pw.pw_gid)
         os.setuid(pw.pw_uid)
-        print "Privilegies set to '%s'." % TARGET_USER
-    except KeyError:
-        print "User '%s' does not exist. Running with default privilegies." % TARGET_USER
-    except OSError:
-        print "Unable to switch UID or GID. Running with default privilegies."
+        print "Privilegies set to '%s:%s'." % (TARGET_USER, TARGET_GROUP)
+    except:
+        print "Unable to change privileges to '%s:%s'. Exitting..." % (TARGET_USER, TARGET_GROUP)
+        sys.exit(6)
 
     # load plugin
     plugin = None
