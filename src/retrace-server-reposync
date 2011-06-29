@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     null = open("/dev/null", "w")
 
-    targetdir = "%s/%s-%s-%s" % (CONFIG["RepoDir"], distribution, version, arch)
+    targetdir = os.path.join(CONFIG["RepoDir"], "%s-%s-%s" % (distribution, version, arch))
 
     # run rsync
     for repo in plugin.repos:
@@ -77,10 +77,11 @@ if __name__ == "__main__":
             if repourl.startswith("rsync://"):
                 files = [repourl]
             else:
+                # folder in FS
                 files = []
                 try:
                     for package in os.listdir(repourl):
-                        files.append("%s/%s" % (repourl, package))
+                        files.append(os.path.join(repourl, package))
                 except Exception as ex:
                     print "Error: %s. Trying another mirror..." % ex
                     continue
