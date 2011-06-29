@@ -34,7 +34,7 @@ if __name__ == "__main__":
         os.setgid(gr.gr_gid)
         pw = pwd.getpwnam(TARGET_USER)
         os.setuid(pw.pw_uid)
-        print "Privilegies set to '%s:%s'." % (TARGET_USER, TARGET_GROUP)
+        print "Privileges set to '%s:%s'." % (TARGET_USER, TARGET_GROUP)
     except:
         print "Unable to change privileges to '%s:%s'. Exitting..." % (TARGET_USER, TARGET_GROUP)
         sys.exit(6)
