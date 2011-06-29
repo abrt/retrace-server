@@ -53,6 +53,11 @@ if __name__ == "__main__":
         sys.stderr.write("Task '%s' does not exist.\n" % taskid)
         sys.exit(13)
 
+    if task.has_status():
+        sys.stderr.write("%s has already been executed " \
+                         "for task '%d'.\n" % (sys.argv[0], taskid))
+        sys.exit(10)
+
     # fork to background
     try:
         pid = os.fork()
