@@ -3,7 +3,7 @@
 Summary: Application for remote coredump analysis
 Name: retrace-server
 Version: @PACKAGE_VERSION@
-Release: 2%{?dist}
+Release: 1%{?dist}
 License: GPLv2+
 Group: Applications/System
 URL: https://fedorahosted.org/abrt/wiki/AbrtRetraceServer
@@ -104,6 +104,17 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Wed Jun 29 2011 Michal Toman <mtoman@redhat.com> 1.2-1
+- add option to verify GPG signatures
+- make HTTPS optional
+- use RetraceTask class
+- validate input
+- limit allowed files
+- do not allow worker to start twice
+- ship cron configuration
+- do not require suid launcher
+- minor bug and typo fixes
+
 * Wed Jun 01 2011 Scott Dodson <sdodson@redhat.com> 1.1-2
 - Add asciidocs xmlto to BuildRequires
 * Wed Jun 01 2011 Michal Toman <mtoman@redhat.com> 1.1-1
