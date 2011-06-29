@@ -67,10 +67,17 @@ exit 0
 /sbin/install-info %{_infodir}/%{name} %{_infodir}/dir 2> /dev/null || :
 /usr/sbin/usermod -a -G mock apache 2> /dev/null || :
 
+#add disabled crontab entry to apache's crontab
+%define apache_crontab_entry "# 0 * * * * /usr/bin/retrace-server-cleanup >> /var/log/retrace-server/cleanup_error.log 2>&1"
+
+(crontab -u apache -l 2> /dev/null; echo %{apache_crontab_entry}) | crontab -u apache - 2> /dev/null
+
 %preun
 if [ "$1" = 0 ]
 then
     /sbin/install-info --delete %{_infodir}/retrace-server %{_infodir}/dir 2> /dev/null || :
+#remove retrace-server related entries from apache's crontab
+    (crontab -u apache -l 2> /dev/null | sed "/%{name}/d") | crontab -u apache - 2> /dev/null
 fi
 
 %files -f %{name}.lang
@@ -89,6 +96,7 @@ fi
 %{_bindir}/coredump2packages
 %{python_site}/retrace.py*
 %{_datadir}/%{name}/*
+%attr(0600,root,root) %{_localstatedir}/spool/cron/retrace
 %doc %{_mandir}/man1/%{name}-cleanup.1.gz
 %doc %{_mandir}/man1/%{name}-reposync.1.gz
 %doc %{_mandir}/man1/%{name}-worker.1.gz

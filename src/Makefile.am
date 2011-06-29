@@ -36,7 +36,10 @@ httpdconfdir = ${sysconfdir}/httpd/conf.d
 logrotate_DATA = retrace-server
 logrotatedir = ${sysconfdir}/logrotate.d
 
-EXTRA_DIST = $(man1_MANS) retrace-server.conf retrace-server-httpd.conf retrace-server.repo retrace-server
+crontab_DATA = retrace
+crontabdir = ${localstatedir}/spool/cron
+
+EXTRA_DIST = $(man1_MANS) retrace-server.conf retrace-server-httpd.conf retrace-server.repo retrace-server retrace
 
 # Apache config files can be owned by root, httpd just needs read
 # access.
