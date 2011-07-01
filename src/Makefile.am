@@ -1,4 +1,4 @@
-SUBDIRS = gpg plugins
+SUBDIRS = config gpg plugins
 
 MAN_TXT = \
     retrace-server-cleanup.txt \
@@ -24,24 +24,4 @@ interface_PYTHON = backtrace.wsgi create.wsgi log.wsgi settings.wsgi status.wsgi
 # interfacedir should probably be $$(pkgdatadir)/retrace
 interfacedir =  $(datadir)/retrace-server
 
-repo_DATA = retrace-server.repo
-repodir = ${sysconfdir}/yum.repos.d
-
-retraceconf_DATA = retrace-server.conf
-retraceconfdir = ${sysconfdir}
-
-httpdconf_DATA = retrace-server-httpd.conf
-httpdconfdir = ${sysconfdir}/httpd/conf.d
-
-logrotate_DATA = retrace-server
-logrotatedir = ${sysconfdir}/logrotate.d
-
-crontab_DATA = retrace
-crontabdir = ${localstatedir}/spool/cron
-
-EXTRA_DIST = $(man1_MANS) retrace-server.conf retrace-server-httpd.conf retrace-server.repo retrace-server retrace
-
-# Apache config files can be owned by root, httpd just needs read
-# access.
-#install-data-hook:
-#       chown apache:apache $(DESTDIR)$(httpdconfdir)/retrace_httpd.conf
+EXTRA_DIST = $(man1_MANS)

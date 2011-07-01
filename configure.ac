@@ -83,6 +83,7 @@ AC_CONFIG_FILES([
 	doc/Makefile
 	po/Makefile.in
 	src/Makefile
+	src/config/Makefile
 	src/gpg/Makefile
 	src/plugins/Makefile
 ])
