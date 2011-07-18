@@ -141,6 +141,11 @@ def application(environ, start_response):
             return response(start_response, "403 Forbidden",
                             _("Required file '%s' is missing") % required_file)
 
+    if "X-Task-Type" in request.headers:
+        task.set_type(request.headers["X-Task-Type"])
+    else:
+        task.set_type(TASK_RETRACE)
+
     call(["/usr/bin/retrace-server-worker", "%d" % task.get_taskid()])
 
     return response(start_response, "201 Created", "",

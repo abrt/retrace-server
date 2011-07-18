@@ -14,7 +14,8 @@ def fail(exitcode):
     global task, log
     task.set_status(STATUS_FAIL)
     task.set_log(log)
-    task.clean()
+    if task.get_type() != TASK_DEBUG:
+        task.clean()
     sys.exit(exitcode)
 
 def retrace_run(errorcode, cmd):
@@ -238,20 +239,21 @@ if __name__ == "__main__":
     # does not work at the moment
     chroot_size = 0
 
-    # clean up temporary data
-    task.set_status(STATUS_CLEANUP)
-    log += "%s " % STATUS[STATUS_CLEANUP]
+    if task.get_type() != TASK_DEBUG:
+        # clean up temporary data
+        task.set_status(STATUS_CLEANUP)
+        log += "%s " % STATUS[STATUS_CLEANUP]
 
-    task.clean()
+        task.clean()
 
-    # ignore error: workdir = savedir => workdir is not empty
-    if CONFIG["UseWorkDir"]:
-        try:
-            os.rmdir(workdir)
-        except:
-            pass
+        # ignore error: workdir = savedir => workdir is not empty
+        if CONFIG["UseWorkDir"]:
+            try:
+                os.rmdir(workdir)
+            except:
+                pass
 
-    log += "OK\n"
+        log += "OK\n"
 
     # save crash statistics
     task.set_status(STATUS_STATS)

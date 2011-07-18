@@ -27,6 +27,9 @@ GZIP_BIN = "/usr/bin/gzip"
 TAR_BIN = "/bin/tar"
 XZ_BIN = "/usr/bin/xz"
 
+TASK_RETRACE, TASK_DEBUG = xrange(2)
+TASK_TYPES = [TASK_RETRACE, TASK_DEBUG]
+
 #characters, numbers, dash (utf-8, iso-8859-2 etc.)
 INPUT_CHARSET_PARSER = re.compile("^([a-zA-Z0-9\-]+)(,.*)?$")
 #en_GB, sk-SK, cs, fr etc.
@@ -362,6 +365,7 @@ class RetraceTask:
     LOG_FILE = "retrace_log"
     PASSWORD_FILE = "password"
     STATUS_FILE = "status"
+    TYPE_FILE = "type"
 
     def __init__(self, taskid=None):
         """Creates a new task if taskid is None,
@@ -419,6 +423,31 @@ class RetraceTask:
     def get_age(self):
         """Returns the age of the task in hours."""
         return int(time.time() - os.path.getatime(self._savedir)) / 3600
+
+    def get_type(self):
+        """Returns task type. If TYPE_FILE is missing,
+        task is considered standard TASK_RETRACE."""
+        typefilename = os.path.join(self._savedir, RetraceTask.TYPE_FILE)
+        if not os.path.isfile(typefilename):
+            return TASK_RETRACE
+
+        with open(typefilename, "r") as typefile:
+            result = typefile.read()
+
+        return int(result)
+
+    def set_type(self, newtype):
+        """Atomically writes given type into TYPE_FILE."""
+        tmpfilename = os.path.join(self._savedir,
+                                   "%s.tmp" % RetraceTask.TYPE_FILE)
+        typefilename = os.path.join(self._savedir, RetraceTask.TYPE_FILE)
+        with open(tmpfilename, "w") as tmpfile:
+            if newtype in TASK_TYPES:
+                tmpfile.write("%d" % newtype)
+            else:
+                tmpfile.write("%d" % TASK_RETRACE)
+
+        os.rename(tmpfilename, typefilename)
 
     def has_backtrace(self):
         """Verifies whether BACKTRACE_FILE is present in the task directory."""
