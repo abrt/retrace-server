@@ -38,12 +38,57 @@ if test -z "$PYTHON"; then
     exit 1
 fi
 
+AC_PATH_PROG([DF], [df], [no])
+[if test "$DF" = "no"]
+[then]
+    [echo "The df program was not found in the search path. Please ensure"]
+    [echo "that it is installed and its directory is included in the search path."]
+    [echo "Then run configure again before attempting to build Retrace server."]
+    [exit 1]
+[fi]
+
+AC_PATH_PROG([DU], [du], [no])
+[if test "$DU" = "no"]
+[then]
+    [echo "The du program was not found in the search path. Please ensure"]
+    [echo "that it is installed and its directory is included in the search path."]
+    [echo "Then run configure again before attempting to build Retrace server."]
+    [exit 1]
+[fi]
+
+AC_PATH_PROG([GZIP], [gzip], [no])
+[if test "$GZIP" = "no"]
+[then]
+    [echo "The gzip program was not found in the search path. Please ensure"]
+    [echo "that it is installed and its directory is included in the search path."]
+    [echo "Then run configure again before attempting to build Retrace server."]
+    [exit 1]
+[fi]
+
+AC_PATH_PROG([TAR], [tar], [no])
+[if test "$TAR" = "no"]
+[then]
+    [echo "The tar program was not found in the search path. Please ensure"]
+    [echo "that it is installed and its directory is included in the search path."]
+    [echo "Then run configure again before attempting to build Retrace server."]
+    [exit 1]
+[fi]
+
+AC_PATH_PROG([XZ], [xz], [no])
+[if test "$XZ" = "no"]
+[then]
+    [echo "The xz program was not found in the search path. Please ensure"]
+    [echo "that it is installed and its directory is included in the search path."]
+    [echo "Then run configure again before attempting to build Retrace server."]
+    [exit 1]
+[fi]
+
 AC_PATH_PROG([ASCIIDOC], [asciidoc], [no])
 [if test "$ASCIIDOC" = "no"]
 [then]
     [echo "The asciidoc program was not found in the search path. Please ensure"]
     [echo "that it is installed and its directory is included in the search path."]
-    [echo "Then run configure again before attempting to build ABRT."]
+    [echo "Then run configure again before attempting to build Retrace server."]
     [exit 1]
 [fi]
 
@@ -52,7 +97,7 @@ AC_PATH_PROG([XMLTO], [xmlto], [no])
 [then]
     [echo "The xmlto program was not found in the search path. Please ensure"]
     [echo "that it is installed and its directory is included in the search path."]
-    [echo "Then run configure again before attempting to build ABRT."]
+    [echo "Then run configure again before attempting to build Retrace server."]
     [exit 1]
 [fi]
 
@@ -86,6 +131,7 @@ AC_CONFIG_FILES([
 	src/config/Makefile
 	src/gpg/Makefile
 	src/plugins/Makefile
+	src/lib/Makefile
 ])
 
 AC_OUTPUT

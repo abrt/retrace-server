@@ -1,4 +1,4 @@
-SUBDIRS = config gpg plugins
+SUBDIRS = config gpg lib plugins
 
 MAN_TXT = \
     retrace-server-cleanup.txt \
@@ -17,8 +17,6 @@ man1_MANS = ${MAN_TXT:%.txt=%.1}
 CLEANFILES = $(man1_MANS)
 
 dist_bin_SCRIPTS = retrace-server-cleanup retrace-server-reposync retrace-server-worker coredump2packages
-
-python_PYTHON = retrace.py
 
 interface_PYTHON = backtrace.wsgi create.wsgi log.wsgi settings.wsgi status.wsgi
 # interfacedir should probably be $$(pkgdatadir)/retrace

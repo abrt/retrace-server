@@ -8,6 +8,7 @@ import sqlite3
 import time
 from webob import Request
 from subprocess import *
+from config import *
 
 GETTEXT_DOMAIN = "retrace-server"
 
@@ -20,12 +21,6 @@ ALLOWED_FILES = {
   "os_release": 128,
   "release": 128,
 }
-
-DF_BIN = "/bin/df"
-DU_BIN = "/usr/bin/du"
-GZIP_BIN = "/usr/bin/gzip"
-TAR_BIN = "/bin/tar"
-XZ_BIN = "/usr/bin/xz"
 
 TASK_RETRACE, TASK_DEBUG = xrange(2)
 TASK_TYPES = [TASK_RETRACE, TASK_DEBUG]

@@ -94,7 +94,7 @@ fi
 %{_bindir}/%{name}-cleanup
 %{_bindir}/%{name}-reposync
 %{_bindir}/coredump2packages
-%{python_site}/retrace.py*
+%{python_site}/retrace/*
 %{_datadir}/%{name}/*
 %attr(0600,root,root) %{_localstatedir}/spool/cron/retrace
 %doc %{_mandir}/man1/%{name}-cleanup.1.gz
