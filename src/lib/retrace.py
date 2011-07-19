@@ -195,7 +195,7 @@ def parse_http_gettext(lang, charset):
 
 def run_gdb(savedir):
     #exception is caught on the higher level
-    exec_file = open("%s/crash/executable" % savedir, "r")
+    exec_file = open(os.path.join(savedir, "crash", "executable"), "r")
     executable = exec_file.read()
     exec_file.close()
 
@@ -308,7 +308,7 @@ def kill_process_and_childs(process_id, ps_output=None):
 
 def init_crashstats_db():
     try:
-        con = sqlite3.connect("%s/%s" % (CONFIG["SaveDir"], CONFIG["DBFile"]))
+        con = sqlite3.connect(os.path.join(CONFIG["SaveDir"], CONFIG["DBFile"]))
         query = con.cursor()
         query.execute("""
           CREATE TABLE IF NOT EXISTS
@@ -334,7 +334,7 @@ def init_crashstats_db():
 
 def save_crashstats(crashstats):
     try:
-        con = sqlite3.connect("%s/%s" % (CONFIG["SaveDir"], CONFIG["DBFile"]))
+        con = sqlite3.connect(os.path.join(CONFIG["SaveDir"], CONFIG["DBFile"]))
         query = con.cursor()
         query.execute("""
           INSERT INTO retracestats(taskid, package, version, release, arch,
