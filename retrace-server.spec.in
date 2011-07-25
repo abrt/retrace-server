@@ -19,7 +19,7 @@ BuildRequires: xmlto
 
 %{?el6:Requires: python-argparse}
 Requires: rsync
-Requires: mock
+Requires: mock >= 1.1.11
 Requires: xz
 Requires: elfutils
 Requires: createrepo
