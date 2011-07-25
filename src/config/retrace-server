@@ -1,4 +1,4 @@
-/var/log/retrace-server/* {
+/var/log/retrace-server/*.log {
     missingok
     notifempty
     weekly
