@@ -63,56 +63,52 @@ if __name__ == "__main__":
 
     null = open("/dev/null", "w")
 
-    targetdir = os.path.join(CONFIG["RepoDir"], "%s-%s-%s" % (distribution, version, arch))
+    try:
+        targetdir = os.path.join(CONFIG["RepoDir"], "%s-%s-%s" % (distribution, version, arch))
 
-    # run rsync
-    for repo in plugin.repos:
-        retcode = -1
-        for mirror in repo:
-            repourl = mirror.replace("$ARCH", arch).replace("$VER", version)
+        # run rsync
+        for repo in plugin.repos:
+            retcode = -1
+            for mirror in repo:
+                repourl = mirror.replace("$ARCH", arch).replace("$VER", version)
 
-            print "Running rsync on '%s'..." % repourl,
-            sys.stdout.flush()
+                print "Running rsync on '%s'..." % repourl,
+                sys.stdout.flush()
 
-            if repourl.startswith("rsync://"):
-                files = [repourl]
-            else:
-                # folder in FS
-                files = []
-                try:
-                    for package in os.listdir(repourl):
-                        files.append(os.path.join(repourl, package))
-                except Exception as ex:
-                    print "Error: %s. Trying another mirror..." % ex
-                    continue
+                if repourl.startswith("rsync://"):
+                    files = [repourl]
+                else:
+                    # folder in FS
+                    files = []
+                    try:
+                        for package in os.listdir(repourl):
+                            files.append(os.path.join(repourl, package))
+                    except Exception as ex:
+                        print "Error: %s. Trying another mirror..." % ex
+                        continue
 
-            retcode = call(["rsync", "-t"] + files + [targetdir], stdout=null, stderr=null)
+                retcode = call(["rsync", "-t"] + files + [targetdir], stdout=null, stderr=null)
 
-            if retcode == 0:
-                print "OK"
-                break
+                if retcode == 0:
+                    print "OK"
+                    break
 
-            print "Error. Trying another mirror..."
+                print "Error. Trying another mirror..."
 
-        if retcode != 0:
-            print "No more mirrors to try."
+            if retcode != 0:
+                print "No more mirrors to try."
 
-    # run createrepo
-    print "Running createrepo on '%s'..." % targetdir,
-    sys.stdout.flush()
+        # run createrepo
+        print "Running createrepo on '%s'..." % targetdir,
+        sys.stdout.flush()
 
-    retcode = call(["createrepo", targetdir], stdout=null, stderr=null)
-
-    null.close()
+        retcode = call(["createrepo", targetdir], stdout=null, stderr=null)
+    finally:
+        null.close()
+        unlock(lockfile)
 
     if retcode != 0:
         print "Failed"
-        unlock(lockfile)
         sys.exit(4)
 
     print "OK"
-
-    # remove lock
-    if not unlock(lockfile):
-        print "Unable to remove lock."
-        sys.exit(5)
