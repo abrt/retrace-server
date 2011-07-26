@@ -1,4 +1,5 @@
 import ConfigParser
+import errno
 import gettext
 import os
 import re
@@ -371,18 +372,27 @@ class RetraceTask:
             self._taskid = None
             generator = random.SystemRandom()
             for i in xrange(50):
-               taskid = generator.randint(pow(10, CONFIG["TaskIdLength"] - 1),
-                                          pow(10, CONFIG["TaskIdLength"]) - 1)
-               taskdir = os.path.join(CONFIG["SaveDir"], "%d" % taskid)
-               if not os.path.isdir(taskdir):
-                   self._taskid = taskid
-                   self._savedir = taskdir
-                   break
+                taskid = generator.randint(pow(10, CONFIG["TaskIdLength"] - 1),
+                                           pow(10, CONFIG["TaskIdLength"]) - 1)
+                taskdir = os.path.join(CONFIG["SaveDir"], "%d" % taskid)
+                try:
+                    os.mkdir(taskdir)
+                except OSError as ex:
+                    # dir exists, try another taskid
+                    if ex[0] == errno.EEXIST:
+                        continue
+                    # error - re-raise original exception
+                    else:
+                        raise ex
+                # directory created
+                else:
+                    self._taskid = taskid
+                    self._savedir = taskdir
+                    break
 
             if self._taskid is None:
                 raise Exception, "Unable to create new task"
 
-            os.mkdir(self._savedir)
             pwdfilepath = os.path.join(self._savedir, RetraceTask.PASSWORD_FILE)
             with open(pwdfilepath, "w") as pwdfile:
                 for i in xrange(CONFIG["TaskPassLength"]):
