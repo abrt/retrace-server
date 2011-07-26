@@ -129,7 +129,7 @@ def read_config():
 
         try:
             CONFIG[key] = get("retrace", key)
-        except:
+        except NoOptionError:
             pass
 
 def free_space(path):
