@@ -204,7 +204,7 @@ def run_gdb(savedir):
         raise Exception, "Executable contains forbidden characters"
 
     chmod = call(["/usr/bin/mock", "shell", "--configdir", savedir,
-                  "--", "/bin/chmod", "777", "'%s'" % executable])
+                  "--", "/bin/chmod", "a+r", "'%s'" % executable])
 
     if chmod != 0:
         raise Exception, "Unable to chmod the executable"
