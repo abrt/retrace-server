@@ -94,11 +94,14 @@ STATUS = [
 
 def lock(lockfile):
     try:
-        if not os.path.isfile(lockfile):
-            open(lockfile, "w").close()
-    except:
-        return False
+        fd = os.open(lockfile, os.O_CREAT | os.O_EXCL, 0600)
+    except OSError as ex:
+        if ex[0] == errno.EEXIST:
+            return False
+        else:
+            raise ex
 
+    os.close(fd)
     return True
 
 def unlock(lockfile):
