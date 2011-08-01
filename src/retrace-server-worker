@@ -92,7 +92,7 @@ if __name__ == "__main__":
     # read package file
     try:
         with open(os.path.join(crashdir, "package"), "r") as package_file:
-            crash_package = package_file.read()
+            crash_package = package_file.read(ALLOWED_FILES["package"])
     except Exception as ex:
         log += "Error\nUnable to read crash package from 'package' file: %s.\n" % ex
         fail(17)
@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     try:
         with open(release_path, "r") as release_file:
-            release = release_file.read()
+            release = release_file.read(ALLOWED_FILES["os_release"])
 
         version = distribution = None
         for plugin in PLUGINS:

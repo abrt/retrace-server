@@ -200,7 +200,7 @@ def parse_http_gettext(lang, charset):
 def run_gdb(savedir):
     #exception is caught on the higher level
     exec_file = open(os.path.join(savedir, "crash", "executable"), "r")
-    executable = exec_file.read()
+    executable = exec_file.read(ALLOWED_FILES["executable"])
     exec_file.close()
 
     if '"' in executable or "'" in executable:
@@ -420,7 +420,7 @@ class RetraceTask:
         """Returns task's password"""
         pwdfilename = os.path.join(self._savedir, RetraceTask.PASSWORD_FILE)
         with open(pwdfilename, "r") as pwdfile:
-            pwd = pwdfile.read()
+            pwd = pwdfile.read(CONFIG["TaskPassLength"])
 
         return pwd
 
@@ -440,7 +440,8 @@ class RetraceTask:
             return TASK_RETRACE
 
         with open(typefilename, "r") as typefile:
-            result = typefile.read()
+            # typicaly one digit, max 8B
+            result = typefile.read(8)
 
         return int(result)
 
@@ -470,7 +471,8 @@ class RetraceTask:
 
         btfilename = os.path.join(self._savedir, RetraceTask.BACKTRACE_FILE)
         with open(btfilename, "r") as btfile:
-            bt = btfile.read()
+            # max 4 MB
+            bt = btfile.read(1 << 22)
 
         return bt
 
@@ -499,7 +501,8 @@ class RetraceTask:
 
         logfilename = os.path.join(self._savedir, RetraceTask.LOG_FILE)
         with open(logfilename, "r") as logfile:
-            log = logfile.read()
+            # max 4 MB
+            log = logfile.read(1 << 22)
 
         return log
 
@@ -535,7 +538,8 @@ class RetraceTask:
 
         statusfilename = os.path.join(self._savedir, RetraceTask.STATUS_FILE)
         with open(statusfilename, "r") as statusfile:
-            status = statusfile.read()
+            # typically one digit, max 8B
+            status = statusfile.read(8)
 
         return int(status)
 
