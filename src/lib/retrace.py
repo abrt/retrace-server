@@ -264,52 +264,6 @@ def get_active_tasks():
 
     return tasks
 
-def run_ps():
-    child = Popen(["ps", "-eo", "pid,ppid,etime,cmd"], stdout=PIPE)
-    lines = child.communicate()[0].split("\n")
-
-    return lines
-
-def get_running_tasks(ps_output=None):
-    if not ps_output:
-        ps_output = run_ps()
-
-    result = []
-
-    for line in ps_output:
-        match = WORKER_RUNNING_PARSER.match(line)
-        if match:
-            result.append((int(match.group(1)), int(match.group(3)), match.group(2)))
-
-    return result
-
-def get_process_tree(pid, ps_output):
-    result = [pid]
-
-    parser = re.compile("^([0-9]+)[ \t]+(%d).*$" % pid)
-
-    for line in ps_output:
-        match = parser.match(line)
-        if match:
-            pid = int(match.group(1))
-            result.extend(get_process_tree(pid, ps_output))
-
-    return result
-
-def kill_process_and_childs(process_id, ps_output=None):
-    result = True
-
-    if not ps_output:
-        ps_output = run_ps()
-
-    for pid in get_process_tree(process_id, ps_output):
-        try:
-            os.kill(pid, 9)
-        except OSError, ex:
-            result = False
-
-    return result
-
 def init_crashstats_db():
     try:
         con = sqlite3.connect(os.path.join(CONFIG["SaveDir"], CONFIG["DBFile"]))
