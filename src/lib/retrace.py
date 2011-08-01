@@ -38,7 +38,7 @@ PACKAGE_PARSER = re.compile("^(.+)-([0-9]+(\.[0-9]+)*-[0-9]+)\.([^-]+)$")
 DF_OUTPUT_PARSER = re.compile("^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
 DU_OUTPUT_PARSER = re.compile("^([0-9]+)")
 URL_PARSER = re.compile("^/([0-9]+)/?")
-WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]+.*worker\.py ([0-9]+)$")
+WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]+.*retrace-server-worker ([0-9]+)$")
 
 HANDLE_ARCHIVE = {
   "application/x-xz-compressed-tar": {
