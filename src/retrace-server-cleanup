@@ -4,6 +4,8 @@ import os
 import sys
 from retrace import *
 
+WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]+.*retrace-server-worker ([0-9]+)$")
+
 def run_ps():
     child = Popen(["ps", "-eo", "pid,ppid,etime,cmd"], stdout=PIPE)
     lines = child.communicate()[0].split("\n")
