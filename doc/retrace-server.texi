@@ -59,7 +59,7 @@ with the debugging symbols are large, requiring a lot of free space and
 causing problems with downloading them via unreliable internet
 connection.
 
-Retrace server solves these problems for Fedora 14+ and RHEL 6+
+Retrace server solves these problems for Fedora 15+ and RHEL 6+
 operating systems, and allows developers to analyze coredumps without
 having access to the machine where the crash occurred.
 
@@ -167,7 +167,10 @@ If the @var{Content-Length} value is greater than a limit set by
 default), then the server returns the @code{413 Request Entity Too
 Large} HTTP error code. The limit can be checked by calling
 @indicateurl{https://server/settings}. The limit is changeable
-from the server configuration file.
+from the server configuration file. Client is allowed to specify
+an optional @var{X-Task-Type} header, identifying the task type.
+At the moment only @code{TASK_RETRACE} and @code{TASK_DEBUG} are
+supported.
 
 If unpacking the archive would result in having the free disk space
 under certain limit in the @file{/var/spool/retrace-server} directory, the
@@ -396,6 +399,13 @@ expected that any combination of packages user might use in a released
 system satisfies the needs of some version of GDB. Yum selects the
 newest possible version which has its requirements satisfied.
 
+After finishing the task (by success or failure)
+@command{retrace-server-worker} cleans up the @command{mock} chroot
+and deletes the crash data uploaded by the user. The only exception
+is @code{TASK_DEBUG} task type, which is designed to keep crash
+(including coredump) and chroot on the server for deeper
+Retrace server code debugging.
+
 @node Task cleanup
 @chapter Task cleanup
 
@@ -439,8 +449,9 @@ supposed to solve.
 The @command{retrace-server-reposync} downloads packages from Fedora
 repositories, and it does not delete older versions of the packages. The
 retrace server administrator is supposed to call this script using cron
-approximately every 6 hours. The script uses @command{rsync} to get the
-packages and @command{createrepo} to generate respository metadata.
+approximately every 6 hours. The script uses @command{rsync}
+or @command{reposync} to get the packages (depending on the protocol)
+and @command{createrepo} to generate respository metadata.
 
 The packages are downloaded to a local repository in
 @file{/var/cache/retrace-server/}. The location can be changed via the
