@@ -26,6 +26,7 @@ Requires: createrepo
 Requires: mod_wsgi
 Requires: mod_ssl
 Requires: python-webob
+Requires: yum-utils
 Requires(preun): /sbin/install-info
 Requires(post): /sbin/install-info
 

@@ -5,6 +5,7 @@ import os
 import grp
 import pwd
 import sys
+import tempfile
 from retrace import *
 
 sys.path.insert(0, "/usr/share/retrace-server")
@@ -50,7 +51,8 @@ if __name__ == "__main__":
         print "Unknown distribution: '%s'" % distribution
         sys.exit(1)
 
-    lockfile = "/tmp/retrace-reposync-lock-%s-%s-%s" % (distribution, version, arch)
+    targetid = "%s-%s-%s" % (distribution, version, arch)
+    lockfile = "/tmp/retrace-reposync-lock-%s" % targetid
 
     if os.path.isfile(lockfile):
         print "Another process with repository download is running."
@@ -64,7 +66,7 @@ if __name__ == "__main__":
     null = open("/dev/null", "w")
 
     try:
-        targetdir = os.path.join(CONFIG["RepoDir"], "%s-%s-%s" % (distribution, version, arch))
+        targetdir = os.path.join(CONFIG["RepoDir"], targetid)
 
         # run rsync
         for repo in plugin.repos:
@@ -72,22 +74,41 @@ if __name__ == "__main__":
             for mirror in repo:
                 repourl = mirror.replace("$ARCH", arch).replace("$VER", version)
 
-                print "Running rsync on '%s'..." % repourl,
+                print "Downloading packages from '%s'..." % repourl,
                 sys.stdout.flush()
 
-                if repourl.startswith("rsync://"):
-                    files = [repourl]
-                else:
-                    # folder in FS
-                    files = []
-                    try:
-                        for package in os.listdir(repourl):
-                            files.append(os.path.join(repourl, package))
-                    except Exception as ex:
-                        print "Error: %s. Trying another mirror..." % ex
-                        continue
+                if repourl.startswith("http://") or \
+                   repourl.startswith("https://") or \
+                   repourl.startswith("ftp://"):
+                    yumtmp = tempfile.NamedTemporaryFile(mode="w", delete=False,
+                                                         prefix="repo", suffix=".conf")
+                    yumtmp.write("[%s]\n" % targetid)
+                    yumtmp.write("name=%s\n" % targetid)
+                    yumtmp.write("baseurl=%s\n" % repourl)
+                    yumtmp.close()
+                    retcode = call(["reposync", "--repoid=%s" % targetid,
+                                    "--download_path=%s" % CONFIG["RepoDir"],
+                                    "--config=%s" % yumtmp.name],
+                                   stdout=null, stderr=null)
 
-                retcode = call(["rsync", "-t"] + files + [targetdir], stdout=null, stderr=null)
+                    try:
+                        os.unlink(yumtmp.name)
+                    except Exception as ex:
+                        print "Unable to unlink '%s': %s." % (yumtmp.name, ex)
+                else:
+                    if repourl.startswith("rsync://"):
+                        files = [repourl]
+                    else:
+                        # folder in FS
+                        files = []
+                        try:
+                            for package in os.listdir(repourl):
+                                files.append(os.path.join(repourl, package))
+                        except Exception as ex:
+                            print "Error: %s. Trying another mirror..." % ex
+                            continue
+
+                    retcode = call(["rsync", "-t"] + files + [targetdir], stdout=null, stderr=null)
 
                 if retcode == 0:
                     print "OK"
