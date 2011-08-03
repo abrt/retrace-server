@@ -102,7 +102,11 @@ if __name__ == "__main__":
         print "Running createrepo on '%s'..." % targetdir,
         sys.stdout.flush()
 
-        retcode = call(["createrepo", targetdir], stdout=null, stderr=null)
+        cmd = ["createrepo", targetdir]
+        if CONFIG["UseCreaterepoUpdate"]:
+            cmd.append("--update")
+
+        retcode = call(cmd, stdout=null, stderr=null)
     finally:
         null.close()
         unlock(lockfile)

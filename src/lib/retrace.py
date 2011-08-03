@@ -74,6 +74,7 @@ CONFIG = {
   "UseWorkDir": False,
   "RequireHTTPS": True,
   "RequireGPGCheck": True,
+  "UseCreaterepoUpdate": False,
   "DBFile": "stats.db",
 }
 
