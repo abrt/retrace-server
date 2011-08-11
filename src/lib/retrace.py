@@ -8,6 +8,7 @@ import shutil
 import sqlite3
 import time
 from webob import Request
+from yum import YumBase
 from subprocess import *
 from config import *
 
@@ -55,6 +56,8 @@ HANDLE_ARCHIVE = {
     "size": (["ls", "-l"], re.compile("^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+([0-9]+).*$")),
   },
 }
+
+REPO_PREFIX = "retrace-"
 
 TASKPASS_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -182,6 +185,15 @@ def guess_release(package, plugins):
             return plugin.distribution, match.group(1)
 
     return None, None
+
+def get_supported_releases():
+    result = []
+    yb = YumBase()
+    for repo in yb.repos.repos:
+        if repo.startswith(REPO_PREFIX):
+            result.append(repo[len(REPO_PREFIX):])
+
+    return result
 
 def parse_http_gettext(lang, charset):
     result = lambda x: x
