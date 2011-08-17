@@ -1,15 +1,3 @@
-[retrace-fedora-14-i386]
-name=Fedora 14 - i386
-failovermethod=priority
-baseurl=file:///var/cache/retrace-server/fedora-14-i386/
-enabled=0
-
-[retrace-fedora-14-x86_64]
-name=Fedora 14 - x86_64
-failovermethod=priority
-baseurl=file:///var/cache/retrace-server/fedora-14-x86_64/
-enabled=0
-
 [retrace-fedora-15-i386]
 name=Fedora 15 - i386
 failovermethod=priority
@@ -20,4 +8,16 @@ enabled=0
 name=Fedora 15 - x86_64
 failovermethod=priority
 baseurl=file:///var/cache/retrace-server/fedora-15-x86_64/
+enabled=0
+
+[retrace-fedora-16-i386]
+name=Fedora 16 - i386
+failovermethod=priority
+baseurl=file:///var/cache/retrace-server/fedora-16-i386/
+enabled=0
+
+[retrace-fedora-16-x86_64]
+name=Fedora 16 - x86_64
+failovermethod=priority
+baseurl=file:///var/cache/retrace-server/fedora-16-x86_64/
 enabled=0
