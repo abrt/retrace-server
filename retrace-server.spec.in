@@ -68,10 +68,12 @@ exit 0
 /sbin/install-info %{_infodir}/%{name} %{_infodir}/dir 2> /dev/null || :
 /usr/sbin/usermod -a -G mock apache 2> /dev/null || :
 
+if [ "$1" = 1 ]
+then
 #add disabled crontab entry to apache's crontab
-%define apache_crontab_entry "# 0 * * * * /usr/bin/retrace-server-cleanup >> /var/log/retrace-server/cleanup_error.log 2>&1"
-
-(crontab -u apache -l 2> /dev/null; echo %{apache_crontab_entry}) | crontab -u apache - 2> /dev/null
+    %define apache_crontab_entry "# 0 * * * * /usr/bin/retrace-server-cleanup >> /var/log/retrace-server/cleanup_error.log 2>&1"
+    (crontab -u apache -l 2> /dev/null; echo %{apache_crontab_entry}) | crontab -u apache - 2> /dev/null
+fi
 
 %preun
 if [ "$1" = 0 ]
