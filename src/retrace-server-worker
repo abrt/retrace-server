@@ -6,14 +6,27 @@ from retrace import *
 sys.path.insert(0, "/usr/share/retrace-server/")
 from plugins import *
 
-log = None
+starttime = int(time.time())
+log = ""
 task = None
+stats = {
+  "taskid": None,
+  "package": None,
+  "version": None,
+  "arch": None,
+  "starttime": starttime,
+  "duration": None,
+  "coresize": None,
+  "status": STATUS_FAIL,
+}
 
 def fail(exitcode):
     "Kills script with given exitcode"
     global task, log
     task.set_status(STATUS_FAIL)
     task.set_log(log)
+    stats["duration"] = int(time.time()) - stats["starttime"]
+    save_crashstats(stats)
     if task.get_type() != TASK_DEBUG:
         task.clean()
     sys.exit(exitcode)
@@ -35,9 +48,6 @@ def retrace_run(errorcode, cmd):
     return output
 
 if __name__ == "__main__":
-    starttime = time.time()
-    log = ""
-
     if len(sys.argv) != 2:
         sys.stderr.write("Usage: %s task_id\n" % sys.argv[0])
         sys.exit(11)
@@ -71,6 +81,11 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # child - continue
+    stats["taskid"] = taskid
+
+    # get count of tasks running before starting
+    prerunning = len(get_active_tasks()) - 1
+
     task.set_status(STATUS_ANALYZE)
     log += "%s " % STATUS[STATUS_ANALYZE]
 
@@ -82,12 +97,20 @@ if __name__ == "__main__":
             log += "Error\nCrash directory does not contain required file '%s'.\n" % required_file
             fail(15)
 
+    corepath = os.path.join(crashdir, "coredump")
+    try:
+        stats["coresize"] = os.path.getsize(corepath)
+    except:
+        pass
+
     # read architecture from coredump
-    arch = guess_arch(os.path.join(crashdir, "coredump"))
+    arch = guess_arch(corepath)
 
     if not arch:
         log += "Error\nUnable to read architecture from 'coredump' file.\n"
         fail(16)
+
+    stats["arch"] = arch
 
     # read package file
     try:
@@ -101,6 +124,17 @@ if __name__ == "__main__":
     if not INPUT_PACKAGE_PARSER.match(crash_package):
         log += "Error\nInvalid package name: %s.\n" % crash_package
         fail(19)
+
+    pkgdata = parse_rpm_name(crash_package)
+    if not pkgdata["name"]:
+        log += "Error\nUnable to parse package name: %s.\n" % crash_package
+        fail(19)
+
+    stats["package"] = pkgdata["name"]
+    if pkgdata["epoch"] != 0:
+        stats["version"] = "%s:%s-%s" % (pkgdata["epoch"], pkgdata["version"], pkgdata["release"])
+    else:
+        stats["version"] = "%s-%s" % (pkgdata["version"], pkgdata["release"])
 
     # read release, distribution and version from release file
     release_path = os.path.join(crashdir, "os_release")
@@ -137,11 +171,10 @@ if __name__ == "__main__":
         log += "Error\nRelease '%s' is not supported.\n" % releaseid
         fail(19)
 
-    packages = crash_package
-
+    packages = [crash_package]
+    missing = []
     # read required packages from coredump
     try:
-        # ToDo: deal with not found build-ids
         child = Popen(["coredump2packages", os.path.join(crashdir, "coredump"),
                        "--repos=%s%s*" % (REPO_PREFIX, releaseid)],
                       stdout=PIPE)
@@ -155,10 +188,13 @@ if __name__ == "__main__":
             elif 0 == section:
                 crash_package_or_component = line.strip()
             elif 1 == section:
-                packages += " %s" % line.rstrip("\n")
+                packages.append(line.strip())
             elif 2 == section:
-                # Missing build ids
-                pass
+                soname, buildid = line.strip().split(" ", 1)
+                if not soname or soname == "-":
+                    soname = None
+                missing.append((soname, buildid))
+
     except Exception as ex:
         log += "Error\nUnable to obtain packages from 'coredump' file: %s.\n" % ex
         fail(20)
@@ -168,7 +204,7 @@ if __name__ == "__main__":
         with open(os.path.join(task.get_savedir(), "default.cfg"), "w") as mockcfg:
             mockcfg.write("config_opts['root'] = '%s'\n" % taskid)
             mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
-            mockcfg.write("config_opts['chroot_setup_cmd'] = '--skip-broken install %s shadow-utils gdb rpm'\n" % packages)
+            mockcfg.write("config_opts['chroot_setup_cmd'] = '--skip-broken install %s shadow-utils gdb rpm'\n" % " ".join(packages))
             mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
             mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
             mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
@@ -208,9 +244,6 @@ if __name__ == "__main__":
 
     log += "OK\n"
 
-    # get count of tasks running before starting
-    prerunning = len(get_active_tasks()) - 1
-
     # run retrace
     task.set_status(STATUS_INIT)
     log += "%s " % STATUS[STATUS_INIT]
@@ -242,7 +275,17 @@ if __name__ == "__main__":
     log += "OK\n"
 
     # does not work at the moment
-    chroot_size = 0
+    rootsize = 0
+    with open("/dev/null", "w") as null:
+        child = Popen(["/usr/bin/mock", "--configdir", task.get_savedir(), "shell",
+                       "--", "du", "-sb", "/"], stdout=PIPE, stderr=null)
+        output = child.communicate()[0]
+
+    for line in output.split("\n"):
+        match = DU_OUTPUT_PARSER.match(line)
+        if match:
+            rootsize = int(match.group(1))
+            break
 
     if task.get_type() != TASK_DEBUG:
         # clean up temporary data
@@ -264,39 +307,25 @@ if __name__ == "__main__":
     task.set_status(STATUS_STATS)
     log += "%s " % STATUS[STATUS_STATS]
 
-    duration = int(time.time() - starttime)
+    stats["duration"] = int(time.time()) - stats["starttime"]
+    stats["status"] = STATUS_SUCCESS
 
-    package_match = PACKAGE_PARSER.match(crash_package)
-    if not package_match:
-        package = crash_package
-        version = "unknown"
-        release = "unknown"
-    else:
-        package = package_match.group(1)
-        version = package_match.group(2)
-        release = package_match.group(4)
-
-    crashstats = {
-      "taskid": task.get_taskid(),
-      "package": package,
-      "version": version,
-      "release": release,
-      "arch": arch,
-      "starttime": int(starttime),
-      "duration": duration,
-      "prerunning": prerunning,
-      "postrunning": len(get_active_tasks()) - 1,
-      "chrootsize": chroot_size
-    }
-
-    if not init_crashstats_db() or not save_crashstats(crashstats):
-        log += "Error\n%s\n" % crashstats
-    else:
+    try:
+        con = init_crashstats_db()
+        statsid = save_crashstats(stats, con)
+        save_crashstats_success(statsid, prerunning,
+                                len(get_active_tasks()), rootsize, con)
+        save_crashstats_packages(statsid, packages[1:], con)
+        if missing:
+            save_crashstats_build_ids(statsid, missing, con)
+        con.close()
         log += "OK\n"
+    except Exception as ex:
+        log += "Error: %s\n" % ex
 
     # publish log => finish task
-    log += "Retrace took %d seconds.\n" % duration
-    log += STATUS[STATUS_SUCCESS]
+    log += "Retrace took %d seconds.\n" % stats["duration"]
+    log += "%s\n" % STATUS[STATUS_SUCCESS]
 
     task.set_log(log)
     task.set_status(STATUS_SUCCESS)

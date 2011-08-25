@@ -12,6 +12,7 @@ def application(environ, start_response):
                         _("You must use HTTPS"))
 
     if len(get_active_tasks()) >= CONFIG["MaxParallelTasks"]:
+        save_crashstats_reportfull(environ["REMOTE_ADDR"])
         return response(start_response, "503 Service Unavailable",
                         _("Retrace server is fully loaded at the moment"))
 
@@ -60,6 +61,7 @@ def application(environ, start_response):
                         _("Unable to create new task"))
 
     if len(get_active_tasks()) > CONFIG["MaxParallelTasks"]:
+        save_crashstats_reportfull(environ["REMOTE_ADDR"])
         os.unlink(archive.name)
         task.remove()
         return response(start_response, "503 Service Unavailable",
