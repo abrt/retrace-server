@@ -298,7 +298,7 @@ def parse_rpm_name(name):
 
     # arch
     match = ARCH_PARSER.match(name)
-    if match and match.group(2) in ["i386", "i586", "i686", "x86_64"]:
+    if match and match.group(2) in ["i386", "i586", "i686", "x86_64", "noarch"]:
         result["arch"] = match.group(2)
         name = name[:-len(match.group(1))]
 
