@@ -4,8 +4,11 @@ import argparse
 import os
 import grp
 import pwd
+import shutil
 import sys
 import tempfile
+import urllib2
+import yum
 from retrace import *
 
 sys.path.insert(0, "/usr/share/retrace-server")
@@ -13,6 +16,82 @@ from plugins import *
 
 TARGET_USER = "retrace"
 TARGET_GROUP = "retrace"
+
+BUFSIZE = 1 << 22 # 4 MB
+
+def sync_using_yum(targetid, repourl):
+    yumtmp = tempfile.NamedTemporaryFile(mode="w", delete=False,
+                                         prefix="repo", suffix=".conf")
+    yumtmp.write("[%s]\n" % targetid)
+    yumtmp.write("name=%s\n" % targetid)
+    yumtmp.write("baseurl=%s\n" % repourl)
+    yumtmp.close()
+
+    pkgdir = os.path.join(CONFIG["RepoDir"], targetid, "Packages")
+
+    try:
+        with open(os.path.join(CONFIG["LogDir"], "reposync_yum.log"), "a") as yumlog:
+            # Shut up yum!
+            old_stderr = sys.stderr
+            sys.stderr = yumlog
+
+            # BEGIN YUM
+            yb = yum.YumBase()
+            yb.doConfigSetup(fn=yumtmp.name)
+            if not yb.setCacheDir():
+                sys.stderr.write("Unable to initialize yum cache\n")
+                sys.stderr = old_stderr
+                return -1
+
+            cachedir = os.path.join(yb.repos._cachedir, targetid)
+            if os.path.isdir(cachedir):
+                shutil.rmtree(cachedir)
+                yb.setCacheDir()
+
+            for repo in yb.repos.listEnabled():
+                repo.disable()
+                repo.close()
+            yb.repos.repos[targetid].enable()
+            yb.repos.doSetup()
+
+            try:
+                yb.repos.populateSack()
+            except Exception as ex:
+                sys.stderr.write("[%s] %s\n" % (time.strftime("%Y-%m-%d %H:%M"), ex))
+                sys.stderr = old_stderr
+                return -1
+
+            packages = yb.pkgSack.returnPackages()
+            retcode = 0
+
+            for package in packages:
+                try:
+                    rpmname = package.remote_url.rsplit("/", 1)[1]
+                    pkgpath = os.path.join(pkgdir, rpmname)
+                    if not os.path.isfile(pkgpath) or os.path.getsize(pkgpath) != package.size:
+                        with open(pkgpath, "wb") as targetfile:
+                            url = urllib2.urlopen(package.remote_url)
+                            try:
+                                buf = url.read(BUFSIZE)
+                                while buf:
+                                    targetfile.write(buf)
+                                    buf = url.read(BUFSIZE)
+                            finally:
+                                url.close()
+                except Exception as ex:
+                    sys.stderr.write("[%s] Error downloading '%s': %s\n" % (time.strftime("%Y-%m-%d %H:%M"), rpmname, ex))
+                    retcode += 1
+            # END YUM
+    finally:
+        sys.stderr = old_stderr
+        try:
+            os.unlink(yumtmp.name)
+            shutil.rmtree(yb.repos.repos[targetid].cachedir)
+        except Exception as ex:
+            print "Unable to clean up: %s." % ex
+            return -1
+
+    return retcode
 
 if __name__ == "__main__":
     # parse arguments
@@ -67,6 +146,14 @@ if __name__ == "__main__":
 
     try:
         targetdir = os.path.join(CONFIG["RepoDir"], targetid)
+        pkgdir = os.path.join(targetdir, "Packages")
+
+        if not os.path.isdir(pkgdir):
+            os.makedirs(pkgdir)
+
+        for filename in os.listdir(targetdir):
+            if filename.endswith(".rpm"):
+                os.rename(os.path.join(targetdir, filename), os.path.join(pkgdir, filename))
 
         # run rsync
         for repo in plugin.repos:
@@ -80,21 +167,7 @@ if __name__ == "__main__":
                 if repourl.startswith("http://") or \
                    repourl.startswith("https://") or \
                    repourl.startswith("ftp://"):
-                    yumtmp = tempfile.NamedTemporaryFile(mode="w", delete=False,
-                                                         prefix="repo", suffix=".conf")
-                    yumtmp.write("[%s]\n" % targetid)
-                    yumtmp.write("name=%s\n" % targetid)
-                    yumtmp.write("baseurl=%s\n" % repourl)
-                    yumtmp.close()
-                    retcode = call(["reposync", "--repoid=%s" % targetid,
-                                    "--download_path=%s" % CONFIG["RepoDir"],
-                                    "--config=%s" % yumtmp.name],
-                                   stdout=null, stderr=null)
-
-                    try:
-                        os.unlink(yumtmp.name)
-                    except Exception as ex:
-                        print "Unable to unlink '%s': %s." % (yumtmp.name, ex)
+                    retcode = sync_using_yum(targetid, repourl)
                 else:
                     if repourl.startswith("rsync://"):
                         files = [repourl]
@@ -108,7 +181,7 @@ if __name__ == "__main__":
                             print "Error: %s. Trying another mirror..." % ex
                             continue
 
-                    retcode = call(["rsync", "-t"] + files + [targetdir], stdout=null, stderr=null)
+                    retcode = call(["rsync", "-t"] + files + [pkgdir], stdout=null, stderr=null)
 
                 if retcode == 0:
                     print "OK"
