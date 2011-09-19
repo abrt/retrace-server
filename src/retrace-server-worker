@@ -166,6 +166,9 @@ if __name__ == "__main__":
             log += "Failure\n"
             fail(18)
 
+    if "rawhide" in release.lower():
+        version = "rawhide"
+
     releaseid = "%s-%s-%s" % (distribution, version, arch)
     if not releaseid in get_supported_releases():
         log += "Error\nRelease '%s' is not supported.\n" % releaseid

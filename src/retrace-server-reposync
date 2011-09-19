@@ -4,6 +4,7 @@ import argparse
 import os
 import grp
 import pwd
+import rpm
 import shutil
 import sys
 import tempfile
@@ -92,6 +93,50 @@ def sync_using_yum(targetid, repourl):
             return -1
 
     return retcode
+
+def vercmp(ver1, ver2):
+    # ToDo: Involve epoch?
+    version, release = ver1.split("-", 1)
+    first = (None, version, release)
+    version, release = ver2.split("-", 1)
+    second = (None, version, release)
+
+    return rpm.labelCompare(first, second)
+
+def clean_rawhide_repo(release):
+    packages = {}
+    pkgdir = os.path.join(CONFIG["RepoDir"], release, "Packages")
+    for f in os.listdir(pkgdir):
+        if not f.endswith(".rpm"):
+            continue
+
+        pkgdata = parse_rpm_name(f)
+        if not pkgdata["name"]:
+            continue
+
+        ver = "%s-%s" % (pkgdata["version"], pkgdata["release"])
+
+        if not pkgdata["name"] in packages:
+            packages[pkgdata["name"]] = { ver: [f] }
+            continue
+
+        if ver in packages[pkgdata["name"]]:
+            packages[pkgdata["name"]][ver].append(f)
+            continue
+
+        packages[pkgdata["name"]][ver] = [f]
+
+    for package in packages:
+        pkgcnt = len(packages[package])
+        if pkgcnt > CONFIG["KeepRawhideLatest"]:
+            vers = sorted(packages[package].keys(), cmp=vercmp)
+            i = 0
+            for ver in vers:
+                for filename in packages[package][ver]:
+                    if i < pkgcnt - CONFIG["KeepRawhideLatest"]:
+                        print "Removing %s" % filename
+                        os.unlink(os.path.join(pkgdir, filename))
+                i += 1
 
 if __name__ == "__main__":
     # parse arguments
@@ -191,6 +236,10 @@ if __name__ == "__main__":
 
             if retcode != 0:
                 print "No more mirrors to try."
+
+        if version.lower() == "rawhide":
+            print "Cleaning rawhide repo..."
+            clean_rawhide_repo(targetid)
 
         # run createrepo
         print "Running createrepo on '%s'..." % targetdir,

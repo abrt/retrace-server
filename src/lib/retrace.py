@@ -77,6 +77,7 @@ CONFIG = {
   "MaxUnpackedSize": 600,
   "MinStorageLeft": 10240,
   "DeleteTaskAfter": 120,
+  "KeepRawhideLatest": 3,
   "LogDir": "/var/log/retrace-server",
   "RepoDir": "/var/cache/retrace-server",
   "SaveDir": "/var/spool/retrace-server",
