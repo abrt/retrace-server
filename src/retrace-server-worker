@@ -220,7 +220,7 @@ if __name__ == "__main__":
             mockcfg.write("logfile=/var/log/yum.log\n")
             mockcfg.write("retries=20\n")
             mockcfg.write("obsoletes=1\n")
-            if CONFIG["RequireGPGCheck"]:
+            if version != "rawhide" and CONFIG["RequireGPGCheck"]:
                 mockcfg.write("gpgcheck=1\n")
             else:
                 mockcfg.write("gpgcheck=0\n")
@@ -234,7 +234,7 @@ if __name__ == "__main__":
             mockcfg.write("name=%s\n" % releaseid)
             mockcfg.write("baseurl=file://%s/%s/\n" % (CONFIG["RepoDir"], releaseid))
             mockcfg.write("failovermethod=priority\n")
-            if CONFIG["RequireGPGCheck"]:
+            if version != "rawhide" and CONFIG["RequireGPGCheck"]:
                 mockcfg.write("gpgkey=file:///usr/share/retrace-server/gpg/%s-%s\n" % (distribution, version))
             mockcfg.write("\"\"\"\n")
 
