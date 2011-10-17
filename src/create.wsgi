@@ -137,16 +137,16 @@ def application(environ, start_response):
                             _("File '%s' is not allowed to be in" \
                               " the archive") % f)
 
-    for required_file in REQUIRED_FILES:
+    if "X-Task-Type" in request.headers:
+        task.set_type(int(request.headers["X-Task-Type"]))
+    else:
+        task.set_type(TASK_RETRACE)
+
+    for required_file in REQUIRED_FILES[task.get_type()]:
         if not required_file in files:
             task.remove()
             return response(start_response, "403 Forbidden",
                             _("Required file '%s' is missing") % required_file)
-
-    if "X-Task-Type" in request.headers:
-        task.set_type(request.headers["X-Task-Type"])
-    else:
-        task.set_type(TASK_RETRACE)
 
     call(["/usr/bin/retrace-server-worker", "%d" % task.get_taskid()])
 

@@ -14,7 +14,6 @@ from config import *
 
 GETTEXT_DOMAIN = "retrace-server"
 
-REQUIRED_FILES = ["coredump", "executable", "package"]
 # filename: max_size (<= 0 unlimited)
 ALLOWED_FILES = {
   "coredump": 0,
@@ -22,10 +21,17 @@ ALLOWED_FILES = {
   "package": 128,
   "os_release": 128,
   "release": 128,
+  "vmcore": 0,
 }
 
-TASK_RETRACE, TASK_DEBUG = xrange(2)
-TASK_TYPES = [TASK_RETRACE, TASK_DEBUG]
+TASK_RETRACE, TASK_DEBUG, TASK_VMCORE = xrange(3)
+TASK_TYPES = [TASK_RETRACE, TASK_DEBUG, TASK_VMCORE]
+
+REQUIRED_FILES = {
+  TASK_RETRACE: ["coredump", "executable", "package"],
+  TASK_DEBUG:   ["coredump", "executable", "package"],
+  TASK_VMCORE:  ["vmcore"],
+}
 
 #characters, numbers, dash (utf-8, iso-8859-2 etc.)
 INPUT_CHARSET_PARSER = re.compile("^([a-zA-Z0-9\-]+)(,.*)?$")
@@ -33,6 +39,9 @@ INPUT_CHARSET_PARSER = re.compile("^([a-zA-Z0-9\-]+)(,.*)?$")
 INPUT_LANG_PARSER = re.compile("^([a-z]{2}([_\-][A-Z]{2})?)(,.*)?$")
 #characters allowed by Fedora Naming Guidelines
 INPUT_PACKAGE_PARSER = re.compile("^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\-\.\_\+]+$")
+
+#2.6.32-201.el6.x86_64
+KERNEL_RELEASE_PARSER = re.compile("^(.*)\.([^\.]+)$")
 
 CORE_ARCH_PARSER = re.compile("core file .*(x86-64|80386)")
 PACKAGE_PARSER = re.compile("^(.+)-([0-9]+(\.[0-9]+)*-[0-9]+)\.([^-]+)$")

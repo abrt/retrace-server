@@ -47,56 +47,9 @@ def retrace_run(errorcode, cmd):
 
     return output
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        sys.stderr.write("Usage: %s task_id\n" % sys.argv[0])
-        sys.exit(11)
-
-    try:
-        taskid = int(sys.argv[1])
-    except:
-        sys.stderr.write("Task ID may only contain digits.\n")
-        sys.exit(12)
-
-    try:
-        task = RetraceTask(taskid)
-    except:
-        sys.stderr.write("Task '%s' does not exist.\n" % taskid)
-        sys.exit(13)
-
-    if task.has_status():
-        sys.stderr.write("%s has already been executed " \
-                         "for task '%d'.\n" % (sys.argv[0], taskid))
-        sys.exit(10)
-
-    # fork to background
-    try:
-        pid = os.fork()
-    except:
-        sys.stderr.write("Unable to fork")
-        sys.exit(14)
-
-    # parent - kill
-    if pid != 0:
-        sys.exit(0)
-
-    # child - continue
-    stats["taskid"] = taskid
-
-    # get count of tasks running before starting
-    prerunning = len(get_active_tasks()) - 1
-
-    task.set_status(STATUS_ANALYZE)
-    log += "%s " % STATUS[STATUS_ANALYZE]
-
+def start_retrace():
+    global log
     crashdir = os.path.join(task.get_savedir(), "crash")
-
-    # check the crash directory for required files
-    for required_file in REQUIRED_FILES:
-        if not os.path.isfile(os.path.join(crashdir, required_file)):
-            log += "Error\nCrash directory does not contain required file '%s'.\n" % required_file
-            fail(15)
-
     corepath = os.path.join(crashdir, "coredump")
     try:
         stats["coresize"] = os.path.getsize(corepath)
@@ -269,12 +222,7 @@ if __name__ == "__main__":
         log += "Error\n%s\n" % ex
         fail(29)
 
-    try:
-        task.set_backtrace(backtrace)
-    except Exception as ex:
-        log += "Error\n%s\n" % ex
-        fail(30)
-
+    task.set_backtrace(backtrace)
     log += "OK\n"
 
     # does not work at the moment
@@ -313,22 +261,197 @@ if __name__ == "__main__":
     stats["duration"] = int(time.time()) - stats["starttime"]
     stats["status"] = STATUS_SUCCESS
 
-    try:
-        con = init_crashstats_db()
-        statsid = save_crashstats(stats, con)
-        save_crashstats_success(statsid, prerunning,
-                                len(get_active_tasks()), rootsize, con)
-        save_crashstats_packages(statsid, packages[1:], con)
-        if missing:
-            save_crashstats_build_ids(statsid, missing, con)
-        con.close()
-        log += "OK\n"
-    except Exception as ex:
-        log += "Error: %s\n" % ex
-
     # publish log => finish task
     log += "Retrace took %d seconds.\n" % stats["duration"]
     log += "%s\n" % STATUS[STATUS_SUCCESS]
 
     task.set_log(log)
     task.set_status(STATUS_SUCCESS)
+
+def start_vmcore():
+    global log
+    vmcore = os.path.join(task.get_savedir(), "crash", "vmcore")
+
+    child = Popen(["crash", "--osrelease", vmcore], stdout=PIPE, stderr=STDOUT)
+    kernelver = child.communicate()[0].strip()
+    retcode = child.wait()
+
+    if retcode:
+        log += "Error\nWarning: crash exited with %d; " % retcode
+
+    match = KERNEL_RELEASE_PARSER.match(kernelver)
+    if not match:
+        log += "Error\nUnexpected kernel version: '%s'\n" % kernelver
+        fail(50)
+
+    stats["package"] = "kernel"
+    stats["version"] = match.group(1)
+    stats["arch"] = match.group(2)
+
+    kernelcache = os.path.join(CONFIG["RepoDir"], "kernel")
+    kerneldir = os.path.join(kernelcache, kernelver)
+    kerneltmp = os.path.join(kernelcache, "%s.tmp" % kernelver)
+
+    log += "OK\n%s " % STATUS[STATUS_INIT]
+    task.set_status(STATUS_INIT)
+
+    if not os.path.isdir(kerneldir):
+        wait = False
+        try:
+            os.mkdir(kerneltmp)
+        except Exception as ex:
+            if ex[0] == errno.EEXIST:
+                wait = True
+            else:
+                log += "Error\nUnable to unpack required kernel debuginfo.\n"
+                fail(54)
+
+        if wait:
+            i = 0
+            # another worker is unpacking the same debuginfo - wait for it to finish
+            # 1800 seconds ~ 30 minutes
+            while i <= 1800 and not os.path.isdir(kerneldir):
+                time.sleep(1)
+                i += 1
+
+            if i >= 1800:
+                log += "Error\nUnpacking required debuginfo timed out.\n"
+                fail(51)
+        else:
+            rpmfile = None
+
+            # search for the debuginfo RPM
+            for release in os.listdir(CONFIG["RepoDir"]):
+                testfile = os.path.join(CONFIG["RepoDir"], release, "Packages", "kernel-debuginfo-%s.rpm" % kernelver)
+                if os.path.isfile(testfile):
+                    rpmfile = testfile
+                    break
+
+                # should not happen, but anyway...
+                testfile = os.path.join(CONFIG["RepoDir"], release, "kernel-debuginfo-%s.rpm" % kernelver)
+                if os.path.isfile(testfile):
+                    rpmfile = testfile
+                    break
+
+            if not rpmfile:
+                log += "Error\nUnable to find the debuginfo for kernel-%s\n" % kernelver
+                fail(52)
+
+            cwd = os.getcwdu()
+            os.chdir(kerneltmp)
+
+            with open("/dev/null", "w") as null:
+                rpm2cpio = Popen(["rpm2cpio", rpmfile], stdout=PIPE, stderr=null)
+                cpio = Popen(["cpio", "-id"], stdin=rpm2cpio.stdout, stdout=null, stderr=null)
+                ret1 = rpm2cpio.wait()
+                ret2 = cpio.wait()
+                rpm2cpio.stdout.close()
+
+                if ret1:
+                    log += "Warning: rpm2cpio exited with %d; " % ret1
+                if ret2:
+                    log += "Warning: cpio exited with %d; " % ret2
+
+            os.chdir(cwd)
+
+            try:
+                os.rename(kerneltmp, kerneldir)
+            except:
+                log += "Unable to cache required debuginfo"
+                fail(53)
+
+    task.set_status(STATUS_BACKTRACE)
+    log += "OK\n%s " % STATUS[STATUS_BACKTRACE]
+
+    vmlinux = os.path.join(kerneldir, "usr", "lib", "debug", "lib", "modules", kernelver, "vmlinux")
+    child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+
+    kernellog = child.communicate("log\nquit\n")[0]
+    retcode = child.wait()
+
+    if retcode:
+        log += "Warning: crash exited with %d; " % retcode
+
+    task.set_backtrace(kernellog)
+
+    stats["duration"] = int(time.time()) - stats["starttime"]
+    stats["status"] = STATUS_SUCCESS
+
+    log += "OK\n%s " % STATUS[STATUS_STATS]
+
+    try:
+        save_crashstats(stats)
+        log += "OK\n"
+    except Exception as ex:
+        log += "Error: %s\n" % ex
+
+    # clean up temporary data
+    task.set_status(STATUS_CLEANUP)
+    log += "%s " % STATUS[STATUS_CLEANUP]
+
+    task.clean()
+
+    log += "OK\nRetrace took %d seconds.\n" % stats["duration"]
+    log += "%s\n" % STATUS[STATUS_SUCCESS]
+
+    task.set_log(log)
+    task.set_status(STATUS_SUCCESS)
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        sys.stderr.write("Usage: %s task_id\n" % sys.argv[0])
+        sys.exit(11)
+
+    try:
+        taskid = int(sys.argv[1])
+    except:
+        sys.stderr.write("Task ID may only contain digits.\n")
+        sys.exit(12)
+
+    try:
+        task = RetraceTask(taskid)
+    except:
+        sys.stderr.write("Task '%s' does not exist.\n" % taskid)
+        sys.exit(13)
+
+    if task.has_status():
+        sys.stderr.write("%s has already been executed " \
+                         "for task '%d'.\n" % (sys.argv[0], taskid))
+        sys.exit(10)
+
+    # fork to background
+    try:
+        pid = os.fork()
+    except:
+        sys.stderr.write("Unable to fork")
+        sys.exit(14)
+
+    # parent - kill
+    if pid != 0:
+        sys.exit(0)
+
+    # child - continue
+    stats["taskid"] = taskid
+
+    # get count of tasks running before starting
+    prerunning = len(get_active_tasks()) - 1
+
+    task.set_status(STATUS_ANALYZE)
+    log += "%s " % STATUS[STATUS_ANALYZE]
+
+    crashdir = os.path.join(task.get_savedir(), "crash")
+
+    tasktype = task.get_type()
+
+    # check the crash directory for required files
+    for required_file in REQUIRED_FILES[tasktype]:
+        if not os.path.isfile(os.path.join(crashdir, required_file)):
+            log += "Error\nCrash directory does not contain required file '%s'.\n" % required_file
+            fail(15)
+
+    if tasktype in [TASK_RETRACE, TASK_DEBUG]:
+        start_retrace()
+    elif tasktype == TASK_VMCORE:
+        start_vmcore()
+    else:
+        pass
