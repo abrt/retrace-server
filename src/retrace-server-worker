@@ -6,6 +6,12 @@ from retrace import *
 sys.path.insert(0, "/usr/share/retrace-server/")
 from plugins import *
 
+# parsers for vmcore version
+# 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
+KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+\-[0-9]+\.[^\.]+)(\.([^\.]+))?$")
+# OSRELEASE=2.6.32-209.el6.x86_64
+OSRELEASE_VAR_PARSER = re.compile("^OSRELEASE=(.*)$")
+
 starttime = int(time.time())
 log = ""
 task = None
@@ -268,25 +274,94 @@ def start_retrace():
     task.set_log(log)
     task.set_status(STATUS_SUCCESS)
 
+# tricky
+# crash is not able to process the vmcore from different arch
+# (not even x86_64 and x86). In addition, there are several
+# types of vmcores: running 'file' command on el5- vmcore results
+# into an expected description (x86-64 or 80386 coredump), while
+# el6+ vmcores are just proclaimed 'data'. Another thing is that
+# the OSRELEASE in the vmcore sometimes contains architecture
+# and sometimes it does not.
+def get_kernel_release(vmcore):
+    child = Popen(["crash", "--osrelease", vmcore], stdout=PIPE, stderr=STDOUT)
+    release = child.communicate()[0]
+
+    if child.wait() != 0 or \
+       not release or \
+       "\n" in release or \
+       release == "unknown":
+        # crash error, let's search the vmcore on our own
+        vers = {}
+        child = Popen(["strings", "-n", "10", vmcore], stdout=PIPE, stderr=PIPE)
+        # lots! of output, do not use .communicate()
+        line = child.stdout.readline()
+        while line:
+            line = line.strip()
+
+            # OSRELEASE variable is defined in the vmcore,
+            # but crash was not able to find it (cross-arch)
+            match = OSRELEASE_VAR_PARSER.match(line)
+            if match:
+                release = match.group(1)
+                break
+
+            # assuming the kernel version will sooner or later
+            # appear in the list of strings contained in the
+            # vmcore
+            # paranoia - something else can match the pattern,
+            # or another version may be present. assuming that
+            # the correct version is repeated several times
+            match = KERNEL_RELEASE_PARSER.match(line)
+            if match:
+                if line in vers:
+                    vers[line] += 1
+                else:
+                    vers[line] = 1
+
+                if vers[line] >= 3:
+                    release = line
+                    break
+
+            line = child.stdout.readline()
+
+        # much more output is available, but we don't need any more
+        child.stdout.close()
+        child.kill()
+
+    # check whether architecture is present
+    match = KERNEL_RELEASE_PARSER.match(release)
+    if not match:
+        return None
+
+    if match.group(3) is None:
+        arch = guess_arch(vmcore)
+        if not arch:
+            return None
+
+        release += ".%s" % arch
+
+    return release
+
 def start_vmcore():
     global log
     vmcore = os.path.join(task.get_savedir(), "crash", "vmcore")
 
-    child = Popen(["crash", "--osrelease", vmcore], stdout=PIPE, stderr=STDOUT)
-    kernelver = child.communicate()[0].strip()
-    retcode = child.wait()
-
-    if retcode:
-        log += "Error\nWarning: crash exited with %d; " % retcode
+    kernelver = get_kernel_release(vmcore)
+    if not kernelver:
+        log += "Error\nUnable to determine kernel version\n"
+        fail(50)
 
     match = KERNEL_RELEASE_PARSER.match(kernelver)
     if not match:
-        log += "Error\nUnexpected kernel version: '%s'\n" % kernelver
-        fail(50)
+        log += "Error\nUnable to parse kernel version\n"
+        fail(51)
+
+    kernelver_noarch = match.group(1)
+    arch = match.group(3)
 
     stats["package"] = "kernel"
-    stats["version"] = match.group(1)
-    stats["arch"] = match.group(2)
+    stats["version"] = kernelver_noarch
+    stats["arch"] = arch
 
     kernelcache = os.path.join(CONFIG["RepoDir"], "kernel")
     kerneldir = os.path.join(kernelcache, kernelver)
@@ -335,10 +410,17 @@ def start_vmcore():
 
             if not rpmfile:
                 log += "Error\nUnable to find the debuginfo for kernel-%s\n" % kernelver
+                shutil.rmtree(kerneltmp)
                 fail(52)
 
             cwd = os.getcwdu()
-            os.chdir(kerneltmp)
+
+            try:
+                os.chdir(kerneltmp)
+                log += "Error\nUnable to chdir to directory '%s'\n" % kerneltmp
+            except:
+                shutil.rmtree(kerneltmp)
+                fail(55)
 
             with open("/dev/null", "w") as null:
                 rpm2cpio = Popen(["rpm2cpio", rpmfile], stdout=PIPE, stderr=null)
@@ -352,20 +434,31 @@ def start_vmcore():
                 if ret2:
                     log += "Warning: cpio exited with %d; " % ret2
 
-            os.chdir(cwd)
+            try:
+                os.chdir(cwd)
+            except:
+                log += "Error\nUnable to get back to directory '%s'\n" % cwd
+                shutil.rmtree(kerneltmp)
+                fail(56)
 
             try:
                 os.rename(kerneltmp, kerneldir)
             except:
                 log += "Unable to cache required debuginfo"
+                shutil.rmtree(kerneltmp)
                 fail(53)
 
     task.set_status(STATUS_BACKTRACE)
     log += "OK\n%s " % STATUS[STATUS_BACKTRACE]
 
     vmlinux = os.path.join(kerneldir, "usr", "lib", "debug", "lib", "modules", kernelver, "vmlinux")
-    child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+    if not os.path.isfile(vmlinux):
+        vmlinux = os.path.join(kerneldir, "usr", "lib", "debug", "lib", "modules", kernelver_noarch, "vmlinux")
+    if not os.path.isfile(vmlinux):
+        log += "Error\nUnable to find vmlinux\n"
+        fail(58)
 
+    child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
     kernellog = child.communicate("log\nquit\n")[0]
     retcode = child.wait()
 
