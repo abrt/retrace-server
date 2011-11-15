@@ -96,6 +96,7 @@ CONFIG = {
   "RequireGPGCheck": True,
   "UseCreaterepoUpdate": False,
   "DBFile": "stats.db",
+  "KernelChrootRepo": "http://dl.fedoraproject.org/pub/fedora/linux/releases/16/Everything/$ARCH/os/",
 }
 
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \

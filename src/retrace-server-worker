@@ -8,7 +8,7 @@ from plugins import *
 
 # parsers for vmcore version
 # 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
-KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+\-[0-9]+\.[^\.]+)(\.([^\.]+))?$")
+KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?\-[0-9]+\.[^\.]+)(\.([^\.]+))?$")
 # OSRELEASE=2.6.32-209.el6.x86_64
 OSRELEASE_VAR_PARSER = re.compile("^OSRELEASE=(.*)$")
 
@@ -284,7 +284,7 @@ def start_retrace():
 # and sometimes it does not.
 def get_kernel_release(vmcore):
     child = Popen(["crash", "--osrelease", vmcore], stdout=PIPE, stderr=STDOUT)
-    release = child.communicate()[0]
+    release = child.communicate()[0].strip()
 
     if child.wait() != 0 or \
        not release or \
@@ -292,7 +292,7 @@ def get_kernel_release(vmcore):
        release == "unknown":
         # crash error, let's search the vmcore on our own
         vers = {}
-        child = Popen(["strings", "-n", "10", vmcore], stdout=PIPE, stderr=PIPE)
+        child = Popen(["strings", "-n", "10", vmcore], stdout=PIPE, stderr=STDOUT)
         # lots! of output, do not use .communicate()
         line = child.stdout.readline()
         while line:
@@ -333,7 +333,7 @@ def get_kernel_release(vmcore):
     if not match:
         return None
 
-    if match.group(3) is None:
+    if match.group(4) is None:
         arch = guess_arch(vmcore)
         if not arch:
             return None
@@ -341,6 +341,80 @@ def get_kernel_release(vmcore):
         release += ".%s" % arch
 
     return release
+
+def find_kernel_debuginfo(kernelver):
+    # search for the debuginfo RPM
+    for release in os.listdir(CONFIG["RepoDir"]):
+        testfile = os.path.join(CONFIG["RepoDir"], release, "Packages", "kernel-debuginfo-%s.rpm" % kernelver)
+        if os.path.isfile(testfile):
+            return testfile
+
+        # should not happen, but anyway...
+        testfile = os.path.join(CONFIG["RepoDir"], release, "kernel-debuginfo-%s.rpm" % kernelver)
+        if os.path.isfile(testfile):
+            return testfile
+
+    return None
+
+def unpack_kernel_debuginfo(kernelver):
+    global log
+    kernelcache = os.path.join(CONFIG["RepoDir"], "kernel")
+    kerneldir = os.path.join(kernelcache, kernelver)
+    kerneltmp = os.path.join(kernelcache, "%s.tmp" % kernelver)
+
+    rpmfile = find_kernel_debuginfo(kernelver)
+
+    if not rpmfile:
+        log += "Error\nUnable to find the debuginfo for kernel-%s\n" % kernelver
+        shutil.rmtree(kerneltmp)
+        fail(64)
+
+    cwd = os.getcwdu()
+
+    try:
+        os.chdir(kerneltmp)
+    except:
+        log += "Error\nUnable to chdir to directory '%s'\n" % kerneltmp
+        shutil.rmtree(kerneltmp)
+        fail(65)
+
+    with open("/dev/null", "w") as null:
+        rpm2cpio = Popen(["rpm2cpio", rpmfile], stdout=PIPE, stderr=null)
+        cpio = Popen(["cpio", "-id"], stdin=rpm2cpio.stdout, stdout=null, stderr=null)
+        ret1 = rpm2cpio.wait()
+        ret2 = cpio.wait()
+        rpm2cpio.stdout.close()
+
+        if ret1:
+            log += "Warning: rpm2cpio exited with %d; " % ret1
+        if ret2:
+            log += "Warning: cpio exited with %d; " % ret2
+
+    try:
+        os.chdir(cwd)
+    except:
+        log += "Error\nUnable to get back to directory '%s'\n" % cwd
+        shutil.rmtree(kerneltmp)
+        fail(66)
+
+    try:
+        os.rename(kerneltmp, kerneldir)
+    except:
+        log += "Unable to cache required debuginfo"
+        shutil.rmtree(kerneltmp)
+        fail(67)
+
+def mock_find_vmlinux(cfgdir, candidates):
+    with open("/dev/null", "w") as null:
+        for cand in candidates:
+            child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                           "test", "-f", cand, "&&", "echo", cand], stdout=PIPE, stderr=null)
+            output = child.communicate()[0].strip()
+            child.wait()
+            if output == cand:
+                return cand
+
+    return None
 
 def start_vmcore():
     global log
@@ -357,7 +431,9 @@ def start_vmcore():
         fail(51)
 
     kernelver_noarch = match.group(1)
-    arch = match.group(3)
+    arch = match.group(4)
+    if arch in ["i486", "i586", "i686"]:
+        arch = "i386"
 
     stats["package"] = "kernel"
     stats["version"] = kernelver_noarch
@@ -366,104 +442,197 @@ def start_vmcore():
     kernelcache = os.path.join(CONFIG["RepoDir"], "kernel")
     kerneldir = os.path.join(kernelcache, kernelver)
     kerneltmp = os.path.join(kernelcache, "%s.tmp" % kernelver)
+    hostarch = os.uname()[4]
+    if hostarch in ["i486", "i586", "i686"]:
+        hostarch = "i386"
 
     log += "OK\n%s " % STATUS[STATUS_INIT]
     task.set_status(STATUS_INIT)
 
-    if not os.path.isdir(kerneldir):
+    # cross-arch: we need to use chroot
+    if hostarch != arch:
+        cfgdir = os.path.join(CONFIG["SaveDir"], "kernel-%s" % arch)
+        tmpdir = os.path.join(CONFIG["SaveDir"], "kernel-%s.tmp" % arch)
         wait = False
-        try:
-            os.mkdir(kerneltmp)
-        except Exception as ex:
-            if ex[0] == errno.EEXIST:
-                wait = True
-            else:
-                log += "Error\nUnable to unpack required kernel debuginfo.\n"
-                fail(54)
+        if not os.path.isdir(cfgdir):
+            try:
+                os.mkdir(tmpdir)
+            except OSError as ex:
+                if ex[0] == errno.EEXIST:
+                    wait = True
+                else:
+                    raise ex
 
+            # no exception - we are the one who prepares the chroot
+            if not wait:
+                # create mock config file
+                try:
+                    with open(os.path.join(tmpdir, "default.cfg"), "w") as mockcfg:
+                        mockcfg.write("config_opts['root'] = 'kernel-%s'\n" % arch)
+                        mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
+                        mockcfg.write("config_opts['chroot_setup_cmd'] = 'install crash cpio bash shadow-utils coreutils'\n")
+                        mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
+                        mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
+                        mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
+                        mockcfg.write("\n")
+                        mockcfg.write("config_opts['yum.conf'] = \"\"\"\n")
+                        mockcfg.write("[main]\n")
+                        mockcfg.write("cachedir=/var/cache/yum\n")
+                        mockcfg.write("debuglevel=1\n")
+                        mockcfg.write("reposdir=/dev/null\n")
+                        mockcfg.write("logfile=/var/log/yum.log\n")
+                        mockcfg.write("retries=20\n")
+                        mockcfg.write("obsoletes=1\n")
+                        mockcfg.write("assumeyes=1\n")
+                        mockcfg.write("syslog_ident=mock\n")
+                        mockcfg.write("syslog_device=\n")
+                        mockcfg.write("\n")
+                        mockcfg.write("#repos\n")
+                        mockcfg.write("\n")
+                        mockcfg.write("[kernel-%s]\n" % arch)
+                        mockcfg.write("name=kernel-%s\n" % arch)
+                        mockcfg.write("baseurl=%s\n" % CONFIG["KernelChrootRepo"].replace("$ARCH", arch))
+                        mockcfg.write("failovermethod=priority\n")
+                        mockcfg.write("\"\"\"\n")
+
+                    # symlink defaults from /etc/mock
+                    os.symlink("/etc/mock/site-defaults.cfg", os.path.join(tmpdir, "site-defaults.cfg"))
+                    os.symlink("/etc/mock/logging.ini", os.path.join(tmpdir, "logging.ini"))
+                except Exception as ex:
+                    log += "Error\nUnable to create mock config file: %s.\n" % ex
+                    fail(52)
+
+                retrace_run(53, ["/usr/bin/mock", "--configdir", tmpdir, "init"])
+
+                try:
+                    os.rename(tmpdir, cfgdir)
+                except OSError as ex:
+                    if ex[0] == errno.EEXIST:
+                        pass
+                    else:
+                        raise ex
+
+        # someone else is preparing the chroot, wait for him to finish
         if wait:
             i = 0
-            # another worker is unpacking the same debuginfo - wait for it to finish
-            # 1800 seconds ~ 30 minutes
-            while i <= 1800 and not os.path.isdir(kerneldir):
-                time.sleep(1)
+            while i < 1800 and not os.path.isdir(cfgdir):
                 i += 1
+                time.sleep(1)
 
+            # error
             if i >= 1800:
-                log += "Error\nUnpacking required debuginfo timed out.\n"
-                fail(51)
-        else:
-            rpmfile = None
+                log += "Error\nWaiting for chroot timed out\n"
+                fail(54)
 
-            # search for the debuginfo RPM
-            for release in os.listdir(CONFIG["RepoDir"]):
-                testfile = os.path.join(CONFIG["RepoDir"], release, "Packages", "kernel-debuginfo-%s.rpm" % kernelver)
-                if os.path.isfile(testfile):
-                    rpmfile = testfile
-                    break
+        lockfile = os.path.join(cfgdir, ".lock")
+        i = 0
+        while i < 1800 and not lock(lockfile):
+            i += 1
+            time.sleep(1)
 
-                # should not happen, but anyway...
-                testfile = os.path.join(CONFIG["RepoDir"], release, "kernel-debuginfo-%s.rpm" % kernelver)
-                if os.path.isfile(testfile):
-                    rpmfile = testfile
-                    break
+        # error
+        if i >= 1800:
+            log += "Error\nWaiting for chroot lock timed out\n"
+            fail(55)
 
-            if not rpmfile:
-                log += "Error\nUnable to find the debuginfo for kernel-%s\n" % kernelver
-                shutil.rmtree(kerneltmp)
-                fail(52)
+        cand1 = os.path.join(kerneldir, "usr", "lib", "debug", "lib", "modules", kernelver, "vmlinux")
+        cand2 = os.path.join(kerneldir, "usr", "lib", "debug", "lib", "modules", kernelver_noarch, "vmlinux")
 
-            cwd = os.getcwdu()
+        try:
+            # we have the lock, let's work
+            vmlinux = mock_find_vmlinux(cfgdir, [cand1, cand2])
 
-            try:
-                os.chdir(kerneltmp)
-                log += "Error\nUnable to chdir to directory '%s'\n" % kerneltmp
-            except:
-                shutil.rmtree(kerneltmp)
-                fail(55)
+            # we need to unpack the debuginfo
+            if not vmlinux:
+                wait = False
+                if not os.path.isdir(kerneldir):
+                    try:
+                        os.mkdir(kerneltmp)
+                    except OSError as ex:
+                        if ex[0] == errno.EEXIST:
+                            wait = True
+                        else:
+                            raise ex
 
+                    if not wait:
+                        unpack_kernel_debuginfo(kernelver)
+
+                if wait:
+                    i = 0
+                    while i < 1800 and not os.path.isdir(kerneldir):
+                        i += 1
+                        time.sleep(1)
+
+                    if i >= 1800:
+                        log += "Error\nUnpacking kernel debuginfo timed out\n"
+                        fail(56)
+
+                with open("/dev/null", "w") as null:
+                    retrace_run(57, ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--", "mkdir", "-p", "/var/cache/retrace-server/kernel"])
+                    retcode = call(["/usr/bin/mock", "--configdir", cfgdir, "--copyin", kerneldir, kerneldir], stdout=null, stderr=null)
+
+                    if retcode:
+                        log += "Warning: copyin exited with %d; " % retcode
+
+            vmlinux = mock_find_vmlinux(cfgdir, [cand1, cand2])
+
+            # error
+            if not vmlinux:
+                log += "Error\nUnable to find vmlinux\n"
+                fail(58)
+
+            # generate the log
+            retrace_run(59, ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--", "mkdir", "-p", "/var/crash/"])
+            retrace_run(60, ["/usr/bin/mock", "--configdir", cfgdir, "--copyin", vmcore, "/var/crash/vmcore"])
             with open("/dev/null", "w") as null:
-                rpm2cpio = Popen(["rpm2cpio", rpmfile], stdout=PIPE, stderr=null)
-                cpio = Popen(["cpio", "-id"], stdin=rpm2cpio.stdout, stdout=null, stderr=null)
-                ret1 = rpm2cpio.wait()
-                ret2 = cpio.wait()
-                rpm2cpio.stdout.close()
-
-                if ret1:
-                    log += "Warning: rpm2cpio exited with %d; " % ret1
-                if ret2:
-                    log += "Warning: cpio exited with %d; " % ret2
-
+                child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                               "crash", "-s", "/var/crash/vmcore", vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                kernellog = child.communicate("log\nquit\n")[0]
+                retcode = child.wait()
+        finally:
+            unlock(lockfile)
+    else:
+        if not os.path.isdir(kerneldir):
+            wait = False
             try:
-                os.chdir(cwd)
-            except:
-                log += "Error\nUnable to get back to directory '%s'\n" % cwd
-                shutil.rmtree(kerneltmp)
-                fail(56)
+                os.mkdir(kerneltmp)
+            except Exception as ex:
+                if ex[0] == errno.EEXIST:
+                    wait = True
+                else:
+                    log += "Error\nUnable to unpack required kernel debuginfo.\n"
+                    fail(61)
 
-            try:
-                os.rename(kerneltmp, kerneldir)
-            except:
-                log += "Unable to cache required debuginfo"
-                shutil.rmtree(kerneltmp)
-                fail(53)
+            if wait:
+                i = 0
+                # another worker is unpacking the same debuginfo - wait for it to finish
+                # 1800 seconds ~ 30 minutes
+                while i < 1800 and not os.path.isdir(kerneldir):
+                    time.sleep(1)
+                    i += 1
 
-    task.set_status(STATUS_BACKTRACE)
-    log += "OK\n%s " % STATUS[STATUS_BACKTRACE]
+                if i >= 1800:
+                    log += "Error\nUnpacking required debuginfo timed out.\n"
+                    fail(62)
+            else:
+                unpack_kernel_debuginfo(kernelver)
 
-    vmlinux = os.path.join(kerneldir, "usr", "lib", "debug", "lib", "modules", kernelver, "vmlinux")
-    if not os.path.isfile(vmlinux):
-        vmlinux = os.path.join(kerneldir, "usr", "lib", "debug", "lib", "modules", kernelver_noarch, "vmlinux")
-    if not os.path.isfile(vmlinux):
-        log += "Error\nUnable to find vmlinux\n"
-        fail(58)
+        task.set_status(STATUS_BACKTRACE)
+        log += "OK\n%s " % STATUS[STATUS_BACKTRACE]
 
-    child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-    kernellog = child.communicate("log\nquit\n")[0]
-    retcode = child.wait()
+        vmlinux = os.path.join(kerneldir, "usr", "lib", "debug", "lib", "modules", kernelver, "vmlinux")
+        if not os.path.isfile(vmlinux):
+            vmlinux = os.path.join(kerneldir, "usr", "lib", "debug", "lib", "modules", kernelver_noarch, "vmlinux")
+        if not os.path.isfile(vmlinux):
+            log += "Error\nUnable to find vmlinux\n"
+            fail(63)
 
-    if retcode:
-        log += "Warning: crash exited with %d; " % retcode
+        child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+        kernellog = child.communicate("log\nquit\n")[0]
+        retcode = child.wait()
+
+        if retcode:
+            log += "Warning: crash exited with %d; " % retcode
 
     task.set_backtrace(kernellog)
 
