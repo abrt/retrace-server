@@ -356,10 +356,9 @@ def find_kernel_debuginfo(kernelver):
 
     return None
 
-def unpack_kernel_debuginfo(kernelver):
+def cache_vmlinux_from_debuginfo(kernelver, kernelver_noarch=None):
     global log
     kernelcache = os.path.join(CONFIG["RepoDir"], "kernel")
-    kerneldir = os.path.join(kernelcache, kernelver)
     kerneltmp = os.path.join(kernelcache, "%s.tmp" % kernelver)
 
     rpmfile = find_kernel_debuginfo(kernelver)
@@ -397,12 +396,29 @@ def unpack_kernel_debuginfo(kernelver):
         shutil.rmtree(kerneltmp)
         fail(66)
 
-    try:
-        os.rename(kerneltmp, kerneldir)
-    except:
-        log += "Unable to cache required debuginfo"
+    vmlinux = None
+    cand = os.path.join(kerneltmp, "usr", "lib", "debug", "lib", "modules", kernelver, "vmlinux")
+    if os.path.isfile(cand):
+        vmlinux = cand
+    elif kernelver_noarch:
+        cand = os.path.join(kerneltmp, "usr", "lib", "debug", "lib", "modules", kernelver_noarch, "vmlinux")
+        if os.path.isfile(cand):
+            vmlinux = cand
+
+    if not vmlinux:
+        log += "Error\nUnable to find vmlinux\n"
         shutil.rmtree(kerneltmp)
         fail(67)
+
+    vmlinux_cache = os.path.join(kernelcache, "vmlinux-%s" % kernelver)
+    try:
+        shutil.copy(vmlinux, vmlinux_cache)
+    except Exception as ex:
+        log += "Error\nUnable to cache vmlinux: %s\n" % ex
+        shutil.rmtree(kerneltmp)
+        fail(68)
+
+    shutil.rmtree(kerneltmp)
 
 def mock_find_vmlinux(cfgdir, candidates):
     with open("/dev/null", "w") as null:
@@ -440,11 +456,12 @@ def start_vmcore():
     stats["arch"] = arch
 
     kernelcache = os.path.join(CONFIG["RepoDir"], "kernel")
-    kerneldir = os.path.join(kernelcache, kernelver)
     kerneltmp = os.path.join(kernelcache, "%s.tmp" % kernelver)
     hostarch = os.uname()[4]
     if hostarch in ["i486", "i586", "i686"]:
         hostarch = "i386"
+
+    vmlinux = os.path.join(kernelcache, "vmlinux-%s" % kernelver)
 
     log += "OK\n%s " % STATUS[STATUS_INIT]
     task.set_status(STATUS_INIT)
@@ -535,31 +552,25 @@ def start_vmcore():
             log += "Error\nWaiting for chroot lock timed out\n"
             fail(55)
 
-        cand1 = os.path.join(kerneldir, "usr", "lib", "debug", "lib", "modules", kernelver, "vmlinux")
-        cand2 = os.path.join(kerneldir, "usr", "lib", "debug", "lib", "modules", kernelver_noarch, "vmlinux")
-
+        # we have the lock, let's work
         try:
-            # we have the lock, let's work
-            vmlinux = mock_find_vmlinux(cfgdir, [cand1, cand2])
-
             # we need to unpack the debuginfo
-            if not vmlinux:
+            if not os.path.isfile(vmlinux):
                 wait = False
-                if not os.path.isdir(kerneldir):
-                    try:
-                        os.mkdir(kerneltmp)
-                    except OSError as ex:
-                        if ex[0] == errno.EEXIST:
-                            wait = True
-                        else:
-                            raise ex
+                try:
+                    os.mkdir(kerneltmp)
+                except OSError as ex:
+                    if ex[0] == errno.EEXIST:
+                        wait = True
+                    else:
+                        raise ex
 
-                    if not wait:
-                        unpack_kernel_debuginfo(kernelver)
+                if not wait:
+                    cache_vmlinux_from_debuginfo(kernelver, kernelver_noarch)
 
                 if wait:
                     i = 0
-                    while i < 1800 and not os.path.isdir(kerneldir):
+                    while i < 1800 and not os.path.isfile(vmlinux):
                         i += 1
                         time.sleep(1)
 
@@ -567,24 +578,15 @@ def start_vmcore():
                         log += "Error\nUnpacking kernel debuginfo timed out\n"
                         fail(56)
 
-                with open("/dev/null", "w") as null:
-                    retrace_run(57, ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--", "mkdir", "-p", "/var/cache/retrace-server/kernel"])
-                    retcode = call(["/usr/bin/mock", "--configdir", cfgdir, "--copyin", kerneldir, kerneldir], stdout=null, stderr=null)
-
-                    if retcode:
-                        log += "Warning: copyin exited with %d; " % retcode
-
-            vmlinux = mock_find_vmlinux(cfgdir, [cand1, cand2])
-
-            # error
-            if not vmlinux:
-                log += "Error\nUnable to find vmlinux\n"
-                fail(58)
-
             # generate the log
             retrace_run(59, ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--", "mkdir", "-p", "/var/crash/"])
             retrace_run(60, ["/usr/bin/mock", "--configdir", cfgdir, "--copyin", vmcore, "/var/crash/vmcore"])
             with open("/dev/null", "w") as null:
+                retrace_run(57, ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--", "mkdir", "-p", "/var/cache/retrace-server/kernel"])
+                retcode = call(["/usr/bin/mock", "--configdir", cfgdir, "--copyin", vmlinux, vmlinux], stdout=null, stderr=null)
+                if retcode:
+                    log += "Warning: copyin exited with %d; " % retcode
+
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                "crash", "-s", "/var/crash/vmcore", vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
                 kernellog = child.communicate("log\nquit\n")[0]
@@ -592,7 +594,7 @@ def start_vmcore():
         finally:
             unlock(lockfile)
     else:
-        if not os.path.isdir(kerneldir):
+        if not os.path.isfile(vmlinux):
             wait = False
             try:
                 os.mkdir(kerneltmp)
@@ -607,7 +609,7 @@ def start_vmcore():
                 i = 0
                 # another worker is unpacking the same debuginfo - wait for it to finish
                 # 1800 seconds ~ 30 minutes
-                while i < 1800 and not os.path.isdir(kerneldir):
+                while i < 1800 and not os.path.isfile(vmlinux):
                     time.sleep(1)
                     i += 1
 
@@ -615,17 +617,10 @@ def start_vmcore():
                     log += "Error\nUnpacking required debuginfo timed out.\n"
                     fail(62)
             else:
-                unpack_kernel_debuginfo(kernelver)
+                cache_vmlinux_from_debuginfo(kernelver, kernelver_noarch)
 
         task.set_status(STATUS_BACKTRACE)
         log += "OK\n%s " % STATUS[STATUS_BACKTRACE]
-
-        vmlinux = os.path.join(kerneldir, "usr", "lib", "debug", "lib", "modules", kernelver, "vmlinux")
-        if not os.path.isfile(vmlinux):
-            vmlinux = os.path.join(kerneldir, "usr", "lib", "debug", "lib", "modules", kernelver_noarch, "vmlinux")
-        if not os.path.isfile(vmlinux):
-            log += "Error\nUnable to find vmlinux\n"
-            fail(63)
 
         child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
         kernellog = child.communicate("log\nquit\n")[0]
