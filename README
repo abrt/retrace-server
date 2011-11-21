@@ -16,7 +16,8 @@ itself consists of 3 parts:
 
   - repos:        An array of public repositories and their mirrors.
                   The synchronization is realized using rsync, so repository
-                  path is either a directory in the filesystem or rsync:// URL.
+                  path is either a directory in the filesystem, rsync:// URL,
+                  http:// URL or ftp:// URL.
                   Example:
                   repos = [
                             [ #repo1
@@ -24,7 +25,7 @@ itself consists of 3 parts:
                               rsync://repo1/mirror2,
                             ],
                             [ #repo2
-                              /srv/repos/repo2_mirror1,
+                              ftp://repo2/repo2_mirror1,
                               /srv/repos/repo2_mirror2,
                             ],
                             [ #repo3
@@ -48,7 +49,7 @@ versions of all packages. This job is realized by retrace-server-reposync tool
 by running 'retrace-server-reposync distribution version architecture' where
 'distribution' is a plugin name (see 1. Plugins). The retrace-server-reposync
 tool should be set up in root's crontab (it drops privileges ASAP) to run
-2-3 times a day.
+1-2 times a day.
 
 3. Garbage collection
 =====================
@@ -69,7 +70,7 @@ There are 3 types of garbage:
                        option. No real user will wait 1 hour for the backtrace.
 
 The retrace-server-cleanup tool handles all of these types. It should be set up
-in root's crontab (it needs root privileges to clean up mock chroots) to run
+in apache's crontab (it needs root privileges to clean up mock chroots) to run
 every hour.
 
 4. SELinux

@@ -4,7 +4,7 @@ How to install
 1. ./autogen.sh
 2. ./configure
 3. make rpm
-4. rpm -ivh $HOSTTYPE/retrace-server-*.rpm
+4. rpm -ivh noarch/retrace-server-*.rpm
 
 How to deploy
 =============
@@ -17,4 +17,4 @@ How to deploy
 5.     (Temporary) Disable SELinux
 6.     Retrace server is ready
 
-See README for more information
+See README or `info retrace-server' for more information

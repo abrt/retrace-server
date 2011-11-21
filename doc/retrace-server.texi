@@ -15,7 +15,7 @@
 @titlepage
 @title Retrace server
 @subtitle @value{VERSION}, @value{UPDATED}
-@author Karel Klic (@email{kklic@@redhat.com})
+@author Karel Klic (@email{kklic@@redhat.com}), Michal Toman (@email{mtoman@@redhat.com})
 @page
 @vskip 0pt plus 1filll
 @end titlepage
@@ -45,6 +45,8 @@ backtrace generation service over a network using HTTP protocol.
 @node Overview
 @chapter Overview
 
+@section Binary crashes
+
 Analyzing a program crash from a coredump is a difficult task. The GNU
 Debugger (GDB), that is commonly used to analyze coredumps on free
 operating systems, expects that the system analyzing the coredump is
@@ -66,14 +68,36 @@ having access to the machine where the crash occurred.
 Retrace server is usually run as a service on a local network, or on
 Internet. A user sends a coredump together with some additional
 information to a retrace server. The server reads the coredump and
-depending on its contents it installs necessary software dependencies to
-create a software environment which is, from the GDB point of view,
+depending on its contents it installs necessary software dependencies
+to create a software environment which is, from the GDB point of view,
 identical to the environment where the crash happened. Then the server
 runs GDB to generate a backtrace from the coredump and provides it back
 to the user.
 
-Core dumps generated on i386 and x86_64 architectures are supported
+Coredumps generated on i386 and x86_64 architectures are supported
 within a single x86_64 retrace server instance.
+
+@section Kernel crashes
+
+Analyzing kernel crashes is a little easier. If @code{kdump} service
+is configured properly, a vmcore (kernel coredump) is generated
+on kernel panic. This can be debugged with the @code{crash} tool,
+which uses an embedded GDB and only requires the vmcore itself and
+the appropriate @file{vmlinux} (found in the kernel-debuginfo
+package).
+
+Retracing a vmcore only means extracting the kernel log from the
+vmcore. The oops message (backtrace) is generated automatically
+by the kernel and is included in the kernel log saved by @code{kdump}
+service.
+
+There is one difference between retracing binaries and kernel: the
+kernel can only be retraced on a machine of exactly the same
+architecture as the vmcore was generated on. This makes difficult to
+retrace i386 vmcores on x86_64 host. However using a chroot with i386
+packages installed fixes the problem.
+
+@section Design
 
 The retrace server consists of the following major parts:
 @enumerate
@@ -81,7 +105,7 @@ The retrace server consists of the following major parts:
 an HTTP interface, consisting of a set of scripts handling communication
 with clients
 @item
-a retrace worker, doing the coredump processing, environment
+a retrace worker, doing the coredump/vmcore processing, environment
 preparation, and running the debugger to generate a backtrace
 @item
 a cleanup script, handling stalled retracing tasks and removing old data
@@ -104,9 +128,9 @@ debuginfo necessary for generating backtraces from coredumps
 The client-server communication proceeds as follows:
 @enumerate
 @item
-Client uploads a coredump to a retrace server. Retrace server creates a
-task for processing the coredump, and sends the task ID and task
-password in response to the client.
+Client uploads a coredump/vmcore to a retrace server. Retrace server
+creates a task and sends the task ID and task password in response
+to the client.
 @item
 Client asks server for the task status using the task ID and password.
 Server responds with the status information (task finished successfully,
@@ -131,6 +155,9 @@ private data. Users may decide to publish their backtraces in a bug
 tracker after reviewing them, but the retrace server doesn't do
 that. The server is supposed to use HTTP persistent connections to to
 avoid frequent SSL renegotiations.
+
+HTTPS can be disabled on a trusted local network to improve
+performance, however it is highly recommended not to do this anyway.
 
 @node Creating a new task
 @section Creating a new task
@@ -169,8 +196,10 @@ Large} HTTP error code. The limit can be checked by calling
 @indicateurl{https://server/settings}. The limit is changeable
 from the server configuration file. Client is allowed to specify
 an optional @var{X-Task-Type} header, identifying the task type.
-At the moment only @code{TASK_RETRACE} and @code{TASK_DEBUG} are
-supported.
+At the moment @code{TASK_RETRACE (0)} and @code{TASK_DEBUG (1)} can
+be used for binary crashes and @code{TASK_VMCORE (2)} for kernel
+crashes. If no @var{X-Task-Type} is specified, @code{TASK_RETRACE}
+is used.
 
 If unpacking the archive would result in having the free disk space
 under certain limit in the @file{/var/spool/retrace-server} directory, the
@@ -202,12 +231,18 @@ response. After that it spawns a subprocess with
 @command{retrace-server-worker} on that directory.
 
 The following files from the local crash directory are required to be
-present in the archive: @file{coredump}, @file{executable},
-@file{package}. If one or more files are not present in
-the archive, the server returns the @code{403 Forbidden} HTTP error code.
-The @file{release} file is not required, but strongly recommended to include.
-Without this one the server tries to guess release, but the client can not
-rely on a correct identification of its system.
+present in the archive for binary crashes: @file{coredump},
+@file{executable}, @file{package}. The @file{os_release} file is not
+required, but may be really helpful. Without this one the server
+tries to guess release, but the client can not rely on a correct
+identification of its system.
+
+For kernel crashes, only the @file{vmcore} needs to be present in
+the archive. Although it's just one file, it needs to be
+@command{tar}-compressed as well.
+
+If one or more files are not present in the archive, the server
+returns the @code{403 Forbidden} HTTP error code.
 
 If the file check succeeds, the server HTTP response has the @code{201
 Created} HTTP code. The response includes the following HTTP header
@@ -327,11 +362,14 @@ mostly limited by the hard drive size and speed.
 @chapter Retrace worker
 
 Retrace worker is a program (usually residing in
-@command{/usr/bin/retrace-server-worker}), which:
+@command{/usr/bin/retrace-server-worker}) takes a task id as
+a parameter and turns it into the task directory. Depending on
+the task type it performs different actions.
+
+@section Binary crashes
+
+The worker performs following steps for binary crashes:
 @enumerate
-@item
-takes a task id as a parameter, and turns it into a directory containing
-a coredump
 @item
 determines which packages need to be installed from the coredump
 @item
@@ -406,18 +444,63 @@ is @code{TASK_DEBUG} task type, which is designed to keep crash
 (including coredump) and chroot on the server for deeper
 Retrace server code debugging.
 
+@section Kernel crashes
+
+The worker performs following steps for kernel crashes:
+@enumerate
+@item
+determines the kernel version from the vmcore
+@item
+prepares a chroot if the architecture is different to host system's
+and copies the vmcore into the chroot
+@item
+if required, unpacks appropriate kernel-debuginfo and caches vmlinux
+@item
+runs @command{crash} tool to generate the log
+@item
+copies the resulting log to the task directory
+@end enumerate
+
+Determining the kernel version from the vmcore is a tricky thing.
+The @command{crash} tool has the @command{--osrelease} option,
+which can be used to determine the version. However this does not
+work for cross-arch vmcores (especially i386 on x86_64). Another
+problem is that el6+ vmcores contain the kernel version in VRA
+(version.release.architecture) format, while el5- only contain VR
+(version.release).
+
+If the host system's architecture does not match the vmcore one,
+a chroot is required to be able to run @command{crash} tool correctly.
+The mock configuration is saved to
+@file{/var/spool/retrace-server/kernel-$ARCH} directory. The repo used
+to install the chroot must be specified in the configuration file,
+using @var{$ARCH} as a wildcard for the appropriate architecture.
+The chroot is only installed on first use and it is kept to be able
+to process future tasks.
+
+Before running the @command{crash} tool, the worker looks for
+@file{/var/cache/retrace-server/kernel/vmlinux-VRA} file. If this one
+is not present, the search for @file{kernel-debuginfo} starts.
+The worker tries to find the debuginfo in all
+@file{/var/cache/retrace-server/} subdirectories and additional
+directories specified in the configuration file. If found,
+the debuginfo is unpacked, @file{vmlinux} is cached and the rest of debuginfo
+is deleted.
+
 @node Task cleanup
 @chapter Task cleanup
 
 It is neccessary to watch and limit the resource usage of tasks for a
 retrace server to remain operational. This is performed by the
 @command{retrace-server-cleanup} tool. It is supposed that the server
-administrator sets @command{cron} to run the tool every hour.
+administrator sets @command{cron} to run the tool every hour (as
+@var{apache} user). The commented crontab entry is added when
+installing the RPM.
 
 Tasks that were created more than 120 hours (5 days) ago are
 deleted. The limit can be changed by the @var{DeleteTaskAfter} option in
 the server configuration file. Coredumps are deleted when the retrace
-process is finished, and only backtraces, logs, and configuration remain
+process is finished, and only backtraces, logs, and passwords remain
 available for every task until the cleanup. The
 @command{retrace-server-cleanup} checks the creation time and deletes the
 directories in @file{/var/spool/retrace-server/}.
@@ -620,7 +703,7 @@ server's environment.
 @c We should consider setting a disk quota to every chroot directory,
 @c and limit the GDB access to resources using cgroups.
 
-SELinux policy exists for the retrace worker.
+SELinux policy exists for the retrace worker, but needs to be updated.
 
 @node Clients
 @section Clients
@@ -650,7 +733,7 @@ server, the passwords protecting the backtraces in the
 @var{X-Task-Password} header are random alphanumeric
 (@samp{[a-zA-Z0-9]}) sequences 32 characters long. 32 alphanumeric
 characters corresponds to 192 bit password, because @samp{[a-zA-Z0-9]}
-is 62 characters, and @math{2^{192}} < @math{62^{22}}. The source of
+is 62 characters, and @math{2^{192}} < @math{62^{32}}. The source of
 randomness is @file{/dev/urandom}.
 
 @node Packages and debuginfo
@@ -662,6 +745,81 @@ package origin is verified.
 
 When the debuginfo filesystem server is done, the retrace server can
 safely use it, as the data will also be signed.
+
+@chapter Configuration
+
+The following options can be specified in the configuration file
+@file{/etc/retrace-server.conf}:
+
+@itemize
+@item
+@command{RequireHTTPS} boolean; whether to deny non-HTTPS. Default 1.
+@item
+@command{RequireGPGCheck} boolean; whether to use GPG check on
+the packages installed into chroot (does not apply for rawhide
+or vmcores chroot). GPG key file named @file{release-version} needs
+to be present in the @file{/usr/share/retrace-server/gpg/} directory.
+Default 1.
+@item
+@command{MaxParallelTasks} integer; how many tasks may be running
+at one time. All new tasks are denied while the number of running
+tasks is not less than the limit. Default 5.
+@item
+@command{MaxPackedSize} integer; maximum size of the uploaded archive
+(in megabytes). Default 50 (needs to be increased for vmcores).
+@item
+@command{MaxUnpackedSize} integer; maximum size of the archive content
+(in megabytes). This is a protection against sparse etc. which can
+unpack a small archive into a huge file. Default 1024.
+@item
+@command{MinStorageLeft} integer; the amount of storage space that
+needs to be kept free on the @file{/var/spool/retrace-server}
+filesystem (in megabytes). Default 1024.
+@item
+@command{DeleteTaskAfter} integer; time (in hours) after which
+the task is considered "old" and should be deleted (next run of
+@command{retrace-server-cleanup} deletes it). Default 120.
+@item
+@command{DBFile} string; the name of file used to save statistics.
+Default @file{stats.db}.
+@item
+@command{LogDir} string; the directory used to save global logs.
+Per-task logs are saved to task directories. Default
+@file{/var/log/retrace-server}.
+@item
+@command{RepoDir} string; the directory where local repositories
+are saved and searched. For vmcores, this directory also contains
+cached vmlinux files and needs to be writable for retrace user
+(thus can not be mounted read-only!). Needs to be synchronized
+manually to the content of @file{/etc/yum.repos.d/retarce-*.repo},
+which hardcodes the default. Default @file{/var/cache/retrace-server}.
+@item
+@command{SaveDir} string; the directory where task directories are
+created. Default @file{/var/spool/retrace-server}.
+@item
+@command{UseWorkDir} boolean; whether to use non-default mock
+directory. Historical, does not work at the moment. May be
+revived in the future.
+@item
+@command{WorkDir} string; custom mock working directory.
+Historical, does not work at the moment. May be revived in the future.
+@item
+@command{UseCreateRepoUpdate} boolean; whether to call
+@command{createrepo} with @command{--update} option when creating
+the local repository. This is much faster, but consumes a lot
+of memory (several gigabytes on a standard Fedora repo). Default 0.
+@item
+@command{KeepRawhideLatest} integer; how many latest packages from
+rawhide distribution to keep. All older packages are deleted.
+Default 3.
+@item
+@command{KernelChrootRepo} string; repository used to install chroot
+for cross-arch vmcore analysis. @var{$ARCH} is a wildcard for
+the required architecture. The repository must contain @file{bash},
+@file{coreutils}, @file{cpio}, @file{crash} and @file{shadow-utils}
+packages and their dependencies. Default
+@file{http://dl.fedoraproject.org/pub/fedora/linux/releases/16/Everything/$ARCH/os/}
+@end itemize
 
 @node Future work
 @chapter Future work
@@ -709,9 +867,8 @@ or coredump.xz.
 This would make retrace server very vulnerable to attacks, it never can
 be enabled in a public instance.
 
-@section Support vmcores
-See @uref{https://fedorahosted.org/cas/, Core analysis system}, its
-features etc.
+@section Update SELinux policy
+The SELinux policy needs to be updated because of recent changes.
 
 @section Do not refuse new tasks on a fully loaded server
 Consider using @uref{http://git.fedorahosted.org/git/?p=kobo.git, kobo}
@@ -800,11 +957,5 @@ then all the old rows can be deleted by executing @code{DELETE FROM
 package_time WHERE package == '??' AND release == '??' AND id <= ??}
 @end itemize
 @end enumerate
-
-@section Support Fedora Rawhide
-When the @command{retrace-server-reposync} is used to sync with the
-Rawhide repository, unneeded packages (where a newer version exists)
-must be removed after residing one week with the newer package in the
-same repository.
 
 @bye
