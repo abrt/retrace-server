@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/xml; charset=utf-8" />
+    <title>Retrace Server statistics</title>
+    <style type="text/css">
+      #stats
+      {
+        width: 980px;
+        border: 0;
+        margin: 0 auto;
+      }
+      body
+      {
+        background-color: white;
+        color: black;
+        font-family: monospace;
+        font-size: 14px;
+      }
+      h1
+      {
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+      }
+      h2
+      {
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+      }
+      h3
+      {
+        text-align: center;
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 16px;
+        margin-bottom: 0px;
+      }
+      div.left
+      {
+        margin-top: 1px;
+        width: 49%;
+      }
+      div.right
+      {
+        margin-top: 1px;
+        float: right;
+        width: 49%;
+      }
+      table
+      {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      table td
+      {
+        border: 1px solid black;
+      }
+      table th
+      {
+        color: black;
+        background-color: #88f;
+        border: 1px solid black;
+      }
+      table tr.odd
+      {
+        background-color: #bbf;
+      }
+      table tr.even
+      {
+        background-color: #ddf;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stats">
+      <h1>Retrace Server statistics</h1>
+      <h2>{host}</h2>
+      <div>
+        <div class="right">
+          <h3>Releases</h3>
+          <table>
+            <tr>
+              <th>Release</th>
+              <th>Count</th>
+            </tr>
+            <tr class="odd">
+              <td>Fedora 15</td>
+              <td>{f15}</td>
+            </tr>
+            <tr class="even">
+              <td>Fedora 16</td>
+              <td>{f16}</td>
+            </tr>
+            <tr class="odd">
+              <td>Fedora 17</td>
+              <td>{f17}</td>
+            </tr>
+          </table>
+          <h3>Retraced packages</h3>
+          <table>
+            <tr>
+              <th>Name</th>
+              <th>Count</th>
+            </tr>
+            {retraced_rows}
+          </table>
+        </div>
+        <div class="left">
+          <h3>Global statistics</h3>
+          <table>
+            <tr class="odd">
+              <td>Total</td>
+              <td>{total}</td>
+            </tr>
+            <tr class="even">
+              <td>Successful</td>
+              <td>{success}</td>
+            </tr>
+            <tr class="odd">
+              <td>Failed</td>
+              <td>{fail}</td>
+            </tr>
+            <tr class="even">
+              <td>First retrace</td>
+              <td>{first}</td>
+            </tr>
+            <tr class="odd">
+              <td>Denied jobs</td>
+              <td>{denied}</td>
+            </tr>
+          </table>
+          <h3>Architectures</h3>
+          <table>
+            <tr>
+              <th>Architecture</th>
+              <th>Count</th>
+            </tr>
+            {arch_rows}
+          </table>
+          <h3>Required packages</h3>
+          <table>
+            <tr>
+              <th>Name</th>
+              <th>Versions</th>
+              <th>Count</th>
+            </tr>
+            {required_rows}
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3>Missing build-ids</h3>
+        <table>
+          <tr>
+            <th>Build-id</th>
+            <th>Shared object name</th>
+            <th>Count</th>
+          </tr>
+          {buildids_rows}
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

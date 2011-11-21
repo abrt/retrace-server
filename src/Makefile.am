@@ -18,9 +18,9 @@ CLEANFILES = $(man1_MANS)
 
 dist_bin_SCRIPTS = retrace-server-cleanup retrace-server-reposync retrace-server-worker coredump2packages
 
-interface_PYTHON = backtrace.wsgi create.wsgi index.wsgi log.wsgi settings.wsgi status.wsgi
-interface_DATA = index.xhtml
+interface_PYTHON = backtrace.wsgi create.wsgi index.wsgi log.wsgi settings.wsgi stats.wsgi status.wsgi
+interface_DATA = index.xhtml stats.xhtml
 # interfacedir should probably be $$(pkgdatadir)/retrace
 interfacedir =  $(datadir)/retrace-server
 
-EXTRA_DIST = $(man1_MANS) index.xhtml
+EXTRA_DIST = $(man1_MANS) index.xhtml stats.xhtml
