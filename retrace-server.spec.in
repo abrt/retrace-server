@@ -110,6 +110,12 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Tue Nov 22 2011 Michal Toman <mtoman@redhat.com> 1.4-1
+- add support for vmcores
+- add welcome page
+- add statistics page
+- add support for rawhide
+
 * Tue Aug 23 2011 Michal Toman <mtoman@redhat.com> 1.3-1
 - cron jobs are not enabled by default
 - support X-Task-Type header
