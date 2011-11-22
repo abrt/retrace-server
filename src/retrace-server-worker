@@ -343,16 +343,23 @@ def get_kernel_release(vmcore):
     return release
 
 def find_kernel_debuginfo(kernelver):
+    vers = [kernelver]
+    if kernelver.endswith(".i386"):
+        vers.append(kernelver.replace(".i386", ".i486"))
+        vers.append(kernelver.replace(".i386", ".i586"))
+        vers.append(kernelver.replace(".i386", ".i686"))
+
     # search for the debuginfo RPM
     for release in os.listdir(CONFIG["RepoDir"]):
-        testfile = os.path.join(CONFIG["RepoDir"], release, "Packages", "kernel-debuginfo-%s.rpm" % kernelver)
-        if os.path.isfile(testfile):
-            return testfile
+        for ver in vers:
+            testfile = os.path.join(CONFIG["RepoDir"], release, "Packages", "kernel-debuginfo-%s.rpm" % ver)
+            if os.path.isfile(testfile):
+                return testfile
 
-        # should not happen, but anyway...
-        testfile = os.path.join(CONFIG["RepoDir"], release, "kernel-debuginfo-%s.rpm" % kernelver)
-        if os.path.isfile(testfile):
-            return testfile
+            # should not happen, but anyway...
+            testfile = os.path.join(CONFIG["RepoDir"], release, "kernel-debuginfo-%s.rpm" % ver)
+            if os.path.isfile(testfile):
+                return testfile
 
     return None
 
