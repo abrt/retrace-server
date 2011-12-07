@@ -242,19 +242,24 @@ def run_gdb(savedir):
     if chmod != 0:
         raise Exception, "Unable to chmod the executable"
 
-    child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
-                   "--", "su", "mockbuild", "-c",
-                   "\" gdb -batch"
-                   " -ex 'file %s'"
-                   " -ex 'core-file /var/spool/abrt/crash/coredump'"
-                   " -ex 'thread apply all backtrace 2048 full'"
-                   " -ex 'info sharedlib'"
-                   " -ex 'print (char*)__abort_msg'"
-                   " -ex 'print (char*)__glib_assert_msg'"
-                   " -ex 'info registers'"
-                   " -ex 'disassemble' \"" % executable,
-                   # redirect GDB's stderr, ignore mock's stderr
-                   "2>&1"], stdout=PIPE)
+    batfile = os.path.join(savedir, "gdb.sh")
+    with open(batfile, "w") as gdbfile:
+        gdbfile.write("gdb -batch -ex 'file %s' "
+                      "-ex 'core-file /var/spool/abrt/crash/coredump' "
+                      "-ex 'thread apply all backtrace 2048 full' "
+                      "-ex 'info sharedlib' "
+                      "-ex 'print (char*)__abort_msg' "
+                      "-ex 'print (char*)__glib_assert_msg' "
+                      "-ex 'info registers' "
+                      "-ex 'disassemble'" % executable)
+
+    with open("/dev/null", "w") as null:
+        call(["/usr/bin/mock", "--configdir", savedir, "--copyin", batfile, "/var/spool/abrt/gdb.sh"])
+
+        child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
+                       "--", "su", "mockbuild", "-c", "'/bin/sh /var/spool/abrt/gdb.sh'",
+                       # redirect GDB's stderr, ignore mock's stderr
+                       "2>&1"], stdout=PIPE, stderr=null)
 
     backtrace = child.communicate()[0]
 
