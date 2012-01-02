@@ -1,6 +1,8 @@
 from retrace import *
 from tempfile import *
 
+BUFSIZE = 1 << 20 # 1 MB
+
 def application(environ, start_response):
     request = Request(environ)
 
@@ -70,7 +72,10 @@ def application(environ, start_response):
     try:
         archive = NamedTemporaryFile(mode="wb", suffix=".tar.xz",
                                      delete=False, dir=task.get_savedir())
-        archive.write(request.body)
+        buf = request.body_file.read(BUFSIZE)
+        while buf:
+            archive.write(buf)
+            buf = request.body_file.read(BUFSIZE)
         archive.close()
     except:
         task.remove()
