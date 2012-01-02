@@ -233,16 +233,6 @@ def start_retrace():
 
     # does not work at the moment
     rootsize = 0
-    with open("/dev/null", "w") as null:
-        child = Popen(["/usr/bin/mock", "--configdir", task.get_savedir(), "shell",
-                       "--", "du", "-sb", "/"], stdout=PIPE, stderr=null)
-        output = child.communicate()[0]
-
-    for line in output.split("\n"):
-        match = DU_OUTPUT_PARSER.match(line)
-        if match:
-            rootsize = int(match.group(1))
-            break
 
     if task.get_type() != TASK_DEBUG:
         # clean up temporary data
