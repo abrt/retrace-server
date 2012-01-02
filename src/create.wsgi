@@ -123,20 +123,13 @@ def application(environ, start_response):
                             _("Symlinks are not allowed to be in" \
                               " the archive"))
 
-        allowed = False
-        for filename in ALLOWED_FILES.keys():
-            if f != filename:
-                continue
-
-            allowed = True
-            maxsize = ALLOWED_FILES[filename]
-
+        if f in ALLOWED_FILES:
+            maxsize = ALLOWED_FILES[f]
             if maxsize > 0 and os.path.getsize(filepath) > maxsize:
                 task.remove()
                 return response(start_response, "403 Forbidden",
                                 _("The '%s' file is larger than expected") % f)
-
-        if not allowed:
+        else:
             task.remove()
             return response(start_response, "403 Forbidden",
                             _("File '%s' is not allowed to be in" \
