@@ -3,5 +3,7 @@
 # Please keep this file sorted alphabetically.
 src/backtrace.wsgi
 src/create.wsgi
+src/index.wsgi
 src/log.wsgi
+src/stats.wsgi
 src/status.wsgi

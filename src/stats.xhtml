@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/xml; charset=utf-8" />
-    <title>Retrace Server statistics</title>
+    <title>{_Retrace_Server_statistics}</title>
     <style type="text/css">
       #stats
       {
@@ -76,15 +76,15 @@
   </head>
   <body>
     <div id="stats">
-      <h1>Retrace Server statistics</h1>
+      <h1>{_Retrace_Server_statistics}</h1>
       <h2>{host}</h2>
       <div>
         <div class="right">
-          <h3>Releases</h3>
+          <h3>{_Releases}</h3>
           <table>
             <tr>
-              <th>Release</th>
-              <th>Count</th>
+              <th>{_Release}</th>
+              <th>{_Count}</th>
             </tr>
             <tr class="odd">
               <td>Fedora 15</td>
@@ -99,65 +99,65 @@
               <td>{f17}</td>
             </tr>
           </table>
-          <h3>Retraced packages</h3>
+          <h3>{_Retraced_packages}</h3>
           <table>
             <tr>
-              <th>Name</th>
-              <th>Count</th>
+              <th>{_Name}</th>
+              <th>{_Count}</th>
             </tr>
             {retraced_rows}
           </table>
         </div>
         <div class="left">
-          <h3>Global statistics</h3>
+          <h3>{_Global_statistics}</h3>
           <table>
             <tr class="odd">
-              <td>Total</td>
+              <td>{_Total}</td>
               <td>{total}</td>
             </tr>
             <tr class="even">
-              <td>Successful</td>
+              <td>{_Successful}</td>
               <td>{success}</td>
             </tr>
             <tr class="odd">
-              <td>Failed</td>
+              <td>{_Failed}</td>
               <td>{fail}</td>
             </tr>
             <tr class="even">
-              <td>First retrace</td>
+              <td>{_First_retrace}</td>
               <td>{first}</td>
             </tr>
             <tr class="odd">
-              <td>Denied jobs</td>
+              <td>{_Denied_jobs}</td>
               <td>{denied}</td>
             </tr>
           </table>
-          <h3>Architectures</h3>
+          <h3>{_Architectures}</h3>
           <table>
             <tr>
-              <th>Architecture</th>
-              <th>Count</th>
+              <th>{_Architecture}</th>
+              <th>{_Count}</th>
             </tr>
             {arch_rows}
           </table>
-          <h3>Required packages</h3>
+          <h3>{_Required_packages}</h3>
           <table>
             <tr>
-              <th>Name</th>
-              <th>Versions</th>
-              <th>Count</th>
+              <th>{_Name}</th>
+              <th>{_Versions}</th>
+              <th>{_Count}</th>
             </tr>
             {required_rows}
           </table>
         </div>
       </div>
       <div>
-        <h3>Missing build-ids</h3>
+        <h3>{_Missing_build-ids}</h3>
         <table>
           <tr>
-            <th>Build-id</th>
-            <th>Shared object name</th>
-            <th>Count</th>
+            <th>{_Build-id}</th>
+            <th>{_Shared_object_name}</th>
+            <th>{_Count}</th>
           </tr>
           {buildids_rows}
         </table>

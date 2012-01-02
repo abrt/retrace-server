@@ -2,8 +2,37 @@
 from retrace import *
 
 def application(environ, start_response):
+    request = Request(environ)
+    _ = parse_http_gettext("%s" % request.accept_language,
+                           "%s" % request.accept_charset)
+
+    strings = {
+                "{_Architecture}": _("Architecture"),
+                "{_Architectures}": _("Architectures"),
+                "{_Build-id}": _("Build-id"),
+                "{_Count}": _("Count"),
+                "{_Denied_jobs}": _("Denied jobs"),
+                "{_Failed}": _("Failed"),
+                "{_First_retrace}": _("First retrace"),
+                "{_Global_statistics}": _("Global statistics"),
+                "{_Missing_build-ids}": _("Missing build-ids"),
+                "{_Name}": _("Name"),
+                "{_Release}": _("Release"),
+                "{_Releases}": _("Releases"),
+                "{_Required_packages}": _("Required packages"),
+                "{_Retraced_packages}": _("Retraced packages"),
+                "{_Retrace_Server_statistics}": _("Retrace Server statistics"),
+                "{_Shared_object_name}": _("Shared object name"),
+                "{_Successful}": _("Successful"),
+                "{_Total}": _("Total"),
+                "{_Versions}": _("Versions"),
+              }
+
     with open("/usr/share/retrace-server/stats.xhtml") as f:
         output = f.read(1 << 20) # 1 MB
+
+    for key in strings:
+        output = output.replace(key, strings[key])
 
     output = output.replace("{host}", environ["HTTP_HOST"])
 
