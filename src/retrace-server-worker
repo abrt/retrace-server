@@ -150,7 +150,12 @@ def start_retrace():
             elif 0 == section:
                 crash_package_or_component = line.strip()
             elif 1 == section:
-                packages.append(line.strip())
+                stripped = line.strip()
+
+                # hack - help to depsolver, yum would fail otherwise
+                if distribution == "fedora" and stripped.startswith("gnome"):
+                    packages.append("desktop-backgrounds-gnome")
+                packages.append(stripped)
             elif 2 == section:
                 soname, buildid = line.strip().split(" ", 1)
                 if not soname or soname == "-":
