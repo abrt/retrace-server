@@ -143,6 +143,7 @@ def start_retrace():
         section = 0
         crash_package_or_component = None
         lines = child.communicate()[0].split("\n")
+        libdb = False
         for line in lines:
             if line == "":
                 section += 1
@@ -155,6 +156,16 @@ def start_retrace():
                 # hack - help to depsolver, yum would fail otherwise
                 if distribution == "fedora" and stripped.startswith("gnome"):
                     packages.append("desktop-backgrounds-gnome")
+
+                # hack - libdb-debuginfo and db4-debuginfo are conflicting
+                if distribution == "fedora" and \
+                   (stripped.startswith("db4-debuginfo") or \
+                    stripped.startswith("libdb-debuginfo")):
+                    if libdb:
+                        continue
+                    else:
+                        libdb = True
+
                 packages.append(stripped)
             elif 2 == section:
                 soname, buildid = line.strip().split(" ", 1)
