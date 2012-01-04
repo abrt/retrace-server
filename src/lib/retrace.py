@@ -236,24 +236,32 @@ def run_gdb(savedir):
     if '"' in executable or "'" in executable:
         raise Exception, "Executable contains forbidden characters"
 
-    chmod = call(["/usr/bin/mock", "shell", "--configdir", savedir,
-                  "--", "/bin/chmod", "a+r", "'%s'" % executable])
-
-    if chmod != 0:
-        raise Exception, "Unable to chmod the executable"
-
-    batfile = os.path.join(savedir, "gdb.sh")
-    with open(batfile, "w") as gdbfile:
-        gdbfile.write("gdb -batch -ex 'file %s' "
-                      "-ex 'core-file /var/spool/abrt/crash/coredump' "
-                      "-ex 'thread apply all backtrace 2048 full' "
-                      "-ex 'info sharedlib' "
-                      "-ex 'print (char*)__abort_msg' "
-                      "-ex 'print (char*)__glib_assert_msg' "
-                      "-ex 'info registers' "
-                      "-ex 'disassemble'" % executable)
-
     with open("/dev/null", "w") as null:
+        child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
+                       "--", "ls", "'%s'" % executable],
+                       stdout=PIPE, stderr=null)
+        output = child.communicate()[0]
+        if output.strip() != executable:
+            raise Exception("The appropriate package set could not be installed")
+
+        chmod = call(["/usr/bin/mock", "shell", "--configdir", savedir,
+                      "--", "/bin/chmod", "a+r", "'%s'" % executable],
+                      stdout=null, stderr=null)
+
+        if chmod != 0:
+            raise Exception, "Unable to chmod the executable"
+
+        batfile = os.path.join(savedir, "gdb.sh")
+        with open(batfile, "w") as gdbfile:
+            gdbfile.write("gdb -batch -ex 'file %s' "
+                          "-ex 'core-file /var/spool/abrt/crash/coredump' "
+                          "-ex 'thread apply all backtrace 2048 full' "
+                          "-ex 'info sharedlib' "
+                          "-ex 'print (char*)__abort_msg' "
+                          "-ex 'print (char*)__glib_assert_msg' "
+                          "-ex 'info registers' "
+                          "-ex 'disassemble'" % executable)
+
         call(["/usr/bin/mock", "--configdir", savedir, "--copyin", batfile, "/var/spool/abrt/gdb.sh"])
 
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
@@ -261,7 +269,9 @@ def run_gdb(savedir):
                        # redirect GDB's stderr, ignore mock's stderr
                        "2>&1"], stdout=PIPE, stderr=null)
 
-    backtrace = child.communicate()[0]
+    backtrace = child.communicate()[0].strip()
+    if not backtrace:
+        raise Exception("An unusable backtrace has been generated")
 
     return backtrace
 
