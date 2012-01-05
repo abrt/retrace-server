@@ -381,18 +381,9 @@ def cache_vmlinux_from_debuginfo(kernelver, kernelver_noarch=None):
         shutil.rmtree(kerneltmp)
         fail(64)
 
-    cwd = os.getcwdu()
-
-    try:
-        os.chdir(kerneltmp)
-    except:
-        log += "Error\nUnable to chdir to directory '%s'\n" % kerneltmp
-        shutil.rmtree(kerneltmp)
-        fail(65)
-
     with open("/dev/null", "w") as null:
         rpm2cpio = Popen(["rpm2cpio", rpmfile], stdout=PIPE, stderr=null)
-        cpio = Popen(["cpio", "-id"], stdin=rpm2cpio.stdout, stdout=null, stderr=null)
+        cpio = Popen(["cpio", "-id"], stdin=rpm2cpio.stdout, stdout=null, stderr=null, cwd=kerneltmp)
         ret1 = rpm2cpio.wait()
         ret2 = cpio.wait()
         rpm2cpio.stdout.close()
@@ -401,13 +392,6 @@ def cache_vmlinux_from_debuginfo(kernelver, kernelver_noarch=None):
             log += "Warning: rpm2cpio exited with %d; " % ret1
         if ret2:
             log += "Warning: cpio exited with %d; " % ret2
-
-    try:
-        os.chdir(cwd)
-    except:
-        log += "Error\nUnable to get back to directory '%s'\n" % cwd
-        shutil.rmtree(kerneltmp)
-        fail(66)
 
     vmlinux = None
     cand = os.path.join(kerneltmp, "usr", "lib", "debug", "lib", "modules", kernelver, "vmlinux")
