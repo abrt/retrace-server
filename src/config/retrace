@@ -1,4 +1,0 @@
-#0 0,12 * * * /usr/bin/retrace-server-reposync fedora 15 i386 >> /var/log/retrace-server/reposync_error.log 2>&1
-#0 3,15 * * * /usr/bin/retrace-server-reposync fedora 15 x86_64 >> /var/log/retrace-server/reposync_error.log 2>&1
-#0 6,18 * * * /usr/bin/retrace-server-reposync fedora 16 i386 >> /var/log/retrace-server/reposync_error.log 2>&1
-#0 9,21 * * * /usr/bin/retrace-server-reposync fedora 16 x86_64 >> /var/log/retrace-server/reposync_error.log 2>&1
