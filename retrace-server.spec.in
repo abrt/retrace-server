@@ -105,7 +105,6 @@ fi
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}-httpd.conf
 %config(noreplace) %{_sysconfdir}/%{name}.conf
-%config(noreplace) %{_sysconfdir}/yum.repos.d/%{name}.repo
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}
 %dir %attr(0775,retrace,apache) %{_localstatedir}/cache/%{name}/kernel

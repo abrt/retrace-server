@@ -49,6 +49,8 @@ DF_OUTPUT_PARSER = re.compile("^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-
 DU_OUTPUT_PARSER = re.compile("^([0-9]+)")
 URL_PARSER = re.compile("^/([0-9]+)/?")
 
+REPODIR_NAME_PARSER = re.compile("^[^\-]+\-[^\-]+\-[^\-]+$")
+
 # rpm name parsers
 EPOCH_PARSER = re.compile("^(([0-9]+)\:).*$")
 ARCH_PARSER = re.compile("^.*(\.([0-9a-zA-Z_]+))$")
@@ -206,10 +208,15 @@ def guess_release(package, plugins):
 
 def get_supported_releases():
     result = []
-    yb = YumBase()
-    for repo in yb.repos.repos:
-        if repo.startswith(REPO_PREFIX):
-            result.append(repo[len(REPO_PREFIX):])
+    files = os.listdir(CONFIG["RepoDir"])
+    for f in files:
+        fullpath = os.path.join(CONFIG["RepoDir"], f)
+        if not os.path.isdir(fullpath):
+            continue
+
+        if REPODIR_NAME_PARSER.match(f) and \
+           os.path.isdir(os.path.join(fullpath, "repodata")):
+            result.append(f)
 
     return result
 

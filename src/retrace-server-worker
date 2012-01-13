@@ -137,8 +137,16 @@ def start_retrace():
     missing = []
     # read required packages from coredump
     try:
+        repoid = "%s%s" % (REPO_PREFIX, releaseid)
+        yumcfgpath = os.path.join(task.get_savedir(), "yum.conf")
+        with open(yumcfgpath, "w") as yumcfg:
+            yumcfg.write("[%s]\n" % repoid)
+            yumcfg.write("name=%s\n" % releaseid)
+            yumcfg.write("baseurl=file://%s/%s/\n" % (CONFIG["RepoDir"], releaseid))
+            yumcfg.write("failovermethod=priority\n")
+
         child = Popen(["coredump2packages", os.path.join(crashdir, "coredump"),
-                       "--repos=%s%s*" % (REPO_PREFIX, releaseid)],
+                       "--repos=%s" % repoid, "--config=%s" % yumcfgpath],
                       stdout=PIPE)
         section = 0
         crash_package_or_component = None

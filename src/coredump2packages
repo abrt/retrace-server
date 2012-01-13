@@ -11,6 +11,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Get packages for coredump processing.')
 parser.add_argument('--repos', default='*', metavar='WILDCARD',
                     help='Yum repository wildcard to be enabled')
+parser.add_argument('--config', help='Yum config file')
 parser.add_argument('coredump', help='Coredump')
 parser.add_argument('--log', metavar='FILENAME',
                     help='Store debug output to a file')
@@ -28,7 +29,10 @@ else:
 stdout = sys.stdout
 sys.stdout = log
 yumbase = yum.YumBase()
-yumbase.doConfigSetup()
+if args.config:
+    yumbase.doConfigSetup(args.config)
+else:
+    yumbase.doConfigSetup()
 if not yumbase.setCacheDir():
     exit(2)
 log.write("Closing all enabled repositories...\n")
