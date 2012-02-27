@@ -124,7 +124,7 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
-* Mon Feb 27 2011 Michal Toman <mtoman@redhat.com> 1.5-1
+* Mon Feb 27 2012 Michal Toman <mtoman@redhat.com> 1.5-1
 - add support for F17
 - add hacks helping to depsolver
 - read huge files buffered
