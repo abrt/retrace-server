@@ -492,7 +492,7 @@ def start_vmcore():
                     with open(os.path.join(tmpdir, "default.cfg"), "w") as mockcfg:
                         mockcfg.write("config_opts['root'] = 'kernel-%s'\n" % arch)
                         mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
-                        mockcfg.write("config_opts['chroot_setup_cmd'] = 'install crash cpio bash shadow-utils coreutils'\n")
+                        mockcfg.write("config_opts['chroot_setup_cmd'] = 'install bash coreutils cpio crash rpm shadow-utils'\n")
                         mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
                         mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
                         mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
