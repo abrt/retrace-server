@@ -124,6 +124,13 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Mon Feb 27 2011 Michal Toman <mtoman@redhat.com> 1.5-1
+- add support for F17
+- add hacks helping to depsolver
+- read huge files buffered
+- get rid of retrace-server.repo file
+- add /<task_id>/delete action
+
 * Tue Nov 22 2011 Michal Toman <mtoman@redhat.com> 1.4-1
 - add support for vmcores
 - add welcome page
