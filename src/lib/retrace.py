@@ -95,6 +95,7 @@ CONFIG = {
   "WorkDir": "/tmp/retrace-server",
   "UseWorkDir": False,
   "RequireHTTPS": True,
+  "AllowAPIDelete": False,
   "RequireGPGCheck": True,
   "UseCreaterepoUpdate": False,
   "DBFile": "stats.db",
