@@ -6,12 +6,6 @@ from retrace import *
 sys.path.insert(0, "/usr/share/retrace-server/")
 from plugins import *
 
-# parsers for vmcore version
-# 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
-KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?\-[0-9]+\.[^\.]+)(\.([^\.]+))?$")
-# OSRELEASE=2.6.32-209.el6.x86_64
-OSRELEASE_VAR_PARSER = re.compile("^OSRELEASE=(.*)$")
-
 starttime = int(time.time())
 log = ""
 task = None
@@ -33,7 +27,7 @@ def fail(exitcode):
     task.set_log(log)
     stats["duration"] = int(time.time()) - stats["starttime"]
     save_crashstats(stats)
-    if task.get_type() != TASK_DEBUG:
+    if not task.get_type() in [TASK_DEBUG, TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
         task.clean()
     sys.exit(exitcode)
 
@@ -258,7 +252,7 @@ def start_retrace():
     # does not work at the moment
     rootsize = 0
 
-    if task.get_type() != TASK_DEBUG:
+    if not task.get_type() in [TASK_DEBUG, TASK_RETRACE_INTERACTIVE]:
         # clean up temporary data
         task.set_status(STATUS_CLEANUP)
         log += "%s " % STATUS[STATUS_CLEANUP]
@@ -287,74 +281,6 @@ def start_retrace():
 
     task.set_log(log)
     task.set_status(STATUS_SUCCESS)
-
-# tricky
-# crash is not able to process the vmcore from different arch
-# (not even x86_64 and x86). In addition, there are several
-# types of vmcores: running 'file' command on el5- vmcore results
-# into an expected description (x86-64 or 80386 coredump), while
-# el6+ vmcores are just proclaimed 'data'. Another thing is that
-# the OSRELEASE in the vmcore sometimes contains architecture
-# and sometimes it does not.
-def get_kernel_release(vmcore):
-    child = Popen(["crash", "--osrelease", vmcore], stdout=PIPE, stderr=STDOUT)
-    release = child.communicate()[0].strip()
-
-    if child.wait() != 0 or \
-       not release or \
-       "\n" in release or \
-       release == "unknown":
-        # crash error, let's search the vmcore on our own
-        vers = {}
-        child = Popen(["strings", "-n", "10", vmcore], stdout=PIPE, stderr=STDOUT)
-        # lots! of output, do not use .communicate()
-        line = child.stdout.readline()
-        while line:
-            line = line.strip()
-
-            # OSRELEASE variable is defined in the vmcore,
-            # but crash was not able to find it (cross-arch)
-            match = OSRELEASE_VAR_PARSER.match(line)
-            if match:
-                release = match.group(1)
-                break
-
-            # assuming the kernel version will sooner or later
-            # appear in the list of strings contained in the
-            # vmcore
-            # paranoia - something else can match the pattern,
-            # or another version may be present. assuming that
-            # the correct version is repeated several times
-            match = KERNEL_RELEASE_PARSER.match(line)
-            if match:
-                if line in vers:
-                    vers[line] += 1
-                else:
-                    vers[line] = 1
-
-                if vers[line] >= 3:
-                    release = line
-                    break
-
-            line = child.stdout.readline()
-
-        # much more output is available, but we don't need any more
-        child.stdout.close()
-        child.kill()
-
-    # check whether architecture is present
-    match = KERNEL_RELEASE_PARSER.match(release)
-    if not match:
-        return None
-
-    if match.group(4) is None:
-        arch = guess_arch(vmcore)
-        if not arch:
-            return None
-
-        release += ".%s" % arch
-
-    return release
 
 def find_kernel_debuginfo(kernelver):
     vers = [kernelver]
@@ -651,7 +577,8 @@ def start_vmcore():
     task.set_status(STATUS_CLEANUP)
     log += "%s " % STATUS[STATUS_CLEANUP]
 
-    task.clean()
+    if not task.get_type() in [TASK_VMCORE_INTERACTIVE]:
+        task.clean()
 
     log += "OK\nRetrace took %d seconds.\n" % stats["duration"]
     log += "%s\n" % STATUS[STATUS_SUCCESS]
@@ -711,9 +638,9 @@ if __name__ == "__main__":
             log += "Error\nCrash directory does not contain required file '%s'.\n" % required_file
             fail(15)
 
-    if tasktype in [TASK_RETRACE, TASK_DEBUG]:
+    if tasktype in [TASK_RETRACE, TASK_DEBUG, TASK_RETRACE_INTERACTIVE]:
         start_retrace()
-    elif tasktype == TASK_VMCORE:
+    elif tasktype in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
         start_vmcore()
     else:
         pass

@@ -24,13 +24,18 @@ ALLOWED_FILES = {
   "vmcore": 0,
 }
 
-TASK_RETRACE, TASK_DEBUG, TASK_VMCORE = xrange(3)
-TASK_TYPES = [TASK_RETRACE, TASK_DEBUG, TASK_VMCORE]
+TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
+  TASK_VMCORE_INTERACTIVE = xrange(5)
+
+TASK_TYPES = [TASK_RETRACE, TASK_DEBUG, TASK_VMCORE,
+              TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]
 
 REQUIRED_FILES = {
-  TASK_RETRACE: ["coredump", "executable", "package"],
-  TASK_DEBUG:   ["coredump", "executable", "package"],
-  TASK_VMCORE:  ["vmcore"],
+  TASK_RETRACE:             ["coredump", "executable", "package"],
+  TASK_DEBUG:               ["coredump", "executable", "package"],
+  TASK_VMCORE:              ["vmcore"],
+  TASK_RETRACE_INTERACTIVE: ["coredump", "executable", "package"],
+  TASK_VMCORE_INTERACTIVE:  ["vmcode"],
 }
 
 #characters, numbers, dash (utf-8, iso-8859-2 etc.)
@@ -57,6 +62,12 @@ ARCH_PARSER = re.compile("^.*(\.([0-9a-zA-Z_]+))$")
 RELEASE_PARSER = re.compile("^.*(\-([0-9a-zA-Z\._]+))$")
 VERSION_PARSER = re.compile("^.*(\-([0-9a-zA-Z\._\:]+))$")
 NAME_PARSER = re.compile("^[a-zA-Z0-9_\.\+\-]+$")
+
+# parsers for vmcore version
+# 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
+KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?\-[0-9]+\.[^\.]+)(\.([^\.]+))?$")
+# OSRELEASE=2.6.32-209.el6.x86_64
+OSRELEASE_VAR_PARSER = re.compile("^OSRELEASE=(.*)$")
 
 HANDLE_ARCHIVE = {
   "application/x-xz-compressed-tar": {
@@ -282,6 +293,74 @@ def run_gdb(savedir):
         raise Exception("An unusable backtrace has been generated")
 
     return backtrace
+
+# tricky
+# crash is not able to process the vmcore from different arch
+# (not even x86_64 and x86). In addition, there are several
+# types of vmcores: running 'file' command on el5- vmcore results
+# into an expected description (x86-64 or 80386 coredump), while
+# el6+ vmcores are just proclaimed 'data'. Another thing is that
+# the OSRELEASE in the vmcore sometimes contains architecture
+# and sometimes it does not.
+def get_kernel_release(vmcore):
+    child = Popen(["crash", "--osrelease", vmcore], stdout=PIPE, stderr=STDOUT)
+    release = child.communicate()[0].strip()
+
+    if child.wait() != 0 or \
+       not release or \
+       "\n" in release or \
+       release == "unknown":
+        # crash error, let's search the vmcore on our own
+        vers = {}
+        child = Popen(["strings", "-n", "10", vmcore], stdout=PIPE, stderr=STDOUT)
+        # lots! of output, do not use .communicate()
+        line = child.stdout.readline()
+        while line:
+            line = line.strip()
+
+            # OSRELEASE variable is defined in the vmcore,
+            # but crash was not able to find it (cross-arch)
+            match = OSRELEASE_VAR_PARSER.match(line)
+            if match:
+                release = match.group(1)
+                break
+
+            # assuming the kernel version will sooner or later
+            # appear in the list of strings contained in the
+            # vmcore
+            # paranoia - something else can match the pattern,
+            # or another version may be present. assuming that
+            # the correct version is repeated several times
+            match = KERNEL_RELEASE_PARSER.match(line)
+            if match:
+                if line in vers:
+                    vers[line] += 1
+                else:
+                    vers[line] = 1
+
+                if vers[line] >= 3:
+                    release = line
+                    break
+
+            line = child.stdout.readline()
+
+        # much more output is available, but we don't need any more
+        child.stdout.close()
+        child.kill()
+
+    # check whether architecture is present
+    match = KERNEL_RELEASE_PARSER.match(release)
+    if not match:
+        return None
+
+    if match.group(4) is None:
+        arch = guess_arch(vmcore)
+        if not arch:
+            return None
+
+        release += ".%s" % arch
+
+    return release
 
 def get_task_est_time(taskdir):
     return 180
@@ -722,7 +801,8 @@ class RetraceTask:
             if f != RetraceTask.BACKTRACE_FILE and \
                f != RetraceTask.LOG_FILE and \
                f != RetraceTask.PASSWORD_FILE and \
-               f != RetraceTask.STATUS_FILE:
+               f != RetraceTask.STATUS_FILE and \
+               f != RetraceTask.TYPE_FILE:
                 path = os.path.join(self._savedir, f)
                 try:
                     if os.path.isdir(path):

@@ -1,0 +1,95 @@
+#!/usr/bin/python
+import argparse
+import grp
+from retrace import *
+
+ACTIONS = ["shell", "gdb", "crash"]
+
+if __name__ == "__main__":
+    groups = [grp.getgrgid(g).gr_name for g in os.getgroups()]
+    if not "mock" in groups or not "retrace" in groups:
+        print "You must be a member of 'mock' and 'retrace' groups " \
+              "in order to use interactive debugging."
+        exit(1)
+
+    parser = argparse.ArgumentParser(description="Interact with retrace-server's chroot")
+    parser.add_argument("task_id", help="Task ID")
+    parser.add_argument("action", help="Desired action (%s)" % "|".join(ACTIONS))
+    parser.add_argument("--priv", default=False, action="store_true", help="Run with root privileges")
+    args = parser.parse_args()
+
+    if not args.action in ACTIONS:
+        print "Invalid action. Allowed actions are: '%s'." % "', '".join(ACTIONS)
+        exit(1)
+
+    try:
+        taskid = int(args.task_id)
+        task = RetraceTask(taskid)
+    except Exception as ex:
+        print ex
+        exit(1)
+
+    if task.get_type() == TASK_RETRACE_INTERACTIVE:
+        if args.action == "shell":
+            cmdline = ["mock", "--configdir", task.get_savedir(), "shell"]
+            if not args.priv:
+                cmdline.append("--unpriv")
+            exit(call(cmdline))
+        if args.action == "gdb":
+            with open(os.path.join(task.get_savedir(), "crash", "executable"), "r") as exec_file:
+                executable = exec_file.read(ALLOWED_FILES["executable"])
+            if "'" in executable or '"' in executable:
+                raise Exception("executable contains forbidden characters")
+
+            cmdline = ["mock", "--configdir", task.get_savedir(), "shell",
+                       "gdb '%s' /var/spool/abrt/crash/coredump" % executable]
+            if not args.priv:
+                cmdline.append("--unpriv")
+
+            exit(call(cmdline))
+
+        print "Action '%s' is not allowed for coredumps." % args.action
+        exit(1)
+    elif task.get_type() == TASK_VMCORE_INTERACTIVE:
+        vmcore = os.path.join(task.get_savedir(), "crash", "vmcore")
+        kernelver = get_kernel_release(vmcore)
+        match = KERNEL_RELEASE_PARSER.match(kernelver)
+        if not match:
+            print "Unable to parse kernel release"
+            exit(1)
+
+        arch = match.group(4)
+        if arch in ["i486", "i586", "i686"]:
+            arch = "i386"
+
+        hostarch = os.uname()[4]
+        if hostarch in ["i486", "i586", "i686"]:
+            hostarch = "i386"
+
+        if args.action == "crash":
+            vmlinux = os.path.join(CONFIG["RepoDir"], "kernel", "vmlinux-%s" % kernelver)
+            if arch == hostarch:
+                cmdline = ["crash", "-s", vmcore, vmlinux]
+            else:
+                cmdline = ["mock", "--configdir", os.path.join(CONFIG["SaveDir"], "kernel-%s" % arch),
+                           "shell", "crash -s /var/crash/vmcore %s" % vmlinux]
+                if not args.priv:
+                    cmdline.append("--unpriv")
+
+            exit(call(cmdline))
+
+        if args.action == "shell":
+            if arch != hostarch:
+                cmdline = ["mock", "--configdir", os.path.join(CONFIG["SaveDir"], "kernel-%s" % arch), "shell"]
+                if not args.priv:
+                    cmdline.append("--unpriv")
+                exit(call(cmdline))
+
+            print "The task does not require a chroot. You can use the current shell."
+            exit(1)
+
+        print "Action '%s' is not allowed for vmcores." % args.action
+        exit(1)
+    else:
+        print "The specified task was not intended for interactive debugging."
+        exit(1)

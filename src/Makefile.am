@@ -2,6 +2,7 @@ SUBDIRS = config gpg lib plugins
 
 MAN_TXT = \
     retrace-server-cleanup.txt \
+    retrace-server-interact.txt \
     retrace-server-reposync.txt \
     retrace-server-worker.txt
 
@@ -16,7 +17,7 @@ man1_MANS = ${MAN_TXT:%.txt=%.1}
 
 CLEANFILES = $(man1_MANS)
 
-dist_bin_SCRIPTS = retrace-server-cleanup retrace-server-reposync retrace-server-worker coredump2packages
+dist_bin_SCRIPTS = retrace-server-cleanup retrace-server-reposync retrace-server-worker coredump2packages retrace-server-interact
 
 interface_PYTHON = backtrace.wsgi create.wsgi delete.wsgi index.wsgi log.wsgi settings.wsgi stats.wsgi status.wsgi
 interface_DATA = index.xhtml stats.xhtml

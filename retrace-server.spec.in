@@ -112,12 +112,14 @@ fi
 %dir %attr(0775,retrace,apache) %{_localstatedir}/spool/%{name}
 %dir %{_datadir}/%{name}
 %{_bindir}/%{name}-worker
+%{_bindir}/%{name}-interact
 %{_bindir}/%{name}-cleanup
 %{_bindir}/%{name}-reposync
 %{_bindir}/coredump2packages
 %{python_site}/retrace/*
 %{_datadir}/%{name}/*
 %doc %{_mandir}/man1/%{name}-cleanup.1.gz
+%doc %{_mandir}/man1/%{name}-interact.1.gz
 %doc %{_mandir}/man1/%{name}-reposync.1.gz
 %doc %{_mandir}/man1/%{name}-worker.1.gz
 %doc %{_infodir}/%{name}*
