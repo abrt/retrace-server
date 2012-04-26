@@ -170,7 +170,12 @@ def process_unstrip_output():
             continue
         build_id = parts[1].split('@')[0]
         binobj_path = parts[2]
-        if binobj_path[0] != '/' and parts[4] != '[exe]':
+        # try/except to handle malformed eu-unstrip output
+        # e.g. for X.org cores
+        try:
+            if binobj_path[0] != '/' and parts[4] != '[exe]':
+                continue
+        except:
             continue
         entry_package_list, entry_coredump_package_list = process_unstrip_entry(build_id, binobj_path)
         if first_entry:
