@@ -126,6 +126,11 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Fri May 04 2012 Michal Toman <mtoman@redhat.com> 1.6-1
+- add support for interactive debugging
+- coredump2packages - handle malformed eu-unstrip output
+- expose repos via HTTP
+
 * Mon Feb 27 2012 Michal Toman <mtoman@redhat.com> 1.5-1
 - add support for F17
 - add hacks helping to depsolver
