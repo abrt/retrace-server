@@ -196,8 +196,9 @@ Large} HTTP error code. The limit can be checked by calling
 @indicateurl{https://server/settings}. The limit is changeable
 from the server configuration file. Client is allowed to specify
 an optional @var{X-Task-Type} header, identifying the task type.
-At the moment @code{TASK_RETRACE (0)} and @code{TASK_DEBUG (1)} can
-be used for binary crashes and @code{TASK_VMCORE (2)} for kernel
+At the moment @code{TASK_RETRACE (0)}, @code{TASK_DEBUG (1)} and
+@code{TASK_RETRACE_INTERACTIVE (3)} can be used for binary crashes
+and @code{TASK_VMCORE (2)} and @code{TASK_VMCORE_INTERACTIVE} for kernel
 crashes. If no @var{X-Task-Type} is specified, @code{TASK_RETRACE}
 is used.
 
@@ -820,6 +821,49 @@ the required architecture. The repository must contain @file{bash},
 packages and their dependencies. Default
 @file{http://dl.fedoraproject.org/pub/fedora/linux/releases/16/Everything/$ARCH/os/}
 @end itemize
+
+@chapter Interactive Debugging
+
+@section Overview
+
+When the task type specified by @var{X-Task-Type} header is either
+@code{TASK_RETRACE_INTERACTIVE} or @code{TASK_VMCORE_INTERACTIVE},
+the standard process is executed, but the chroot is not cleaned up.
+It can be later accessed by the @file{retrace-server-interact} tool,
+which is basically a wrapper over @file{mock}, @file{gdb}
+and @file{crash}. Using either @code{crash} or @code{gdb} actions
+will enter the chroot, run the desired tool, load the core/vmcore
+and appropriate debuginfo automatically so that the debugger can
+start typing commands directly to the prompt. Using the @code{shell}
+command jumps to the chrooted shell. All commands are executed as
+non-privileged user by default, but this can be overriden by
+the @code{--priv} option.
+
+@section Security
+
+The user executing @file{retrace-server-interact} needs to be a member
+of @code{retrace} and @code{mock} groups. The only thing required to
+interactively debug is the task ID (not even task password!).
+There are no further security mechanisms, assuming the debugger
+has a root access to the host machine. Using
+@file{retrace-server-interact} enables the debugger to jump into
+root shell within the chroot, which may be a possible security risk.
+
+@section Notes
+
+@itemize
+@item
+The interactive task needs to be explicitely removed, as
+the automatic cleanup skips it.
+@item
+When retracing vmcores natively (e.g. x86_64 vmcore on x86_64 host),
+no chroot is used, thus jumping to chrooted shell is meaningless:
+you can use the current shell.
+@item
+See @code{man retrace-server-interact} for further information on
+command syntax.
+@end itemize
+
 
 @node Future work
 @chapter Future work
