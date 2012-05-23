@@ -133,6 +133,13 @@ def start_retrace():
                   os.path.join(CONFIG["RepoDir"], releaseid,
                                "%s.%s.rpm" % (crash_package, arch))]
 
+    if arch == "i386":
+        for a in ["i486", "i586", "i686"]:
+            candidates.append(os.path.join(CONFIG["RepoDir"], releaseid, "Packages",
+                                           "%s.%s.rpm" % (crash_package, a)))
+            candidates.append(os.path.join(CONFIG["RepoDir"], releaseid,
+                                           "%s.%s.rpm" % (crash_package, a)))
+
     known_package = any([os.path.isfile(f) for f in candidates])
     if not known_package:
         log += "Error\nPackage '%s' was not recognized. Is it a part of " \
