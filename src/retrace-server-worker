@@ -94,6 +94,7 @@ def start_retrace():
     if not os.path.isfile(release_path):
         release_path = os.path.join(crashdir, "release")
 
+    release = "Unknown Release"
     try:
         with open(release_path, "r") as release_file:
             release = release_file.read(ALLOWED_FILES["os_release"])
@@ -126,6 +127,17 @@ def start_retrace():
     if not releaseid in get_supported_releases():
         log += "Error\nRelease '%s' is not supported.\n" % releaseid
         fail(19)
+
+    candidates = [os.path.join(CONFIG["RepoDir"], releaseid, "Packages",
+                               "%s.%s.rpm" % (crash_package, arch)),
+                  os.path.join(CONFIG["RepoDir"], releaseid,
+                               "%s.%s.rpm" % (crash_package, arch))]
+
+    known_package = any([os.path.isfile(f) for f in candidates])
+    if not known_package:
+        log += "Error\nPackage '%s' was not recognized. Is it a part of " \
+               "official %s repositories?\n" % (crash_package, release)
+        fail(43)
 
     packages = [crash_package]
     missing = []
