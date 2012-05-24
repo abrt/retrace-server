@@ -57,6 +57,8 @@ def application(environ, start_response):
                         _("There is not enough storage space on the server"))
 
     try:
+        # do not make the task world-readable
+        os.umask(0027)
         task = RetraceTask()
     except:
         return response(start_response, "500 Internal Server Error",
