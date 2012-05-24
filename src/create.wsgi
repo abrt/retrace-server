@@ -136,7 +136,21 @@ def application(environ, start_response):
                               " the archive") % f)
 
     if "X-Task-Type" in request.headers:
-        task.set_type(int(request.headers["X-Task-Type"]))
+        try:
+            tasktype = int(request.headers["X-Task-Type"])
+        except:
+            tasktype = TASK_RETRACE
+
+        if not tasktype in TASK_TYPES:
+            tasktype = TASK_RETRACE
+
+        if tasktype in [TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE] \
+           and not CONFIG["AllowInteractive"]:
+            task.remove()
+            return response(start_response, "409 Conflict",
+                            _("Interactive tasks were disabled by " \
+                              "server administrator"))
+        task.set_type(tasktype)
     else:
         task.set_type(TASK_RETRACE)
 

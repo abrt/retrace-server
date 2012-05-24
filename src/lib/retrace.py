@@ -107,6 +107,7 @@ CONFIG = {
   "UseWorkDir": False,
   "RequireHTTPS": True,
   "AllowAPIDelete": False,
+  "AllowInteractive": False,
   "RequireGPGCheck": True,
   "UseCreaterepoUpdate": False,
   "DBFile": "stats.db",
