@@ -17,9 +17,11 @@ GETTEXT_DOMAIN = "retrace-server"
 # filename: max_size (<= 0 unlimited)
 ALLOWED_FILES = {
   "coredump": 0,
-  "executable": 64,
+  "executable": 512,
   "package": 128,
   "os_release": 128,
+  "os_release_in_rootdir": 128,
+  "rootdir": 256,
   "release": 128,
   "vmcore": 0,
 }

@@ -90,9 +90,29 @@ def start_retrace():
         stats["version"] = "%s-%s" % (pkgdata["version"], pkgdata["release"])
 
     # read release, distribution and version from release file
-    release_path = os.path.join(crashdir, "os_release")
-    if not os.path.isfile(release_path):
-        release_path = os.path.join(crashdir, "release")
+    release_path = None
+    rootdir = None
+    rootdir_path = os.path.join(crashdir, "rootdir")
+    if os.path.isfile(rootdir_path):
+        with open(rootdir_path, "r") as rootdir_file:
+            rootdir = rootdir_file.read(ALLOWED_FILES["rootdir"])
+
+        exec_path = os.path.join(crashdir, "executable")
+        with open(exec_path, "r") as exec_file:
+            executable = exec_file.read(ALLOWED_FILES["executable"])
+
+        if executable.startswith(rootdir):
+            with open(exec_path, "w") as exec_file:
+                exec_file.write(executable[len(rootdir):])
+
+        rel_path = os.path.join(crashdir, "os_release_in_rootdir")
+        if os.path.isfile(rel_path):
+            release_path = rel_path
+
+    if not release_path:
+        release_path = os.path.join(crashdir, "os_release")
+        if not os.path.isfile(release_path):
+            release_path = os.path.join(crashdir, "release")
 
     release = "Unknown Release"
     try:
@@ -142,7 +162,7 @@ def start_retrace():
 
     known_package = any([os.path.isfile(f) for f in candidates])
     if not known_package:
-        log += "Error\nPackage '%s' was not recognized. Is it a part of " \
+        log += "Error\nPackage '%s' was not recognized.\nIs it a part of " \
                "official %s repositories?\n" % (crash_package, release)
         fail(43)
 
