@@ -45,7 +45,11 @@ INPUT_CHARSET_PARSER = re.compile("^([a-zA-Z0-9\-]+)(,.*)?$")
 #en_GB, sk-SK, cs, fr etc.
 INPUT_LANG_PARSER = re.compile("^([a-z]{2}([_\-][A-Z]{2})?)(,.*)?$")
 #characters allowed by Fedora Naming Guidelines
-INPUT_PACKAGE_PARSER = re.compile("^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\-\.\_\+]+$")
+INPUT_PACKAGE_PARSER = re.compile("^[a-zA-Z0-9\-\.\_\+]+$")
+#architecture (i386, x86_64, armv7hl, mips4kec)
+INPUT_ARCH_PARSER = re.compile("^[a-zA-Z0-9_]+$")
+#name-version-arch (fedora-16-x86_64, rhel-6.2-i386, opensuse-12.1-x86_64)
+INPUT_RELEASEID_PARSER = re.compile("^[a-zA-Z0-9]+\-[0-9a-zA-Z\.]+\-[a-zA-Z0-9_]+$")
 
 #2.6.32-201.el6.x86_64
 KERNEL_RELEASE_PARSER = re.compile("^(.*)\.([^\.]+)$")
@@ -296,6 +300,28 @@ def run_gdb(savedir):
         raise Exception("An unusable backtrace has been generated")
 
     return backtrace
+
+def is_package_known(package_nvr, arch, releaseid=None):
+    if releaseid is None:
+        releases = get_supported_releases()
+    else:
+        releases = [releaseid]
+
+    candidates = []
+    for releaseid in releases:
+        if arch in ["i386", "i486", "i586", "i686"]:
+            for a in ["i386", "i486", "i586", "i686"]:
+                candidates.append(os.path.join(CONFIG["RepoDir"], releaseid, "Packages",
+                                               "%s.%s.rpm" % (package_nvr, a)))
+                candidates.append(os.path.join(CONFIG["RepoDir"], releaseid,
+                                               "%s.%s.rpm" % (package_nvr, a)))
+        else:
+            candidates.append(os.path.join(CONFIG["RepoDir"], releaseid, "Packages",
+                                           "%s.%s.rpm" % (package_nvr, arch)))
+            candidates.append(os.path.join(CONFIG["RepoDir"], releaseid,
+                                           "%s.%s.rpm" % (package_nvr, arch)))
+
+    return any([os.path.isfile(f) for f in candidates])
 
 # tricky
 # crash is not able to process the vmcore from different arch
