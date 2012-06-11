@@ -288,7 +288,17 @@ def run_gdb(savedir):
                           "-ex 'info registers' "
                           "-ex 'disassemble'" % executable)
 
-        call(["/usr/bin/mock", "--configdir", savedir, "--copyin", batfile, "/var/spool/abrt/gdb.sh"])
+        copyin = call(["/usr/bin/mock", "--configdir", savedir, "--copyin",
+                       batfile, "/var/spool/abrt/gdb.sh"],
+                      stdout=null, stderr=null)
+        if copyin:
+            raise Exception("Unable to copy GDB launcher into chroot")
+
+        chmod = call(["/usr/bin/mock", "--configdir", savedir, "shell",
+                      "--", "/bin/chmod", "a+rx", "/var/spool/abrt/gdb.sh"],
+                     stdout=null, stderr=null)
+        if chmod:
+            raise Exception("Unable to chmod GDB launcher")
 
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
                        "--", "su", "mockbuild", "-c", "'/bin/sh /var/spool/abrt/gdb.sh'",
@@ -296,6 +306,9 @@ def run_gdb(savedir):
                        "2>&1"], stdout=PIPE, stderr=null)
 
     backtrace = child.communicate()[0].strip()
+    if child.wait():
+        raise Exception("Running GDB failed")
+
     if not backtrace:
         raise Exception("An unusable backtrace has been generated")
 
