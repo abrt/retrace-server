@@ -37,7 +37,7 @@ REQUIRED_FILES = {
   TASK_DEBUG:               ["coredump", "executable", "package"],
   TASK_VMCORE:              ["vmcore"],
   TASK_RETRACE_INTERACTIVE: ["coredump", "executable", "package"],
-  TASK_VMCORE_INTERACTIVE:  ["vmcode"],
+  TASK_VMCORE_INTERACTIVE:  ["vmcore"],
 }
 
 #characters, numbers, dash (utf-8, iso-8859-2 etc.)
