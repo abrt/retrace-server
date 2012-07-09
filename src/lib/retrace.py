@@ -69,6 +69,8 @@ RELEASE_PARSER = re.compile("^.*(\-([0-9a-zA-Z\._]+))$")
 VERSION_PARSER = re.compile("^.*(\-([0-9a-zA-Z\._\:]+))$")
 NAME_PARSER = re.compile("^[a-zA-Z0-9_\.\+\-]+$")
 
+KO_DEBUG_PARSER = re.compile("^.*/([a-zA-Z0-9_\-]+)\.ko\.debug$")
+
 # parsers for vmcore version
 # 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
 KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?\-[0-9]+\.[^\.]+)(\.([^\.]+))?$")
@@ -403,6 +405,112 @@ def get_kernel_release(vmcore):
         release += ".%s" % arch
 
     return release
+
+def find_kernel_debuginfo(kernelver):
+    vers = [kernelver]
+    if kernelver.endswith(".i386"):
+        vers.append(kernelver.replace(".i386", ".i486"))
+        vers.append(kernelver.replace(".i386", ".i586"))
+        vers.append(kernelver.replace(".i386", ".i686"))
+
+    # search for the debuginfo RPM
+    for release in os.listdir(CONFIG["RepoDir"]):
+        for ver in vers:
+            testfile = os.path.join(CONFIG["RepoDir"], release, "Packages", "kernel-debuginfo-%s.rpm" % ver)
+            if os.path.isfile(testfile):
+                return testfile
+
+            # should not happen, but anyway...
+            testfile = os.path.join(CONFIG["RepoDir"], release, "kernel-debuginfo-%s.rpm" % ver)
+            if os.path.isfile(testfile):
+                return testfile
+
+    return None
+
+def cache_files_from_debuginfo(debuginfo, basedir, files):
+    # important! if empty list is specified, the whole debuginfo would be unpacked
+    if not files:
+        return
+
+    if not os.path.isfile(debuginfo):
+        raise Exception, "Given debuginfo file does not exist"
+
+    # prepend absolute path /usr/lib/debug/... with dot, so that cpio can match it
+    for i in xrange(len(files)):
+        if files[i][0] == "/":
+            files[i] = ".%s" % files[i]
+
+    with open("/dev/null", "w") as null:
+        rpm2cpio = Popen(["rpm2cpio", debuginfo], stdout=PIPE, stderr=null)
+        cpio = Popen(["cpio", "-id"] + files, stdin=rpm2cpio.stdout, stdout=null, stderr=null, cwd=basedir)
+        rpm2cpio.wait()
+        cpio.wait()
+        rpm2cpio.stdout.close()
+
+def prepare_debuginfo(vmcore, chroot=None):
+    kernelver = get_kernel_release(vmcore)
+    match = KERNEL_RELEASE_PARSER.match(kernelver)
+    if not match:
+        raise Exception, "Unable to parse kernel version"
+
+    kernelver_noarch = match.group(1)
+    arch = match.group(4)
+
+    debuginfo = find_kernel_debuginfo(kernelver)
+    if not debuginfo:
+        raise Exception, "Unable to find debuginfo package"
+
+    vmlinux_path = None
+    debugfiles = {}
+    child = Popen(["rpm", "-qpl", debuginfo], stdout=PIPE)
+    lines = child.communicate()[0].splitlines()
+    for line in lines:
+        if line.endswith("/vmlinux"):
+            vmlinux_path = line
+            continue
+
+        match = KO_DEBUG_PARSER.match(line)
+        if not match:
+            continue
+
+        # '-' in file name is transformed to '_' in module name
+        debugfiles[match.group(1).replace("-", "_")] = line
+
+    debugdir_base = os.path.join(CONFIG["RepoDir"], "kernel", arch)
+    if not os.path.isdir(debugdir_base):
+        os.makedirs(debugdir_base)
+
+    vmlinux = os.path.join(debugdir_base, vmlinux_path.lstrip("/"))
+    if not os.path.isfile(vmlinux):
+        cache_files_from_debuginfo(debuginfo, debugdir_base, [vmlinux_path])
+        if not os.path.isfile(vmlinux):
+            raise Exception, "Caching vmlinux failed"
+
+    if chroot:
+        child = Popen(["/usr/bin/mock", "--configdir", chroot, "shell", "--", "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE)
+    else:
+        child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE)
+    lines = child.communicate("mod\nquit")[0].splitlines()
+    if child.returncode:
+        raise Exception, "crash exitted with %d" % child.returncode
+
+    modules = []
+    for line in lines:
+        # skip header
+        if "NAME" in line:
+            continue
+
+        modules.append(line.split()[1])
+
+    todo = []
+    for module in modules:
+        if module in debugfiles and \
+           not os.path.isfile(os.path.join(debugdir_base, debugfiles[module].lstrip("/"))):
+            todo.append(debugfiles[module])
+
+    cache_files_from_debuginfo(debuginfo, debugdir_base, todo)
+
+    return vmlinux
 
 def get_task_est_time(taskdir):
     return 180
