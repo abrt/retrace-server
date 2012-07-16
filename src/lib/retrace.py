@@ -116,6 +116,7 @@ CONFIG = {
   "RequireHTTPS": True,
   "AllowAPIDelete": False,
   "AllowInteractive": False,
+  "AllowTaskManager": False,
   "RequireGPGCheck": True,
   "UseCreaterepoUpdate": False,
   "DBFile": "stats.db",
@@ -487,7 +488,10 @@ def prepare_debuginfo(vmcore, chroot=None):
             raise Exception, "Caching vmlinux failed"
 
     if chroot:
-        child = Popen(["/usr/bin/mock", "--configdir", chroot, "shell", "--", "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE)
+        with open("/dev/null", "w") as null:
+            child = Popen(["/usr/bin/mock", "--configdir", chroot, "shell",
+                           "--", "crash", "-s", vmcore, vmlinux],
+                           stdin=PIPE, stdout=PIPE, stderr=null)
     else:
         child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE)
     lines = child.communicate("mod\nquit")[0].splitlines()
@@ -539,6 +543,9 @@ def get_active_tasks():
         try:
             task = RetraceTask(int(filename))
         except:
+            continue
+
+        if task.get_managed():
             continue
 
         if not task.has_log():
@@ -744,6 +751,7 @@ class RetraceTask:
 
     BACKTRACE_FILE = "retrace_backtrace"
     LOG_FILE = "retrace_log"
+    MANAGED_FILE = "managed"
     PASSWORD_FILE = "password"
     STATUS_FILE = "status"
     TYPE_FILE = "type"
@@ -809,6 +817,11 @@ class RetraceTask:
     def verify_password(self, password):
         """Verifies if the given password matches task's password."""
         return self.get_password() == password
+
+    def is_running(self):
+        """Returns whether the task is running. Does not actually examine
+        /proc, just reads the STATUS_FILE."""
+        return self.has_status() and not self.get_status() in [STATUS_SUCCESS, STATUS_FAIL]
 
     def get_age(self):
         """Returns the age of the task in hours."""
@@ -937,6 +950,27 @@ class RetraceTask:
 
         os.rename(tmpfilename, statusfilename)
 
+    def get_managed(self):
+        """Verifies whether the task is under task management control"""
+        if not CONFIG["AllowTaskManager"]:
+            raise Exception, "Task management is disabled"
+
+        filename = os.path.join(self._savedir, RetraceTask.MANAGED_FILE)
+        return os.path.isfile(filename)
+
+    def set_managed(self, managed):
+        """Puts or removes the task from task management control"""
+        if not CONFIG["AllowTaskManager"]:
+            raise Exception, "Task management is disabled"
+
+        filename = os.path.join(self._savedir, RetraceTask.MANAGED_FILE)
+        # create the file if it does not exist
+        if managed and not os.path.isfile(filename):
+            open(filename, "w").close()
+        # unlink the file if it exists
+        elif not managed and os.path.isfile(filename):
+            os.unlink(filename)
+
     def clean(self):
         """Removes all files and directories except for BACKTRACE_FILE,
         LOG_FILE, PASSWORD_FILE and STATUS_FILE from the task directory."""
@@ -950,6 +984,7 @@ class RetraceTask:
         for f in os.listdir(self._savedir):
             if f != RetraceTask.BACKTRACE_FILE and \
                f != RetraceTask.LOG_FILE and \
+               f != RetraceTask.MANAGED_FILE and \
                f != RetraceTask.PASSWORD_FILE and \
                f != RetraceTask.STATUS_FILE and \
                f != RetraceTask.TYPE_FILE:
@@ -966,6 +1001,7 @@ class RetraceTask:
 
     def remove(self):
         """Completely removes the task directory."""
+        self.clean()
         shutil.rmtree(self._savedir)
 
 ### read config on import ###

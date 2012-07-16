@@ -469,14 +469,14 @@ def start_vmcore():
 
         if i >= 1800:
             log += "Error: waiting for debuginfo timed out\n"
-            sys.exit(89)
+            fail(89)
 
         try:
             vmlinux = prepare_debuginfo(vmcore)
         except Exception as ex:
             log += "Error: %s\n" % ex
             unlock(lockfile)
-            sys.exit(90)
+            fail(90)
 
         unlock(lockfile)
 

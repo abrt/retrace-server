@@ -29,12 +29,16 @@ interface_PYTHON = backtrace.wsgi \
                    delete.wsgi \
                    index.wsgi \
                    log.wsgi \
+                   manager.wsgi \
                    settings.wsgi \
                    stats.wsgi \
                    status.wsgi
 
-interface_DATA = index.xhtml stats.xhtml
+interface_DATA = index.xhtml \
+                 manager.xhtml \
+                 managertask.xhtml \
+                 stats.xhtml
 # interfacedir should probably be $$(pkgdatadir)/retrace
 interfacedir =  $(datadir)/retrace-server
 
-EXTRA_DIST = $(man1_MANS) index.xhtml stats.xhtml
+EXTRA_DIST = $(man1_MANS) $(interface_DATA)

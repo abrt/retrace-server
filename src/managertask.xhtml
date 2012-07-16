@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>{title}</title>
+    <style type="text/css">
+      #start {
+        font-size: 18px;
+        font-weight: bold;
+        color: #0c0;
+      }
+
+      #highrow {
+        padding: 16px 4px;
+      }
+
+      body {
+        font-family: sans-serif;
+        font-size: 14px;
+      }
+
+      code {
+        font-family: monospace;
+        font-weight: bold;
+      }
+
+      table {
+        border: 0;
+        border-collapse: collapse;
+        margin: 20px 0;
+      }
+
+      table td {
+        border: 0;
+        padding: 10px 4px;
+      }
+
+      table th {
+        text-align: left;
+        border: 0;
+        padding: 10px 4px;
+        width: 100px;
+      }
+
+      a:link {
+        color: blue;
+        text-decoration: none;
+      }
+
+      a:visited {
+        color: blue;
+        text-decoration: none;
+      }
+
+      a:active {
+        color: blue;
+        text-decoration: none;
+      }
+
+      a:hover {
+        color: blue;
+        text-decoration: underline;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      h2 {
+        font-size: 16px;
+      }
+
+      textarea {
+        width: 90%;
+        height: 400px;
+        padding: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>{taskno}</h1>
+    <table>
+      <tr>
+        <th>{str_type}</th>
+        <td>{type}</td>
+      </tr>
+      <tr>
+        <th>{str_status}</th>
+        <td>{status}</td>
+      </tr>
+      {interactive}
+      {start}
+      {backtrace}
+      {delete}
+      {back}
+    </table>
+    {backtracewindow}
+  </body>
+</html>

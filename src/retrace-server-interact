@@ -67,12 +67,14 @@ if __name__ == "__main__":
             hostarch = "i386"
 
         if args.action == "crash":
-            vmlinux = os.path.join(CONFIG["RepoDir"], "kernel", "vmlinux-%s" % kernelver)
             if arch == hostarch:
+                vmlinux = prepare_debuginfo(vmcore)
                 cmdline = ["crash", "-s", vmcore, vmlinux]
             else:
-                cmdline = ["mock", "--configdir", os.path.join(CONFIG["SaveDir"], "kernel-%s" % arch),
-                           "shell", "crash -s /var/crash/vmcore %s" % vmlinux]
+                cfgdir = os.path.join(CONFIG["SaveDir"], "kernel-%s" % arch)
+                vmlinux = prepare_debuginfo(vmcore, chroot=cfgdir)
+                cmdline = ["mock", "--configdir", cfgdir,
+                           "shell", "crash -s %s %s" % (vmcore, vmlinux)]
                 if not args.priv:
                     cmdline.append("--unpriv")
 
