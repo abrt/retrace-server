@@ -1,5 +1,6 @@
 import ConfigParser
 import errno
+import ftplib
 import gettext
 import os
 import re
@@ -73,7 +74,7 @@ KO_DEBUG_PARSER = re.compile("^.*/([a-zA-Z0-9_\-]+)\.ko\.debug$")
 
 # parsers for vmcore version
 # 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
-KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?\-[0-9]+\.[^\.]+)(\.([^\.]+))?$")
+KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?\-[0-9]+\..*?)(\.(x86_64|i386|i486|i586|i686|s390|s390x|ppc|ppc64|armv5tel|armv7l|armv7hl|ia64))?$")
 # OSRELEASE=2.6.32-209.el6.x86_64
 OSRELEASE_VAR_PARSER = re.compile("^OSRELEASE=(.*)$")
 
@@ -117,6 +118,12 @@ CONFIG = {
   "AllowAPIDelete": False,
   "AllowInteractive": False,
   "AllowTaskManager": False,
+  "UseFTPTasks": False,
+  "FTPSSL": False,
+  "FTPHost": "",
+  "FTPUser": "",
+  "FTPPass": "",
+  "FTPDir": "/",
   "RequireGPGCheck": True,
   "UseCreaterepoUpdate": False,
   "DBFile": "stats.db",
@@ -124,7 +131,8 @@ CONFIG = {
 }
 
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \
-STATUS_STATS, STATUS_FINISHING, STATUS_SUCCESS, STATUS_FAIL = xrange(8)
+STATUS_STATS, STATUS_FINISHING, STATUS_SUCCESS, STATUS_FAIL, \
+STATUS_DOWNLOADING = xrange(9)
 
 STATUS = [
   "Analyzing crash data",
@@ -135,6 +143,7 @@ STATUS = [
   "Finishing task",
   "Retrace job finished successfully",
   "Retrace job failed",
+  "Downloading remote resources",
 ]
 
 def lock(lockfile):
@@ -745,6 +754,77 @@ def save_crashstats_reportfull(ip, con=None):
     con.commit()
     if close:
         con.close()
+def ftp_init():
+    if CONFIG["FTPSSL"]:
+        ftp = ftplib.FTP_SSL(CONFIG["FTPHost"])
+        ftp.prot_p()
+    else:
+        ftp = ftplib.FTP(CONFIG["FTPHost"])
+
+    ftp.login(CONFIG["FTPUser"], CONFIG["FTPPass"])
+    ftp.cwd(CONFIG["FTPDir"])
+
+    return ftp
+
+def ftp_close(ftp):
+    try:
+        ftp.quit()
+    except:
+        ftp.close()
+
+def ftp_list_dir(ftpdir="/", ftp=None):
+    close = False
+    if ftp is None:
+        ftp = ftp_init()
+        close = True
+
+    result = [f.lstrip("/") for f in ftp.nlst(ftpdir)]
+
+    if close:
+        ftp_close(ftp)
+
+    return result
+
+def cmp_vmcores_first(str1, str2):
+    vmcore1 = "vmcore" in str1.lower()
+    vmcore2 = "vmcore" in str2.lower()
+
+    if vmcore1 and not vmcore2:
+        return -1
+    elif not vmcore1 and vmcore2:
+        return 1
+
+    return cmp(str1, str2)
+
+def check_run(cmd):
+    child = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+    stdout = child.communicate()[0]
+    if child.wait():
+        return "%s exitted with %d: %s" % (cmd[0], child.returncode, stdout)
+
+    return None
+
+def move_dir_contents(source, dest):
+    for filename in os.listdir(source):
+        path = os.path.join(source, filename)
+        if os.path.isdir(path):
+            move_dir_contents(path, dest)
+        elif os.path.isfile(path):
+            destfile = os.path.join(dest, filename)
+            if os.path.isfile(destfile):
+                i = 0
+                newdest = "%s.%d" % (destfile, i)
+                while os.path.isfile(newdest):
+                    i += 1
+                    newdest = "%s.%d" % (destfile, i)
+
+                destfile = newdest
+
+# try?
+            os.rename(path, destfile)
+# except?
+
+    shutil.rmtree(source)
 
 class RetraceTask:
     """Represents Retrace server's task."""
@@ -753,6 +833,7 @@ class RetraceTask:
     LOG_FILE = "retrace_log"
     MANAGED_FILE = "managed"
     PASSWORD_FILE = "password"
+    REMOTE_FILE = "remote"
     STATUS_FILE = "status"
     TYPE_FILE = "type"
 
@@ -949,6 +1030,116 @@ class RetraceTask:
             tmpfile.write("%d" % statuscode)
 
         os.rename(tmpfilename, statusfilename)
+
+    def has_remote(self):
+        """Verifies whether REMOTE_FILE is present in the task directory."""
+        return os.path.isfile(os.path.join(self._savedir,
+                                           RetraceTask.REMOTE_FILE))
+
+    def add_remote(self, url):
+        """Appends a remote resource to REMOTE_FILE."""
+        if "\n" in url:
+            url = url.split("\n")[0]
+
+        with open(os.path.join(self._savedir, RetraceTask.REMOTE_FILE), "a") as remote_file:
+            remote_file.write("%s\n" % url)
+
+    def get_remote(self):
+        """Returns the list of remote resources."""
+        if not self.has_remote():
+            return []
+
+        with open(os.path.join(self._savedir, RetraceTask.REMOTE_FILE), "r") as remote_file:
+            result = [line.strip() for line in remote_file.readlines()]
+
+        return result
+
+    def download_remote(self, unpack=True):
+        """Downloads all remote resources and returns a list of errors."""
+        errors = []
+
+        crashdir = os.path.join(self._savedir, "crash")
+        if not os.path.isdir(crashdir):
+            os.makedirs(crashdir)
+
+        for url in self.get_remote():
+            if url.startswith("FTP "):
+                filename = url[4:].strip()
+
+                ftp = None
+                try:
+                    ftp = ftp_init()
+                    with open(os.path.join(crashdir, filename), "wb") as target_file:
+                        ftp.retrbinary("RETR %s" % filename, target_file.write)
+                except Exception as ex:
+                    errors.append((url, str(ex)))
+                    continue
+                finally:
+                    if ftp:
+                        ftp_close(ftp)
+            else:
+                child = Popen(["wget", "-nv", "-P", crashdir, url], stdout=PIPE, stderr=STDOUT)
+                stdout = child.communicate()[0]
+                if child.wait():
+                    errors.append((url, "wget exitted with %d: %s" % (child.returncode, stdout)))
+                    continue
+
+                filename = url.rsplit("/", 1)[1]
+
+            if unpack:
+                fullpath = os.path.join(crashdir, filename)
+
+                if filename.endswith(".tar.gz") or filename.endswith(".tgz"):
+                    unpack_result = check_run(["tar", "xzf", fullpath, "-C", crashdir])
+                elif filename.endswith(".tar.bz2"):
+                    unpack_result = check_run(["tar", "xjf", fullpath, "-C", crashdir])
+                elif filename.endswith(".tar.xz"):
+                    unpack_result = check_run(["tar", "xJf", fullpath, "-C", crashdir])
+                elif filename.endswith(".tar"):
+                    unpack_result = check_run(["tar", "xf", fullpath, "-C", crashdir])
+                elif filename.endswith(".gz") or filename.endswith(".Z"):
+                    unpack_result = check_run(["gunzip", fullpath])
+                elif filename.endswith(".bz2"):
+                    unpack_result = check_run(["bunzip2", fullpath])
+                elif filename.endswith(".xz"):
+                    unpack_result = check_run(["unxz", fullpath])
+                elif filename.endswith(".zip"):
+                    unpack_result = check_run(["unzip", fullpath])
+
+                if os.path.isfile(fullpath):
+                    os.unlink(fullpath)
+
+
+        if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
+            files = os.listdir(crashdir)
+            for filename in files:
+                fullpath = os.path.join(crashdir, filename)
+                if os.path.isdir(fullpath):
+                    move_dir_contents(fullpath, crashdir)
+
+            files = os.listdir(crashdir)
+            if len(files) == 1:
+                if files[0] != "vmcore":
+                    os.rename(os.path.join(crashdir, files[0]), os.path.join(crashdir, "vmcore"))
+            else:
+                vmcores = []
+                for filename in files:
+                    if "vmcore" in filename:
+                        vmcores.append(filename)
+
+                if len(vmcores) != 1:
+                    errors.append((str(files), "Unable to determine vmcore"))
+                else:
+                    for filename in files:
+                        if filename == vmcores[0]:
+                            if vmcores[0] != "vmcore":
+                                os.rename(os.path.join(crashdir, filename), os.path.join(crashdir, "vmcore"))
+                        else:
+                            os.unlink(os.path.join(crashdir, filename))
+
+        os.unlink(os.path.join(self._savedir, RetraceTask.REMOTE_FILE))
+
+        return errors
 
     def get_managed(self):
         """Verifies whether the task is under task management control"""

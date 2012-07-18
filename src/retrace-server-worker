@@ -555,6 +555,16 @@ if __name__ == "__main__":
     # get count of tasks running before starting
     prerunning = len(get_active_tasks()) - 1
 
+    if task.has_remote():
+        task.set_status(STATUS_DOWNLOADING)
+        log += "%s " % STATUS[STATUS_DOWNLOADING]
+
+        errors = task.download_remote()
+        if errors:
+            log += "%s\n" % str(errors)
+        else:
+            log += "OK\n"
+
     task.set_status(STATUS_ANALYZE)
     log += "%s " % STATUS[STATUS_ANALYZE]
 

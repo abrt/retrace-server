@@ -1,13 +1,21 @@
 import re
 from retrace import *
 
-MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([0-9]+)(/(start|backtrace|delete)?)?)?)?$")
+MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(start|backtrace|delete)?)?)?)?$")
 
 LONG_TYPES = { TASK_RETRACE: "Coredump retrace",
                TASK_DEBUG: "Coredump retrace - debug",
                TASK_VMCORE: "VMcore retrace",
                TASK_RETRACE_INTERACTIVE: "Coredump retrace - interactive",
                TASK_VMCORE_INTERACTIVE: "VMcore retrace - interactive" }
+
+def is_local_task(taskid):
+    try:
+        RetraceTask(taskid)
+    except:
+        return False
+
+    return True
 
 def application(environ, start_response):
     request = Request(environ)
@@ -24,16 +32,38 @@ def application(environ, start_response):
 
     if match.group(6) and match.group(6) == "start":
         # start
+        ftptask = False
         try:
             task = RetraceTask(match.group(4))
         except:
-            return response(start_response, "404 Not Found", _("There is no such task"))
+            if CONFIG["UseFTPTasks"]:
+                files = ftp_list_dir(CONFIG["FTPDir"])
+                if not match.group(4) in files:
+                    return response(start_response, "404 Not Found", _("There is no such task"))
+
+                ftptask = True
+            else:
+                return response(start_response, "404 Not Found", _("There is no such task"))
+
+        if ftptask:
+            try:
+                task = RetraceTask()
+                task.set_managed(True)
+                # ToDo: determine?
+                task.set_type(TASK_VMCORE_INTERACTIVE)
+                task.add_remote("FTP %s" % match.group(4))
+            except:
+                return response(start_response, "500 Internal Server Error", _("Unable to create a new task"))
 
         if not task.get_managed():
             return response(start_response, "403 Forbidden", _("Task does not belong to task manager"))
 
-        call(["/usr/bin/retrace-server-worker", match.group(4)])
-        return response(start_response, "303 See Other", "", [("Location", "%s/%s" % (match.group(1), match.group(4)))])
+        call(["/usr/bin/retrace-server-worker", str(task.get_taskid())])
+
+        # ugly, ugly, ugly! retrace-server-worker double-forks and needs a while to spawn
+        time.sleep(2)
+
+        return response(start_response, "303 See Other", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "backtrace":
         try:
             task = RetraceTask(match.group(4))
@@ -61,24 +91,34 @@ def application(environ, start_response):
         return response(start_response, "302 Found", "", [("Location", match.group(1))])
     elif match.group(4):
         # info
-        # ToDo - does not exist = exception = HTTP 500
+        ftptask = False
         try:
             task = RetraceTask(match.group(4))
         except:
-            return response(start_response, "404 Not Found", _("There is no such task"))
+            if CONFIG["UseFTPTasks"]:
+                files = ftp_list_dir(CONFIG["FTPDir"])
+                if not match.group(4) in files:
+                    return response(start_response, "404 Not Found", _("There is no such task"))
+
+                ftptask = True
+            else:
+                return response(start_response, "404 Not Found", _("There is no such task"))
 
         with open("/usr/share/retrace-server/managertask.xhtml", "r") as f:
             output = f.read(1 << 20) # 1MB
 
-        if task.has_status():
+        start = ""
+        if ftptask:
+            status = _("On remote FTP server")
+            start = "<tr><td colspan=\"2\" id=\"highrow\"><a href=\"%s/start\" id=\"start\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Start task"))
+        elif task.has_status():
             status = _(STATUS[task.get_status()])
-            start = ""
         else:
             status = _("Not started")
             start = "<tr><td colspan=\"2\" id=\"highrow\"><a href=\"%s/start\" id=\"start\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Start task"))
 
         interactive = ""
-        if task.has_backtrace():
+        if not ftptask and task.has_backtrace():
             backtrace = "<tr><td colspan=\"2\"><a href=\"%s/backtrace\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Show raw backtrace"))
             backtracewindow = "<h2>Backtrace</h2><textarea>%s</textarea>" % task.get_backtrace()
             if task.get_type() in [TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
@@ -98,16 +138,27 @@ def application(environ, start_response):
             backtrace = ""
             backtracewindow = ""
 
-        if task.is_running():
+        if ftptask or task.is_running():
             delete = ""
         else:
             delete = "<tr><td colspan=\"2\"><a href=\"%s/delete\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Delete task"))
+
+        if ftptask:
+            # ToDo: determine?
+            tasktype = _(LONG_TYPES[TASK_VMCORE_INTERACTIVE])
+            title = "%s '%s' - %s" % (_("Remote file"), match.group(4), _("Retrace Server Task Manager"))
+            taskno = "%s '%s'" % (_("Remote file"), match.group(4))
+        else:
+            tasktype = _(LONG_TYPES[task.get_type()])
+            title = "%s #%s - %s" % (_("Task"), match.group(4), _("Retrace Server Task Manager"))
+            taskno = "%s #%s" % (_("Task"), match.group(4))
+
         back = "<tr><td colspan=\"2\"><a href=\"%s\">%s</a></td></tr>" % (match.group(1), _("Back to task manager"))
 
         output = output.replace("{title}", _("Task #%s - Retrace Server Task Manager") % match.group(4))
         output = output.replace("{taskno}", _("Task #%s") % match.group(4))
         output = output.replace("{str_type}", _("Type:"))
-        output = output.replace("{type}", _(LONG_TYPES[task.get_type()]))
+        output = output.replace("{type}", tasktype)
         output = output.replace("{str_status}", _("Status:"))
         output = output.replace("{status}", status)
         output = output.replace("{start}", start)
@@ -116,8 +167,7 @@ def application(environ, start_response):
         output = output.replace("{backtracewindow}", backtracewindow)
         output = output.replace("{delete}", delete)
         output = output.replace("{interactive}", interactive)
-        return response(start_response, "200 OK", output,
-                        [("Content-Type", "text/html")])
+        return response(start_response, "200 OK", output, [("Content-Type", "text/html")])
 
     # menu
     with open("/usr/share/retrace-server/manager.xhtml") as f:
@@ -155,6 +205,12 @@ def application(environ, start_response):
                 continue
 
             running.append(row)
+
+    if CONFIG["UseFTPTasks"]:
+        available = []
+        for filename in sorted(ftp_list_dir(CONFIG["FTPDir"]), cmp=cmp_vmcores_first):
+            available.append("<tr><td><a href=\"%s/%s\">%s</a></td></tr>" \
+                             % (match.group(1), filename, filename))
 
     output = output.replace("{title}", title)
     output = output.replace("{sitename}", sitename)
