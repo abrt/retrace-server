@@ -119,14 +119,14 @@ def application(environ, start_response):
             output = f.read(1 << 20) # 1MB
 
         start = ""
-        if ftptask:
-            status = _("On remote FTP server")
-            start = "<tr><td colspan=\"2\" id=\"highrow\"><a href=\"%s/start\" id=\"start\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Start task"))
-        elif task.has_status():
+        if task.has_status():
             status = _(STATUS[task.get_status()])
         else:
-            status = _("Not started")
-            start = "<tr><td colspan=\"2\" id=\"highrow\"><a href=\"%s/start\" id=\"start\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Start task"))
+            start = "<tr><td colspan=\"2\"><a href=\"%s/start\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Start task"))
+            if ftptask:
+                status = _("On remote FTP server")
+            else:
+                status = _("Not started")
 
         interactive = ""
         if not ftptask:
