@@ -1,7 +1,8 @@
+import fnmatch
 import re
 from retrace import *
 
-MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(start|backtrace|delete|misc/([^/]+)/?)?)?)?)?$")
+MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^\?/]+)(/(start|backtrace|delete|misc/([^/]+)/?)?)?)?)?/?(\?.*)?$")
 
 LONG_TYPES = { TASK_RETRACE: "Coredump retrace",
                TASK_DEBUG: "Coredump retrace - debug",
@@ -200,11 +201,19 @@ def application(environ, start_response):
     if not baseurl.endswith("/"):
         baseurl += "/"
 
+    try:
+        filterexp = request.GET.getone("filter")
+    except:
+        filterexp = None
+
     available = []
     running = []
     finished = []
     for taskid in sorted(os.listdir(CONFIG["SaveDir"])):
         if not os.path.isdir(os.path.join(CONFIG["SaveDir"], taskid)):
+            continue
+
+        if filterexp and not fnmatch.fnmatch(taskid, filterexp):
             continue
 
         try:
@@ -232,7 +241,13 @@ def application(environ, start_response):
 
     if CONFIG["UseFTPTasks"]:
         available = []
-        for filename in sorted(ftp_list_dir(CONFIG["FTPDir"]), cmp=cmp_vmcores_first):
+        rawtasklist = ftp_list_dir(CONFIG["FTPDir"])
+        if filterexp:
+            tasklist = sorted(fnmatch.filter(rawtasklist, filterexp))
+        else:
+            tasklist = sorted(rawtasklist, cmp=cmp_vmcores_first)
+
+        for filename in tasklist:
             available.append("<tr><td><a href=\"%s/%s\">%s</a></td></tr>" \
                              % (match.group(1), filename, filename))
         available_str = _("FTP files")

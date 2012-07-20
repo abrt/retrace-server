@@ -20,6 +20,24 @@
         margin: 0 auto;
       }
 
+      #filter
+      {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      #submit
+      {
+        width: 100px;
+      }
+
+      input
+      {
+        border: 1px solid black;
+        padding: 4px;
+      }
+
       a:link {
         color: blue;
         text-decoration: none;
@@ -71,6 +89,10 @@
   </head>
   <body>
     <h1>{sitename}</h1>
+    <form method="get" id="filter">
+      <input type="text" name="filter" />
+      <input type="submit" value="Filter" id="submit" />
+    </form>
     <div id="available">
       <table>
         <tr>
