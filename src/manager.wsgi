@@ -129,14 +129,15 @@ def application(environ, start_response):
             start = "<tr><td colspan=\"2\" id=\"highrow\"><a href=\"%s/start\" id=\"start\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Start task"))
 
         interactive = ""
-        if not ftptask and task.has_backtrace():
-            backtrace = "<tr><td colspan=\"2\"><a href=\"%s/backtrace\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Show raw backtrace"))
-            backtracewindow = "<h2>Backtrace</h2><textarea>%s</textarea>" % task.get_backtrace()
-            if task.get_type() in [TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
-                if task.get_type() == TASK_VMCORE_INTERACTIVE:
-                    debugger = "crash"
-                else:
-                    debugger = "gdb"
+        if not ftptask:
+            if task.has_backtrace():
+                backtrace = "<tr><td colspan=\"2\"><a href=\"%s/backtrace\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Show raw backtrace"))
+                backtracewindow = "<h2>Backtrace</h2><textarea>%s</textarea>" % task.get_backtrace()
+                if task.get_type() in [TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
+                    if task.get_type() == TASK_VMCORE_INTERACTIVE:
+                        debugger = "crash"
+                    else:
+                        debugger = "gdb"
 
                 interactive = "<tr><td colspan=\"2\">%s</td></tr>" \
                               "<tr><td colspan=\"2\">%s <code>retrace-server-interact %s shell</code></td></tr>" \
@@ -145,6 +146,9 @@ def application(environ, start_response):
                               % (_("This is an interactive task"), _("You can jump to the chrooted shell with:"), match.group(4),
                                  _("You can jump directly to the debugger with:"), match.group(4), debugger,
                                  _("see"), _("for further information about cmdline flags"))
+            elif task.has_log():
+                backtrace = ""
+                backtracewindow = "<h2>Log:</h2><textarea>%s</textarea>" % task.get_log()
         else:
             backtrace = ""
             backtracewindow = ""
