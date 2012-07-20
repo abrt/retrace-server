@@ -502,13 +502,13 @@ def prepare_debuginfo(vmcore, chroot=None):
                            "--", "crash", "-s", vmcore, vmlinux],
                            stdin=PIPE, stdout=PIPE, stderr=null)
     else:
-        child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE)
-    lines = child.communicate("mod\nquit")[0].splitlines()
+        child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+    stdout = child.communicate("mod\nquit")[0]
     if child.returncode:
-        raise Exception, "crash exitted with %d" % child.returncode
+        raise Exception, "crash exitted with %d:\n%s" % (child.returncode, stdout)
 
     modules = []
-    for line in lines:
+    for line in stdout.splitlines():
         # skip header
         if "NAME" in line:
             continue
