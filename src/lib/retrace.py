@@ -832,6 +832,7 @@ class RetraceTask:
     BACKTRACE_FILE = "retrace_backtrace"
     LOG_FILE = "retrace_log"
     MANAGED_FILE = "managed"
+    MISC_DIR = "misc"
     PASSWORD_FILE = "password"
     REMOTE_FILE = "remote"
     STATUS_FILE = "status"
@@ -1141,6 +1142,63 @@ class RetraceTask:
 
         return errors
 
+    def has_misc(self, name):
+        """Verifies whether a file named 'name' is present in MISC_DIR."""
+        if "/" in name:
+            raise Exception, "name may not contain the '/' character"
+
+        miscdir = os.path.join(self._savedir, RetraceTask.MISC_DIR)
+        miscpath = os.path.join(miscdir, name)
+
+        return os.path.isdir(miscdir) and os.path.isfile(miscpath)
+
+    def get_misc_list(self):
+        """Lists all files in MISC_DIR."""
+        miscdir = os.path.join(self._savedir, RetraceTask.MISC_DIR)
+        if not os.path.isdir(miscdir):
+            return []
+
+        return os.listdir(miscdir)
+
+    def get_misc(self, name):
+        """Gets content of a file named 'name' from MISC_DIR."""
+        if "/" in name:
+            raise Exception, "name may not contain the '/' character"
+
+        if not self.has_misc(name):
+            raise Exception, "There is no record with such name"
+
+        miscpath = os.path.join(self._savedir, RetraceTask.MISC_DIR, name)
+        with open(miscpath, "r") as misc_file:
+            result = misc_file.read(1 << 24) # 16MB
+
+        return result
+
+    def add_misc(self, name, value, overwrite=False):
+        """Adds a file named 'name' into MISC_DIR and writes 'value' into it."""
+        if "/" in name:
+            raise Exception, "name may not contain the '/' character"
+
+        if not overwrite and self.has_misc(name):
+            raise Exception, "The record already exists. Use overwrite=True " \
+                             "to force overwrite existing records."
+
+        miscdir = os.path.join(self._savedir, RetraceTask.MISC_DIR)
+        if not os.path.isdir(miscdir):
+            os.makedirs(miscdir)
+
+        miscpath = os.path.join(miscdir, name)
+        with open(miscpath, "w") as misc_file:
+            misc_file.write(value)
+
+    def del_misc(self, name):
+        """Deletes the file named 'name' from MISC_DIR."""
+        if "/" in name:
+            raise Exception, "name may not contain the '/' character"
+
+        if self.has_misc(name):
+            os.unlink(os.path.join(self._savedir, RetraceTask.MISC_DIR, name))
+
     def get_managed(self):
         """Verifies whether the task is under task management control"""
         if not CONFIG["AllowTaskManager"]:
@@ -1163,8 +1221,8 @@ class RetraceTask:
             os.unlink(filename)
 
     def clean(self):
-        """Removes all files and directories except for BACKTRACE_FILE,
-        LOG_FILE, PASSWORD_FILE and STATUS_FILE from the task directory."""
+        """Removes all files and directories others than
+        results and logs from the task directory."""
         with open("/dev/null", "w") as null:
             if os.path.isfile(os.path.join(self._savedir, "default.cfg")) and \
                os.path.isfile(os.path.join(self._savedir, "site-defaults.cfg")) and \
@@ -1178,7 +1236,8 @@ class RetraceTask:
                f != RetraceTask.MANAGED_FILE and \
                f != RetraceTask.PASSWORD_FILE and \
                f != RetraceTask.STATUS_FILE and \
-               f != RetraceTask.TYPE_FILE:
+               f != RetraceTask.TYPE_FILE and \
+               f != RetraceTask.MISC_DIR:
                 path = os.path.join(self._savedir, f)
                 try:
                     if os.path.isdir(path):

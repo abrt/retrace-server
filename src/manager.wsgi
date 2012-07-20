@@ -1,7 +1,7 @@
 import re
 from retrace import *
 
-MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(start|backtrace|delete)?)?)?)?$")
+MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(start|backtrace|delete|misc/([^/]+)/?)?)?)?)?$")
 
 LONG_TYPES = { TASK_RETRACE: "Coredump retrace",
                TASK_DEBUG: "Coredump retrace - debug",
@@ -30,7 +30,17 @@ def application(environ, start_response):
     if not match:
         return response(start_response, "404 Not Found")
 
-    if match.group(6) and match.group(6) == "start":
+    if match.group(6) and match.group(6).startswith("misc") and match.group(7):
+        try:
+            task = RetraceTask(match.group(4))
+        except:
+            return response(start_response, "404 Not Found", _("There is no such task"))
+
+        if not task.has_misc(match.group(7)):
+            return response(start_response, "404 Not Found", _("There is no such record"))
+
+        return response(start_response, "200 OK", task.get_misc(match.group(7)))
+    elif match.group(6) and match.group(6) == "start":
         # start
         ftptask = False
         try:
@@ -153,6 +163,15 @@ def application(environ, start_response):
             title = "%s #%s - %s" % (_("Task"), match.group(4), _("Retrace Server Task Manager"))
             taskno = "%s #%s" % (_("Task"), match.group(4))
 
+        misc = ""
+        if not ftptask:
+            misclist = sorted(task.get_misc_list())
+            if misclist:
+                links = []
+                for name in misclist:
+                    links.append("<a href=\"%s/misc/%s\">%s</a>" % (request.url.rstrip("/"), name, name))
+                misc = "<tr><th>Additional results:</th><td>%s</td></tr>" % ", ".join(links)
+
         back = "<tr><td colspan=\"2\"><a href=\"%s\">%s</a></td></tr>" % (match.group(1), _("Back to task manager"))
 
         output = output.replace("{title}", _("Task #%s - Retrace Server Task Manager") % match.group(4))
@@ -167,6 +186,7 @@ def application(environ, start_response):
         output = output.replace("{backtracewindow}", backtracewindow)
         output = output.replace("{delete}", delete)
         output = output.replace("{interactive}", interactive)
+        output = output.replace("{misc}", misc)
         return response(start_response, "200 OK", output, [("Content-Type", "text/html")])
 
     # menu

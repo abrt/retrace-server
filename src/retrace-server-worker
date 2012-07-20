@@ -452,7 +452,36 @@ def start_vmcore():
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
                 kernellog = child.communicate("log\nquit\n")[0]
-                retcode = child.wait()
+                if child.wait():
+                    log += "Warning: crash 'log' exitted with %d; " % child.returncode
+
+                child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                               "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                crash_bt_a = child.communicate("bt -a\nquit\n")[0]
+                if child.wait():
+                    log += "Warning: crash 'bt -a' exitted with %d; " % child.returncode
+                    crash_bt_a = None
+
+                child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                               "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
+                if child.wait():
+                    log += "Warning: crash 'kmem -f' exitted with %d; " % child.returncode
+                    crash_kmem_f = None
+
+                child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                               "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                crash_sys = child.communicate("sys\nquit\n")[0]
+                if child.wait():
+                    log += "Warning: crash 'sys' exitted with %d; " % child.returncode
+                    crash_sys = None
+
+                child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                               "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                crash_sys_c = child.communicate("sys -c\nquit\n")[0]
+                if child.wait():
+                    log += "Warning: crash 'sys -c' exitted with %d; " % child.returncode
+                    crash_sys_c = None
         except Exception as ex:
             log += "Error\n%s" % ex
             unlock(lockfile)
@@ -485,12 +514,42 @@ def start_vmcore():
 
         child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
         kernellog = child.communicate("log\nquit\n")[0]
-        retcode = child.wait()
+        if child.wait():
+            log += "Warning: crash 'log' exited with %d; " % child.returncode
 
-        if retcode:
-            log += "Warning: crash exited with %d; " % retcode
+        child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+        crash_bt_a = child.communicate("bt -a\nquit\n")[0]
+        if child.wait():
+            log += "Warning: crash 'bt -a' exited with %d; " % child.returncode
+            crash_bt_a = None
+
+        child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+        crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
+        if child.wait():
+            log += "Warning: crash 'kmem -f' exited with %d; " % child.returncode
+            crash_kmem_f = None
+
+        child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+        crash_sys = child.communicate("sys\nquit\n")[0]
+        if child.wait():
+            log += "Warning: crash 'sys' exited with %d; " % child.returncode
+            crash_sys = None
+
+        child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+        crash_sys_c = child.communicate("sys -c\nquit\n")[0]
+        if child.wait():
+            log += "Warning: crash 'sys -c' exited with %d; " % child.returncode
+            crash_sys_c = None
 
     task.set_backtrace(kernellog)
+    if crash_bt_a:
+        task.add_misc("bt-a", crash_bt_a)
+    if crash_kmem_f:
+        task.add_misc("kmem-f", crash_kmem_f)
+    if crash_sys:
+        task.add_misc("sys", crash_sys)
+    if crash_sys_c:
+        task.add_misc("sys-c", crash_sys_c)
 
     stats["duration"] = int(time.time()) - stats["starttime"]
     stats["status"] = STATUS_SUCCESS
