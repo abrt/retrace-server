@@ -222,8 +222,13 @@ def application(environ, start_response):
             continue
 
         if task.get_managed():
-            row = "<tr><td><a href=\"%s%s\">%s</a> (%s)</td></tr>" \
-                  % (baseurl, taskid, taskid, LONG_TYPES[task.get_type()])
+            if task.has_status():
+                status = " (%s)" % _(STATUS[task.get_status()])
+            else:
+                status = ""
+
+            row = "<tr><td><a href=\"%s%s\">%s</a>%s</td></tr>" \
+                  % (baseurl, taskid, taskid, status)
 
             if not task.has_status():
                 available.append(row)
