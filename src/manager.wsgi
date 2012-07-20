@@ -170,12 +170,12 @@ def application(environ, start_response):
                 links = []
                 for name in misclist:
                     links.append("<a href=\"%s/misc/%s\">%s</a>" % (request.url.rstrip("/"), name, name))
-                misc = "<tr><th>Additional results:</th><td>%s</td></tr>" % ", ".join(links)
+                misc = "<tr><th>%s</th><td>%s</td></tr>" % (_("Additional results:"), ", ".join(links))
 
         back = "<tr><td colspan=\"2\"><a href=\"%s\">%s</a></td></tr>" % (match.group(1), _("Back to task manager"))
 
-        output = output.replace("{title}", _("Task #%s - Retrace Server Task Manager") % match.group(4))
-        output = output.replace("{taskno}", _("Task #%s") % match.group(4))
+        output = output.replace("{title}", title)
+        output = output.replace("{taskno}", taskno)
         output = output.replace("{str_type}", _("Type:"))
         output = output.replace("{type}", tasktype)
         output = output.replace("{str_status}", _("Status:"))
@@ -226,14 +226,22 @@ def application(environ, start_response):
 
             running.append(row)
 
+    available_str = _("Available tasks")
+    running_str = _("Running tasks")
+    finished_str = _("Finished tasks")
+
     if CONFIG["UseFTPTasks"]:
         available = []
         for filename in sorted(ftp_list_dir(CONFIG["FTPDir"]), cmp=cmp_vmcores_first):
             available.append("<tr><td><a href=\"%s/%s\">%s</a></td></tr>" \
                              % (match.group(1), filename, filename))
+        available_str = _("FTP files")
 
     output = output.replace("{title}", title)
     output = output.replace("{sitename}", sitename)
+    output = output.replace("{available_str}", available_str)
+    output = output.replace("{running_str}", running_str)
+    output = output.replace("{finished_str}", finished_str)
     # spaces to keep the XML nicely aligned
     output = output.replace("{available}", "\n        ".join(available))
     output = output.replace("{running}", "\n        ".join(running))
