@@ -119,7 +119,7 @@ def application(environ, start_response):
             output = f.read(1 << 20) # 1MB
 
         start = ""
-        if task.has_status():
+        if not ftptask and task.has_status():
             status = _(STATUS[task.get_status()])
         else:
             start = "<tr><td colspan=\"2\"><a href=\"%s/start\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Start task"))
