@@ -2,7 +2,7 @@ import fnmatch
 import re
 from retrace import *
 
-MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^\?/]+)(/(start|backtrace|delete|misc/([^/]+)/?)?)?)?)?/?(\?.*)?$")
+MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(start|backtrace|delete|misc/([^/]+)/?)?)?)?)?$")
 
 LONG_TYPES = { TASK_RETRACE: "Coredump retrace",
                TASK_DEBUG: "Coredump retrace - debug",
@@ -27,7 +27,7 @@ def application(environ, start_response):
     if not CONFIG["AllowTaskManager"]:
         return response(start_response, "403 Forbidden", _("Task manager was disabled by the server administrator"))
 
-    match = MANAGER_URL_PARSER.match(request.url)
+    match = MANAGER_URL_PARSER.match(request.path_url)
     if not match:
         return response(start_response, "404 Not Found")
 
@@ -122,7 +122,7 @@ def application(environ, start_response):
         if not ftptask and task.has_status():
             status = _(STATUS[task.get_status()])
         else:
-            start = "<tr><td colspan=\"2\"><a href=\"%s/start\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Start task"))
+            start = "<tr><td colspan=\"2\"><a href=\"%s/start\">%s</a></td></tr>" % (request.path_url.rstrip("/"), _("Start task"))
             if ftptask:
                 status = _("On remote FTP server")
             else:
@@ -133,7 +133,7 @@ def application(environ, start_response):
         backtracewindow = ""
         if not ftptask:
             if task.has_backtrace():
-                backtrace = "<tr><td colspan=\"2\"><a href=\"%s/backtrace\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Show raw backtrace"))
+                backtrace = "<tr><td colspan=\"2\"><a href=\"%s/backtrace\">%s</a></td></tr>" % (request.path_url.rstrip("/"), _("Show raw backtrace"))
                 backtracewindow = "<h2>Backtrace</h2><textarea>%s</textarea>" % task.get_backtrace()
                 if task.get_type() in [TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
                     if task.get_type() == TASK_VMCORE_INTERACTIVE:
@@ -154,7 +154,7 @@ def application(environ, start_response):
         if ftptask or task.is_running():
             delete = ""
         else:
-            delete = "<tr><td colspan=\"2\"><a href=\"%s/delete\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Delete task"))
+            delete = "<tr><td colspan=\"2\"><a href=\"%s/delete\">%s</a></td></tr>" % (request.path_url.rstrip("/"), _("Delete task"))
 
         if ftptask:
             # ToDo: determine?
@@ -172,7 +172,7 @@ def application(environ, start_response):
             if misclist:
                 links = []
                 for name in misclist:
-                    links.append("<a href=\"%s/misc/%s\">%s</a>" % (request.url.rstrip("/"), name, name))
+                    links.append("<a href=\"%s/misc/%s\">%s</a>" % (request.path_url.rstrip("/"), name, name))
                 misc = "<tr><th>%s</th><td>%s</td></tr>" % (_("Additional results:"), ", ".join(links))
 
         back = "<tr><td colspan=\"2\"><a href=\"%s\">%s</a></td></tr>" % (match.group(1), _("Back to task manager"))
@@ -199,7 +199,7 @@ def application(environ, start_response):
     title = _("Retrace Server Task Manager")
     sitename = _("Retrace Server Task Manager")
 
-    baseurl = request.url
+    baseurl = request.path_url
     if not baseurl.endswith("/"):
         baseurl += "/"
 
