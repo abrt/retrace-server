@@ -129,6 +129,8 @@ def application(environ, start_response):
                 status = _("Not started")
 
         interactive = ""
+        backtrace = ""
+        backtracewindow = ""
         if not ftptask:
             if task.has_backtrace():
                 backtrace = "<tr><td colspan=\"2\"><a href=\"%s/backtrace\">%s</a></td></tr>" % (request.url.rstrip("/"), _("Show raw backtrace"))
@@ -147,11 +149,7 @@ def application(environ, start_response):
                                  _("You can jump directly to the debugger with:"), match.group(4), debugger,
                                  _("see"), _("for further information about cmdline flags"))
             elif task.has_log():
-                backtrace = ""
                 backtracewindow = "<h2>Log:</h2><textarea>%s</textarea>" % task.get_log()
-        else:
-            backtrace = ""
-            backtracewindow = ""
 
         if ftptask or task.is_running():
             delete = ""
