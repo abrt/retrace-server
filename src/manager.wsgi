@@ -2,7 +2,7 @@ import fnmatch
 import re
 from retrace import *
 
-MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(start|backtrace|delete|misc/([^/]+)/?)?)?)?)?$")
+MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(start|backtrace|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
 
 LONG_TYPES = { TASK_RETRACE: "Coredump retrace",
                TASK_DEBUG: "Coredump retrace - debug",
@@ -31,16 +31,16 @@ def application(environ, start_response):
     if not match:
         return response(start_response, "404 Not Found")
 
-    if match.group(6) and match.group(6).startswith("misc") and match.group(7):
+    if match.group(6) and match.group(6).startswith("misc") and match.group(9):
         try:
             task = RetraceTask(match.group(4))
         except:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
-        if not task.has_misc(match.group(7)):
+        if not task.has_misc(match.group(9)):
             return response(start_response, "404 Not Found", _("There is no such record"))
 
-        return response(start_response, "200 OK", task.get_misc(match.group(7)))
+        return response(start_response, "200 OK", task.get_misc(match.group(9)))
     elif match.group(6) and match.group(6) == "start":
         # start
         ftptask = False
@@ -88,7 +88,8 @@ def application(environ, start_response):
             return response(start_response, "404 Forbidden", _("Task does not have a backtrace"))
 
         return response(start_response, "200 OK", task.get_backtrace())
-    elif match.group(6) and match.group(6) == "delete":
+    elif match.group(6) and match.group(6).startswith("delete") and \
+         match.group(8) and match.group(8).startswith("sure"):
         try:
             task = RetraceTask(match.group(4))
         except:
@@ -175,6 +176,13 @@ def application(environ, start_response):
                     links.append("<a href=\"%s/misc/%s\">%s</a>" % (request.path_url.rstrip("/"), name, name))
                 misc = "<tr><th>%s</th><td>%s</td></tr>" % (_("Additional results:"), ", ".join(links))
 
+        if match.group(6) and match.group(6).startswith("delete"):
+            delete_yesno = "<tr><td colspan=\"2\">%s <a href=\"%s/sure\">Yes</a> - <a href=\"%s/%s\">No</a></td></tr>" \
+                           % (_("Are you sure you want to delete the task?"), request.path_url.rstrip("/"),
+                              match.group(1), match.group(4))
+        else:
+            delete_yesno = ""
+
         back = "<tr><td colspan=\"2\"><a href=\"%s\">%s</a></td></tr>" % (match.group(1), _("Back to task manager"))
 
         output = output.replace("{title}", title)
@@ -188,6 +196,7 @@ def application(environ, start_response):
         output = output.replace("{backtrace}", backtrace)
         output = output.replace("{backtracewindow}", backtracewindow)
         output = output.replace("{delete}", delete)
+        output = output.replace("{delete_yesno}", delete_yesno)
         output = output.replace("{interactive}", interactive)
         output = output.replace("{misc}", misc)
         return response(start_response, "200 OK", output, [("Content-Type", "text/html")])
