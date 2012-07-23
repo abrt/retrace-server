@@ -104,15 +104,23 @@ def application(environ, start_response):
     elif match.group(4):
         # info
         ftptask = False
+        filesize = None
         try:
             task = RetraceTask(match.group(4))
         except:
             if CONFIG["UseFTPTasks"]:
-                files = ftp_list_dir(CONFIG["FTPDir"])
+                ftp = ftp_init()
+                files = ftp_list_dir(CONFIG["FTPDir"], ftp)
                 if not match.group(4) in files:
+                    ftp_close()
                     return response(start_response, "404 Not Found", _("There is no such task"))
 
                 ftptask = True
+                try:
+                    filesize = ftp.size(match.group(4))
+                except:
+                    pass
+                ftp_close(ftp)
             else:
                 return response(start_response, "404 Not Found", _("There is no such task"))
 
@@ -126,6 +134,15 @@ def application(environ, start_response):
             start = "<tr><td colspan=\"2\"><a href=\"%s/start\">%s</a></td></tr>" % (request.path_url.rstrip("/"), _("Start task"))
             if ftptask:
                 status = _("On remote FTP server")
+                if filesize:
+                    if filesize > (1 << 30):
+                        status += " (%.2f GiB)" % (float(filesize) / (1 << 30))
+                    elif filesize > (1 << 20):
+                        status += " (%.2f MiB)" % (float(filesize) / (1 << 20))
+                    elif filesize > (1 << 10):
+                        status += " (%.2f kiB)" % (float(filesize) / (1 << 10))
+                    else:
+                        status += " (%d B)" % filesize
             else:
                 status = _("Not started")
 
