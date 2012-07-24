@@ -109,6 +109,7 @@ CONFIG = {
   "MinStorageLeft": 10240,
   "DeleteTaskAfter": 120,
   "KeepRawhideLatest": 3,
+  "KojiRoot": "/mnt/koji",
   "LogDir": "/var/log/retrace-server",
   "RepoDir": "/var/cache/retrace-server",
   "SaveDir": "/var/spool/retrace-server",
@@ -418,10 +419,13 @@ def get_kernel_release(vmcore):
 
 def find_kernel_debuginfo(kernelver):
     vers = [kernelver]
-    if kernelver.endswith(".i386"):
-        vers.append(kernelver.replace(".i386", ".i486"))
-        vers.append(kernelver.replace(".i386", ".i586"))
-        vers.append(kernelver.replace(".i386", ".i686"))
+    v, tail = kernelver.split("-", 1)
+    r, a = tail.rsplit(".", 1)
+
+    if v == "i386":
+        vers.append("%s-%s.i486" % (v, r))
+        vers.append("%s-%s.i586" % (v, r))
+        vers.append("%s-%s.i686" % (v, r))
 
     # search for the debuginfo RPM
     for release in os.listdir(CONFIG["RepoDir"]):
@@ -434,6 +438,11 @@ def find_kernel_debuginfo(kernelver):
             testfile = os.path.join(CONFIG["RepoDir"], release, "kernel-debuginfo-%s.rpm" % ver)
             if os.path.isfile(testfile):
                 return testfile
+
+    # koji-like root
+    testfile = os.path.join(CONFIG["KojiRoot"], "packages", "kernel", v, r, a, "kernel-debuginfo-%s.rpm" % ver)
+    if os.path.isfile(testfile):
+        return testfile
 
     return None
 
