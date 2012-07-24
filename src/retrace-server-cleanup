@@ -83,21 +83,58 @@ if __name__ == "__main__":
                     continue
 
                 task.clean()
-                task.set_log("Killed by garbage collector", True)
+                task.set_log("Killed by garbage collector\n", True)
 
-        # clean up old tasks
-        try:
-            files = os.listdir(CONFIG["SaveDir"])
-        except OSError, ex:
-            files = []
-            log.write("Error listing task directory: %s\n" % ex)
-
-        for filename in files:
+        if CONFIG["ArchiveTaskAfter"] > 0:
+            # archive old tasks
             try:
-                task = RetraceTask(int(filename))
-            except:
-                continue
+                files = os.listdir(CONFIG["SaveDir"])
+            except OSError, ex:
+                files = []
+                log.write("Error listing task directory: %s\n" % ex)
 
-            if task.get_age() >= CONFIG["DeleteTaskAfter"]:
-                log.write("Deleting old task %s\n" % filename)
-                task.remove()
+            for filename in files:
+                try:
+                    task = RetraceTask(filename)
+                except:
+                    continue
+
+                if task.get_age() >= CONFIG["ArchiveTaskAfter"]:
+                    log.write("Archiving task %s\n" % filename)
+                    if not os.path.isdir(CONFIG["DropDir"]):
+                        os.makedirs(CONFIG["DropDir"])
+
+                    targetfile = os.path.join(CONFIG["DropDir"],
+                                              "%s-%s.tar.gz" % (filename, time.strftime("%Y%m%d%H%M%S")))
+                    with open("/dev/null", "w") as null:
+                        child = Popen(["tar", "czf", targetfile, task.get_savedir()],
+                                      stdout=PIPE, stderr=STDOUT)
+                        stdout = child.communicate()[0]
+                        if child.wait():
+                            log += "Error: tar exitted with %d: %s\n" % (child.returncode, stdout)
+                            try:
+                                os.unlink(targetfile)
+                            except:
+                                pass
+
+                            continue
+
+                        task.remove()
+
+        if CONFIG["DeleteTaskAfter"] > 0:
+            # clean up old tasks
+            try:
+                files = os.listdir(CONFIG["SaveDir"])
+            except OSError, ex:
+                files = []
+                log.write("Error listing task directory: %s\n" % ex)
+
+            for filename in files:
+                try:
+                    task = RetraceTask(filename)
+                except:
+                    continue
+
+                if task.get_age() >= CONFIG["DeleteTaskAfter"]:
+                    log.write("Deleting old task %s\n" % filename)
+                    task.remove()
