@@ -112,7 +112,7 @@ def application(environ, start_response):
                 ftp = ftp_init()
                 files = ftp_list_dir(CONFIG["FTPDir"], ftp)
                 if not match.group(4) in files:
-                    ftp_close()
+                    ftp_close(ftp)
                     return response(start_response, "404 Not Found", _("There is no such task"))
 
                 ftptask = True
