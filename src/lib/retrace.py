@@ -127,6 +127,7 @@ CONFIG = {
   "FTPUser": "",
   "FTPPass": "",
   "FTPDir": "/",
+  "VmcoreDumpLevel": 0,
   "RequireGPGCheck": True,
   "UseCreaterepoUpdate": False,
   "DBFile": "stats.db",
@@ -815,6 +816,22 @@ def check_run(cmd):
 
     return None
 
+def strip_vmcore(vmcore):
+    vmlinux = None
+    try:
+        vmlinux = prepare_debuginfo(vmcore)
+    except:
+        pass
+
+    if vmlinux:
+        newvmcore = "%s.stripped" % vmcore
+        retcode = call(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
+                        "-x", vmlinux, "--message-level", "0", vmcore, newvmcore])
+        if retcode:
+            os.unlink(newvmcore)
+        else:
+            os.rename(newvmcore, vmcore)
+
 def move_dir_contents(source, dest):
     for filename in os.listdir(source):
         path = os.path.join(source, filename)
@@ -1123,6 +1140,7 @@ class RetraceTask:
 
 
         if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
+            vmcore = os.path.join(crashdir, "vmcore")
             files = os.listdir(crashdir)
             for filename in files:
                 fullpath = os.path.join(crashdir, filename)
@@ -1132,7 +1150,7 @@ class RetraceTask:
             files = os.listdir(crashdir)
             if len(files) == 1:
                 if files[0] != "vmcore":
-                    os.rename(os.path.join(crashdir, files[0]), os.path.join(crashdir, "vmcore"))
+                    os.rename(os.path.join(crashdir, files[0]), vmcore)
             else:
                 vmcores = []
                 for filename in files:
@@ -1145,9 +1163,12 @@ class RetraceTask:
                     for filename in files:
                         if filename == vmcores[0]:
                             if vmcores[0] != "vmcore":
-                                os.rename(os.path.join(crashdir, filename), os.path.join(crashdir, "vmcore"))
+                                os.rename(os.path.join(crashdir, filename), vmcore)
                         else:
                             os.unlink(os.path.join(crashdir, filename))
+
+            if CONFIG["VmcoreDumpLevel"] > 0 and CONFIG["VmcoreDumpLevel"] < 32:
+                strip_vmcore(vmcore)
 
         os.unlink(os.path.join(self._savedir, RetraceTask.REMOTE_FILE))
 
