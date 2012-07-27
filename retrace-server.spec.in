@@ -121,6 +121,20 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Fri Jul 27 2012 Michal Toman <mtoman@redhat.com> 1.7-1
+- check whether package can be retraced before uploading
+- add possibility to disable interactive debugging
+- add support for chrooted crashes
+- also cache debuginfo for modules loaded in a vmcore
+- add task manager
+- add possibility to search kernel debuginfo in koji-like directory structure
+- fix permission denied on gdb.sh
+- add possibility to query an external FTP for task data
+- tasks may have multiple results
+- tasks may have remote resources
+- add possibility to run makedumpfile on vmcores
+- add possibility to archive old tasks instead of deleting them
+
 * Fri May 04 2012 Michal Toman <mtoman@redhat.com> 1.6-1
 - add support for interactive debugging
 - coredump2packages - handle malformed eu-unstrip output
