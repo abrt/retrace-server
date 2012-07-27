@@ -39,6 +39,9 @@ backtrace generation service over a network using HTTP protocol.
 * Package repository::
 * Traffic and load estimation::
 * Security::
+* Interactive Debugging::
+* Task Manager::
+* Configuration::
 * Future work::
 @end menu
 
@@ -198,8 +201,8 @@ from the server configuration file. Client is allowed to specify
 an optional @var{X-Task-Type} header, identifying the task type.
 At the moment @code{TASK_RETRACE (0)}, @code{TASK_DEBUG (1)} and
 @code{TASK_RETRACE_INTERACTIVE (3)} can be used for binary crashes
-and @code{TASK_VMCORE (2)} and @code{TASK_VMCORE_INTERACTIVE} for kernel
-crashes. If no @var{X-Task-Type} is specified, @code{TASK_RETRACE}
+and @code{TASK_VMCORE (2)} and @code{TASK_VMCORE_INTERACTIVE (4)} for
+kernel crashes. If no @var{X-Task-Type} is specified, @code{TASK_RETRACE}
 is used.
 
 If unpacking the archive would result in having the free disk space
@@ -240,7 +243,11 @@ identification of its system.
 
 For kernel crashes, only the @file{vmcore} needs to be present in
 the archive. Although it's just one file, it needs to be
-@command{tar}-compressed as well.
+@command{tar}-compressed as well. As the vmcore may be a large file,
+the server administrator may specify the @var{VmcoreDumpLevel} config
+option to run @command{makedumpfile} with the appropriate dump level
+on each received vmcore. This will drop unnecessary pages from the
+vmcore and save a significant amount of disk space.
 
 If one or more files are not present in the archive, the server
 returns the @code{403 Forbidden} HTTP error code.
@@ -364,8 +371,16 @@ mostly limited by the hard drive size and speed.
 
 Retrace worker is a program (usually residing in
 @command{/usr/bin/retrace-server-worker}) takes a task id as
-a parameter and turns it into the task directory. Depending on
-the task type it performs different actions.
+a parameter and turns it into the task directory.
+
+Each task may contain a set of remote resources. These are specified
+in the @file{remote} file within the task directory. Each line means
+a separate resource - URL parseable by @command{wget}. The worker
+goes line by line calling @command{wget} on each record. The download
+is best-effort - it does not die on a missing or invalid resource.
+The list of errors is later available in the @file{retrace_log} file.
+
+Next performed actions depend on the task type.
 
 @section Binary crashes
 
@@ -474,19 +489,20 @@ If the host system's architecture does not match the vmcore one,
 a chroot is required to be able to run @command{crash} tool correctly.
 The mock configuration is saved to
 @file{/var/spool/retrace-server/kernel-$ARCH} directory. The repo used
-to install the chroot must be specified in the configuration file,
-using @var{$ARCH} as a wildcard for the appropriate architecture.
+to install the chroot must be specified in the @var{KernelChrootRepo}
+config option, using @var{$ARCH} as a placeholder for the architecture.
 The chroot is only installed on first use and it is kept to be able
 to process future tasks.
 
-Before running the @command{crash} tool, the worker looks for
-@file{/var/cache/retrace-server/kernel/vmlinux-VRA} file. If this one
-is not present, the search for @file{kernel-debuginfo} starts.
-The worker tries to find the debuginfo in all
-@file{/var/cache/retrace-server/} subdirectories and additional
-directories specified in the configuration file. If found,
-the debuginfo is unpacked, @file{vmlinux} is cached and the rest of debuginfo
-is deleted.
+To perform full debugging, the @file{vmlinux} file from kernel
+debuginfo is required, as well as debuginfo for all loaded modules.
+The worker first checks, whether all files are cached under
+@file{/var/cache/retrace-server/kernel/$ARCH/}. If any of them is
+missing, it is unpacked from the debuginfo and cached. This incremental
+process only keeps the required files unpacked and thus does not waste
+hard drive space. (Note: if every module would be loaded in the set of
+processed vmcores, one would end up with the whole debuginfo unpacked.)
+
 
 @node Task cleanup
 @chapter Task cleanup
@@ -505,6 +521,16 @@ process is finished, and only backtraces, logs, and passwords remain
 available for every task until the cleanup. The
 @command{retrace-server-cleanup} checks the creation time and deletes the
 directories in @file{/var/spool/retrace-server/}.
+
+If the server administrator does not want to completely delete all tasks,
+he can set the @var{ArchiveTaskAfter} config option. When the task becomes
+old enough to be archived, it is @command{.tar.gz}-ed into drop directory
+set by the @var{DropDir} config option. The original task directory is
+deleted. Archiving tasks is a possible privacy problem and should not be
+used on public instances. Please note that if e.g.
+@var{DeleteTaskAfter = 120} and @var{ArchiveTaskAfter = 24}, every
+task will be archived, because it matches the condition earlier.
+If both options are set to the same value, the task is deleted.
 
 Tasks running for more than 1 hour are terminated and removed from the
 system. Tasks for which the @command{retrace-server-worker} crashed for
@@ -747,81 +773,7 @@ package origin is verified.
 When the debuginfo filesystem server is done, the retrace server can
 safely use it, as the data will also be signed.
 
-@chapter Configuration
-
-The following options can be specified in the configuration file
-@file{/etc/retrace-server.conf}:
-
-@itemize
-@item
-@command{RequireHTTPS} boolean; whether to deny non-HTTPS. Default 1.
-@item
-@command{RequireGPGCheck} boolean; whether to use GPG check on
-the packages installed into chroot (does not apply for rawhide
-or vmcores chroot). GPG key file named @file{release-version} needs
-to be present in the @file{/usr/share/retrace-server/gpg/} directory.
-Default 1.
-@item
-@command{MaxParallelTasks} integer; how many tasks may be running
-at one time. All new tasks are denied while the number of running
-tasks is not less than the limit. Default 5.
-@item
-@command{MaxPackedSize} integer; maximum size of the uploaded archive
-(in megabytes). Default 50 (needs to be increased for vmcores).
-@item
-@command{MaxUnpackedSize} integer; maximum size of the archive content
-(in megabytes). This is a protection against sparse etc. which can
-unpack a small archive into a huge file. Default 1024.
-@item
-@command{MinStorageLeft} integer; the amount of storage space that
-needs to be kept free on the @file{/var/spool/retrace-server}
-filesystem (in megabytes). Default 1024.
-@item
-@command{DeleteTaskAfter} integer; time (in hours) after which
-the task is considered "old" and should be deleted (next run of
-@command{retrace-server-cleanup} deletes it). Default 120.
-@item
-@command{DBFile} string; the name of file used to save statistics.
-Default @file{stats.db}.
-@item
-@command{LogDir} string; the directory used to save global logs.
-Per-task logs are saved to task directories. Default
-@file{/var/log/retrace-server}.
-@item
-@command{RepoDir} string; the directory where local repositories
-are saved and searched. For vmcores, this directory also contains
-cached vmlinux files and needs to be writable for retrace user
-(thus can not be mounted read-only!). Needs to be synchronized
-manually to the content of @file{/etc/yum.repos.d/retarce-*.repo},
-which hardcodes the default. Default @file{/var/cache/retrace-server}.
-@item
-@command{SaveDir} string; the directory where task directories are
-created. Default @file{/var/spool/retrace-server}.
-@item
-@command{UseWorkDir} boolean; whether to use non-default mock
-directory. Historical, does not work at the moment. May be
-revived in the future.
-@item
-@command{WorkDir} string; custom mock working directory.
-Historical, does not work at the moment. May be revived in the future.
-@item
-@command{UseCreateRepoUpdate} boolean; whether to call
-@command{createrepo} with @command{--update} option when creating
-the local repository. This is much faster, but consumes a lot
-of memory (several gigabytes on a standard Fedora repo). Default 0.
-@item
-@command{KeepRawhideLatest} integer; how many latest packages from
-rawhide distribution to keep. All older packages are deleted.
-Default 3.
-@item
-@command{KernelChrootRepo} string; repository used to install chroot
-for cross-arch vmcore analysis. @var{$ARCH} is a wildcard for
-the required architecture. The repository must contain @file{bash},
-@file{coreutils}, @file{cpio}, @file{crash} and @file{shadow-utils}
-packages and their dependencies. Default
-@file{http://dl.fedoraproject.org/pub/fedora/linux/releases/16/Everything/$ARCH/os/}
-@end itemize
-
+@node Interactive Debugging
 @chapter Interactive Debugging
 
 @section Overview
@@ -862,6 +814,159 @@ you can use the current shell.
 @item
 See @code{man retrace-server-interact} for further information on
 command syntax.
+@end itemize
+
+
+@node Task Manager
+@chapter Task Manager
+
+@section Creating a managed task
+
+First of all, @var{AllowTaskManager} needs to be enabled in
+the configuration file. The managed task can be created in three ways:
+
+@itemize
+@item
+Using Retrace Server's standard HTTP API. The request is exactly same
+as when creating a regular task, except that it needs to include
+the @var{X-Task-Managed} header.
+@item
+By using an external FTP server. Retrace Server is able to connect
+to an FTP server and download task data from it. See below for more
+detailed information.
+@item
+By manually creating the task directory, respecting Retrace Server's
+internal directory structure. This approach works, however it is not
+recommended to use it, as the internals may change.
+@end itemize
+
+@section Tasks created from remote FTP files
+
+Retrace Server is able to query task data from an FTP server. It will
+unpack @var{.tar.gz}, @var{.tar.bz2}, @var{.tar.xz}, @var{.tarz},
+@var{.tar}, @var{.gz}, @var{.bz2}, @var{.xz}, @var{.Z} and @var{.zip}
+archives. More formats may be added in the future. So far only vmcores
+are supported and the task is always created as
+@var{TASK_VMCORE_INTERACTIVE}, so make sure @var{AllowInteractive} is
+enabled in the configuration file.
+The local task is created by clicking @code{Start Task} link in
+the task manager. The task is automatically executed and begins
+downloading remote resources immediately.
+
+@node Configuration
+@chapter Configuration
+
+The following options can be specified in the configuration file
+@file{/etc/retrace-server.conf}:
+
+@itemize
+@item
+@command{RequireHTTPS} boolean; whether to deny non-HTTPS. Default 1.
+@item
+@command{RequireGPGCheck} boolean; whether to use GPG check on
+the packages installed into chroot (does not apply for rawhide
+or vmcores chroot). GPG key file named @file{release-version} needs
+to be present in the @file{/usr/share/retrace-server/gpg/} directory.
+Default 1.
+@item
+@command{AllowApiDelete} boolean; whether to allow task deleting by
+a HTTP request to @file{https://someserver/<task_id>/delete}.
+Default 0.
+@item
+@command{AllowInteractive} boolean; whether to allow interactive tasks.
+This is a security risk and should not be used on public systems.
+See the Interactive tasks chapter for more information. Default 0.
+@item
+@command{AllowTaskManager} boolean; whether to allow managing tasks
+by task manager. See the Task Manager chapter for more information.
+Default 0.
+@item
+@command{MaxParallelTasks} integer; how many tasks may be running
+at one time. All new tasks are denied while the number of running
+tasks is not less than the limit. Default 5.
+@item
+@command{MaxPackedSize} integer; maximum size of the uploaded archive
+(in megabytes). Default 50 (needs to be increased for vmcores).
+@item
+@command{MaxUnpackedSize} integer; maximum size of the archive content
+(in megabytes). This is a protection against sparse etc. which can
+unpack a small archive into a huge file. Default 1024.
+@item
+@command{MinStorageLeft} integer; the amount of storage space that
+needs to be kept free on the @file{/var/spool/retrace-server}
+filesystem (in megabytes). Default 1024.
+@item
+@command{DeleteTaskAfter} integer; time (in hours) after which
+the task is considered "old" and should be deleted (next run of
+@command{retrace-server-cleanup} deletes it). Any value less or
+equal to zero means disabled. Default 120.
+@item
+@command{ArchiveTaskAfter} integer; similar to
+@command{DeleteTaskAfter}, but the task is archived to @command{DropDir}
+(see below) before deleting. Default 0.
+@item
+@command{DBFile} string; the name of file used to save statistics.
+Default @file{stats.db}.
+@item
+@command{LogDir} string; the directory used to save global logs.
+Per-task logs are saved to task directories. Default
+@file{/var/log/retrace-server}.
+@item
+@command{RepoDir} string; the directory where local repositories
+are saved and searched. For vmcores, this directory also contains
+cached vmlinux files and needs to be writable for retrace user
+(thus can not be mounted read-only!). Needs to be synchronized
+manually to the content of @file{/etc/yum.repos.d/retarce-*.repo},
+which hardcodes the default. Default @file{/var/cache/retrace-server}.
+@item
+@command{SaveDir} string; the directory where task directories are
+created. Default @file{/var/spool/retrace-server}.
+@item
+@command{UseWorkDir} boolean; whether to use non-default mock
+directory. Historical, does not work at the moment. May be
+revived in the future.
+@item
+@command{WorkDir} string; custom mock working directory.
+Historical, does not work at the moment. May be revived in the future.
+@item
+@command{DropDir} string; directory, where old tasks are archived
+before deleting. No effect if archiving is disabled. Default
+@file{/srv/retrace/archive}.
+@item
+@command{UseCreateRepoUpdate} boolean; whether to call
+@command{createrepo} with @command{--update} option when creating
+the local repository. This is much faster, but consumes a lot
+of memory (several gigabytes on a standard Fedora repo). Default 0.
+@item
+@command{KeepRawhideLatest} integer; how many latest packages from
+rawhide distribution to keep. All older packages are deleted.
+Default 3.
+@item
+@command{KernelChrootRepo} string; repository used to install chroot
+for cross-arch vmcore analysis. @var{$ARCH} is a wildcard for
+the required architecture. The repository must contain @file{bash},
+@file{coreutils}, @file{cpio}, @file{crash} and @file{shadow-utils}
+packages and their dependencies. Default
+@file{http://dl.fedoraproject.org/pub/fedora/linux/releases/16/Everything/$ARCH/os/}
+@item
+@command{KojiRoot} string; the directory pointing to the root of
+Koji directory structure. This is used when looking for kernel
+debuginfo when processing vmcores. Default @file{/mnt/koji}.
+@item
+@command{UseFTPTasks} boolean; whether to download tasks from remote FTP.
+No effect if task manager is disabled. Default 0.
+@item
+@command{FTPSSL} boolean; whether to use SSL with the FTP connection.
+Default 0,
+@item
+@command{FTPHost} string; FTP host. Default empty.
+@item
+@command{FTPUser} string; FTP user. Default empty.
+@item
+@command{FTPPass} string; FTP password. Default empty.
+@item
+@command{FTPDir} string; FTP directory containing tasks. Default @file{/}.
+
 @end itemize
 
 
