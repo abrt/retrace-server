@@ -820,10 +820,18 @@ command syntax.
 @node Task Manager
 @chapter Task Manager
 
-@section Creating a managed task
+The task manager enables Retrace Server not to execute tasks
+immediately, but let users/debuggers to choose when to start
+a particular one.
 
 First of all, @var{AllowTaskManager} needs to be enabled in
-the configuration file. The managed task can be created in three ways:
+the configuration file. There is no authentication in the task manager.
+All results are publicly visible to anybody who can access the correct
+URL, thus the task manager should not be used on public instances.
+
+@section Creating a managed task
+
+The managed task can be created in three ways:
 
 @itemize
 @item
@@ -843,15 +851,25 @@ recommended to use it, as the internals may change.
 @section Tasks created from remote FTP files
 
 Retrace Server is able to query task data from an FTP server. It will
-unpack @var{.tar.gz}, @var{.tar.bz2}, @var{.tar.xz}, @var{.tarz},
-@var{.tar}, @var{.gz}, @var{.bz2}, @var{.xz}, @var{.Z} and @var{.zip}
-archives. More formats may be added in the future. So far only vmcores
-are supported and the task is always created as
+unpack @var{.tar.gz}, @var{.tgz}, @var{.tar.bz2}, @var{.tar.xz},
+@var{.tarz}, @var{.tar}, @var{.gz}, @var{.bz2}, @var{.xz}, @var{.Z}
+and @var{.zip} archives. More formats may be added in the future.
+So far only vmcores are supported and the task is always created as
 @var{TASK_VMCORE_INTERACTIVE}, so make sure @var{AllowInteractive} is
 enabled in the configuration file.
 The local task is created by clicking @code{Start Task} link in
 the task manager. The task is automatically executed and begins
 downloading remote resources immediately.
+
+@section Miscleanous results
+
+In addition to the standard @file{retrace_log} and
+@file{retrace_backtrace}, a managet task may contain more than a single
+result. All excessive data may be saved as miscleanous results. These
+are key-value pairs saved into @file{misc} subdirectory within
+the task directory. Each entry is saved into @file{<task_dir>/misc/key}
+file and the contents are the actual value. All miscleanous results
+are accessible from the task manager.
 
 @node Configuration
 @chapter Configuration
