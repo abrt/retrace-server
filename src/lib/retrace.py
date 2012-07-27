@@ -95,6 +95,9 @@ HANDLE_ARCHIVE = {
   },
 }
 
+FTP_SUPPORTED_EXTENSIONS = [".tar.gz", ".tgz", ".tarz", ".tar.bz2", ".tar.xz",
+                            ".tar", ".gz", ".bz2", ".xz", ".Z", ".zip"]
+
 REPO_PREFIX = "retrace-"
 
 TASKPASS_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"

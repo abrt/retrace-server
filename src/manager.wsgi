@@ -200,6 +200,15 @@ def application(environ, start_response):
         else:
             delete_yesno = ""
 
+        unknownext = ""
+        if ftptask:
+            known = any(match.group(4).endswith(ext) for ext in FTP_SUPPORTED_EXTENSIONS)
+            if not known:
+                unknownext = "<tr><td colspan=\"2\">%s %s</td></tr>" % \
+                             (_("The file extension was not recognized, thus the file will be "
+                                "considered a raw vmcore. Known extensions are:"),
+                              ", ".join(FTP_SUPPORTED_EXTENSIONS))
+
         back = "<tr><td colspan=\"2\"><a href=\"%s\">%s</a></td></tr>" % (match.group(1), _("Back to task manager"))
 
         output = output.replace("{title}", title)
@@ -216,6 +225,7 @@ def application(environ, start_response):
         output = output.replace("{delete_yesno}", delete_yesno)
         output = output.replace("{interactive}", interactive)
         output = output.replace("{misc}", misc)
+        output = output.replace("{unknownext}", unknownext)
         return response(start_response, "200 OK", output, [("Content-Type", "text/html")])
 
     # menu
