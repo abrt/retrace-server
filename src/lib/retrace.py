@@ -130,6 +130,8 @@ CONFIG = {
   "FTPUser": "",
   "FTPPass": "",
   "FTPDir": "/",
+  "WgetKernelDebuginfos": False,
+  "KernelDebuginfoURL": "http://kojipkgs.fedoraproject.org/packages/kernel/$VERSION/$RELEASE/$ARCH/",
   "VmcoreDumpLevel": 0,
   "RequireGPGCheck": True,
   "UseCreaterepoUpdate": False,
@@ -428,7 +430,7 @@ def find_kernel_debuginfo(kernelver):
     v, tail = kernelver.split("-", 1)
     r, a = tail.rsplit(".", 1)
 
-    if v == "i386":
+    if a == "i386":
         vers.append("%s-%s.i486" % (v, r))
         vers.append("%s-%s.i586" % (v, r))
         vers.append("%s-%s.i686" % (v, r))
@@ -446,9 +448,26 @@ def find_kernel_debuginfo(kernelver):
                 return testfile
 
     # koji-like root
-    testfile = os.path.join(CONFIG["KojiRoot"], "packages", "kernel", v, r, a, "kernel-debuginfo-%s.rpm" % ver)
-    if os.path.isfile(testfile):
-        return testfile
+    for ver in vers:
+        testfile = os.path.join(CONFIG["KojiRoot"], "packages", "kernel", v, r, a, "kernel-debuginfo-%s.rpm" % ver)
+        if os.path.isfile(testfile):
+            return testfile
+
+    if CONFIG["WgetKernelDebuginfos"]:
+        downloaddir = os.path.join(CONFIG["RepoDir"], "download")
+        if not os.path.isdir(downloaddir):
+            os.makedirs(downloaddir)
+
+        for ver in vers:
+            pkgname = "kernel-debuginfo-%s.rpm" % ver
+            url = CONFIG["KernelDebuginfoURL"].replace("$VERSION", v).replace("$RELEASE", r).replace("$ARCH", a)
+            if not url.endswith("/"):
+                url += "/"
+            url += pkgname
+
+            retcode = call(["wget", "-nv", "-P", downloaddir, url])
+            if retcode == 0:
+                return os.path.join(downloaddir, pkgname)
 
     return None
 
