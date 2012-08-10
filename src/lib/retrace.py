@@ -1151,7 +1151,9 @@ class RetraceTask:
                     move_dir_contents(fullpath, crashdir)
 
             files = os.listdir(crashdir)
-            if len(files) == 1:
+            if len(files) < 1:
+                errors.append(([], "No files found in the tarball"))
+            elif len(files) == 1:
                 if files[0] != "vmcore":
                     os.rename(os.path.join(crashdir, files[0]), vmcore)
             else:
@@ -1160,15 +1162,30 @@ class RetraceTask:
                     if "vmcore" in filename:
                         vmcores.append(filename)
 
-                if len(vmcores) != 1:
-                    errors.append((str(files), "Unable to determine vmcore"))
+                # pick the largest file
+                if len(vmcores) < 1:
+                    absfiles = [os.path.join(crashdir, f) for f in files]
+                    files_sizes = [(os.path.getsize(f), f) for f in absfiles]
+                    largest_file = sorted(files_sizes, reverse=True)[0][1]
+                    os.rename(largest_file, vmcore)
+                elif len(vmcores) > 1:
+                    absfiles = [os.path.join(crashdir, f) for f in vmcores]
+                    files_sizes = [(os.path.getsize(f), f) for f in absfiles]
+                    largest_file = sorted(files_sizes, reverse=True)[0][1]
+                    os.rename(largest_file, vmcore)
                 else:
                     for filename in files:
                         if filename == vmcores[0]:
                             if vmcores[0] != "vmcore":
                                 os.rename(os.path.join(crashdir, filename), vmcore)
-                        else:
-                            os.unlink(os.path.join(crashdir, filename))
+
+            files = os.listdir(crashdir)
+            for filename in files:
+                if filename == "vmcore":
+                    continue
+
+                os.unlink(os.path.join(crashdir, filename))
+
 
             if CONFIG["VmcoreDumpLevel"] > 0 and CONFIG["VmcoreDumpLevel"] < 32:
                 strip_vmcore(vmcore)
