@@ -408,9 +408,15 @@ def start_vmcore():
                     os.symlink("/etc/mock/logging.ini", os.path.join(tmpdir, "logging.ini"))
                 except Exception as ex:
                     log += "Error\nUnable to create mock config file: %s.\n" % ex
+                    shutil.rmtree(tmpdir)
                     fail(52)
 
-                retrace_run(53, ["/usr/bin/mock", "--configdir", tmpdir, "init"])
+                child = Popen(["/usr/bin/mock", "--configdir", tmpdir, "init"], stdout=PIPE, stderr=STDOUT)
+                stdout = child.communicate()[0]
+                if child.wait():
+                    log += "Error\nmock exitted with %d:\n%s" % (child.returncode, stdout)
+                    shutil.rmtree(tmpdir)
+                    fail(53)
 
                 try:
                     os.rename(tmpdir, cfgdir)
