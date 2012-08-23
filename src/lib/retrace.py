@@ -7,6 +7,7 @@ import re
 import random
 import shutil
 import sqlite3
+import stat
 import time
 from webob import Request
 from yum import YumBase
@@ -1225,6 +1226,8 @@ class RetraceTask:
 
             if CONFIG["VmcoreDumpLevel"] > 0 and CONFIG["VmcoreDumpLevel"] < 32:
                 strip_vmcore(vmcore)
+                st = os.stat(vmcore)
+                os.chmod(vmcore, st.st_mode | stat.S_IRGRP)
 
         os.unlink(os.path.join(self._savedir, RetraceTask.REMOTE_FILE))
         self.set_downloaded(", ".join(downloaded))
