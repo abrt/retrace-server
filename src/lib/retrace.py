@@ -894,6 +894,7 @@ class RetraceTask:
     """Represents Retrace server's task."""
 
     BACKTRACE_FILE = "retrace_backtrace"
+    DOWNLOADED_FILE = "downloaded"
     LOG_FILE = "retrace_log"
     MANAGED_FILE = "managed"
     MISC_DIR = "misc"
@@ -1121,6 +1122,7 @@ class RetraceTask:
 
     def download_remote(self, unpack=True):
         """Downloads all remote resources and returns a list of errors."""
+        downloaded = []
         errors = []
 
         crashdir = os.path.join(self._savedir, "crash")
@@ -1136,6 +1138,8 @@ class RetraceTask:
                     ftp = ftp_init()
                     with open(os.path.join(crashdir, filename), "wb") as target_file:
                         ftp.retrbinary("RETR %s" % filename, target_file.write)
+
+                    downloaded.append(filename)
                 except Exception as ex:
                     errors.append((url, str(ex)))
                     continue
@@ -1150,6 +1154,7 @@ class RetraceTask:
                     continue
 
                 filename = url.rsplit("/", 1)[1]
+                downloaded.append(url)
 
             if unpack:
                 fullpath = os.path.join(crashdir, filename)
@@ -1173,7 +1178,6 @@ class RetraceTask:
 
                 if os.path.isfile(fullpath):
                     os.unlink(fullpath)
-
 
         if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
             vmcore = os.path.join(crashdir, "vmcore")
@@ -1219,11 +1223,11 @@ class RetraceTask:
 
                 os.unlink(os.path.join(crashdir, filename))
 
-
             if CONFIG["VmcoreDumpLevel"] > 0 and CONFIG["VmcoreDumpLevel"] < 32:
                 strip_vmcore(vmcore)
 
         os.unlink(os.path.join(self._savedir, RetraceTask.REMOTE_FILE))
+        self.set_downloaded(", ".join(downloaded))
 
         return errors
 
@@ -1305,6 +1309,33 @@ class RetraceTask:
         elif not managed and os.path.isfile(filename):
             os.unlink(filename)
 
+    def has_downloaded(self):
+        """Verifies whether DOWNLOAD_FILE exists"""
+        return os.path.isfile(os.path.join(self._savedir,
+                                           RetraceTask.DOWNLOADED_FILE))
+
+    def get_downloaded(self):
+        """Gets contents of DOWNLOADED_FILE"""
+        if not self.has_downloaded():
+            return None
+
+        downloaded_file_name = os.path.join(self._savedir,
+                                            RetraceTask.DOWNLOADED_FILE)
+        with open(downloaded_file_name, "r") as f:
+            result = f.read(1 << 22)
+
+        return result
+
+    def set_downloaded(self, value):
+        """Writes (not atomically) content to DOWNLOADED_FILE"""
+        downloaded_file_name = os.path.join(self._savedir,
+                                            RetraceTask.DOWNLOADED_FILE)
+
+        with open(downloaded_file_name, "w") as f:
+            result = f.write(value)
+
+        return result
+
     def clean(self):
         """Removes all files and directories others than
         results and logs from the task directory."""
@@ -1317,6 +1348,7 @@ class RetraceTask:
 
         for f in os.listdir(self._savedir):
             if f != RetraceTask.BACKTRACE_FILE and \
+               f != RetraceTask.DOWNLOADED_FILE and \
                f != RetraceTask.LOG_FILE and \
                f != RetraceTask.MANAGED_FILE and \
                f != RetraceTask.PASSWORD_FILE and \

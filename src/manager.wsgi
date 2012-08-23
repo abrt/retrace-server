@@ -209,6 +209,10 @@ def application(environ, start_response):
                                 "considered a raw vmcore. Known extensions are:"),
                               ", ".join(FTP_SUPPORTED_EXTENSIONS))
 
+        downloaded = ""
+        if not ftptask and task.has_downloaded():
+            downloaded = "<tr><th>Downloaded resources:</th><td>%s</td></tr>" % task.get_downloaded()
+
         back = "<tr><td colspan=\"2\"><a href=\"%s\">%s</a></td></tr>" % (match.group(1), _("Back to task manager"))
 
         output = output.replace("{title}", title)
@@ -226,6 +230,7 @@ def application(environ, start_response):
         output = output.replace("{interactive}", interactive)
         output = output.replace("{misc}", misc)
         output = output.replace("{unknownext}", unknownext)
+        output = output.replace("{downloaded}", downloaded)
         return response(start_response, "200 OK", output, [("Content-Type", "text/html")])
 
     # menu
