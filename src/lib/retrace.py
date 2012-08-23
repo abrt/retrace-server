@@ -236,7 +236,27 @@ def guess_arch(coredump_path):
         elif match.group(1) == "x86-64":
             return "x86_64"
 
-    return None
+    result = None
+    child = Popen(["strings", coredump_path], stdout=PIPE)
+    line = child.stdout.readline()
+    while line:
+        if "x86_64" in line:
+            result = "x86_64"
+            break
+
+        if "i386" in line or \
+           "i486" in line or \
+           "i586" in line or \
+           "i686" in line:
+            result = "i386"
+            break
+
+        line = child.stdout.readline()
+
+    child.kill()
+    child.stdout.close()
+
+    return result
 
 def guess_release(package, plugins):
     for plugin in plugins:
@@ -396,14 +416,8 @@ def get_kernel_release(vmcore):
             # the correct version is repeated several times
             match = KERNEL_RELEASE_PARSER.match(line)
             if match:
-                if line in vers:
-                    vers[line] += 1
-                else:
-                    vers[line] = 1
-
-                if vers[line] >= 3:
-                    release = line
-                    break
+                release = line
+                break
 
             line = child.stdout.readline()
 
