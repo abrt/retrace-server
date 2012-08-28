@@ -480,7 +480,9 @@ def find_kernel_debuginfo(kernelver):
                 url += "/"
             url += pkgname
 
-            retcode = call(["wget", "-nv", "-P", downloaddir, url])
+            with open("/dev/null", "w") as null:
+                retcode = call(["wget", "-nv", "-P", downloaddir, url], stdout=null, stderr=null)
+
             if retcode == 0:
                 return os.path.join(downloaddir, pkgname)
 
@@ -896,11 +898,13 @@ class RetraceTask:
 
     BACKTRACE_FILE = "retrace_backtrace"
     DOWNLOADED_FILE = "downloaded"
+    FINISHED_FILE = "finished_time"
     LOG_FILE = "retrace_log"
     MANAGED_FILE = "managed"
     MISC_DIR = "misc"
     PASSWORD_FILE = "password"
     REMOTE_FILE = "remote"
+    STARTED_FILE = "started_time"
     STATUS_FILE = "status"
     TYPE_FILE = "type"
 
@@ -1227,7 +1231,8 @@ class RetraceTask:
 
                 os.unlink(os.path.join(crashdir, filename))
 
-            if CONFIG["VmcoreDumpLevel"] > 0 and CONFIG["VmcoreDumpLevel"] < 32:
+            if CONFIG["VmcoreDumpLevel"] > 0 and CONFIG["VmcoreDumpLevel"] < 32 and \
+               os.path.isfile(vmcore):
                 strip_vmcore(vmcore)
                 st = os.stat(vmcore)
                 os.chmod(vmcore, st.st_mode | stat.S_IRGRP)
@@ -1342,6 +1347,60 @@ class RetraceTask:
 
         return result
 
+    def has_started_time(self):
+        """Verifies whether STARTED_FILE exists"""
+        return os.path.isfile(os.path.join(self._savedir,
+                                           RetraceTask.STARTED_FILE))
+
+    def get_started_time(self):
+        """Gets the unix timestamp from STARTED_FILE"""
+        if not self.has_started_time():
+            return None
+
+        start_file_name = os.path.join(self._savedir, RetraceTask.STARTED_FILE)
+        with open(start_file_name, "r") as f:
+            result = f.read(1 << 8)
+
+        return int(result)
+
+    def set_started_time(self, value):
+        """Writes the unix timestamp to STARTED_FILE"""
+        try:
+            data = int(value)
+        except ValueError:
+            raise Exception, "set_start_time requires unix timestamp as parameter"
+
+        start_file_name = os.path.join(self._savedir, RetraceTask.STARTED_FILE)
+        with open(start_file_name, "w") as f:
+            result = f.write("%d" % data)
+
+    def has_finished_time(self):
+        """Verifies whether FINISHED_FILE exists"""
+        return os.path.isfile(os.path.join(self._savedir,
+                                           RetraceTask.FINISHED_FILE))
+
+    def get_finished_time(self):
+        """Gets the unix timestamp from FINISHED_FILE"""
+        if not self.has_finished_time():
+            return None
+
+        finished_file_name = os.path.join(self._savedir, RetraceTask.FINISHED_FILE)
+        with open(finished_file_name, "r") as f:
+            result = f.read(1 << 8)
+
+        return int(result)
+
+    def set_finished_time(self, value):
+        """Writes the unix timestamp to FINISHED_FILE"""
+        try:
+            data = int(value)
+        except ValueError:
+            raise Exception, "set_finished_time requires unix timestamp as parameter"
+
+        finished_file_name = os.path.join(self._savedir, RetraceTask.FINISHED_FILE)
+        with open(finished_file_name, "w") as f:
+            result = f.write("%d" % data)
+
     def clean(self):
         """Removes all files and directories others than
         results and logs from the task directory."""
@@ -1355,9 +1414,11 @@ class RetraceTask:
         for f in os.listdir(self._savedir):
             if f != RetraceTask.BACKTRACE_FILE and \
                f != RetraceTask.DOWNLOADED_FILE and \
+               f != RetraceTask.FINISHED_FILE and \
                f != RetraceTask.LOG_FILE and \
                f != RetraceTask.MANAGED_FILE and \
                f != RetraceTask.PASSWORD_FILE and \
+               f != RetraceTask.STARTED_FILE and \
                f != RetraceTask.STATUS_FILE and \
                f != RetraceTask.TYPE_FILE and \
                f != RetraceTask.MISC_DIR:

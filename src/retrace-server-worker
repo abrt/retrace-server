@@ -25,6 +25,7 @@ def fail(exitcode):
     global task, log
     task.set_status(STATUS_FAIL)
     task.set_log(log)
+    task.set_finished_time(int(time.time()))
     stats["duration"] = int(time.time()) - stats["starttime"]
     save_crashstats(stats)
     if not task.get_type() in [TASK_DEBUG, TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
@@ -298,6 +299,7 @@ def start_retrace():
     task.set_status(STATUS_STATS)
     log += "%s " % STATUS[STATUS_STATS]
 
+    task.set_finished_time(int(time.time()))
     stats["duration"] = int(time.time()) - stats["starttime"]
     stats["status"] = STATUS_SUCCESS
 
@@ -557,6 +559,7 @@ def start_vmcore():
     if crash_sys_c:
         task.add_misc("sys-c", crash_sys_c)
 
+    task.set_finished_time(int(time.time()))
     stats["duration"] = int(time.time()) - stats["starttime"]
     stats["status"] = STATUS_SUCCESS
 
@@ -602,6 +605,8 @@ if __name__ == "__main__":
         sys.stderr.write("%s has already been executed " \
                          "for task '%d'.\n" % (sys.argv[0], taskid))
         sys.exit(10)
+
+    task.set_started_time(int(time.time()))
 
     # fork to background
     try:

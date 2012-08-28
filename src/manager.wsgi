@@ -1,3 +1,4 @@
+import datetime
 import fnmatch
 import re
 from retrace import *
@@ -213,6 +214,14 @@ def application(environ, start_response):
         if not ftptask and task.has_downloaded():
             downloaded = "<tr><th>Downloaded resources:</th><td>%s</td></tr>" % task.get_downloaded()
 
+        starttime = ""
+        if not ftptask and task.has_started_time():
+            starttime = "<tr><th>Started:</th><td>%s</td></tr>" % datetime.datetime.fromtimestamp(task.get_started_time())
+
+        finishtime = ""
+        if not ftptask and task.has_finished_time():
+            finishtime = "<tr><th>Finished:</th><td>%s</td></tr>" % datetime.datetime.fromtimestamp(task.get_finished_time())
+
         back = "<tr><td colspan=\"2\"><a href=\"%s\">%s</a></td></tr>" % (match.group(1), _("Back to task manager"))
 
         output = output.replace("{title}", title)
@@ -231,6 +240,8 @@ def application(environ, start_response):
         output = output.replace("{misc}", misc)
         output = output.replace("{unknownext}", unknownext)
         output = output.replace("{downloaded}", downloaded)
+        output = output.replace("{starttime}", starttime)
+        output = output.replace("{finishtime}", finishtime)
         return response(start_response, "200 OK", output, [("Content-Type", "text/html")])
 
     # menu
