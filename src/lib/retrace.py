@@ -1160,6 +1160,7 @@ class RetraceTask:
             if unpack:
                 fullpath = os.path.join(crashdir, filename)
 
+                unlink = True
                 if filename.endswith(".tar.gz") or filename.endswith(".tgz"):
                     unpack_result = check_run(["tar", "xzf", fullpath, "-C", crashdir])
                 elif filename.endswith(".tar.bz2"):
@@ -1176,8 +1177,10 @@ class RetraceTask:
                     unpack_result = check_run(["unxz", fullpath])
                 elif filename.endswith(".zip"):
                     unpack_result = check_run(["unzip", fullpath])
+                else:
+                    unlink = False
 
-                if os.path.isfile(fullpath):
+                if unlink and os.path.isfile(fullpath):
                     os.unlink(fullpath)
 
         if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
