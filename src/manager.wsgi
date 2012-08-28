@@ -256,9 +256,6 @@ def application(environ, start_response):
         if not os.path.isdir(os.path.join(CONFIG["SaveDir"], taskid)):
             continue
 
-        if filterexp and not fnmatch.fnmatch(taskid, filterexp):
-            continue
-
         try:
             task = RetraceTask(taskid)
         except:
@@ -266,12 +263,30 @@ def application(environ, start_response):
 
         if task.get_managed():
             if task.has_status():
-                status = " (%s)" % _(STATUS[task.get_status()])
+                status = _(STATUS[task.get_status()])
             else:
                 status = ""
 
-            row = "<tr><td><a href=\"%s%s\">%s</a>%s</td></tr>" \
-                  % (baseurl, taskid, taskid, status)
+            if task.has_downloaded():
+                downloaded = task.get_downloaded()
+            else:
+                downloaded = ""
+
+            if task.has_remote() and task.get_remote():
+                remotes = []
+                for remote in task.get_remote():
+                    if remote.startswith("FTP "):
+                        remotes.append(remote[4:])
+                    else:
+                        remotes.append(remote)
+
+                downloaded = "%s %s" % (", ".join(remotes), downloaded)
+
+            row = "<tr><td class=\"taskid\"><a href=\"%s%s\">%s</a></td><td>%s</td><td class=\"status\">%s</td></tr>" \
+                  % (baseurl, taskid, taskid, downloaded, status)
+
+            if filterexp and not fnmatch.fnmatch(row, filterexp):
+                continue
 
             if not task.has_status():
                 available.append(row)
