@@ -299,6 +299,18 @@ def start_retrace():
     task.set_status(STATUS_STATS)
     log += "%s " % STATUS[STATUS_STATS]
 
+    try:
+        con = init_crashstats_db()
+        statsid = save_crashstats(stats, con)
+        save_crashstats_success(statsid, prerunning, len(get_active_tasks()), rootsize, con)
+        save_crashstats_packages(statsid, packages[1:], con)
+        if missing:
+            save_crashstats_build_ids(statsid, missing, con)
+        con.close()
+        log += "OK\n"
+    except Exception as ex:
+        log += "Error: %s\n" % ex
+
     task.set_finished_time(int(time.time()))
     stats["duration"] = int(time.time()) - stats["starttime"]
     stats["status"] = STATUS_SUCCESS
