@@ -138,6 +138,8 @@ CONFIG = {
   "UseCreaterepoUpdate": False,
   "DBFile": "stats.db",
   "KernelChrootRepo": "http://dl.fedoraproject.org/pub/fedora/linux/releases/16/Everything/$ARCH/os/",
+  "UseFafPackages": False,
+  "FafLinkDir": "/var/spool/faf/retrace-tmp",
 }
 
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \
