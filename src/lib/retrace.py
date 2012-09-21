@@ -899,6 +899,7 @@ class RetraceTask:
     """Represents Retrace server's task."""
 
     BACKTRACE_FILE = "retrace_backtrace"
+    CRASHRC_FILE = "crashrc"
     DOWNLOADED_FILE = "downloaded"
     FINISHED_FILE = "finished_time"
     LOG_FILE = "retrace_log"
@@ -1352,6 +1353,32 @@ class RetraceTask:
             result = f.write(value)
 
         return result
+
+    def has_crashrc(self):
+        """Verifies whether CRASHRC_FILE exists"""
+        return os.path.isfile(os.path.join(self._savedir,
+                                           RetraceTask.CRASHRC_FILE))
+
+    def get_crashrc_path(self):
+        """Gets the absolute path of CRASHRC_FILE"""
+        return os.path.join(self._savedir, RetraceTask.CRASHRC_FILE)
+
+    def get_crashrc(self):
+        """Gets the unix timestamp from CRASHRC_FILE"""
+        if not self.has_started_time():
+            return None
+
+        crashrc_file_name = os.path.join(self._savedir, RetraceTask.CRASHRC_FILE)
+        with open(crashrc_file_name, "r") as f:
+            result = f.read(1 << 22)
+
+        return result
+
+    def set_crashrc(self, data):
+        """Writes data to CRASHRC_FILE"""
+        crashrc_file_name = os.path.join(self._savedir, RetraceTask.CRASHRC_FILE)
+        with open(crashrc_file_name, "w") as f:
+            result = f.write(data)
 
     def has_started_time(self):
         """Verifies whether STARTED_FILE exists"""

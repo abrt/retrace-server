@@ -391,6 +391,7 @@ def start_vmcore():
 
     log += "OK\n%s " % STATUS[STATUS_INIT]
     task.set_status(STATUS_INIT)
+    vmlinux = ""
 
     # cross-arch: we need to use chroot
     if hostarch != arch:
@@ -596,6 +597,9 @@ def start_vmcore():
         task.add_misc("sys", crash_sys)
     if crash_sys_c:
         task.add_misc("sys-c", crash_sys_c)
+
+    if "/" in vmlinux:
+        task.set_crashrc("mod -S %s" % vmlinux.rsplit("/", 1)[0])
 
     task.set_finished_time(int(time.time()))
     stats["duration"] = int(time.time()) - stats["starttime"]

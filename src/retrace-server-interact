@@ -69,12 +69,19 @@ if __name__ == "__main__":
         if args.action == "crash":
             if arch == hostarch:
                 vmlinux = prepare_debuginfo(vmcore)
-                cmdline = ["crash", "-s", vmcore, vmlinux]
+                if task.has_crashrc():
+                    cmdline = ["crash", "-s", "-i", task.get_crashrc_path(), vmcore, vmlinux]
+                else:
+                    cmdline = ["crash", "-s", vmcore, vmlinux]
             else:
                 cfgdir = os.path.join(CONFIG["SaveDir"], "kernel-%s" % arch)
                 vmlinux = prepare_debuginfo(vmcore, chroot=cfgdir)
-                cmdline = ["mock", "--configdir", cfgdir,
-                           "shell", "crash -s %s %s" % (vmcore, vmlinux)]
+                if task.has_crashrc():
+                    cmdline = ["mock", "--configdir", cfgdir,
+                               "shell", "crash -s %s %s" % (vmcore, vmlinux)]
+                else:
+                    cmdline = ["mock", "--configdir", cfgdir,
+                               "shell", "crash -s -i %s %s %s" % (task.get_crashrc_path(), vmcore, vmlinux)]
                 if not args.priv:
                     cmdline.append("--unpriv")
 
