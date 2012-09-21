@@ -1,9 +1,10 @@
 #!/usr/bin/python
 import argparse
 import grp
+import os
 from retrace import *
 
-ACTIONS = ["shell", "gdb", "crash"]
+ACTIONS = ["shell", "gdb", "crash", "printdir"]
 
 if __name__ == "__main__":
     groups = [grp.getgrgid(g).gr_name for g in os.getgroups()]
@@ -28,6 +29,10 @@ if __name__ == "__main__":
     except Exception as ex:
         print ex
         exit(1)
+
+    if args.action == "printdir":
+        print task.get_savedir()
+        exit(0)
 
     if task.get_type() == TASK_RETRACE_INTERACTIVE:
         if args.action == "shell":
