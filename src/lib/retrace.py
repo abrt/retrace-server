@@ -79,6 +79,8 @@ KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+(\.[^\-]+)?\-[0-9]+\
 # OSRELEASE=2.6.32-209.el6.x86_64
 OSRELEASE_VAR_PARSER = re.compile("^OSRELEASE=(.*)$")
 
+WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]+.*retrace-server-worker ([0-9]+)$")
+
 HANDLE_ARCHIVE = {
   "application/x-xz-compressed-tar": {
     "unpack": [TAR_BIN, "xJf"],
@@ -595,6 +597,25 @@ def response(start_response, status, body="", extra_headers=[]):
     start_response(status, [("Content-Type", "text/plain"), ("Content-Length", "%d" % len(body))] + extra_headers)
     return [body]
 
+def run_ps():
+    child = Popen(["ps", "-eo", "pid,ppid,etime,cmd"], stdout=PIPE)
+    lines = child.communicate()[0].split("\n")
+
+    return lines
+
+def get_running_tasks(ps_output=None):
+    if not ps_output:
+        ps_output = run_ps()
+
+    result = []
+
+    for line in ps_output:
+        match = WORKER_RUNNING_PARSER.match(line)
+        if match:
+            result.append((int(match.group(1)), int(match.group(3)), match.group(2)))
+
+    return result
+
 def get_active_tasks():
     tasks = []
 
@@ -977,10 +998,17 @@ class RetraceTask:
         """Verifies if the given password matches task's password."""
         return self.get_password() == password
 
-    def is_running(self):
-        """Returns whether the task is running. Does not actually examine
-        /proc, just reads the STATUS_FILE."""
-        return self.has_status() and not self.get_status() in [STATUS_SUCCESS, STATUS_FAIL]
+    def is_running(self, readproc=False):
+        """Returns whether the task is running. Reads /proc if readproc=True
+        otherwise just reads the STATUS_FILE."""
+        if readproc:
+            for pid, taskid, ppid in get_running_tasks():
+                if taskid == self._taskid:
+                    return True
+
+            return False
+        else:
+            return self.has_status() and not self.get_status() in [STATUS_SUCCESS, STATUS_FAIL]
 
     def get_age(self):
         """Returns the age of the task in hours."""

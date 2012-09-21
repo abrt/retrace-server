@@ -170,7 +170,7 @@ def application(environ, start_response):
             elif task.has_log():
                 backtracewindow = "<h2>Log:</h2><textarea>%s</textarea>" % task.get_log()
 
-        if ftptask or task.is_running():
+        if ftptask or task.is_running(readproc=True):
             delete = ""
         else:
             delete = "<tr><td colspan=\"2\"><a href=\"%s/delete\">%s</a></td></tr>" % (request.path_url.rstrip("/"), _("Delete task"))
