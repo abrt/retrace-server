@@ -690,9 +690,13 @@ if __name__ == "__main__":
             log += "Error\nCrash directory does not contain required file '%s'.\n" % required_file
             fail(15)
 
-    if tasktype in [TASK_RETRACE, TASK_DEBUG, TASK_RETRACE_INTERACTIVE]:
-        start_retrace()
-    elif tasktype in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
-        start_vmcore()
-    else:
-        pass
+    try:
+        if tasktype in [TASK_RETRACE, TASK_DEBUG, TASK_RETRACE_INTERACTIVE]:
+            start_retrace()
+        elif tasktype in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
+            start_vmcore()
+        else:
+            raise Exception, "Unsupported task type"
+    except Exception as ex:
+        log += "Error: %s\n" % ex
+        fail(16)
