@@ -580,6 +580,97 @@ def prepare_debuginfo(vmcore, chroot=None):
 
     return vmlinux
 
+def get_files_sizes(directory):
+    result = []
+
+    for f in os.listdir(directory):
+        fullpath = os.path.join(directory, f)
+        if os.path.isfile(fullpath):
+            result.append((fullpath, os.path.getsize(fullpath)))
+        elif os.path.isdir(fullpath):
+            result += get_files_sizes(fullpath)
+
+    return sorted(result, key=lambda (f, s): s, reverse=True)
+
+def get_archive_type(path):
+    ms = magic.open(magic.MAGIC_NONE)
+    ms.load()
+    filetype = ms.file(path).lower()
+
+    if "bzip2 compressed data" in filetype:
+        return ARCHIVE_BZ2
+    elif "gzip compressed data" in filetype:
+        return ARCHIVE_GZ
+    elif "xz compressed data" in filetype:
+        return ARCHIVE_XZ
+    elif "zip archive data" in filetype:
+        return ARCHIVE_ZIP
+    elif "tar archive" in filetype:
+        return ARCHIVE_TAR
+
+    return ARCHIVE_UNKNOWN
+
+def unpack_vmcore(path):
+    parentdir = path.rsplit("/", 1)[0]
+    vmcore = os.path.join(parentdir, "vmcore")
+    if path != vmcore and os.path.isfile(vmcore):
+        raise Exception, "'vmcore' already exists"
+
+    os.rename(path, vmcore)
+    filetype = get_archive_type(vmcore)
+    while filetype != ARCHIVE_UNKNOWN:
+        files = set(f for (f, s) in get_files_sizes(parentdir))
+        if filetype == ARCHIVE_GZ:
+            vmcoregz = "%s.gz" % vmcore
+            os.rename(vmcore, vmcoregz)
+            check_run(["gunzip", vmcoregz])
+
+            # do we really need it?
+            if not os.path.isfile(vmcore):
+                raise Exception, "gunzip failed"
+        elif filetype == ARCHIVE_BZ2:
+            check_run(["bunzip2", vmcore])
+        elif filetype == ARCHIVE_XZ:
+            check_run(["unxz", vmcore])
+        elif filetype == ARCHIVE_ZIP:
+            check_run(["unzip", vmcore])
+        elif filetype == ARCHIVE_TAR:
+            check_run(["tar", "-C", parentdir, "-xf", vmcore])
+        else:
+            raise Exception, "Unknown archive type"
+
+        files_sizes = get_files_sizes(parentdir)
+        newfiles = [f for (f, s) in files_sizes]
+        diff = set(newfiles) - files
+        vmcore_candidate = 0
+        while vmcore_candidate < len(newfiles) and \
+              not newfiles[vmcore_candidate] in diff:
+            vmcore_candidate += 1
+
+        if len(diff) > 1:
+            os.rename(newfiles[vmcore_candidate], vmcore)
+            for filename in newfiles:
+                if not filename in diff or \
+                   filename == newfiles[vmcore_candidate]:
+                    continue
+
+                os.unlink(filename)
+
+        elif len(diff) == 1:
+            os.rename(diff.pop(), vmcore)
+
+        # just be explicit here - if no file changed, an archive
+        # has most probably been unpacked to a file with same name
+        else:
+            pass
+
+        for filename in os.listdir(parentdir):
+            fullpath = os.path.join(parentdir, filename)
+            if os.path.isdir(fullpath):
+                shutil.rmtree(fullpath)
+
+        filetype = get_archive_type(vmcore)
+
 def get_task_est_time(taskdir):
     return 180
 
