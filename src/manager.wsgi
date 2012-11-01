@@ -1,6 +1,8 @@
+#!/usr/bin/python
 import datetime
 import fnmatch
 import re
+import urlparse
 from retrace import *
 
 MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(start|backtrace|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
@@ -44,6 +46,7 @@ def application(environ, start_response):
         return response(start_response, "200 OK", task.get_misc(match.group(9)))
     elif match.group(6) and match.group(6) == "start":
         # start
+        get = urlparse.parse_qs(request.query_string)
         ftptask = False
         try:
             task = RetraceTask(match.group(4))
@@ -70,7 +73,21 @@ def application(environ, start_response):
         if not task.get_managed():
             return response(start_response, "403 Forbidden", _("Task does not belong to task manager"))
 
-        call(["/usr/bin/retrace-server-worker", str(task.get_taskid())])
+        cmdline = ["/usr/bin/retrace-server-worker", str(task.get_taskid())]
+        if "debug" in get:
+            cmdline.append("-v")
+
+        if "kernelver" in get:
+            kmatch = KERNEL_RELEASE_PARSER.match(get["kernelver"][0])
+            if not kmatch or not kmatch.group(4):
+                return response(start_response, "403 Forbidden", _("Please use VRA format for kernel version (eg. 2.6.32-287.el6.x86_64)"))
+
+            cmdline.append("--kernelver")
+            cmdline.append(kmatch.group(1))
+            cmdline.append("--arch")
+            cmdline.append(kmatch.group(4))
+
+        call(cmdline)
 
         # ugly, ugly, ugly! retrace-server-worker double-forks and needs a while to spawn
         time.sleep(2)
@@ -132,7 +149,16 @@ def application(environ, start_response):
         if not ftptask and task.has_status():
             status = _(STATUS[task.get_status()])
         else:
-            start = "<tr><td colspan=\"2\"><a href=\"%s/start\">%s</a></td></tr>" % (request.path_url.rstrip("/"), _("Start task"))
+            start = "<tr>" \
+                    "  <td colspan=\"2\">" \
+                    "    <form method=\"get\" action=\"%s/start\">" \
+                    "      Kernel VRA (empty to autodetect): <input name=\"kernelver\" type=\"text\" id=\"kernelver\" /><br />" \
+                    "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" />Be more verbose in case of error<br />" \
+                    "      <input type=\"submit\" value=\"%s\" id=\"start\" />" \
+                    "    </form>" \
+                    "  </td>" \
+                    "</tr>" % (request.path_url.rstrip("/"), _("Start task"))
+
             if ftptask:
                 status = _("On remote FTP server")
                 if filesize:
