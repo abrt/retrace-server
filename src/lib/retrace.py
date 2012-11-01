@@ -37,7 +37,7 @@ TASK_TYPES = [TASK_RETRACE, TASK_DEBUG, TASK_VMCORE,
               TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]
 
 ARCHIVE_UNKNOWN, ARCHIVE_GZ, ARCHIVE_ZIP, \
-  ARCHIVE_BZ2, ARCHIVE_XZ, ARCHIVE_TAR = xrange(6)
+  ARCHIVE_BZ2, ARCHIVE_XZ, ARCHIVE_TAR, ARCHIVE_7Z = xrange(7)
 
 REQUIRED_FILES = {
   TASK_RETRACE:             ["coredump", "executable", "package"],
@@ -609,6 +609,8 @@ def get_archive_type(path):
         return ARCHIVE_GZ
     elif "xz compressed data" in filetype:
         return ARCHIVE_XZ
+    elif "7-zip archive data" in filetype:
+        return ARCHIVE_7Z
     elif "zip archive data" in filetype:
         return ARCHIVE_ZIP
     elif "tar archive" in filetype:
@@ -640,6 +642,8 @@ def unpack_vmcore(path):
             check_run(["unxz", vmcore])
         elif filetype == ARCHIVE_ZIP:
             check_run(["unzip", vmcore, "-d", parentdir])
+        elif filetype == ARCHIVE_7Z:
+            check_run(["7za", "e", "-o%s" % parentdir, vmcore])
         elif filetype == ARCHIVE_TAR:
             check_run(["tar", "-C", parentdir, "-xf", vmcore])
         else:
