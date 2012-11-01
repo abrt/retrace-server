@@ -303,8 +303,12 @@ def application(environ, start_response):
                 available.append(row)
                 continue
 
-            if task.get_status() in [STATUS_SUCCESS, STATUS_FAIL]:
-                finished.append(row)
+            if task.get_status() == STATUS_SUCCESS:
+                finished.append(row.replace("<tr>", "<tr class=\"success\">"))
+                continue
+
+            if task.get_status() == STATUS_FAIL:
+                finished.append(row.replace("<tr>", "<tr class=\"fail\">"))
                 continue
 
             running.append(row)
