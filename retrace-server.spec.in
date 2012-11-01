@@ -21,6 +21,11 @@ BuildRequires: xmlto
 Requires: rsync
 Requires: mock >= 1.1.11
 Requires: xz
+Requires: gzip
+Requires: bzip2
+Requires: tar
+Requires: p7zip
+Requires: unzip
 Requires: elfutils
 Requires: createrepo
 Requires: mod_wsgi
