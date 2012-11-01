@@ -604,7 +604,8 @@ def get_archive_type(path):
 
     if "bzip2 compressed data" in filetype:
         return ARCHIVE_BZ2
-    elif "gzip compressed data" in filetype:
+    elif "gzip compressed data" in filetype or \
+         "compress'd data" in filetype:
         return ARCHIVE_GZ
     elif "xz compressed data" in filetype:
         return ARCHIVE_XZ
