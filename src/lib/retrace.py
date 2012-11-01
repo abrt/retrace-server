@@ -2,6 +2,7 @@ import ConfigParser
 import errno
 import ftplib
 import gettext
+import magic
 import os
 import re
 import random
@@ -9,6 +10,7 @@ import shutil
 import sqlite3
 import stat
 import time
+from argparser import *
 from webob import Request
 from yum import YumBase
 from subprocess import *
@@ -33,6 +35,9 @@ TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
 
 TASK_TYPES = [TASK_RETRACE, TASK_DEBUG, TASK_VMCORE,
               TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]
+
+ARCHIVE_UNKNOWN, ARCHIVE_GZ, ARCHIVE_ZIP, \
+  ARCHIVE_BZ2, ARCHIVE_XZ, ARCHIVE_TAR = xrange(6)
 
 REQUIRED_FILES = {
   TASK_RETRACE:             ["coredump", "executable", "package"],
@@ -79,7 +84,7 @@ KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+(\.[^\-]+)?\-[0-9]+\
 # OSRELEASE=2.6.32-209.el6.x86_64
 OSRELEASE_VAR_PARSER = re.compile("^OSRELEASE=(.*)$")
 
-WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]+.*retrace-server-worker ([0-9]+)$")
+WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]+.*retrace-server-worker ([0-9]+)( .*)?$")
 
 HANDLE_ARCHIVE = {
   "application/x-xz-compressed-tar": {
@@ -1289,29 +1294,7 @@ class RetraceTask:
 
             if unpack:
                 fullpath = os.path.join(crashdir, filename)
-
-                unlink = True
-                if filename.endswith(".tar.gz") or filename.endswith(".tgz"):
-                    unpack_result = check_run(["tar", "xzf", fullpath, "-C", crashdir])
-                elif filename.endswith(".tar.bz2"):
-                    unpack_result = check_run(["tar", "xjf", fullpath, "-C", crashdir])
-                elif filename.endswith(".tar.xz"):
-                    unpack_result = check_run(["tar", "xJf", fullpath, "-C", crashdir])
-                elif filename.endswith(".tar"):
-                    unpack_result = check_run(["tar", "xf", fullpath, "-C", crashdir])
-                elif filename.endswith(".gz") or filename.endswith(".Z"):
-                    unpack_result = check_run(["gunzip", fullpath])
-                elif filename.endswith(".bz2"):
-                    unpack_result = check_run(["bunzip2", fullpath])
-                elif filename.endswith(".xz"):
-                    unpack_result = check_run(["unxz", fullpath])
-                elif filename.endswith(".zip"):
-                    unpack_result = check_run(["unzip", fullpath])
-                else:
-                    unlink = False
-
-                if unlink and os.path.isfile(fullpath):
-                    os.unlink(fullpath)
+                unpack_vmcore(fullpath)
 
         if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
             vmcore = os.path.join(crashdir, "vmcore")
