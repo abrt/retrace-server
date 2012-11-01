@@ -639,7 +639,7 @@ def unpack_vmcore(path):
         elif filetype == ARCHIVE_XZ:
             check_run(["unxz", vmcore])
         elif filetype == ARCHIVE_ZIP:
-            check_run(["unzip", vmcore])
+            check_run(["unzip", vmcore, "-d", parentdir])
         elif filetype == ARCHIVE_TAR:
             check_run(["tar", "-C", parentdir, "-xf", vmcore])
         else:
