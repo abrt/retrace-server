@@ -130,6 +130,28 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Fri Nov 2 2012 Michal Toman <mtoman@redhat.com> 1.8-1
+- use standard python mechanisms for logging
+- determine archive types with file magic
+- catch all task-specific exceptions
+- support various archive types
+- make AuthGroup configurable
+- allow overriding kernel version & architecture from command line
+- create a writable directory for interactive debuggers
+- add the retrace-server-interact printdir command
+- autoload modules when jumping into crash
+- make dead tasks deletable (really look to /proc)
+- show downloaded files in task manager
+- do not delete files that do not need unpacking
+- show task's start and finish time
+- added backref to downloaded file
+- make vmcore readable for retrace group
+- improve architecture guessing for vmcores
+- add possibility to wget kernel debuginfo
+- try harder to determine the actual vmcore
+- fix kernel version handling
+- fix httpd config
+
 * Fri Jul 27 2012 Michal Toman <mtoman@redhat.com> 1.7-1
 - check whether package can be retraced before uploading
 - add possibility to disable interactive debugging
