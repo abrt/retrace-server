@@ -357,7 +357,7 @@ def application(environ, start_response):
         available_str = _("FTP files")
 
     output = output.replace("{title}", title)
-    output = output.replace("{sitename}", str(os.getuid()))#sitename)
+    output = output.replace("{sitename}", sitename)
     output = output.replace("{available_str}", available_str)
     output = output.replace("{running_str}", running_str)
     output = output.replace("{finished_str}", finished_str)
