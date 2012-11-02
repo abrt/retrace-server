@@ -8,9 +8,9 @@ ACTIONS = ["shell", "gdb", "crash", "printdir"]
 
 if __name__ == "__main__":
     groups = [grp.getgrgid(g).gr_name for g in os.getgroups()]
-    if not "mock" in groups or not "retrace" in groups:
-        print "You must be a member of 'mock' and 'retrace' groups " \
-              "in order to use interactive debugging."
+    if not CONFIG["AuthGroup"] in groups:
+        print "You must be a member '%s' group in order to " \
+              "use interactive debugging." % CONFIG["AuthGroup"]
         exit(1)
 
     parser = argparse.ArgumentParser(description="Interact with retrace-server's chroot")

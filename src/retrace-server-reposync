@@ -16,7 +16,7 @@ sys.path.insert(0, "/usr/share/retrace-server")
 from plugins import *
 
 TARGET_USER = "retrace"
-TARGET_GROUP = "retrace"
+TARGET_GROUP = CONFIG["AuthGroup"]
 
 BUFSIZE = 1 << 22 # 4 MB
 
@@ -160,8 +160,9 @@ if __name__ == "__main__":
         pw = pwd.getpwnam(TARGET_USER)
         os.setuid(pw.pw_uid)
         print "Privileges set to '%s:%s'." % (TARGET_USER, TARGET_GROUP)
-    except:
-        print "Unable to change privileges to '%s:%s'. Exitting..." % (TARGET_USER, TARGET_GROUP)
+    except Exception as ex:
+        print "Unable to change privileges to '%s:%s'.\n%s\nExitting..." \
+               % (TARGET_USER, TARGET_GROUP, str(ex))
         sys.exit(6)
 
     # load plugin

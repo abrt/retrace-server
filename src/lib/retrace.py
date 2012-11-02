@@ -147,6 +147,7 @@ CONFIG = {
   "KernelChrootRepo": "http://dl.fedoraproject.org/pub/fedora/linux/releases/16/Everything/$ARCH/os/",
   "UseFafPackages": False,
   "FafLinkDir": "/var/spool/faf/retrace-tmp",
+  "AuthGroup": "retrace",
 }
 
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \
