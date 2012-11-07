@@ -1040,6 +1040,8 @@ class RetraceTask:
 
         if taskid is None:
             # create a new task
+            # create a retrace-group-writable directory
+            oldmask = os.umask(0002)
             self._taskid = None
             generator = random.SystemRandom()
             for i in xrange(50):
@@ -1069,8 +1071,6 @@ class RetraceTask:
                 for i in xrange(CONFIG["TaskPassLength"]):
                     pwdfile.write(generator.choice(TASKPASS_ALPHABET))
 
-            # create a retrace-group-writable directory
-            oldmask = os.umask(0002)
             os.makedirs(os.path.join(self._savedir, RetraceTask.MISC_DIR))
             os.umask(oldmask)
         else:
