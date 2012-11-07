@@ -1300,7 +1300,10 @@ class RetraceTask:
 
             if unpack:
                 fullpath = os.path.join(crashdir, filename)
-                unpack_vmcore(fullpath)
+                try:
+                    unpack_vmcore(fullpath)
+                except Exception as ex:
+                    errors.append((fullpath, str(ex)))
 
         if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
             vmcore = os.path.join(crashdir, "vmcore")
