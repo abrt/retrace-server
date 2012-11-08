@@ -602,21 +602,29 @@ def get_archive_type(path):
     ms = magic.open(magic.MAGIC_NONE)
     ms.load()
     filetype = ms.file(path).lower()
+    logging.debug("File type: %s" % filetype)
 
     if "bzip2 compressed data" in filetype:
+        logging.debug("bzip2 detected")
         return ARCHIVE_BZ2
     elif "gzip compressed data" in filetype or \
          "compress'd data" in filetype:
+        logging.debug("gzip detected")
         return ARCHIVE_GZ
     elif "xz compressed data" in filetype:
+        logging.debug("xz detected")
         return ARCHIVE_XZ
     elif "7-zip archive data" in filetype:
+        logging.debug("7-zip detected")
         return ARCHIVE_7Z
     elif "zip archive data" in filetype:
+        logging.debug("zip detected")
         return ARCHIVE_ZIP
     elif "tar archive" in filetype:
+        logging.debug("tar detected")
         return ARCHIVE_TAR
 
+    logging.debug("unknown file type, unpacking finished")
     return ARCHIVE_UNKNOWN
 
 def unpack_vmcore(path):
@@ -634,9 +642,8 @@ def unpack_vmcore(path):
             os.rename(vmcore, vmcoregz)
             check_run(["gunzip", vmcoregz])
 
-            # do we really need it?
             if not os.path.isfile(vmcore):
-                raise Exception, "gunzip failed"
+                logging.warn("expected file not present, maybe gunzip failed?")
         elif filetype == ARCHIVE_BZ2:
             check_run(["bunzip2", vmcore])
         elif filetype == ARCHIVE_XZ:
@@ -976,9 +983,7 @@ def check_run(cmd):
     child = Popen(cmd, stdout=PIPE, stderr=STDOUT)
     stdout = child.communicate()[0]
     if child.wait():
-        return "%s exitted with %d: %s" % (cmd[0], child.returncode, stdout)
-
-    return None
+        raise Exception, "%s exitted with %d: %s" % (cmd[0], child.returncode, stdout)
 
 def strip_vmcore(vmcore):
     vmlinux = None
