@@ -35,6 +35,7 @@ Requires: yum-utils
 Requires: crash >= 5.1.7
 Requires: wget
 Requires: kexec-tools
+Requires: python-magic
 Requires(preun): /sbin/install-info
 Requires(post): /sbin/install-info
 
