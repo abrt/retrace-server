@@ -156,9 +156,9 @@ STATUS_DOWNLOADING = xrange(9)
 
 STATUS = [
   "Analyzing crash data",
-  "Initializing virtual root",
+  "Preparing environment for backtrace generation",
   "Generating backtrace",
-  "Cleaning up virtual root",
+  "Cleaning environment after backtrace generation",
   "Saving crash statistics",
   "Finishing task",
   "Retrace job finished successfully",
