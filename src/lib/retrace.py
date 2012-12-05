@@ -1085,6 +1085,10 @@ class RetraceTask:
             if not os.path.isdir(self._savedir):
                 raise Exception, "The task %d does not exist" % self._taskid
 
+    def _get_file_path(self, key):
+        key_sanitized = key.replace("/", "_").replace(" ", "_")
+        return os.path.join(self._savedir, key_sanitized)
+
     def get_taskid(self):
         """Returns task's ID"""
         return self._taskid
@@ -1093,13 +1097,48 @@ class RetraceTask:
         """Returns task's savedir"""
         return self._savedir
 
+    def set(self, key, value, mode="w"):
+        if not mode in ["w", "a"]:
+            raise ValueError, "mode must be either 'w' or 'a'"
+
+        with open(self._get_file_path(key), mode) as f:
+            f.write(value)
+
+    def set_atomic(self, key, value, mode="w"):
+        if not mode in ["w", "a"]:
+            raise ValueError, "mode must be either 'w' or 'a'"
+
+        tmpfilename = self._get_file_path("%s.tmp" % key)
+        filename = self._get_file_path(key)
+        with open(tmpfilename, mode) as f:
+            f.write(value)
+
+        os.rename(tmpfilename, filename)
+
+    # 256MB should be enough by default
+    def get(self, key, maxlen=268435456):
+        if not self.has(key):
+            return None
+
+        filename = self._get_file_path(key)
+        with open(filename, "r") as f:
+            result = f.read(maxlen)
+
+        return result
+
+    def has(self, key):
+        return os.path.isfile(self._get_file_path(key))
+
+    def touch(self, key):
+        open(self._get_file_path(key), "a").close()
+
+    def delete(self, key):
+        if self.has(key):
+            os.unlink(self._get_file_path(key))
+
     def get_password(self):
         """Returns task's password"""
-        pwdfilename = os.path.join(self._savedir, RetraceTask.PASSWORD_FILE)
-        with open(pwdfilename, "r") as pwdfile:
-            pwd = pwdfile.read(CONFIG["TaskPassLength"])
-
-        return pwd
+        return self.get(RetraceTask.PASSWORD_FILE, maxlen=CONFIG["TaskPassLength"])
 
     def verify_password(self, password):
         """Verifies if the given password matches task's password."""
@@ -1124,148 +1163,85 @@ class RetraceTask:
     def get_type(self):
         """Returns task type. If TYPE_FILE is missing,
         task is considered standard TASK_RETRACE."""
-        typefilename = os.path.join(self._savedir, RetraceTask.TYPE_FILE)
-        if not os.path.isfile(typefilename):
+        result = self.get(RetraceTask.TYPE_FILE, maxlen=8)
+        if result is None:
             return TASK_RETRACE
-
-        with open(typefilename, "r") as typefile:
-            # typicaly one digit, max 8B
-            result = typefile.read(8)
 
         return int(result)
 
     def set_type(self, newtype):
         """Atomically writes given type into TYPE_FILE."""
-        tmpfilename = os.path.join(self._savedir,
-                                   "%s.tmp" % RetraceTask.TYPE_FILE)
-        typefilename = os.path.join(self._savedir, RetraceTask.TYPE_FILE)
-        with open(tmpfilename, "w") as tmpfile:
-            if newtype in TASK_TYPES:
-                tmpfile.write("%d" % newtype)
-            else:
-                tmpfile.write("%d" % TASK_RETRACE)
+        if not newtype in TASK_TYPES:
+            newtype = TASK_RETRACE
 
-        os.rename(tmpfilename, typefilename)
+        self.set_atomic(RetraceTask.TYPE_FILE, str(newtype))
 
     def has_backtrace(self):
         """Verifies whether BACKTRACE_FILE is present in the task directory."""
-        return os.path.isfile(os.path.join(self._savedir,
-                                           RetraceTask.BACKTRACE_FILE))
+        return self.has(RetraceTask.BACKTRACE_FILE)
 
     def get_backtrace(self):
         """Returns None if there is no BACKTRACE_FILE in the task directory,
         BACKTRACE_FILE's contents otherwise."""
-        if not self.has_backtrace():
-            return None
-
-        btfilename = os.path.join(self._savedir, RetraceTask.BACKTRACE_FILE)
-        with open(btfilename, "r") as btfile:
-            # max 4 MB
-            bt = btfile.read(1 << 22)
-
-        return bt
+        # max 16 MB
+        return self.get(RetraceTask.BACKTRACE_FILE, maxlen=1 << 24)
 
     def set_backtrace(self, backtrace):
         """Atomically writes given string into BACKTRACE_FILE."""
-        tmpfilename = os.path.join(self._savedir,
-                                   "%s.tmp" % RetraceTask.BACKTRACE_FILE)
-        btfilename = os.path.join(self._savedir,
-                                   RetraceTask.BACKTRACE_FILE)
-
-        with open(tmpfilename, "w") as tmpfile:
-            tmpfile.write(backtrace)
-
-        os.rename(tmpfilename, btfilename)
+        self.set_atomic(RetraceTask.BACKTRACE_FILE, backtrace)
 
     def has_log(self):
         """Verifies whether LOG_FILE is present in the task directory."""
-        return os.path.isfile(os.path.join(self._savedir,
-                                           RetraceTask.LOG_FILE))
+        return self.has(RetraceTask.LOG_FILE)
 
     def get_log(self):
         """Returns None if there is no LOG_FILE in the task directory,
         LOG_FILE's contents otherwise."""
-        if not self.has_log():
-            return None
-
-        logfilename = os.path.join(self._savedir, RetraceTask.LOG_FILE)
-        with open(logfilename, "r") as logfile:
-            # max 4 MB
-            log = logfile.read(1 << 22)
-
-        return log
+        return self.get(RetraceTask.LOG_FILE, maxlen=1 << 22)
 
     def set_log(self, log, append=False):
         """Atomically writes or appends given string into LOG_FILE."""
-        tmpfilename = os.path.join(self._savedir,
-                                   "%s.tmp" % RetraceTask.LOG_FILE)
-        logfilename = os.path.join(self._savedir,
-                                   RetraceTask.LOG_FILE)
-
+        mode = "w"
         if append:
-            if os.path.isfile(logfilename):
-                shutil.copyfile(logfilename, tmpfilename)
+            mode = "a"
 
-            with open(tmpfilename, "a") as tmpfile:
-                tmpfile.write(log)
-        else:
-            with open(tmpfilename, "w") as tmpfile:
-                tmpfile.write(log)
-
-        os.rename(tmpfilename, logfilename)
+        self.set_atomic(RetraceTask.LOG_FILE, log, mode=mode)
 
     def has_status(self):
         """Verifies whether STATUS_FILE is present in the task directory."""
-        return os.path.isfile(os.path.join(self._savedir,
-                                           RetraceTask.STATUS_FILE))
+        return self.has(RetraceTask.STATUS_FILE)
 
     def get_status(self):
         """Returns None if there is no STATUS_FILE in the task directory,
         an integer status code otherwise."""
-        if not self.has_status():
+        result = self.get(RetraceTask.STATUS_FILE, maxlen=8)
+        if result is None:
             return None
 
-        statusfilename = os.path.join(self._savedir, RetraceTask.STATUS_FILE)
-        with open(statusfilename, "r") as statusfile:
-            # typically one digit, max 8B
-            status = statusfile.read(8)
-
-        return int(status)
+        return int(result)
 
     def set_status(self, statuscode):
         """Atomically writes given statuscode into STATUS_FILE."""
-        tmpfilename = os.path.join(self._savedir,
-                                   "%s.tmp" % RetraceTask.STATUS_FILE)
-        statusfilename = os.path.join(self._savedir,
-                                      RetraceTask.STATUS_FILE)
-
-        with open(tmpfilename, "w") as tmpfile:
-            tmpfile.write("%d" % statuscode)
-
-        os.rename(tmpfilename, statusfilename)
+        self.set_atomic(RetraceTask.STATUS_FILE, "%d" % statuscode)
 
     def has_remote(self):
         """Verifies whether REMOTE_FILE is present in the task directory."""
-        return os.path.isfile(os.path.join(self._savedir,
-                                           RetraceTask.REMOTE_FILE))
+        return self.has(RetraceTask.REMOTE_FILE)
 
     def add_remote(self, url):
         """Appends a remote resource to REMOTE_FILE."""
         if "\n" in url:
             url = url.split("\n")[0]
 
-        with open(os.path.join(self._savedir, RetraceTask.REMOTE_FILE), "a") as remote_file:
-            remote_file.write("%s\n" % url)
+        self.set(RetraceTask.REMOTE_FILE, "%s\n" % url, mode="a")
 
     def get_remote(self):
         """Returns the list of remote resources."""
-        if not self.has_remote():
+        result = self.get(RetraceTask.REMOTE_FILE, maxlen=1 << 22)
+        if result is None:
             return []
 
-        with open(os.path.join(self._savedir, RetraceTask.REMOTE_FILE), "r") as remote_file:
-            result = [line.strip() for line in remote_file.readlines()]
-
-        return result
+        return result.splitlines()
 
     def download_remote(self, unpack=True):
         """Downloads all remote resources and returns a list of errors."""
@@ -1427,88 +1403,57 @@ class RetraceTask:
         if not CONFIG["AllowTaskManager"]:
             raise Exception, "Task management is disabled"
 
-        filename = os.path.join(self._savedir, RetraceTask.MANAGED_FILE)
-        return os.path.isfile(filename)
+        return self.has(RetraceTask.MANAGED_FILE)
 
     def set_managed(self, managed):
         """Puts or removes the task from task management control"""
         if not CONFIG["AllowTaskManager"]:
             raise Exception, "Task management is disabled"
 
-        filename = os.path.join(self._savedir, RetraceTask.MANAGED_FILE)
         # create the file if it does not exist
-        if managed and not os.path.isfile(filename):
-            open(filename, "w").close()
+        if managed and not self.has(RetraceTask.MANAGED_FILE):
+            self.touch(RetraceTask.MANAGED_FILE)
         # unlink the file if it exists
-        elif not managed and os.path.isfile(filename):
-            os.unlink(filename)
+        elif not managed and self.has(RetraceTask.MANAGED_FILE):
+            self.delete(RetraceTask.MANAGED_FILE)
 
     def has_downloaded(self):
         """Verifies whether DOWNLOAD_FILE exists"""
-        return os.path.isfile(os.path.join(self._savedir,
-                                           RetraceTask.DOWNLOADED_FILE))
+        return self.has(RetraceTask.DOWNLOADED_FILE)
 
     def get_downloaded(self):
         """Gets contents of DOWNLOADED_FILE"""
-        if not self.has_downloaded():
-            return None
-
-        downloaded_file_name = os.path.join(self._savedir,
-                                            RetraceTask.DOWNLOADED_FILE)
-        with open(downloaded_file_name, "r") as f:
-            result = f.read(1 << 22)
-
-        return result
+        return self.get(RetraceTask.DOWNLOADED_FILE, maxlen=1 << 22)
 
     def set_downloaded(self, value):
         """Writes (not atomically) content to DOWNLOADED_FILE"""
-        downloaded_file_name = os.path.join(self._savedir,
-                                            RetraceTask.DOWNLOADED_FILE)
-
-        with open(downloaded_file_name, "w") as f:
-            result = f.write(value)
-
-        return result
+        self.set(RetraceTask.DOWNLOADED_FILE, value)
 
     def has_crashrc(self):
         """Verifies whether CRASHRC_FILE exists"""
-        return os.path.isfile(os.path.join(self._savedir,
-                                           RetraceTask.CRASHRC_FILE))
+        return self.has(RetraceTask.CRASHRC_FILE)
 
     def get_crashrc_path(self):
         """Gets the absolute path of CRASHRC_FILE"""
-        return os.path.join(self._savedir, RetraceTask.CRASHRC_FILE)
+        return self._get_file_path(RetraceTask.CRASHRC_FILE)
 
     def get_crashrc(self):
-        """Gets the unix timestamp from CRASHRC_FILE"""
-        if not self.has_started_time():
-            return None
-
-        crashrc_file_name = os.path.join(self._savedir, RetraceTask.CRASHRC_FILE)
-        with open(crashrc_file_name, "r") as f:
-            result = f.read(1 << 22)
-
-        return result
+        """Gets the contents of CRASHRC_FILE"""
+        return self.get(RetraceTask.CRASHRC_FILE, maxlen=1 << 22)
 
     def set_crashrc(self, data):
         """Writes data to CRASHRC_FILE"""
-        crashrc_file_name = os.path.join(self._savedir, RetraceTask.CRASHRC_FILE)
-        with open(crashrc_file_name, "w") as f:
-            result = f.write(data)
+        self.set(RetraceTask.CRASHRC_FILE, data)
 
     def has_started_time(self):
         """Verifies whether STARTED_FILE exists"""
-        return os.path.isfile(os.path.join(self._savedir,
-                                           RetraceTask.STARTED_FILE))
+        return self.has(RetraceTask.STARTED_FILE)
 
     def get_started_time(self):
         """Gets the unix timestamp from STARTED_FILE"""
-        if not self.has_started_time():
+        result = self.get(RetraceTask.STARTED_FILE, maxlen=1 << 8)
+        if result is None:
             return None
-
-        start_file_name = os.path.join(self._savedir, RetraceTask.STARTED_FILE)
-        with open(start_file_name, "r") as f:
-            result = f.read(1 << 8)
 
         return int(result)
 
@@ -1519,23 +1464,17 @@ class RetraceTask:
         except ValueError:
             raise Exception, "set_start_time requires unix timestamp as parameter"
 
-        start_file_name = os.path.join(self._savedir, RetraceTask.STARTED_FILE)
-        with open(start_file_name, "w") as f:
-            result = f.write("%d" % data)
+        self.set(RetraceTask.STARTED_FILE, "%d" % data)
 
     def has_finished_time(self):
         """Verifies whether FINISHED_FILE exists"""
-        return os.path.isfile(os.path.join(self._savedir,
-                                           RetraceTask.FINISHED_FILE))
+        return self.has(RetraceTask.FINISHED_FILE)
 
     def get_finished_time(self):
         """Gets the unix timestamp from FINISHED_FILE"""
-        if not self.has_finished_time():
+        result = self.get(RetraceTask.FINISHED_FILE, 1 << 8)
+        if result is None:
             return None
-
-        finished_file_name = os.path.join(self._savedir, RetraceTask.FINISHED_FILE)
-        with open(finished_file_name, "r") as f:
-            result = f.read(1 << 8)
 
         return int(result)
 
@@ -1546,9 +1485,7 @@ class RetraceTask:
         except ValueError:
             raise Exception, "set_finished_time requires unix timestamp as parameter"
 
-        finished_file_name = os.path.join(self._savedir, RetraceTask.FINISHED_FILE)
-        with open(finished_file_name, "w") as f:
-            result = f.write("%d" % data)
+        self.set(RetraceTask.FINISHED_FILE, "%d" % value)
 
     def clean(self):
         """Removes all files and directories others than
