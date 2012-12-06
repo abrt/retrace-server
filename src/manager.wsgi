@@ -21,6 +21,13 @@ def is_local_task(taskid):
 
     return True
 
+def get_status_for_task_manager(task, _=lambda x: x):
+    status = _(STATUS[task.get_status()])
+    if task.get_status() == STATUS_DOWNLOADING and task.has(RetraceTask.PROGRESS_FILE):
+        status += " %s" % task.get(RetraceTask.PROGRESS_FILE)
+
+    return status
+
 def application(environ, start_response):
     request = Request(environ)
 
@@ -147,7 +154,7 @@ def application(environ, start_response):
 
         start = ""
         if not ftptask and task.has_status():
-            status = _(STATUS[task.get_status()])
+            status = get_status_for_task_manager(task, _=_)
         else:
             start = "<tr>" \
                     "  <td colspan=\"2\">" \
@@ -162,14 +169,7 @@ def application(environ, start_response):
             if ftptask:
                 status = _("On remote FTP server")
                 if filesize:
-                    if filesize > (1 << 30):
-                        status += " (%.2f GiB)" % (float(filesize) / (1 << 30))
-                    elif filesize > (1 << 20):
-                        status += " (%.2f MiB)" % (float(filesize) / (1 << 20))
-                    elif filesize > (1 << 10):
-                        status += " (%.2f kiB)" % (float(filesize) / (1 << 10))
-                    else:
-                        status += " (%d B)" % filesize
+                    status += " (%s)" % human_readable_size(filesize)
             else:
                 status = _("Not started")
 
@@ -300,7 +300,7 @@ def application(environ, start_response):
 
         if task.get_managed():
             if task.has_status():
-                status = _(STATUS[task.get_status()])
+                status = get_status_for_task_manager(task, _=_)
             else:
                 status = ""
 

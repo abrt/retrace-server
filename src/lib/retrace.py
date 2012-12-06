@@ -86,6 +86,8 @@ OSRELEASE_VAR_PARSER = re.compile("^OSRELEASE=(.*)$")
 
 WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]+.*retrace-server-worker ([0-9]+)( .*)?$")
 
+UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB"]
+
 HANDLE_ARCHIVE = {
   "application/x-xz-compressed-tar": {
     "unpack": [TAR_BIN, "xJf"],
@@ -1023,6 +1025,15 @@ def move_dir_contents(source, dest):
 
     shutil.rmtree(source)
 
+def human_readable_size(bytes):
+    size = float(bytes)
+    unit = 0
+    while size > 1024.0 and unit < len(UNITS) - 1:
+        unit += 1
+        size /= 1024.0
+
+    return "%.2f %s" % (size, UNITS[unit])
+
 class RetraceTask:
     """Represents Retrace server's task."""
 
@@ -1034,6 +1045,7 @@ class RetraceTask:
     MANAGED_FILE = "managed"
     MISC_DIR = "misc"
     PASSWORD_FILE = "password"
+    PROGRESS_FILE = "progress"
     REMOTE_FILE = "remote"
     STARTED_FILE = "started_time"
     STATUS_FILE = "status"
@@ -1243,7 +1255,15 @@ class RetraceTask:
 
         return result.splitlines()
 
-    def download_remote(self, unpack=True):
+    def download_block(self, data):
+        self._progress_write_func(data)
+        self._progress_current += len(data)
+        progress = "%d%% (%s / %s)" % ((100 * self._progress_current) / self._progress_total,
+                                       human_readable_size(self._progress_current),
+                                       self._progress_total_str)
+        self.set_atomic(RetraceTask.PROGRESS_FILE, progress)
+
+    def download_remote(self, unpack=True, timeout=0):
         """Downloads all remote resources and returns a list of errors."""
         downloaded = []
         errors = []
@@ -1260,7 +1280,12 @@ class RetraceTask:
                 try:
                     ftp = ftp_init()
                     with open(os.path.join(crashdir, filename), "wb") as target_file:
-                        ftp.retrbinary("RETR %s" % filename, target_file.write)
+                        self._progress_write_func = target_file.write
+                        self._progress_total = ftp.size(filename)
+                        self._progress_total_str = human_readable_size(self._progress_total)
+                        self._progress_current = 0
+
+                        ftp.retrbinary("RETR %s" % filename, self.download_block)
 
                     downloaded.append(filename)
                 except Exception as ex:
