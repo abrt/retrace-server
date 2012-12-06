@@ -2,6 +2,7 @@
 import datetime
 import fnmatch
 import re
+import urllib
 import urlparse
 from retrace import *
 
@@ -41,9 +42,13 @@ def application(environ, start_response):
     if not match:
         return response(start_response, "404 Not Found")
 
+    filename = match.group(4)
+    if filename:
+        filename = urllib.unquote(match.group(4))
+
     if match.group(6) and match.group(6).startswith("misc") and match.group(9):
         try:
-            task = RetraceTask(match.group(4))
+            task = RetraceTask(filename)
         except:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
@@ -56,11 +61,11 @@ def application(environ, start_response):
         get = urlparse.parse_qs(request.query_string)
         ftptask = False
         try:
-            task = RetraceTask(match.group(4))
+            task = RetraceTask(filename)
         except:
             if CONFIG["UseFTPTasks"]:
                 files = ftp_list_dir(CONFIG["FTPDir"])
-                if not match.group(4) in files:
+                if not filename in files:
                     return response(start_response, "404 Not Found", _("There is no such task"))
 
                 ftptask = True
@@ -73,7 +78,7 @@ def application(environ, start_response):
                 task.set_managed(True)
                 # ToDo: determine?
                 task.set_type(TASK_VMCORE_INTERACTIVE)
-                task.add_remote("FTP %s" % match.group(4))
+                task.add_remote("FTP %s" % filename)
             except:
                 return response(start_response, "500 Internal Server Error", _("Unable to create a new task"))
 
@@ -102,7 +107,7 @@ def application(environ, start_response):
         return response(start_response, "303 See Other", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "backtrace":
         try:
-            task = RetraceTask(match.group(4))
+            task = RetraceTask(filename)
         except:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
@@ -116,7 +121,7 @@ def application(environ, start_response):
     elif match.group(6) and match.group(6).startswith("delete") and \
          match.group(8) and match.group(8).startswith("sure"):
         try:
-            task = RetraceTask(match.group(4))
+            task = RetraceTask(filename)
         except:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
@@ -126,23 +131,23 @@ def application(environ, start_response):
         task.remove()
 
         return response(start_response, "302 Found", "", [("Location", match.group(1))])
-    elif match.group(4):
+    elif filename:
         # info
         ftptask = False
         filesize = None
         try:
-            task = RetraceTask(match.group(4))
+            task = RetraceTask(filename)
         except:
             if CONFIG["UseFTPTasks"]:
                 ftp = ftp_init()
                 files = ftp_list_dir(CONFIG["FTPDir"], ftp)
-                if not match.group(4) in files:
+                if not filename in files:
                     ftp_close(ftp)
                     return response(start_response, "404 Not Found", _("There is no such task"))
 
                 ftptask = True
                 try:
-                    filesize = ftp.size(match.group(4))
+                    filesize = ftp.size(filename)
                 except:
                     pass
                 ftp_close(ftp)
@@ -190,8 +195,8 @@ def application(environ, start_response):
                               "<tr><td colspan=\"2\">%s <code>retrace-server-interact %s shell</code></td></tr>" \
                               "<tr><td colspan=\"2\">%s <code>retrace-server-interact %s %s</code></td></tr>" \
                               "<tr><td colspan=\"2\">%s <code>man retrace-server-interact</code> %s</td></tr>" \
-                              % (_("This is an interactive task"), _("You can jump to the chrooted shell with:"), match.group(4),
-                                 _("You can jump directly to the debugger with:"), match.group(4), debugger,
+                              % (_("This is an interactive task"), _("You can jump to the chrooted shell with:"), filename,
+                                 _("You can jump directly to the debugger with:"), filename, debugger,
                                  _("see"), _("for further information about cmdline flags"))
             elif task.has_log():
                 backtracewindow = "<h2>Log:</h2><textarea>%s</textarea>" % task.get_log()
@@ -204,12 +209,12 @@ def application(environ, start_response):
         if ftptask:
             # ToDo: determine?
             tasktype = _(LONG_TYPES[TASK_VMCORE_INTERACTIVE])
-            title = "%s '%s' - %s" % (_("Remote file"), match.group(4), _("Retrace Server Task Manager"))
-            taskno = "%s '%s'" % (_("Remote file"), match.group(4))
+            title = "%s '%s' - %s" % (_("Remote file"), filename, _("Retrace Server Task Manager"))
+            taskno = "%s '%s'" % (_("Remote file"), filename)
         else:
             tasktype = _(LONG_TYPES[task.get_type()])
-            title = "%s #%s - %s" % (_("Task"), match.group(4), _("Retrace Server Task Manager"))
-            taskno = "%s #%s" % (_("Task"), match.group(4))
+            title = "%s #%s - %s" % (_("Task"), filename, _("Retrace Server Task Manager"))
+            taskno = "%s #%s" % (_("Task"), filename)
 
         misc = ""
         if not ftptask:
@@ -223,13 +228,13 @@ def application(environ, start_response):
         if match.group(6) and match.group(6).startswith("delete"):
             delete_yesno = "<tr><td colspan=\"2\">%s <a href=\"%s/sure\">Yes</a> - <a href=\"%s/%s\">No</a></td></tr>" \
                            % (_("Are you sure you want to delete the task?"), request.path_url.rstrip("/"),
-                              match.group(1), match.group(4))
+                              match.group(1), filename)
         else:
             delete_yesno = ""
 
         unknownext = ""
         if ftptask:
-            known = any(match.group(4).endswith(ext) for ext in FTP_SUPPORTED_EXTENSIONS)
+            known = any(filename.endswith(ext) for ext in FTP_SUPPORTED_EXTENSIONS)
             if not known:
                 unknownext = "<tr><td colspan=\"2\">%s %s</td></tr>" % \
                              (_("The file extension was not recognized, thus the file will be "
@@ -351,9 +356,9 @@ def application(environ, start_response):
         else:
             tasklist = sorted(rawtasklist, cmp=cmp_vmcores_first)
 
-        for filename in tasklist:
+        for fname in tasklist:
             available.append("<tr><td><a href=\"%s/%s\">%s</a></td></tr>" \
-                             % (match.group(1), filename, filename))
+                             % (match.group(1), urllib.quote_plus(fname), fname))
         available_str = _("FTP files")
 
     output = output.replace("{title}", title)
