@@ -1044,6 +1044,7 @@ class RetraceTask:
     LOG_FILE = "retrace_log"
     MANAGED_FILE = "managed"
     MISC_DIR = "misc"
+    NOTES_FILE = "notes"
     PASSWORD_FILE = "password"
     PROGRESS_FILE = "progress"
     REMOTE_FILE = "remote"
@@ -1254,6 +1255,15 @@ class RetraceTask:
             return []
 
         return result.splitlines()
+
+    def has_notes(self):
+        return self.has(RetraceTask.NOTES_FILE)
+
+    def get_notes(self):
+        return self.get(RetraceTask.NOTES_FILE, maxlen=1 << 22)
+
+    def set_notes(self, value):
+        self.set_atomic(RetraceTask.NOTES_FILE, value)
 
     def download_block(self, data):
         self._progress_write_func(data)

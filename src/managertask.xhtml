@@ -61,22 +61,39 @@
         font-size: 16px;
       }
 
-      textarea {
-        width: 90%;
-        height: 400px;
-        padding: 6px;
-      }
-
       input {
         border: 1px solid black;
         font-size: 12px;
         margin: 10px 4px;
         vertical-align: middle;
+        padding: 4px 10px;
+      }
+
+      input.button {
+        margin: 10px 0px;
+      }
+
+      textarea.backtrace {
+        width: 90%;
+        height: 400px;
+        padding: 6px;
+      }
+
+      textarea.notes {
+        height: 200px;
+        width: 600px;
+      }
+
+      form.notes {
+        float: right;
+        width: 610px;
+        margin-right: 100px;
       }
     </style>
   </head>
   <body>
     <h1>{taskno}</h1>
+    {notes}
     <table>
       {back}
       <tr>

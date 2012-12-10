@@ -6,7 +6,7 @@ import urllib
 import urlparse
 from retrace import *
 
-MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(start|backtrace|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
+MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(start|backtrace|savenotes|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
 
 LONG_TYPES = { TASK_RETRACE: "Coredump retrace",
                TASK_DEBUG: "Coredump retrace - debug",
@@ -105,6 +105,17 @@ def application(environ, start_response):
         time.sleep(2)
 
         return response(start_response, "303 See Other", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
+    elif match.group(6) and match.group(6) == "savenotes":
+        POST = urlparse.parse_qs(request.body, keep_blank_values=1)
+        try:
+            task = RetraceTask(filename)
+        except:
+            return response(start_response, "404 Not Found", _("There is no such task"))
+
+        if "notes" in POST and len(POST["notes"]) > 0:
+            task.set_notes(POST["notes"][0])
+
+        return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "backtrace":
         try:
             task = RetraceTask(filename)
@@ -166,7 +177,7 @@ def application(environ, start_response):
                     "    <form method=\"get\" action=\"%s/start\">" \
                     "      Kernel VRA (empty to autodetect): <input name=\"kernelver\" type=\"text\" id=\"kernelver\" /><br />" \
                     "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" />Be more verbose in case of error<br />" \
-                    "      <input type=\"submit\" value=\"%s\" id=\"start\" />" \
+                    "      <input type=\"submit\" value=\"%s\" id=\"start\" class=\"button\" />" \
                     "    </form>" \
                     "  </td>" \
                     "</tr>" % (request.path_url.rstrip("/"), _("Start task"))
@@ -184,7 +195,7 @@ def application(environ, start_response):
         if not ftptask:
             if task.has_backtrace():
                 backtrace = "<tr><td colspan=\"2\"><a href=\"%s/backtrace\">%s</a></td></tr>" % (request.path_url.rstrip("/"), _("Show raw backtrace"))
-                backtracewindow = "<h2>Backtrace</h2><textarea>%s</textarea>" % task.get_backtrace()
+                backtracewindow = "<h2>Backtrace</h2><textarea class=\"backtrace\">%s</textarea>" % task.get_backtrace()
                 if task.get_type() in [TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
                     if task.get_type() == TASK_VMCORE_INTERACTIVE:
                         debugger = "crash"
@@ -199,7 +210,7 @@ def application(environ, start_response):
                                  _("You can jump directly to the debugger with:"), filename, debugger,
                                  _("see"), _("for further information about cmdline flags"))
             elif task.has_log():
-                backtracewindow = "<h2>Log:</h2><textarea>%s</textarea>" % task.get_log()
+                backtracewindow = "<h2>Log:</h2><textarea class=\"backtrace\">%s</textarea>" % task.get_log()
 
         if ftptask or task.is_running(readproc=True):
             delete = ""
@@ -255,6 +266,21 @@ def application(environ, start_response):
 
         back = "<tr><td colspan=\"2\"><a href=\"%s\">%s</a></td></tr>" % (match.group(1), _("Back to task manager"))
 
+        notes = ""
+        if not ftptask:
+            notes_quoted = ""
+            if task.has_notes():
+                notes_quoted = task.get_notes().replace("<", "&lt;") \
+                                               .replace(">", "&gt;") \
+                                               .replace("\"", "&quot;") \
+                                               .replace("'", "&apos;")
+
+            notes = "<form method=\"post\" action=\"%s/savenotes\" class=\"notes\">" \
+                    "  <h2>Notes</h2>" \
+                    "  <textarea class=\"notes\" name=\"notes\">%s</textarea>" \
+                    "  <input type=\"submit\" value=\"Update notes\" class=\"button\" />" \
+                    "</form>" % (request.path_url.rstrip("/"), notes_quoted)
+
         output = output.replace("{title}", title)
         output = output.replace("{taskno}", taskno)
         output = output.replace("{str_type}", _("Type:"))
@@ -269,6 +295,7 @@ def application(environ, start_response):
         output = output.replace("{delete_yesno}", delete_yesno)
         output = output.replace("{interactive}", interactive)
         output = output.replace("{misc}", misc)
+        output = output.replace("{notes}", notes)
         output = output.replace("{unknownext}", unknownext)
         output = output.replace("{downloaded}", downloaded)
         output = output.replace("{starttime}", starttime)
