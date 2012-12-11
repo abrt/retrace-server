@@ -539,6 +539,14 @@ def start_vmcore():
                 if child.wait():
                     logging.warn("crash 'sys -c' exitted with %d" % child.returncode)
                     crash_sys_c = None
+
+                child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                               "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                crash_foreach_bt = child.communicate("foreach bt\nquit\n")[0]
+                if child.wait():
+                    logging.warn("crash 'foreach bt' exitted with %d" % child.returncode)
+                    crash_foreach_bt = None
+
         except Exception as ex:
             logging.error(str(ex))
             unlock(lockfile)
@@ -598,6 +606,12 @@ def start_vmcore():
             logging.warn("crash 'sys -c' exited with %d" % child.returncode)
             crash_sys_c = None
 
+        child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+        crash_foreach_bt = child.communicate("foreach bt\nquit\n")[0]
+        if child.wait():
+            logging.warn("crash 'foreach bt' exited with %d" % child.returncode)
+            crash_foreach_bt = None
+
     task.set_backtrace(kernellog)
     if crash_bt_a:
         task.add_misc("bt-a", crash_bt_a)
@@ -607,6 +621,13 @@ def start_vmcore():
         task.add_misc("sys", crash_sys)
     if crash_sys_c:
         task.add_misc("sys-c", crash_sys_c)
+    if crash_foreach_bt:
+        child = Popen(["bt_filter"], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+        bt_filter = child.communicate(crash_foreach_bt)[0]
+        if child.wait():
+            bt_filter = "bt_filter exitted with %d\n\n%s" % (child.returncode, bt_filter)
+
+        task.add_misc("bt-filter", bt_filter)
 
     if "/" in vmlinux:
         task.set_crashrc("mod -S %s" % vmlinux.rsplit("/", 1)[0])

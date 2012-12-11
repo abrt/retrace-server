@@ -17,10 +17,11 @@ man1_MANS = ${MAN_TXT:%.txt=%.1}
 
 CLEANFILES = $(man1_MANS)
 
-dist_bin_SCRIPTS = retrace-server-cleanup \
+dist_bin_SCRIPTS = bt_filter \
+                   coredump2packages \
+                   retrace-server-cleanup \
                    retrace-server-reposync \
                    retrace-server-worker \
-                   coredump2packages \
                    retrace-server-interact
 
 interface_PYTHON = backtrace.wsgi \
