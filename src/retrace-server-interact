@@ -46,7 +46,7 @@ if __name__ == "__main__":
                 cmdline.append("--unpriv")
 
             print_cmdline(cmdline)
-            exit(call(cmdline))
+            os.execvp(cmdline[0], cmdline)
         if args.action == "gdb":
             with open(os.path.join(task.get_savedir(), "crash", "executable"), "r") as exec_file:
                 executable = exec_file.read(ALLOWED_FILES["executable"])
@@ -60,7 +60,7 @@ if __name__ == "__main__":
                 cmdline.append("--unpriv")
 
             print_cmdline(cmdline)
-            exit(call(cmdline))
+            os.execvp(cmdline[0], cmdline)
 
         sys.stderr.write("Action '%s' is not allowed for coredumps.\n" % args.action)
         exit(1)
@@ -100,7 +100,7 @@ if __name__ == "__main__":
                     cmdline.append("--unpriv")
 
             print_cmdline(cmdline)
-            exit(call(cmdline))
+            os.execvp(cmdline[0], cmdline)
 
         if args.action == "shell":
             if arch != hostarch:
@@ -109,7 +109,7 @@ if __name__ == "__main__":
                     cmdline.append("--unpriv")
 
                 print_cmdline(cmdline)
-                exit(call(cmdline))
+                os.execvp(cmdline[0], cmdline)
 
             sys.stderr.write("The task does not require a chroot. You can use the current shell.\n")
             exit(1)
