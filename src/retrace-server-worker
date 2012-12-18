@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import logging
 import time
 import sys
 sys.path.insert(0, "/usr/share/retrace-server/")
@@ -40,10 +39,10 @@ def retrace_run(errorcode, cmd):
         output = child.communicate()[0]
     except Exception as ex:
         child = None
-        logging.error("An unhandled exception occured: %s" % ex)
+        log_error("An unhandled exception occured: %s" % ex)
 
     if not child or child.returncode != 0:
-        logging.error("%s exitted with %d\n=== OUTPUT ===\n%s" % (" ".join(cmd), child.returncode, output))
+        log_error("%s exitted with %d\n=== OUTPUT ===\n%s" % (" ".join(cmd), child.returncode, output))
         fail(errorcode)
 
     return output
@@ -58,17 +57,17 @@ def start_retrace():
         pass
 
     if cmdline.arch:
-        logging.debug("Using architecture from command line: %s" % cmdline.arch)
+        log_debug("Using architecture from command line: %s" % cmdline.arch)
         arch = cmdline.arch
     else:
         # read architecture from coredump
         arch = guess_arch(corepath)
 
         if not arch:
-            logging.error("Unable to determine architecture from coredump")
+            log_error("Unable to determine architecture from coredump")
             fail()
 
-        logging.debug("Determined architecture: %s" % arch)
+        log_debug("Determined architecture: %s" % arch)
 
     stats["arch"] = arch
 
@@ -82,12 +81,12 @@ def start_retrace():
 
     # read package file
     if not INPUT_PACKAGE_PARSER.match(crash_package):
-        logging.error("Invalid package name: %s" % crash_package)
+        log_error("Invalid package name: %s" % crash_package)
         fail()
 
     pkgdata = parse_rpm_name(crash_package)
     if not pkgdata["name"]:
-        logging.error("Unable to parse package name: %s" % crash_package)
+        log_error("Unable to parse package name: %s" % crash_package)
         fail()
 
     stats["package"] = pkgdata["name"]
@@ -138,13 +137,13 @@ def start_retrace():
             raise Exception, "Unknown release '%s'" % release
 
     except Exception as ex:
-        logging.error("Unable to read distribution and version from 'release' file: %s" % ex)
-        logging.info("Trying to guess distribution and version")
+        log_error("Unable to read distribution and version from 'release' file: %s" % ex)
+        log_info("Trying to guess distribution and version")
         distribution, version = guess_release(crash_package, PLUGINS)
         if distribution and version:
-            logging.info("%s-%s" % (distribution, version))
+            log_info("%s-%s" % (distribution, version))
         else:
-            logging.error("Failure")
+            log_error("Failure")
             fail()
 
     if "rawhide" in release.lower():
@@ -152,11 +151,11 @@ def start_retrace():
 
     releaseid = "%s-%s-%s" % (distribution, version, arch)
     if not releaseid in get_supported_releases():
-        logging.error("Release '%s' is not supported" % releaseid)
+        log_error("Release '%s' is not supported" % releaseid)
         fail()
 
     if not is_package_known(crash_package, arch, releaseid):
-        logging.error("Package '%s.%s' was not recognized.\nIs it a part of "
+        log_error("Package '%s.%s' was not recognized.\nIs it a part of "
                       "official %s repositories?" % (crash_package, arch, release))
         fail()
 
@@ -171,7 +170,7 @@ def start_retrace():
         stdout, stderr = child.communicate()
         fafrepo = stdout.strip()
         if stderr:
-            logging.warn(stderr)
+            log_warn(stderr)
 
         # hack - use latest glibc - for some reason gives better results
         for filename in os.listdir(fafrepo):
@@ -226,10 +225,10 @@ def start_retrace():
                     missing.append((soname, buildid))
 
             if stderr:
-                logging.warn(stderr)
+                log_warn(stderr)
 
         except Exception as ex:
-            logging.error("Unable to obtain packages from 'coredump' file: %s" % ex)
+            log_error("Unable to obtain packages from 'coredump' file: %s" % ex)
             fail()
 
     # create mock config file
@@ -279,12 +278,12 @@ def start_retrace():
         os.symlink("/etc/mock/site-defaults.cfg", os.path.join(task.get_savedir(), "site-defaults.cfg"))
         os.symlink("/etc/mock/logging.ini", os.path.join(task.get_savedir(), "logging.ini"))
     except Exception as ex:
-        logging.error("Unable to create mock config file: %s" % ex)
+        log_error("Unable to create mock config file: %s" % ex)
         fail()
 
     # run retrace
     task.set_status(STATUS_INIT)
-    logging.info(STATUS[STATUS_INIT])
+    log_info(STATUS[STATUS_INIT])
 
     retrace_run(25, ["/usr/bin/mock", "init", "--configdir", task.get_savedir()])
     if CONFIG["UseFafPackages"]:
@@ -296,12 +295,12 @@ def start_retrace():
 
     # generate backtrace
     task.set_status(STATUS_BACKTRACE)
-    logging.info(STATUS[STATUS_BACKTRACE])
+    log_info(STATUS[STATUS_BACKTRACE])
 
     try:
         backtrace = run_gdb(task.get_savedir())
     except Exception as ex:
-        logging.error(str(ex))
+        log_error(str(ex))
         fail()
 
     task.set_backtrace(backtrace)
@@ -312,7 +311,7 @@ def start_retrace():
     if not task.get_type() in [TASK_DEBUG, TASK_RETRACE_INTERACTIVE]:
         # clean up temporary data
         task.set_status(STATUS_CLEANUP)
-        logging.info(STATUS[STATUS_CLEANUP])
+        log_info(STATUS[STATUS_CLEANUP])
 
         task.clean()
         if CONFIG["UseFafPackages"]:
@@ -327,7 +326,7 @@ def start_retrace():
 
     # save crash statistics
     task.set_status(STATUS_STATS)
-    logging.info(STATUS[STATUS_STATS])
+    log_info(STATUS[STATUS_STATS])
 
     task.set_finished_time(int(time.time()))
     stats["duration"] = int(time.time()) - stats["starttime"]
@@ -342,15 +341,15 @@ def start_retrace():
             save_crashstats_build_ids(statsid, missing, con)
         con.close()
     except Exception as ex:
-        logging.warn(str(ex))
+        log_warn(str(ex))
 
     # publish log => finish task
-    logging.info("Retrace took %d seconds" % stats["duration"])
+    log_info("Retrace took %d seconds" % stats["duration"])
 
     if log:
         task.set_log(log.getvalue())
 
-    logging.info(STATUS[STATUS_SUCCESS])
+    log_info(STATUS[STATUS_SUCCESS])
     task.set_status(STATUS_SUCCESS)
 
 def mock_find_vmlinux(cfgdir, candidates):
@@ -370,18 +369,18 @@ def start_vmcore():
 
     if cmdline.kernelver:
         kernelver = "%s.%s" % (cmdline.kernelver, cmdline.arch)
-        logging.debug("Using kernel version from command line: %s" % kernelver)
+        log_debug("Using kernel version from command line: %s" % kernelver)
     else:
         kernelver = get_kernel_release(vmcore)
         if not kernelver:
-            logging.error("Unable to determine kernel version")
+            log_error("Unable to determine kernel version")
             fail()
 
-        logging.debug("Determined kernel version: %s" % kernelver)
+        log_debug("Determined kernel version: %s" % kernelver)
 
     match = KERNEL_RELEASE_PARSER.match(kernelver)
     if not match:
-        logging.error("Unable to parse kernel version")
+        log_error("Unable to parse kernel version")
         fail()
 
     kernelver_noarch = match.group(1)
@@ -399,7 +398,7 @@ def start_vmcore():
     if hostarch in ["i486", "i586", "i686"]:
         hostarch = "i386"
 
-    logging.info(STATUS[STATUS_INIT])
+    log_info(STATUS[STATUS_INIT])
     task.set_status(STATUS_INIT)
     vmlinux = ""
 
@@ -458,14 +457,14 @@ def start_vmcore():
                     os.symlink("/etc/mock/site-defaults.cfg", os.path.join(tmpdir, "site-defaults.cfg"))
                     os.symlink("/etc/mock/logging.ini", os.path.join(tmpdir, "logging.ini"))
                 except Exception as ex:
-                    logging.error("Unable to create mock config file: %s" % ex)
+                    log_error("Unable to create mock config file: %s" % ex)
                     shutil.rmtree(tmpdir)
                     fail()
 
                 child = Popen(["/usr/bin/mock", "--configdir", tmpdir, "init"], stdout=PIPE, stderr=STDOUT)
                 stdout = child.communicate()[0]
                 if child.wait():
-                    logging.error("mock exitted with %d:\n%s" % (child.returncode, stdout))
+                    log_error("mock exitted with %d:\n%s" % (child.returncode, stdout))
                     shutil.rmtree(tmpdir)
                     fail()
 
@@ -486,7 +485,7 @@ def start_vmcore():
 
             # error
             if i >= 1800:
-                logging.error("Waiting for chroot timed out")
+                log_error("Waiting for chroot timed out")
                 fail()
 
         lockfile = os.path.join(cfgdir, ".lock")
@@ -497,7 +496,7 @@ def start_vmcore():
 
         # error
         if i >= 1800:
-            logging.error("Waiting for chroot lock timed out")
+            log_error("Waiting for chroot lock timed out")
             fail()
 
         # we have the lock, let's work
@@ -510,45 +509,45 @@ def start_vmcore():
                                "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
                 kernellog = child.communicate("log\nquit\n")[0]
                 if child.wait():
-                    logging.warn("crash 'log' exitted with %d" % child.returncode)
+                    log_warn("crash 'log' exitted with %d" % child.returncode)
 
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
                 crash_bt_a = child.communicate("bt -a\nquit\n")[0]
                 if child.wait():
-                    logging.warn("crash 'bt -a' exitted with %d" % child.returncode)
+                    log_warn("crash 'bt -a' exitted with %d" % child.returncode)
                     crash_bt_a = None
 
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
                 crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
                 if child.wait():
-                    logging.warn("crash 'kmem -f' exitted with %d" % child.returncode)
+                    log_warn("crash 'kmem -f' exitted with %d" % child.returncode)
                     crash_kmem_f = None
 
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
                 crash_sys = child.communicate("sys\nquit\n")[0]
                 if child.wait():
-                    logging.warn("crash 'sys' exitted with %d" % child.returncode)
+                    log_warn("crash 'sys' exitted with %d" % child.returncode)
                     crash_sys = None
 
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
                 crash_sys_c = child.communicate("sys -c\nquit\n")[0]
                 if child.wait():
-                    logging.warn("crash 'sys -c' exitted with %d" % child.returncode)
+                    log_warn("crash 'sys -c' exitted with %d" % child.returncode)
                     crash_sys_c = None
 
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
                 crash_foreach_bt = child.communicate("foreach bt\nquit\n")[0]
                 if child.wait():
-                    logging.warn("crash 'foreach bt' exitted with %d" % child.returncode)
+                    log_warn("crash 'foreach bt' exitted with %d" % child.returncode)
                     crash_foreach_bt = None
 
         except Exception as ex:
-            logging.error(str(ex))
+            log_error(str(ex))
             unlock(lockfile)
             fail()
 
@@ -562,54 +561,54 @@ def start_vmcore():
             time.sleep(1)
 
         if i >= 1800:
-            logging.error("waiting for debuginfo timed out")
+            log_error("waiting for debuginfo timed out")
             fail()
 
         try:
             vmlinux = prepare_debuginfo(vmcore)
         except Exception as ex:
-            logging.error(str(ex))
+            log_error(str(ex))
             unlock(lockfile)
             fail()
 
         unlock(lockfile)
 
         task.set_status(STATUS_BACKTRACE)
-        logging.info(STATUS[STATUS_BACKTRACE])
+        log_info(STATUS[STATUS_BACKTRACE])
 
         child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
         kernellog = child.communicate("log\nquit\n")[0]
         if child.wait():
-            logging.warn("crash 'log' exited with %d" % child.returncode)
+            log_warn("crash 'log' exited with %d" % child.returncode)
 
         child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
         crash_bt_a = child.communicate("bt -a\nquit\n")[0]
         if child.wait():
-            logging.warn("crash 'bt -a' exited with %d" % child.returncode)
+            log_warn("crash 'bt -a' exited with %d" % child.returncode)
             crash_bt_a = None
 
         child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
         crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
         if child.wait():
-            logging.warn("crash 'kmem -f' exited with %d" % child.returncode)
+            log_warn("crash 'kmem -f' exited with %d" % child.returncode)
             crash_kmem_f = None
 
         child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
         crash_sys = child.communicate("sys\nquit\n")[0]
         if child.wait():
-            logging.warn("crash 'sys' exited with %d" % child.returncode)
+            log_warn("crash 'sys' exited with %d" % child.returncode)
             crash_sys = None
 
         child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
         crash_sys_c = child.communicate("sys -c\nquit\n")[0]
         if child.wait():
-            logging.warn("crash 'sys -c' exited with %d" % child.returncode)
+            log_warn("crash 'sys -c' exited with %d" % child.returncode)
             crash_sys_c = None
 
         child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
         crash_foreach_bt = child.communicate("foreach bt\nquit\n")[0]
         if child.wait():
-            logging.warn("crash 'foreach bt' exited with %d" % child.returncode)
+            log_warn("crash 'foreach bt' exited with %d" % child.returncode)
             crash_foreach_bt = None
 
     task.set_backtrace(kernellog)
@@ -636,22 +635,22 @@ def start_vmcore():
     stats["duration"] = int(time.time()) - stats["starttime"]
     stats["status"] = STATUS_SUCCESS
 
-    logging.info(STATUS[STATUS_STATS])
+    log_info(STATUS[STATUS_STATS])
 
     try:
         save_crashstats(stats)
     except Exception as ex:
-        logging.error(str(ex))
+        log_error(str(ex))
 
     # clean up temporary data
     task.set_status(STATUS_CLEANUP)
-    logging.info(STATUS[STATUS_CLEANUP])
+    log_info(STATUS[STATUS_CLEANUP])
 
     if not task.get_type() in [TASK_VMCORE_INTERACTIVE]:
         task.clean()
 
-    logging.info("Retrace took %d seconds" % stats["duration"])
-    logging.info(STATUS[STATUS_SUCCESS])
+    log_info("Retrace took %d seconds" % stats["duration"])
+    log_info(STATUS[STATUS_SUCCESS])
 
     if log:
         task.set_log(log.getvalue())
@@ -675,11 +674,11 @@ if __name__ == "__main__":
     try:
         task = RetraceTask(cmdline.task_id)
     except:
-        logging.error("Task '%d' does not exist" % cmdline.task_id)
+        log_error("Task '%d' does not exist" % cmdline.task_id)
         exit(1)
 
     if task.has_status():
-        logging.error("%s has already been executed for task %d" % (sys.argv[0], cmdline.task_id))
+        log_error("%s has already been executed for task %d" % (sys.argv[0], cmdline.task_id))
         exit(1)
 
     task.set_started_time(int(time.time()))
@@ -688,7 +687,7 @@ if __name__ == "__main__":
         try:
             pid = os.fork()
         except:
-            logging.error("Unable to fork")
+            log_error("Unable to fork")
             exit(1)
 
         # parent - kill
@@ -701,14 +700,14 @@ if __name__ == "__main__":
 
     if task.has_remote():
         task.set_status(STATUS_DOWNLOADING)
-        logging.info(STATUS[STATUS_DOWNLOADING])
+        log_info(STATUS[STATUS_DOWNLOADING])
         errors = task.download_remote()
         if errors:
             for error in errors:
-                logging.warn(error)
+                log_warn(error)
 
     task.set_status(STATUS_ANALYZE)
-    logging.info(STATUS[STATUS_ANALYZE])
+    log_info(STATUS[STATUS_ANALYZE])
 
     crashdir = os.path.join(task.get_savedir(), "crash")
 
@@ -716,7 +715,7 @@ if __name__ == "__main__":
 
     for required_file in REQUIRED_FILES[tasktype]:
         if not os.path.isfile(os.path.join(crashdir, required_file)):
-            logging.error("Crash directory does not contain required file '%s'" % required_file)
+            log_error("Crash directory does not contain required file '%s'" % required_file)
             exit(1)
 
     try:

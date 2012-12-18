@@ -1,7 +1,9 @@
 import ConfigParser
+import datetime
 import errno
 import ftplib
 import gettext
+import logging
 import magic
 import os
 import re
@@ -167,6 +169,21 @@ STATUS = [
   "Retrace job failed",
   "Downloading remote resources",
 ]
+
+def now():
+    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+def log_info(msg):
+    logging.info("%23s %s" % (now(), msg))
+
+def log_debug(msg):
+    logging.debug("%22s %s" % (now(), msg))
+
+def log_warn(msg):
+    logging.warn("%20s %s" % (now(), msg))
+
+def log_error(msg):
+    logging.error("%22s %s" % (now(), msg))
 
 def lock(lockfile):
     try:
@@ -604,29 +621,29 @@ def get_archive_type(path):
     ms = magic.open(magic.MAGIC_NONE)
     ms.load()
     filetype = ms.file(path).lower()
-    logging.debug("File type: %s" % filetype)
+    log_debug("File type: %s" % filetype)
 
     if "bzip2 compressed data" in filetype:
-        logging.debug("bzip2 detected")
+        log_debug("bzip2 detected")
         return ARCHIVE_BZ2
     elif "gzip compressed data" in filetype or \
          "compress'd data" in filetype:
-        logging.debug("gzip detected")
+        log_debug("gzip detected")
         return ARCHIVE_GZ
     elif "xz compressed data" in filetype:
-        logging.debug("xz detected")
+        log_debug("xz detected")
         return ARCHIVE_XZ
     elif "7-zip archive data" in filetype:
-        logging.debug("7-zip detected")
+        log_debug("7-zip detected")
         return ARCHIVE_7Z
     elif "zip archive data" in filetype:
-        logging.debug("zip detected")
+        log_debug("zip detected")
         return ARCHIVE_ZIP
     elif "tar archive" in filetype:
-        logging.debug("tar detected")
+        log_debug("tar detected")
         return ARCHIVE_TAR
 
-    logging.debug("unknown file type, unpacking finished")
+    log_debug("unknown file type, unpacking finished")
     return ARCHIVE_UNKNOWN
 
 def unpack_vmcore(path):
@@ -645,7 +662,7 @@ def unpack_vmcore(path):
             check_run(["gunzip", vmcoregz])
 
             if not os.path.isfile(vmcore):
-                logging.warn("expected file not present, maybe gunzip failed?")
+                log_warn("expected file not present, maybe gunzip failed?")
         elif filetype == ARCHIVE_BZ2:
             check_run(["bunzip2", vmcore])
         elif filetype == ARCHIVE_XZ:
