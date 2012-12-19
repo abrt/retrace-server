@@ -1061,6 +1061,7 @@ class RetraceTask:
     """Represents Retrace server's task."""
 
     BACKTRACE_FILE = "retrace_backtrace"
+    CASENO_FILE = "caseno"
     CRASHRC_FILE = "crashrc"
     DOWNLOADED_FILE = "downloaded"
     FINISHED_FILE = "finished_time"
@@ -1527,6 +1528,27 @@ class RetraceTask:
             raise Exception, "set_start_time requires unix timestamp as parameter"
 
         self.set(RetraceTask.STARTED_FILE, "%d" % data)
+
+    def has_caseno(self):
+        """Verifies whether CASENO_FILE exists"""
+        return self.has(RetraceTask.CASENO_FILE)
+
+    def get_caseno(self):
+        """Gets the case number from CASENO_FILE"""
+        result = self.get(RetraceTask.CASENO_FILE, maxlen=1 << 8)
+        if result is None:
+            return None
+
+        return int(result)
+
+    def set_caseno(self, value):
+        """Writes case number into CASENO_FILE"""
+        try:
+            data = int(value)
+        except ValueError:
+            raise Exception, "set_caseno requires a number as parameter"
+
+        self.set(RetraceTask.CASENO_FILE, "%d" % data)
 
     def has_finished_time(self):
         """Verifies whether FINISHED_FILE exists"""

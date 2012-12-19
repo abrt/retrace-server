@@ -6,7 +6,7 @@ import urllib
 import urlparse
 from retrace import *
 
-MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(start|backtrace|savenotes|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
+MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(start|backtrace|savenotes|caseno|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
 
 LONG_TYPES = { TASK_RETRACE: "Coredump retrace",
                TASK_DEBUG: "Coredump retrace - debug",
@@ -114,6 +114,25 @@ def application(environ, start_response):
 
         if "notes" in POST and len(POST["notes"]) > 0:
             task.set_notes(POST["notes"][0])
+
+        return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
+    elif match.group(6) and match.group(6) == "caseno":
+        POST = urlparse.parse_qs(request.body, keep_blank_values=1)
+        try:
+            task = RetraceTask(filename)
+        except:
+            return response(start_response, "404 Not Found", _("There is no such task"))
+
+        if "caseno" in POST and len(POST["caseno"]) > 0:
+            if not POST["caseno"][0]:
+                task.delete(RetraceTask.CASENO_FILE)
+            else:
+                try:
+                    caseno = int(POST["caseno"][0])
+                except Exception as ex:
+                    return response(start_response, "404 Not Found", _("Case number must be an integer; %s" % ex))
+
+                task.set_caseno(caseno)
 
         return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "backtrace":
@@ -267,6 +286,22 @@ def application(environ, start_response):
         if not ftptask and task.has_finished_time():
             finishtime = "<tr><th>Finished:</th><td>%s</td></tr>" % datetime.datetime.fromtimestamp(task.get_finished_time())
 
+        caseno = ""
+        if not ftptask:
+            currentcaseno = ""
+            if task.has_caseno():
+                currentcaseno = "value=\"%d\" " % task.get_caseno()
+
+            caseno = "<tr>" \
+                     "  <th>Case no.:</th>" \
+                     "  <td>" \
+                     "    <form method=\"post\" action=\"%s/caseno\">" \
+                     "      <input type=\"text\" name=\"caseno\" %s/>" \
+                     "      <input type=\"submit\" value=\"Update case no.\" class=\"button\" />" \
+                     "    </form>" \
+                     "  </td>" \
+                     "</tr>" % (request.path_url.rstrip("/"), currentcaseno)
+
         back = "<tr><td colspan=\"2\"><a href=\"%s\">%s</a></td></tr>" % (match.group(1), _("Back to task manager"))
 
         notes = ""
@@ -294,6 +329,7 @@ def application(environ, start_response):
         output = output.replace("{back}", back)
         output = output.replace("{backtrace}", backtrace)
         output = output.replace("{backtracewindow}", backtracewindow)
+        output = output.replace("{caseno}", caseno)
         output = output.replace("{delete}", delete)
         output = output.replace("{delete_yesno}", delete_yesno)
         output = output.replace("{interactive}", interactive)
