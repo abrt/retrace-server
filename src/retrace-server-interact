@@ -2,10 +2,11 @@
 import argparse
 import grp
 import os
+import pwd
 import sys
 from retrace import *
 
-ACTIONS = ["shell", "gdb", "crash", "printdir"]
+ACTIONS = ["shell", "gdb", "crash", "printdir", "delete"]
 
 def print_cmdline(cmdline):
     sys.stderr.write("If you want to execute the command manually, you can run\n")
@@ -37,6 +38,17 @@ if __name__ == "__main__":
 
     if args.action == "printdir":
         sys.stdout.write("%s\n" % task.get_savedir())
+        exit(0)
+
+    if args.action == "delete":
+        username = pwd.getpwuid(os.getuid()).pw_name
+
+        if CONFIG["TaskManagerAuthDelete"] and \
+           not username in CONFIG["TaskManagerDeleteUsers"]:
+            sys.stderr.write("You are not allowed to delete tasks\n")
+            exit(1)
+
+        task.remove()
         exit(0)
 
     if task.get_type() == TASK_RETRACE_INTERACTIVE:

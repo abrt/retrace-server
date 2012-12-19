@@ -114,7 +114,7 @@ fi
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}/kernel
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}/download
 %dir %attr(0750,retrace,retrace) %{_localstatedir}/log/%{name}
-%dir %attr(0750,retrace,retrace) %{_localstatedir}/spool/%{name}
+%dir %attr(0770,retrace,retrace) %{_localstatedir}/spool/%{name}
 %dir %{_datadir}/%{name}
 %{_bindir}/%{name}-worker
 %{_bindir}/%{name}-interact

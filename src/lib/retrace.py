@@ -136,6 +136,8 @@ CONFIG = {
   "AllowAPIDelete": False,
   "AllowInteractive": False,
   "AllowTaskManager": False,
+  "TaskManagerAuthDelete": False,
+  "TaskManagerDeleteUsers": [],
   "UseFTPTasks": False,
   "FTPSSL": False,
   "FTPHost": "",
@@ -217,6 +219,8 @@ def read_config():
             get = parser.getboolean
         elif vartype is float:
             get = parser.getfloat
+        elif vartype is list:
+            get = lambda sect, key: parser.get(sect, key).split()
         else:
             get = parser.get
 
@@ -500,7 +504,9 @@ def find_kernel_debuginfo(kernelver):
     if CONFIG["WgetKernelDebuginfos"]:
         downloaddir = os.path.join(CONFIG["RepoDir"], "download")
         if not os.path.isdir(downloaddir):
+            oldmask = os.umask(0007)
             os.makedirs(downloaddir)
+            os.umask(oldmask)
 
         for ver in vers:
             pkgname = "kernel-debuginfo-%s.rpm" % ver
@@ -1076,7 +1082,7 @@ class RetraceTask:
         if taskid is None:
             # create a new task
             # create a retrace-group-writable directory
-            oldmask = os.umask(0002)
+            oldmask = os.umask(0007)
             self._taskid = None
             generator = random.SystemRandom()
             for i in xrange(50):
@@ -1297,7 +1303,9 @@ class RetraceTask:
 
         crashdir = os.path.join(self._savedir, "crash")
         if not os.path.isdir(crashdir):
+            oldmask = os.umask(0007)
             os.makedirs(crashdir)
+            os.umask(oldmask)
 
         for url in self.get_remote():
             if url.startswith("FTP "):
@@ -1436,7 +1444,9 @@ class RetraceTask:
 
         miscdir = os.path.join(self._savedir, RetraceTask.MISC_DIR)
         if not os.path.isdir(miscdir):
+            oldmask = os.umask(0007)
             os.makedirs(miscdir)
+            os.umask(oldmask)
 
         miscpath = os.path.join(miscdir, name)
         with open(miscpath, "w") as misc_file:

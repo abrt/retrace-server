@@ -139,6 +139,9 @@ def application(environ, start_response):
         if not task.get_managed():
             return response(start_response, "403 Forbidden", _("Task does not belong to task manager"))
 
+        if CONFIG["TaskManagerAuthDelete"]:
+            return response(start_response, "403 Forbidden", _("Authorization required to delete tasks"))
+
         task.remove()
 
         return response(start_response, "302 Found", "", [("Location", match.group(1))])
@@ -212,7 +215,7 @@ def application(environ, start_response):
             elif task.has_log():
                 backtracewindow = "<h2>Log:</h2><textarea class=\"backtrace\">%s</textarea>" % task.get_log()
 
-        if ftptask or task.is_running(readproc=True):
+        if ftptask or task.is_running(readproc=True) or CONFIG["TaskManagerAuthDelete"]:
             delete = ""
         else:
             delete = "<tr><td colspan=\"2\"><a href=\"%s/delete\">%s</a></td></tr>" % (request.path_url.rstrip("/"), _("Delete task"))
@@ -236,7 +239,7 @@ def application(environ, start_response):
                     links.append("<a href=\"%s/misc/%s\">%s</a>" % (request.path_url.rstrip("/"), name, name))
                 misc = "<tr><th>%s</th><td>%s</td></tr>" % (_("Additional results:"), ", ".join(links))
 
-        if match.group(6) and match.group(6).startswith("delete"):
+        if match.group(6) and match.group(6).startswith("delete") and not CONFIG["TaskManagerAuthDelete"]:
             delete_yesno = "<tr><td colspan=\"2\">%s <a href=\"%s/sure\">Yes</a> - <a href=\"%s/%s\">No</a></td></tr>" \
                            % (_("Are you sure you want to delete the task?"), request.path_url.rstrip("/"),
                               match.group(1), filename)
