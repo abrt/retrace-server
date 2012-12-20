@@ -46,6 +46,10 @@ def application(environ, start_response):
     if filename:
         filename = urllib.unquote(match.group(4))
 
+    space = free_space(CONFIG["SaveDir"])
+    if space is None:
+        return response(start_response, "500 Internal Server Error", _("Unable to obtain free space"))
+
     if match.group(6) and match.group(6).startswith("misc") and match.group(9):
         try:
             task = RetraceTask(filename)
@@ -64,9 +68,22 @@ def application(environ, start_response):
             task = RetraceTask(filename)
         except:
             if CONFIG["UseFTPTasks"]:
-                files = ftp_list_dir(CONFIG["FTPDir"])
+                ftp = ftp_init()
+                files = ftp_list_dir(CONFIG["FTPDir"], ftp)
                 if not filename in files:
+                    ftp_close(ftp)
                     return response(start_response, "404 Not Found", _("There is no such task"))
+
+                try:
+                    size = ftp.size(filename)
+                except:
+                    size = 0
+
+                ftp_close(ftp)
+
+                if space - size < (CONFIG["MinStorageLeft"] << 20):
+                    return response(start_response, "507 Insufficient Storage",
+                                    _("There is not enough free space on the server"))
 
                 ftptask = True
             else:
@@ -194,22 +211,27 @@ def application(environ, start_response):
         if not ftptask and task.has_status():
             status = get_status_for_task_manager(task, _=_)
         else:
-            start = "<tr>" \
-                    "  <td colspan=\"2\">" \
-                    "    <form method=\"get\" action=\"%s/start\">" \
-                    "      Kernel VRA (empty to autodetect): <input name=\"kernelver\" type=\"text\" id=\"kernelver\" /><br />" \
-                    "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" />Be more verbose in case of error<br />" \
-                    "      <input type=\"submit\" value=\"%s\" id=\"start\" class=\"button\" />" \
-                    "    </form>" \
-                    "  </td>" \
-                    "</tr>" % (request.path_url.rstrip("/"), _("Start task"))
+            startcontent = "    <form method=\"get\" action=\"%s/start\">" \
+                           "      Kernel VRA (empty to autodetect): <input name=\"kernelver\" type=\"text\" id=\"kernelver\" /><br />" \
+                           "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" />Be more verbose in case of error<br />" \
+                           "      <input type=\"submit\" value=\"%s\" id=\"start\" class=\"button\" />" \
+                           "    </form>" % (request.path_url.rstrip("/"), _("Start task"))
 
             if ftptask:
                 status = _("On remote FTP server")
                 if filesize:
                     status += " (%s)" % human_readable_size(filesize)
+
+                if space - filesize < (CONFIG["MinStorageLeft"] << 20):
+                    startcontent = _("You can not start the task because there is not enough free space on the server")
             else:
                 status = _("Not started")
+
+            start = "<tr>" \
+                    "  <td colspan=\"2\">" \
+                    "%s" \
+                    "  </td>" \
+                    "</tr>" % startcontent
 
         interactive = ""
         backtrace = ""
