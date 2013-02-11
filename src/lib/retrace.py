@@ -599,7 +599,8 @@ def prepare_debuginfo(vmcore, chroot=None):
         if "NAME" in line:
             continue
 
-        modules.append(line.split()[1])
+        if " " in line:
+            modules.append(line.split()[1])
 
     todo = []
     for module in modules:
