@@ -567,7 +567,7 @@ def start_vmcore():
         try:
             vmlinux = prepare_debuginfo(vmcore)
         except Exception as ex:
-            log_error(str(ex))
+            log_error("prepare_debuginfo failed: %s" % str(ex))
             unlock(lockfile)
             fail()
 

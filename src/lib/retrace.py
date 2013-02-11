@@ -158,7 +158,7 @@ CONFIG = {
 
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \
 STATUS_STATS, STATUS_FINISHING, STATUS_SUCCESS, STATUS_FAIL, \
-STATUS_DOWNLOADING = xrange(9)
+STATUS_DOWNLOADING, STATUS_POSTPROCESS = xrange(10)
 
 STATUS = [
   "Analyzing crash data",
@@ -170,6 +170,7 @@ STATUS = [
   "Retrace job finished successfully",
   "Retrace job failed",
   "Downloading remote resources",
+  "Post-processing downloaded file",
 ]
 
 def now():
@@ -1310,6 +1311,9 @@ class RetraceTask:
             os.umask(oldmask)
 
         for url in self.get_remote():
+            self.set_status(STATUS_DOWNLOADING)
+            log_info(STATUS[STATUS_DOWNLOADING])
+
             if url.startswith("FTP "):
                 filename = url[4:].strip()
 
@@ -1340,6 +1344,9 @@ class RetraceTask:
 
                 filename = url.rsplit("/", 1)[1]
                 downloaded.append(url)
+
+            self.set_status(STATUS_POSTPROCESS)
+            log_info(STATUS[STATUS_POSTPROCESS])
 
             if unpack:
                 fullpath = os.path.join(crashdir, filename)
@@ -1392,11 +1399,18 @@ class RetraceTask:
 
                 os.unlink(os.path.join(crashdir, filename))
 
-            if CONFIG["VmcoreDumpLevel"] > 0 and CONFIG["VmcoreDumpLevel"] < 32 and \
-               os.path.isfile(vmcore):
-                strip_vmcore(vmcore)
-                st = os.stat(vmcore)
-                os.chmod(vmcore, st.st_mode | stat.S_IRGRP)
+            if os.path.isfile(vmcore):
+                oldsize = os.path.getsize(vmcore)
+                log_info("Vmcore size: %s" % human_readable_size(oldsize))
+                if CONFIG["VmcoreDumpLevel"] > 0 and CONFIG["VmcoreDumpLevel"] < 32:
+                    log_debug("Executing makedumpfile")
+                    start = time.time()
+                    strip_vmcore(vmcore)
+                    dur = int(time.time() - start)
+                    st = os.stat(vmcore)
+                    os.chmod(vmcore, st.st_mode | stat.S_IRGRP)
+                    log_info("Stripped size: %s" % human_readable_size(st.st_size))
+                    log_info("Makedumpfile took %d seconds and saved %s" % (dur, human_readable_size(oldsize - st.st_size)))
 
         os.unlink(os.path.join(self._savedir, RetraceTask.REMOTE_FILE))
         self.set_downloaded(", ".join(downloaded))
