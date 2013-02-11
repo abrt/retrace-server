@@ -694,6 +694,11 @@ if __name__ == "__main__":
         if pid != 0:
             exit(0)
 
+        try:
+            os.setpgrp()
+        except Exception as ex:
+            log_warn("Failed to detach from process group: %s" % str(ex))
+
     stats["taskid"] = cmdline.task_id
 
     prerunning = len(get_active_tasks()) - 1
