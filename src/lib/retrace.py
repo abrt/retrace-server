@@ -1326,7 +1326,9 @@ class RetraceTask:
                         self._progress_total_str = human_readable_size(self._progress_total)
                         self._progress_current = 0
 
-                        ftp.retrbinary("RETR %s" % filename, self.download_block)
+                        # the files are expected to be huge (even hundreds of gigabytes)
+                        # use a larger buffer - 16MB
+                        ftp.retrbinary("RETR %s" % filename, self.download_block, 1 << 24)
 
                     downloaded.append(filename)
                 except Exception as ex:
