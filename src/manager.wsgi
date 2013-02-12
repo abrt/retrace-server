@@ -391,50 +391,97 @@ def application(environ, start_response):
         except:
             continue
 
-        if task.get_managed():
-            if task.has_status():
-                status = get_status_for_task_manager(task, _=_)
-            else:
+        if not task.get_managed():
+            continue
+
+        if task.has_status():
+            statuscode = task.get_status()
+            if statuscode in [STATUS_SUCCESS, STATUS_FAIL]:
                 status = ""
+                if statuscode == STATUS_SUCCESS:
+                    status = " class=\"success\""
+                elif statuscode == STATUS_FAIL:
+                    status = " class=\"fail\""
 
-            if task.has_downloaded():
-                downloaded = task.get_downloaded()
+                finishtime = ""
+                if task.has_finished_time():
+                    finishtime = datetime.datetime.fromtimestamp(task.get_finished_time())
+
+                caseno = ""
+                if task.has_caseno():
+                    caseno = str(task.get_caseno())
+
+                files = ""
+                if task.has_downloaded():
+                    files = task.get_downloaded()
+
+                row = "<tr%s>" \
+                      "  <td class=\"taskid\">" \
+                      "    <a href=\"%s%s\">%s</a>" \
+                      "  </td>" \
+                      "  <td>%s</td>" \
+                      "  <td>%s</td>" \
+                      "  <td>%s</td>" \
+                      "</tr>" % (status, baseurl, taskid, taskid, caseno, files, finishtime)
+
+                if filterexp and not fnmatch.fnmatch(row, filterexp):
+                    continue
+
+                finished.append(row)
             else:
-                downloaded = ""
+                status = get_status_for_task_manager(task, _=_)
 
-            if task.has_remote() and task.get_remote():
-                remotes = []
-                for remote in task.get_remote():
-                    if remote.startswith("FTP "):
-                        remotes.append(remote[4:])
-                    else:
-                        remotes.append(remote)
+                starttime = ""
+                if task.has_started_time():
+                    starttime = datetime.datetime.fromtimestamp(task.get_started_time())
 
-                downloaded = "%s %s" % (", ".join(remotes), downloaded)
+                caseno = ""
+                if task.has_caseno():
+                    caseno = str(task.get_caseno())
 
-            row = "<tr><td class=\"taskid\"><a href=\"%s%s\">%s</a></td><td>%s</td><td class=\"status\">%s</td></tr>" \
-                  % (baseurl, taskid, taskid, downloaded, status)
+                files = ""
+                if task.has_remote():
+                    remote = map(lambda x: x[4:] if x.startswith("FTP ") else x, task.get_remote())
+                    files = ", ".join(remote)
+
+                if task.has_downloaded():
+                    files = ", ".join(filter(None, [task.get_downloaded(), files]))
+
+                row = "<tr>" \
+                      "  <td class=\"taskid\">" \
+                      "    <a href=\"%s%s\">%s</a>" \
+                      "  </td>" \
+                      "  <td>%s</td>" \
+                      "  <td>%s</td>" \
+                      "  <td>%s</td>" \
+                      "  <td>%s</td>" \
+                      "</tr>" % (baseurl, taskid, taskid, caseno, files, starttime, status)
+
+                if filterexp and not fnmatch.fnmatch(row, filterexp):
+                    continue
+
+                running.append(row)
+        else:
+            row = "<tr>" \
+                  "  <td>" \
+                  "    <a href=\"%s%s\">%s</a>" \
+                  "  </td>" \
+                  "</tr>" % (baseurl, taskid, taskid)
 
             if filterexp and not fnmatch.fnmatch(row, filterexp):
                 continue
 
-            if not task.has_status():
-                available.append(row)
-                continue
-
-            if task.get_status() == STATUS_SUCCESS:
-                finished.append(row.replace("<tr>", "<tr class=\"success\">"))
-                continue
-
-            if task.get_status() == STATUS_FAIL:
-                finished.append(row.replace("<tr>", "<tr class=\"fail\">"))
-                continue
-
-            running.append(row)
+            available.append(row)
 
     available_str = _("Available tasks")
     running_str = _("Running tasks")
     finished_str = _("Finished tasks")
+    taskid_str = _("Task ID")
+    caseno_str = _("Case no.")
+    files_str = _("File(s)")
+    starttime_str = _("Started")
+    finishtime_str = _("Finished")
+    status_str = _("Status")
 
     if CONFIG["UseFTPTasks"]:
         available = []
@@ -454,9 +501,15 @@ def application(environ, start_response):
     output = output.replace("{available_str}", available_str)
     output = output.replace("{running_str}", running_str)
     output = output.replace("{finished_str}", finished_str)
+    output = output.replace("{taskid_str}", taskid_str)
+    output = output.replace("{caseno_str}", caseno_str)
+    output = output.replace("{files_str}", files_str)
+    output = output.replace("{starttime_str}", starttime_str)
+    output = output.replace("{finishtime_str}", finishtime_str)
+    output = output.replace("{status_str}", status_str)
     # spaces to keep the XML nicely aligned
-    output = output.replace("{available}", "\n        ".join(available))
-    output = output.replace("{running}", "\n        ".join(running))
-    output = output.replace("{finished}", "\n        ".join(finished))
+    output = output.replace("{available}", "\n            ".join(available))
+    output = output.replace("{running}", "\n            ".join(running))
+    output = output.replace("{finished}", "\n            ".join(finished))
 
     return response(start_response, "200 OK", output, [("Content-Type", "text/html")])

@@ -5,19 +5,26 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>{title}</title>
     <style type="text/css">
-      #available {
+      #left {
+        width: 36%;
         float: left;
-        width: 32%;
+      }
+
+      #right {
+        width: 63%;
+        float: right;
+      }
+
+      #available {
+
       }
 
       #finished {
-        float: right;
-        width: 32%;
+
       }
 
       #running {
-        width: 32%;
-        margin: 0 auto;
+        margin-bottom: 20px;
       }
 
       #filter
@@ -30,6 +37,13 @@
       #submit
       {
         width: 100px;
+      }
+
+      #main
+      {
+        display: inline-block;
+        margin-bottom: 20px;
+        width: 100%;
       }
 
       .success
@@ -46,6 +60,8 @@
       {
         border: 1px solid black;
         padding: 4px;
+        width: 250px;
+        margin: 4px;
       }
 
       a:link {
@@ -84,20 +100,34 @@
         padding: 2px 4px;
       }
 
-      table td.taskid
+      table th.taskid
       {
         width: 56px;
       }
 
-      table td.status
+      table th.status
       {
-        width: 170px;
+        width: 320px;
+      }
+
+      table th.timestamp
+      {
+        width: 110px;
+      }
+
+      table th.caseno
+      {
+        width: 56px;
       }
 
       table th {
         border: 1px solid black;
-        background-color: #bbb;
-        padding: 2px 6px;
+        background-color: #ccc;
+        padding: 6px;
+      }
+
+      table th.tablename {
+        font-size: 14px;
       }
 
       h1 {
@@ -113,29 +143,48 @@
       <input type="text" name="filter" />
       <input type="submit" value="Filter" id="submit" />
     </form>
-    <div id="available">
-      <table>
-        <tr>
-          <th>{available_str}</th>
-        </tr>
-        {available}
-      </table>
-    </div>
-    <div id="finished">
-      <table>
-        <tr>
-          <th colspan="3">{finished_str}</th>
-        </tr>
-        {finished}
-      </table>
-    </div>
-    <div id="running">
-      <table>
-        <tr>
-          <th colspan="3">{running_str}</th>
-        </tr>
-        {running}
-      </table>
+    <div id="main">
+      <div id="left">
+        <div id="available">
+          <table>
+            <tr>
+              <th class="tablename">{available_str}</th>
+            </tr>
+            {available}
+          </table>
+        </div>
+      </div>
+      <div id="right">
+        <div id="running">
+          <table>
+            <tr>
+              <th colspan="5" class="tablename">{running_str}</th>
+            </tr>
+            <tr>
+              <th class="taskid">{taskid_str}</th>
+              <th class="caseno">{caseno_str}</th>
+              <th>{files_str}</th>
+              <th class="timestamp">{starttime_str}</th>
+              <th class="status">{status_str}</th>
+            </tr>
+            {running}
+          </table>
+        </div>
+        <div id="finished">
+          <table>
+            <tr>
+              <th colspan="4" class="tablename">{finished_str}</th>
+            </tr>
+            <tr>
+              <th class="taskid">{taskid_str}</th>
+              <th class="caseno">{caseno_str}</th>
+              <th>{files_str}</th>
+              <th class="timestamp">{finishtime_str}</th>
+            </tr>
+            {finished}
+          </table>
+        </div>
+      </div>
     </div>
   </body>
 </html>
