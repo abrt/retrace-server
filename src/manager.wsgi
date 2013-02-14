@@ -427,7 +427,7 @@ def application(environ, start_response):
                 if filterexp and not fnmatch.fnmatch(row, filterexp):
                     continue
 
-                finished.append(row)
+                finished.append((finishtime, row))
             else:
                 status = get_status_for_task_manager(task, _=_)
 
@@ -460,7 +460,7 @@ def application(environ, start_response):
                 if filterexp and not fnmatch.fnmatch(row, filterexp):
                     continue
 
-                running.append(row)
+                running.append((starttime, row))
         else:
             row = "<tr>" \
                   "  <td>" \
@@ -472,6 +472,9 @@ def application(environ, start_response):
                 continue
 
             available.append(row)
+
+    finished = [f[1] for f in sorted(finished, key=lambda x: x[0], reverse=True)]
+    running = [r[1] for r in sorted(running, key=lambda x: x[0], reverse=True)]
 
     available_str = _("Available tasks")
     running_str = _("Running tasks")
