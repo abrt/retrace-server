@@ -144,6 +144,7 @@ CONFIG = {
   "FTPUser": "",
   "FTPPass": "",
   "FTPDir": "/",
+  "FTPBufferSize": 16,
   "WgetKernelDebuginfos": False,
   "KernelDebuginfoURL": "http://kojipkgs.fedoraproject.org/packages/kernel/$VERSION/$RELEASE/$ARCH/",
   "VmcoreDumpLevel": 0,
@@ -1330,8 +1331,9 @@ class RetraceTask:
                         self._progress_current = 0
 
                         # the files are expected to be huge (even hundreds of gigabytes)
-                        # use a larger buffer - 16MB
-                        ftp.retrbinary("RETR %s" % filename, self.download_block, 1 << 24)
+                        # use a larger buffer - 16MB by default
+                        ftp.retrbinary("RETR %s" % filename, self.download_block,
+                                       CONFIG["FTPBufferSize"] * (1 << 20))
 
                     downloaded.append(filename)
                 except Exception as ex:
