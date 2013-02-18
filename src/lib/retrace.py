@@ -1014,20 +1014,21 @@ def check_run(cmd):
         raise Exception, "%s exitted with %d: %s" % (cmd[0], child.returncode, stdout)
 
 def strip_vmcore(vmcore):
-    vmlinux = None
     try:
         vmlinux = prepare_debuginfo(vmcore)
-    except:
-        pass
+    except Exception as ex:
+        log_warn("prepare_debuginfo failed: %s" % ex)
+        return
 
-    if vmlinux:
-        newvmcore = "%s.stripped" % vmcore
-        retcode = call(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
-                        "-x", vmlinux, "--message-level", "0", vmcore, newvmcore])
-        if retcode:
+    newvmcore = "%s.stripped" % vmcore
+    retcode = call(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
+                    "-x", vmlinux, "--message-level", "0", vmcore, newvmcore])
+    if retcode:
+        log.warn("makedumpfile exited with %d" % retcode)
+        if os.path.isfile(newvmcore):
             os.unlink(newvmcore)
-        else:
-            os.rename(newvmcore, vmcore)
+    else:
+        os.rename(newvmcore, vmcore)
 
 def move_dir_contents(source, dest):
     for filename in os.listdir(source):
