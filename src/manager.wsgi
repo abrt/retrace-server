@@ -6,7 +6,7 @@ import urllib
 import urlparse
 from retrace import *
 
-MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(start|backtrace|savenotes|caseno|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
+MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
 
 LONG_TYPES = { TASK_RETRACE: "Coredump retrace",
                TASK_DEBUG: "Coredump retrace - debug",
@@ -181,6 +181,21 @@ def application(environ, start_response):
         task.remove()
 
         return response(start_response, "302 Found", "", [("Location", match.group(1))])
+    elif filename and filename == "__custom__":
+        POST = urlparse.parse_qs(request.body, keep_blank_values=1)
+        try:
+            task = RetraceTask()
+        except Exception as ex:
+            return response(start_response, "500 Internal Server Error", _("Unable to create a new task"))
+
+        # ToDo - support more
+        task.set_type(TASK_VMCORE_INTERACTIVE)
+        task.add_remote(POST["custom_url"][0])
+        task.set_managed(True)
+
+        starturl = "%s/%d/start" % (match.group(1), task.get_taskid())
+
+        return response(start_response, "302 Found", "", [("Location", starturl)])
     elif filename:
         # info
         ftptask = False
@@ -499,6 +514,8 @@ def application(environ, start_response):
                              % (match.group(1), urllib.quote_plus(fname), fname))
         available_str = _("FTP files")
 
+    custom_url = "%s/__custom__" % match.group(1)
+
     output = output.replace("{title}", title)
     output = output.replace("{sitename}", sitename)
     output = output.replace("{available_str}", available_str)
@@ -510,6 +527,7 @@ def application(environ, start_response):
     output = output.replace("{starttime_str}", starttime_str)
     output = output.replace("{finishtime_str}", finishtime_str)
     output = output.replace("{status_str}", status_str)
+    output = output.replace("{create_custom_url}", custom_url)
     # spaces to keep the XML nicely aligned
     output = output.replace("{available}", "\n            ".join(available))
     output = output.replace("{running}", "\n            ".join(running))

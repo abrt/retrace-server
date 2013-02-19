@@ -34,9 +34,11 @@
         margin-bottom: 20px;
       }
 
-      #submit
+      #custom
       {
-        width: 100px;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 20px;
       }
 
       #main
@@ -44,6 +46,11 @@
         display: inline-block;
         margin-bottom: 20px;
         width: 100%;
+      }
+
+      .submit
+      {
+        width: 100px;
       }
 
       .success
@@ -54,6 +61,18 @@
       .fail
       {
         background-color: #ddaaaa;
+      }
+
+      .formhead
+      {
+        font-weight: bold;
+        font-size: 14px;
+      }
+
+      input.url
+      {
+        width: 800px;
+        font-family: monospace;
       }
 
       input
@@ -141,7 +160,11 @@
     <h1>{sitename}</h1>
     <form method="get" id="filter">
       <input type="text" name="filter" />
-      <input type="submit" value="Filter" id="submit" />
+      <input type="submit" value="Filter" class="submit" />
+    </form>
+    <form method="post" action="{create_custom_url}" id="custom">
+      <span class="formhead">Custom core location:</span> <input type="text" name="custom_url" class="url" />
+      <input type="submit" value="Create" class="submit" />
     </form>
     <div id="main">
       <div id="left">

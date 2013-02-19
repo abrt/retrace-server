@@ -666,7 +666,7 @@ if __name__ == "__main__":
 
     log = cmdline._log
 
-    # do not use logging
+    # do not use logging yet - we need the task
     if cmdline.kernelver and not cmdline.arch:
         sys.stderr.write("You also need to specify architecture when overriding kernel version\n")
         exit(1)
@@ -674,12 +674,13 @@ if __name__ == "__main__":
     try:
         task = RetraceTask(cmdline.task_id)
     except:
-        log_error("Task '%d' does not exist" % cmdline.task_id)
+        sys.stderr.write("Task '%d' does not exist\n" % cmdline.task_id)
         exit(1)
 
+    # we have the task, now we can use log_*() and fail()
     if task.has_status():
         log_error("%s has already been executed for task %d" % (sys.argv[0], cmdline.task_id))
-        exit(1)
+        fail()
 
     task.set_started_time(int(time.time()))
 
@@ -688,7 +689,7 @@ if __name__ == "__main__":
             pid = os.fork()
         except:
             log_error("Unable to fork")
-            exit(1)
+            fail()
 
         # parent - kill
         if pid != 0:
@@ -704,8 +705,6 @@ if __name__ == "__main__":
     prerunning = len(get_active_tasks()) - 1
 
     if task.has_remote():
-        task.set_status(STATUS_DOWNLOADING)
-        log_info(STATUS[STATUS_DOWNLOADING])
         errors = task.download_remote()
         if errors:
             for error in errors:
@@ -721,7 +720,7 @@ if __name__ == "__main__":
     for required_file in REQUIRED_FILES[tasktype]:
         if not os.path.isfile(os.path.join(crashdir, required_file)):
             log_error("Crash directory does not contain required file '%s'" % required_file)
-            exit(1)
+            fail()
 
     try:
         if tasktype in [TASK_RETRACE, TASK_DEBUG, TASK_RETRACE_INTERACTIVE]:
@@ -731,5 +730,5 @@ if __name__ == "__main__":
         else:
             raise Exception, "Unsupported task type"
     except Exception as ex:
-        sys.stderr.write(str(ex))
-        exit(1)
+        log_error(str(ex))
+        fail()
