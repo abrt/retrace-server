@@ -1024,7 +1024,7 @@ def strip_vmcore(vmcore):
     retcode = call(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
                     "-x", vmlinux, "--message-level", "0", vmcore, newvmcore])
     if retcode:
-        log.warn("makedumpfile exited with %d" % retcode)
+        log_warn("makedumpfile exited with %d" % retcode)
         if os.path.isfile(newvmcore):
             os.unlink(newvmcore)
     else:
