@@ -36,6 +36,9 @@ if __name__ == "__main__":
         sys.stderr.write("%s\n" % ex)
         exit(1)
 
+    # touch the task directory
+    os.utime(task.get_savedir(), None)
+
     if args.action == "printdir":
         sys.stdout.write("%s\n" % task.get_savedir())
         exit(0)
