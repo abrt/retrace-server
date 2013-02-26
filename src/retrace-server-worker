@@ -368,7 +368,14 @@ def start_vmcore():
     vmcore = os.path.join(task.get_savedir(), "crash", "vmcore")
 
     if cmdline.kernelver:
-        kernelver = "%s.%s" % (cmdline.kernelver, cmdline.arch)
+        try:
+            kernelver = KernelVer(cmdline.kernelver)
+            if cmdline.arch:
+                kernelver.arch = cmdline.arch
+        except Exception as ex:
+            log_error(str(ex))
+            fail()
+
         log_debug("Using kernel version from command line: %s" % kernelver)
     else:
         kernelver = get_kernel_release(vmcore)
@@ -378,19 +385,9 @@ def start_vmcore():
 
         log_debug("Determined kernel version: %s" % kernelver)
 
-    match = KERNEL_RELEASE_PARSER.match(kernelver)
-    if not match:
-        log_error("Unable to parse kernel version")
-        fail()
-
-    kernelver_noarch = match.group(1)
-    arch = match.group(4)
-    if arch in ["i486", "i586", "i686"]:
-        arch = "i386"
-
     stats["package"] = "kernel"
-    stats["version"] = kernelver_noarch
-    stats["arch"] = arch
+    stats["version"] = "%s-%s" % (kernelver.version, kernelver.release)
+    stats["arch"] = kernelver.arch
 
     kernelcache = os.path.join(CONFIG["RepoDir"], "kernel")
     kerneltmp = os.path.join(kernelcache, "%s.tmp" % kernelver)
@@ -403,9 +400,9 @@ def start_vmcore():
     vmlinux = ""
 
     # cross-arch: we need to use chroot
-    if hostarch != arch:
-        cfgdir = os.path.join(CONFIG["SaveDir"], "kernel-%s" % arch)
-        tmpdir = os.path.join(CONFIG["SaveDir"], "kernel-%s.tmp" % arch)
+    if hostarch != kernelver.arch:
+        cfgdir = os.path.join(CONFIG["SaveDir"], "kernel-%s" % kernelver.arch)
+        tmpdir = os.path.join(CONFIG["SaveDir"], "kernel-%s.tmp" % kernelver.arch)
         wait = False
         if not os.path.isdir(cfgdir):
             try:
@@ -421,8 +418,8 @@ def start_vmcore():
                 # create mock config file
                 try:
                     with open(os.path.join(tmpdir, "default.cfg"), "w") as mockcfg:
-                        mockcfg.write("config_opts['root'] = 'kernel-%s'\n" % arch)
-                        mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
+                        mockcfg.write("config_opts['root'] = 'kernel-%s'\n" % kernelver.arch)
+                        mockcfg.write("config_opts['target_arch'] = '%s'\n" % kernelver.arch)
                         mockcfg.write("config_opts['chroot_setup_cmd'] = 'install bash coreutils cpio crash rpm shadow-utils'\n")
                         mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
                         mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
@@ -449,7 +446,7 @@ def start_vmcore():
                         mockcfg.write("\n")
                         mockcfg.write("[kernel-%s]\n" % arch)
                         mockcfg.write("name=kernel-%s\n" % arch)
-                        mockcfg.write("baseurl=%s\n" % CONFIG["KernelChrootRepo"].replace("$ARCH", arch))
+                        mockcfg.write("baseurl=%s\n" % CONFIG["KernelChrootRepo"].replace("$ARCH", kernelver.arch))
                         mockcfg.write("failovermethod=priority\n")
                         mockcfg.write("\"\"\"\n")
 

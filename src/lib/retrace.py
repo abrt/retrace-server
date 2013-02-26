@@ -60,9 +60,6 @@ INPUT_ARCH_PARSER = re.compile("^[a-zA-Z0-9_]+$")
 #name-version-arch (fedora-16-x86_64, rhel-6.2-i386, opensuse-12.1-x86_64)
 INPUT_RELEASEID_PARSER = re.compile("^[a-zA-Z0-9]+\-[0-9a-zA-Z\.]+\-[a-zA-Z0-9_]+$")
 
-#2.6.32-201.el6.x86_64
-KERNEL_RELEASE_PARSER = re.compile("^(.*)\.([^\.]+)$")
-
 CORE_ARCH_PARSER = re.compile("core file .*(x86-64|80386)")
 PACKAGE_PARSER = re.compile("^(.+)-([0-9]+(\.[0-9]+)*-[0-9]+)\.([^-]+)$")
 DF_OUTPUT_PARSER = re.compile("^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
@@ -82,7 +79,7 @@ KO_DEBUG_PARSER = re.compile("^.*/([a-zA-Z0-9_\-]+)\.ko\.debug$")
 
 # parsers for vmcore version
 # 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
-KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+(\.[^\-]+)?\-[0-9]+\..*?)(\.(x86_64|i386|i486|i586|i686|s390|s390x|ppc|ppc64|armv5tel|armv7l|armv7hl|ia64))?$")
+KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+\.[^ \t]*)$")
 # OSRELEASE=2.6.32-209.el6.x86_64
 OSRELEASE_VAR_PARSER = re.compile("^OSRELEASE=(.*)$")
 
@@ -447,9 +444,6 @@ def get_kernel_release(vmcore):
             # assuming the kernel version will sooner or later
             # appear in the list of strings contained in the
             # vmcore
-            # paranoia - something else can match the pattern,
-            # or another version may be present. assuming that
-            # the correct version is repeated several times
             match = KERNEL_RELEASE_PARSER.match(line)
             if match:
                 release = line
@@ -462,44 +456,44 @@ def get_kernel_release(vmcore):
         child.kill()
 
     # check whether architecture is present
-    match = KERNEL_RELEASE_PARSER.match(release)
-    if not match:
+    try:
+        result = KernelVer(release)
+    except Exception as ex:
+        log_error(str(ex))
         return None
 
-    if match.group(4) is None:
-        arch = guess_arch(vmcore)
-        if not arch:
+    if result.arch is None:
+        result.arch = guess_arch(vmcore)
+        if not result.arch:
+            log_error("Unable to determine architecture")
             return None
 
-        release += ".%s" % arch
-
-    return release
+    return result
 
 def find_kernel_debuginfo(kernelver):
     vers = [kernelver]
-    v, tail = kernelver.split("-", 1)
-    r, a = tail.rsplit(".", 1)
 
-    if a == "i386":
-        vers.append("%s-%s.i486" % (v, r))
-        vers.append("%s-%s.i586" % (v, r))
-        vers.append("%s-%s.i686" % (v, r))
+    if kernelver.arch == "i386":
+        for arch in ["i486", "i586", "i686"]:
+            cand = KernelVer(str(kernelver))
+            cand.arch = arch
+            vers.append(cand)
 
     # search for the debuginfo RPM
     for release in os.listdir(CONFIG["RepoDir"]):
         for ver in vers:
-            testfile = os.path.join(CONFIG["RepoDir"], release, "Packages", "kernel-debuginfo-%s.rpm" % ver)
+            testfile = os.path.join(CONFIG["RepoDir"], release, "Packages", ver.package_name(debug=True))
             if os.path.isfile(testfile):
                 return testfile
 
             # should not happen, but anyway...
-            testfile = os.path.join(CONFIG["RepoDir"], release, "kernel-debuginfo-%s.rpm" % ver)
+            testfile = os.path.join(CONFIG["RepoDir"], release, ver.package_name(debug=True))
             if os.path.isfile(testfile):
                 return testfile
 
     # koji-like root
     for ver in vers:
-        testfile = os.path.join(CONFIG["KojiRoot"], "packages", "kernel", v, r, a, "kernel-debuginfo-%s.rpm" % ver)
+        testfile = os.path.join(CONFIG["KojiRoot"], "packages", "kernel", ver.version, ver.release, ver.arch, ver.package_name(debug=True))
         if os.path.isfile(testfile):
             return testfile
 
@@ -511,8 +505,8 @@ def find_kernel_debuginfo(kernelver):
             os.umask(oldmask)
 
         for ver in vers:
-            pkgname = "kernel-debuginfo-%s.rpm" % ver
-            url = CONFIG["KernelDebuginfoURL"].replace("$VERSION", v).replace("$RELEASE", r).replace("$ARCH", a)
+            pkgname = ver.package_name(debug=True)
+            url = CONFIG["KernelDebuginfoURL"].replace("$VERSION", ver.version).replace("$RELEASE", ver.release).replace("$ARCH", ver.arch)
             if not url.endswith("/"):
                 url += "/"
             url += pkgname
@@ -547,12 +541,6 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
 
 def prepare_debuginfo(vmcore, chroot=None):
     kernelver = get_kernel_release(vmcore)
-    match = KERNEL_RELEASE_PARSER.match(kernelver)
-    if not match:
-        raise Exception, "Unable to parse kernel version"
-
-    kernelver_noarch = match.group(1)
-    arch = match.group(4)
 
     debuginfo = find_kernel_debuginfo(kernelver)
     if not debuginfo:
@@ -574,7 +562,7 @@ def prepare_debuginfo(vmcore, chroot=None):
         # '-' in file name is transformed to '_' in module name
         debugfiles[match.group(1).replace("-", "_")] = line
 
-    debugdir_base = os.path.join(CONFIG["RepoDir"], "kernel", arch)
+    debugdir_base = os.path.join(CONFIG["RepoDir"], "kernel", kernelver.arch)
     if not os.path.isdir(debugdir_base):
         os.makedirs(debugdir_base)
 
@@ -1060,6 +1048,68 @@ def human_readable_size(bytes):
         size /= 1024.0
 
     return "%.2f %s" % (size, UNITS[unit])
+
+class KernelVer:
+    FLAVOUR =  [ "debug", "highbank", "hugemem",
+                 "kirkwood", "largesmp", "PAE", "omap",
+                 "smp", "tegra", "xen", "xenU" ]
+
+    ARCH = [ "i386", "i486", "i586", "i686", "x86_64",
+             "ppc", "ppc64", "ppc64iseries", "s390", "s390x",
+             "armv5tel", "armv7l", "armv7hl", "armv7hnl", "ia64" ]
+
+    def __init__(self, kernelver_str):
+        self.flavour = None
+        for kf in KernelVer.FLAVOUR:
+            if kernelver_str.endswith(".%s" % kf):
+                self.flavour = kf
+                kernelver_str = kernelver_str[:-len(kf) - 1]
+                break
+
+        self.arch = None
+        for ka in KernelVer.ARCH:
+            if kernelver_str.endswith(".%s" % ka):
+                self.arch = ka
+                kernelver_str = kernelver_str[:-len(ka) - 1]
+                break
+
+        self.version, self.release = kernelver_str.split("-", 1)
+
+        if self.flavour is None:
+            for kf in KernelVer.FLAVOUR:
+                if self.release.endswith(kf):
+                    self.flavour = kf
+                    self.release = self.release[:-len(kf)]
+                    break
+
+    def __str__(self):
+        result = "%s-%s" % (self.version, self.release)
+
+        if self.arch:
+            result = "%s.%s" % (result, self.arch)
+
+        if self.flavour:
+            result = "%s.%s" % (result, self.flavour)
+
+        return result
+
+    def __repr__(self):
+        return self.__str__()
+
+    def package_name(self, debug=False):
+        if self.arch is None:
+            raise Exception, "Architecture is required for building package name"
+
+        base = "kernel"
+        if self.flavour:
+            base = "%s-%s" % (base, self.flavour)
+        if debug:
+            base = "%s-debuginfo" % base
+
+        return "%s-%s-%s.%s.rpm" % (base, self.version, self.release, self.arch)
+
+    def needs_arch(self):
+        return self.arch is None
 
 class RetraceTask:
     """Represents Retrace server's task."""

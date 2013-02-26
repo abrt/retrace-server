@@ -107,14 +107,15 @@ def application(environ, start_response):
             cmdline.append("-v")
 
         if "kernelver" in get:
-            kmatch = KERNEL_RELEASE_PARSER.match(get["kernelver"][0])
-            if not kmatch or not kmatch.group(4):
+            try:
+                kernelver = KernelVer(get["kernelver"][0])
+            except Exception as ex:
                 return response(start_response, "403 Forbidden", _("Please use VRA format for kernel version (eg. 2.6.32-287.el6.x86_64)"))
 
             cmdline.append("--kernelver")
-            cmdline.append(kmatch.group(1))
+            cmdline.append(str(kernelver))
             cmdline.append("--arch")
-            cmdline.append(kmatch.group(4))
+            cmdline.append(kernelver.arch)
 
         call(cmdline)
 
