@@ -702,11 +702,15 @@ if __name__ == "__main__":
         except Exception as ex:
             log_warn(str(ex))
 
-    if task.has_remote():
-        errors = task.download_remote(kernelver=cmdline.kernelver)
-        if errors:
-            for error in errors:
-                log_warn(error)
+    try:
+        if task.has_remote():
+            errors = task.download_remote(kernelver=cmdline.kernelver)
+            if errors:
+                for error in errors:
+                    log_warn(error)
+    except Exception as ex:
+        log_error("Unable to download remote resources: %s" % ex)
+        fail()
 
     task.set_status(STATUS_ANALYZE)
     log_info(STATUS[STATUS_ANALYZE])
