@@ -638,6 +638,11 @@ def start_vmcore():
     if not task.get_type() in [TASK_VMCORE_INTERACTIVE]:
         task.clean()
 
+    # add a symlink to log to misc directory
+    # use two underscores so that the log is first in the list
+    os.symlink(task._get_file_path(RetraceTask.LOG_FILE),
+               os.path.join(task._get_file_path(RetraceTask.MISC_DIR), "_log"))
+
     log_info("Retrace took %d seconds" % stats["duration"])
     log_info(STATUS[STATUS_SUCCESS])
 
