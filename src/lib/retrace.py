@@ -426,6 +426,7 @@ def get_kernel_release(vmcore):
        not release or \
        "\n" in release or \
        release == "unknown":
+        release = None
         # crash error, let's search the vmcore on our own
         vers = {}
         child = Popen(["strings", "-n", "10", vmcore], stdout=PIPE, stderr=STDOUT)
@@ -454,6 +455,9 @@ def get_kernel_release(vmcore):
         # much more output is available, but we don't need any more
         child.stdout.close()
         child.kill()
+
+    if release is None or release == "unknown":
+        return None
 
     # check whether architecture is present
     try:
@@ -542,6 +546,9 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
 def prepare_debuginfo(vmcore, chroot=None, kernelver=None):
     if kernelver is None:
         kernelver = get_kernel_release(vmcore)
+
+    if kernelver is None:
+        raise Exception, "Unable to determine kernel version"
 
     debuginfo = find_kernel_debuginfo(kernelver)
     if not debuginfo:
