@@ -674,7 +674,12 @@ def unpack_vmcore(path):
         elif filetype == ARCHIVE_BZ2:
             check_run(["bunzip2", vmcore])
         elif filetype == ARCHIVE_XZ:
-            check_run(["unxz", vmcore])
+            vmcorexz = "%s.xz" % vmcore
+            os.rename(vmcore, vmcorexz)
+            check_run(["unxz", vmcorexz])
+
+            if not os.path.isfile(vmcore):
+                log_warn("expected file not present, maybe unxz failed?")
         elif filetype == ARCHIVE_ZIP:
             check_run(["unzip", vmcore, "-d", parentdir])
         elif filetype == ARCHIVE_7Z:
