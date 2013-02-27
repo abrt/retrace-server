@@ -23,13 +23,51 @@ def fail(exitcode=1):
     "Kills script with given exitcode"
     global log, task
     task.set_status(STATUS_FAIL)
+
+    if CONFIG["EmailNotify"] and task.has_notify():
+        try:
+            log_info("Sending e-mail to %s" % ", ".join(task.get_notify()))
+
+            message = "The task #%d on %s failed\n\n" % (task.get_taskid(), os.uname()[1])
+
+            if task.has_url():
+                message += "URL: %s\n" % task.get_url()
+
+            message += "Task directory: %s\n" % task.get_savedir()
+
+            if task.has_started_time():
+                message += "Started: %s\n" % datetime.datetime.fromtimestamp(task.get_started_time())
+
+            if task.has_remote() or task.has_downloaded():
+                files = ""
+                if task.has_remote():
+                    remote = map(lambda x: x[4:] if x.startswith("FTP ") else x, task.get_remote())
+                    files = ", ".join(remote)
+
+                if task.has_downloaded():
+                    files = ", ".join(filter(None, [task.get_downloaded(), files]))
+
+                message += "Remote file(s): %s\n" % files
+
+            message += "\nError log:\n%s\n" % log.getvalue()
+
+            send_email("Retrace Server <%s>" % CONFIG["EmailNotifyFrom"],
+                       task.get_notify(),
+                       "Retrace Task #%d on %s failed" % (task.get_taskid(), os.uname()[1]),
+                       message)
+
+        except Exception as ex:
+            log_error("Failed to send e-mail: %s" % ex)
+
     if log:
         task.set_log(log.getvalue())
+
     task.set_finished_time(int(time.time()))
     stats["duration"] = int(time.time()) - stats["starttime"]
     save_crashstats(stats)
     if not task.get_type() in [TASK_DEBUG, TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
         task.clean()
+
     sys.exit(exitcode)
 
 def retrace_run(errorcode, cmd):
@@ -638,16 +676,55 @@ def start_vmcore():
     if not task.get_type() in [TASK_VMCORE_INTERACTIVE]:
         task.clean()
 
-    # add a symlink to log to misc directory
-    # use two underscores so that the log is first in the list
-    os.symlink(task._get_file_path(RetraceTask.LOG_FILE),
-               os.path.join(task._get_file_path(RetraceTask.MISC_DIR), "_log"))
+    if CONFIG["EmailNotify"] and task.has_notify():
+        try:
+            log_info("Sending e-mail to %s" % ", ".join(task.get_notify()))
+
+            message = "The task #%d started on %s succeeded\n\n" % (task.get_taskid(), os.uname()[1])
+
+            if task.has_url():
+                message += "URL: %s\n" % task.get_url()
+
+            message += "Task directory: %s\n" % task.get_savedir()
+
+            if task.has_started_time():
+                message += "Started: %s\n" % datetime.datetime.fromtimestamp(task.get_started_time())
+
+            if task.has_finished_time():
+                message += "Finished: %s\n" % datetime.datetime.fromtimestamp(task.get_finished_time())
+
+            if task.has_remote() or task.has_downloaded():
+                files = ""
+                if task.has_remote():
+                    remote = map(lambda x: x[4:] if x.startswith("FTP ") else x, task.get_remote())
+                    files = ", ".join(remote)
+
+                if task.has_downloaded():
+                    files = ", ".join(filter(None, [task.get_downloaded(), files]))
+
+                message += "Remote file(s): %s\n" % files
+
+            message += "\nLog:\n%s\n" % log.getvalue()
+
+            send_email("Retrace Server <%s>" % CONFIG["EmailNotifyFrom"],
+                       task.get_notify(),
+                       "Retrace Task #%d @ %s succeded" % (task.get_taskid(), os.uname()[1]),
+                       message)
+
+        except Exception as ex:
+            log_error("Failed to send e-mail: %s" % ex)
 
     log_info("Retrace took %d seconds" % stats["duration"])
     log_info(STATUS[STATUS_SUCCESS])
 
     if log:
         task.set_log(log.getvalue())
+
+    # add a symlink to log to misc directory
+    # use underscore so that the log is first in the list
+    os.symlink(task._get_file_path(RetraceTask.LOG_FILE),
+               os.path.join(task._get_file_path(RetraceTask.MISC_DIR), "_log"))
+
     task.set_status(STATUS_SUCCESS)
 
 if __name__ == "__main__":
@@ -707,15 +784,11 @@ if __name__ == "__main__":
         except Exception as ex:
             log_warn(str(ex))
 
-    try:
-        if task.has_remote():
-            errors = task.download_remote(kernelver=cmdline.kernelver)
-            if errors:
-                for error in errors:
-                    log_warn(error)
-    except Exception as ex:
-        log_error("Unable to download remote resources: %s" % ex)
-        fail()
+    if task.has_remote():
+        errors = task.download_remote(kernelver=cmdline.kernelver)
+        if errors:
+            for error in errors:
+                log_warn(error)
 
     task.set_status(STATUS_ANALYZE)
     log_info(STATUS[STATUS_ANALYZE])

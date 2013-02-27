@@ -6,7 +6,7 @@ import urllib
 import urlparse
 from retrace import *
 
-MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
+MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|notify|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
 
 LONG_TYPES = { TASK_RETRACE: "Coredump retrace",
                TASK_DEBUG: "Coredump retrace - debug",
@@ -96,6 +96,7 @@ def application(environ, start_response):
                 # ToDo: determine?
                 task.set_type(TASK_VMCORE_INTERACTIVE)
                 task.add_remote("FTP %s" % filename)
+                task.set_url("%s/%d" % (match.group(1), task.get_taskid()))
             except:
                 return response(start_response, "500 Internal Server Error", _("Unable to create a new task"))
 
@@ -117,6 +118,9 @@ def application(environ, start_response):
             cmdline.append("--arch")
             cmdline.append(kernelver.arch)
 
+        if "notify" in get:
+            task.set_notify(filter(None, set(n.strip() for n in get["notify"][0].replace(";", ",").split(","))))
+
         call(cmdline)
 
         # ugly, ugly, ugly! retrace-server-worker double-forks and needs a while to spawn
@@ -132,6 +136,17 @@ def application(environ, start_response):
 
         if "notes" in POST and len(POST["notes"]) > 0:
             task.set_notes(POST["notes"][0])
+
+        return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
+    elif match.group(6) and match.group(6) == "notify":
+        POST = urlparse.parse_qs(request.body, keep_blank_values=1)
+        try:
+            task = RetraceTask(filename)
+        except:
+            return response(start_response, "404 Not Found", _("There is no such task"))
+
+        if "notify" in POST and len(POST["notify"]) > 0:
+            task.set_notify(filter(None, set(n.strip() for n in POST["notify"][0].replace(";", ",").split(","))))
 
         return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "caseno":
@@ -193,6 +208,7 @@ def application(environ, start_response):
         task.set_type(TASK_VMCORE_INTERACTIVE)
         task.add_remote(POST["custom_url"][0])
         task.set_managed(True)
+        task.set_url("%s/%d" % (match.group(1), task.get_taskid()))
 
         starturl = "%s/%d/start" % (match.group(1), task.get_taskid())
 
@@ -229,6 +245,7 @@ def application(environ, start_response):
         else:
             startcontent = "    <form method=\"get\" action=\"%s/start\">" \
                            "      Kernel VRA (empty to autodetect): <input name=\"kernelver\" type=\"text\" id=\"kernelver\" /><br />" \
+                           "      E-mail notification: <input name=\"notify\" type=\"text\" id=\"notify\" /><br />" \
                            "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" />Be more verbose in case of error<br />" \
                            "      <input type=\"submit\" value=\"%s\" id=\"start\" class=\"button\" />" \
                            "    </form>" % (request.path_url.rstrip("/"), _("Start task"))
@@ -357,6 +374,22 @@ def application(environ, start_response):
                     "  <input type=\"submit\" value=\"Update notes\" class=\"button\" />" \
                     "</form>" % (request.path_url.rstrip("/"), notes_quoted)
 
+        notify = ""
+        if not ftptask:
+            currentnotify = ""
+            if task.has_notify():
+                currentnotify = "value=\"%s\"" % ", ".join(task.get_notify())
+
+            notify = "<tr>" \
+                     "  <th>E-mail notification:</th>" \
+                     "  <td>" \
+                     "    <form method=\"post\" action=\"%s/notify\">" \
+                     "      <input type=\"text\" name=\"notify\" %s/>" \
+                     "      <input type=\"submit\" value=\"Update e-mail(s)\" class=\"button\" />" \
+                     "    </form>" \
+                     "  </td>" \
+                     "</tr>" % (request.path_url.rstrip("/"), currentnotify)
+
         output = output.replace("{title}", title)
         output = output.replace("{taskno}", taskno)
         output = output.replace("{str_type}", _("Type:"))
@@ -368,6 +401,7 @@ def application(environ, start_response):
         output = output.replace("{backtrace}", backtrace)
         output = output.replace("{backtracewindow}", backtracewindow)
         output = output.replace("{caseno}", caseno)
+        output = output.replace("{notify}", notify)
         output = output.replace("{delete}", delete)
         output = output.replace("{delete_yesno}", delete_yesno)
         output = output.replace("{interactive}", interactive)

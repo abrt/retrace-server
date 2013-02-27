@@ -9,6 +9,7 @@ import os
 import re
 import random
 import shutil
+import smtplib
 import sqlite3
 import stat
 import time
@@ -152,6 +153,8 @@ CONFIG = {
   "UseFafPackages": False,
   "FafLinkDir": "/var/spool/faf/retrace-tmp",
   "AuthGroup": "retrace",
+  "EmailNotify": False,
+  "EmailNotifyFrom": "retrace@localhost",
 }
 
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \
@@ -961,6 +964,24 @@ def save_crashstats_reportfull(ip, con=None):
     con.commit()
     if close:
         con.close()
+
+def send_email(frm, to, subject, body):
+    if isinstance(to, list):
+        to = ",".join(to)
+
+    if not isinstance(to, str):
+        raise Exception, "'to' must be either string or a list of strings"
+
+    msg = "From: %s\n" \
+          "To: %s\n" \
+          "Subject: %s\n" \
+          "\n" \
+          "%s" % (frm, to, subject, body)
+
+    smtp = smtplib.SMTP("localhost")
+    smtp.sendmail(frm, to, msg)
+    smtp.close()
+
 def ftp_init():
     if CONFIG["FTPSSL"]:
         ftp = ftplib.FTP_SSL(CONFIG["FTPHost"])
@@ -1135,12 +1156,14 @@ class RetraceTask:
     MANAGED_FILE = "managed"
     MISC_DIR = "misc"
     NOTES_FILE = "notes"
+    NOTIFY_FILE = "notify"
     PASSWORD_FILE = "password"
     PROGRESS_FILE = "progress"
     REMOTE_FILE = "remote"
     STARTED_FILE = "started_time"
     STATUS_FILE = "status"
     TYPE_FILE = "type"
+    URL_FILE = "url"
 
     def __init__(self, taskid=None):
         """Creates a new task if taskid is None,
@@ -1357,6 +1380,29 @@ class RetraceTask:
 
     def set_notes(self, value):
         self.set_atomic(RetraceTask.NOTES_FILE, value)
+
+    def has_notify(self):
+        return self.has(RetraceTask.NOTIFY_FILE)
+
+    def get_notify(self):
+        result = self.get(RetraceTask.NOTIFY_FILE, maxlen=1 << 16)
+        return filter(None, set(n.strip() for n in result.split("\n")))
+
+    def set_notify(self, values):
+        if not isinstance(values, list) or not all([isinstance(v, basestring) for v in values]):
+            raise Exception, "values must be a list of strings"
+
+        self.set_atomic(RetraceTask.NOTIFY_FILE,
+                        "%s\n" % "\n".join(filter(None, set(v.strip().replace("\n", " ") for v in values))))
+
+    def has_url(self):
+        return self.has(RetraceTask.URL_FILE)
+
+    def get_url(self):
+        return self.get(RetraceTask.URL_FILE, maxlen=1 << 14)
+
+    def set_url(self, value):
+        self.set(RetraceTask.URL_FILE, value)
 
     def download_block(self, data):
         self._progress_write_func(data)
@@ -1667,16 +1713,15 @@ class RetraceTask:
                                stdout=null, stderr=null)
 
         for f in os.listdir(self._savedir):
-            if f != RetraceTask.BACKTRACE_FILE and \
-               f != RetraceTask.DOWNLOADED_FILE and \
-               f != RetraceTask.FINISHED_FILE and \
-               f != RetraceTask.LOG_FILE and \
-               f != RetraceTask.MANAGED_FILE and \
-               f != RetraceTask.PASSWORD_FILE and \
-               f != RetraceTask.STARTED_FILE and \
-               f != RetraceTask.STATUS_FILE and \
-               f != RetraceTask.TYPE_FILE and \
-               f != RetraceTask.MISC_DIR:
+            if not f in [ RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
+              RetraceTask.BACKTRACE_FILE, RetraceTask.DOWNLOADED_FILE,
+              RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
+              RetraceTask.MANAGED_FILE, RetraceTask.NOTES_FILE,
+              RetraceTask.NOTIFY_FILE, RetraceTask.PASSWORD_FILE,
+              RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
+              RetraceTask.TYPE_FILE, RetraceTask.MISC_DIR,
+              RetraceTask.CRASHRC_FILE, RetraceTask.URL_FILE ]:
+
                 path = os.path.join(self._savedir, f)
                 try:
                     if os.path.isdir(path):
