@@ -367,16 +367,8 @@ def mock_find_vmlinux(cfgdir, candidates):
 def start_vmcore():
     vmcore = os.path.join(task.get_savedir(), "crash", "vmcore")
 
-    if cmdline.kernelver:
-        try:
-            kernelver = KernelVer(cmdline.kernelver)
-            if cmdline.arch:
-                kernelver.arch = cmdline.arch
-        except Exception as ex:
-            log_error(str(ex))
-            fail()
-
-        log_debug("Using kernel version from command line: %s" % kernelver)
+    if not cmdline.kernelver is None:
+        kernelver = cmdline.kernelver
     else:
         kernelver = get_kernel_release(vmcore)
         if not kernelver:
@@ -498,7 +490,7 @@ def start_vmcore():
 
         # we have the lock, let's work
         try:
-            vmlinux = prepare_debuginfo(vmcore, cfgdir)
+            vmlinux = prepare_debuginfo(vmcore, cfgdir, kernelver=cmdline.kernelver)
 
             # generate the log
             with open("/dev/null", "w") as null:
@@ -562,7 +554,7 @@ def start_vmcore():
             fail()
 
         try:
-            vmlinux = prepare_debuginfo(vmcore)
+            vmlinux = prepare_debuginfo(vmcore, kernelver=cmdline.kernelver)
         except Exception as ex:
             log_error("prepare_debuginfo failed: %s" % str(ex))
             unlock(lockfile)
@@ -657,7 +649,7 @@ if __name__ == "__main__":
     cmdline_parser = ArgumentParser(description="Execute a retrace job")
     cmdline_parser.add_argument("task_id", type=int, help="Task ID (%s/<task_id>) must exist" % CONFIG["SaveDir"])
     cmdline_parser.add_argument("--foreground", action="store_true", default=False, help="Do not fork to background")
-    cmdline_parser.add_argument("--kernelver", help="VR (eg. 2.6.32-287.el6), also needs --arch")
+    cmdline_parser.add_argument("--kernelver", default=None, help="VR (eg. 2.6.32-287.el6), also needs --arch")
     cmdline_parser.add_argument("--arch", help="Architecture")
     cmdline = cmdline_parser.parse_args()
 
@@ -701,8 +693,17 @@ if __name__ == "__main__":
 
     prerunning = len(get_active_tasks()) - 1
 
+    if not cmdline.kernelver is None:
+        try:
+            cmdline.kernelver = KernelVer(cmdline.kernelver)
+            if cmdline.arch:
+                cmdline.kernelver.arch = cmdline.arch
+            log_debug("Using kernel version from command line: %s" % cmdline.kernelver)
+        except Exception as ex:
+            log_warn(str(ex))
+
     if task.has_remote():
-        errors = task.download_remote()
+        errors = task.download_remote(kernelver=cmdline.kernelver)
         if errors:
             for error in errors:
                 log_warn(error)

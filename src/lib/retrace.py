@@ -539,8 +539,9 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
         cpio.wait()
         rpm2cpio.stdout.close()
 
-def prepare_debuginfo(vmcore, chroot=None):
-    kernelver = get_kernel_release(vmcore)
+def prepare_debuginfo(vmcore, chroot=None, kernelver=None):
+    if kernelver is None:
+        kernelver = get_kernel_release(vmcore)
 
     debuginfo = find_kernel_debuginfo(kernelver)
     if not debuginfo:
@@ -1001,9 +1002,9 @@ def check_run(cmd):
     if child.wait():
         raise Exception, "%s exitted with %d: %s" % (cmd[0], child.returncode, stdout)
 
-def strip_vmcore(vmcore):
+def strip_vmcore(vmcore, kernelver=None):
     try:
-        vmlinux = prepare_debuginfo(vmcore)
+        vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver)
     except Exception as ex:
         log_warn("prepare_debuginfo failed: %s" % ex)
         return
@@ -1059,6 +1060,7 @@ class KernelVer:
              "armv5tel", "armv7l", "armv7hl", "armv7hnl", "ia64" ]
 
     def __init__(self, kernelver_str):
+        log_debug("Parsing kernel version '%s'" % kernelver_str)
         self.flavour = None
         for kf in KernelVer.FLAVOUR:
             if kernelver_str.endswith(".%s" % kf):
@@ -1081,6 +1083,9 @@ class KernelVer:
                     self.flavour = kf
                     self.release = self.release[:-len(kf)]
                     break
+
+        log_debug("Version: '%s'; Release: '%s'; Arch: '%s'; Flavour: '%s'"
+                  % (self.version, self.release, self.arch, self.flavour))
 
     def __str__(self):
         result = "%s-%s" % (self.version, self.release)
@@ -1354,7 +1359,7 @@ class RetraceTask:
                                        self._progress_total_str)
         self.set_atomic(RetraceTask.PROGRESS_FILE, progress)
 
-    def download_remote(self, unpack=True, timeout=0):
+    def download_remote(self, unpack=True, timeout=0, kernelver=None):
         """Downloads all remote resources and returns a list of errors."""
         downloaded = []
         errors = []
@@ -1463,7 +1468,7 @@ class RetraceTask:
                 if CONFIG["VmcoreDumpLevel"] > 0 and CONFIG["VmcoreDumpLevel"] < 32:
                     log_debug("Executing makedumpfile")
                     start = time.time()
-                    strip_vmcore(vmcore)
+                    strip_vmcore(vmcore, kernelver)
                     dur = int(time.time() - start)
                     st = os.stat(vmcore)
                     os.chmod(vmcore, st.st_mode | stat.S_IRGRP)
