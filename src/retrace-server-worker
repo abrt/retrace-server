@@ -723,7 +723,7 @@ def start_vmcore():
     # add a symlink to log to misc directory
     # use underscore so that the log is first in the list
     os.symlink(task._get_file_path(RetraceTask.LOG_FILE),
-               os.path.join(task._get_file_path(RetraceTask.MISC_DIR), "_log"))
+               os.path.join(task._get_file_path(RetraceTask.MISC_DIR), "retrace-log"))
 
     task.set_status(STATUS_SUCCESS)
 
