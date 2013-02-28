@@ -246,7 +246,7 @@ def application(environ, start_response):
             startcontent = "    <form method=\"get\" action=\"%s/start\">" \
                            "      Kernel VRA (empty to autodetect): <input name=\"kernelver\" type=\"text\" id=\"kernelver\" /><br />" \
                            "      E-mail notification: <input name=\"notify\" type=\"text\" id=\"notify\" /><br />" \
-                           "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" />Be more verbose in case of error<br />" \
+                           "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" checked=\"checked\" />Be more verbose in case of error<br />" \
                            "      <input type=\"submit\" value=\"%s\" id=\"start\" class=\"button\" />" \
                            "    </form>" % (request.path_url.rstrip("/"), _("Start task"))
 
