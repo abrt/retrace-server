@@ -708,7 +708,7 @@ def start_vmcore():
 
             send_email("Retrace Server <%s>" % CONFIG["EmailNotifyFrom"],
                        task.get_notify(),
-                       "Retrace Task #%d @ %s succeded" % (task.get_taskid(), os.uname()[1]),
+                       "Retrace Task #%d on %s succeded" % (task.get_taskid(), os.uname()[1]),
                        message)
 
         except Exception as ex:
