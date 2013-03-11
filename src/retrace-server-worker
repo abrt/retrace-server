@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import grp
 import time
 import sys
 sys.path.insert(0, "/usr/share/retrace-server/")
@@ -49,7 +50,8 @@ def fail(exitcode=1):
 
                 message += "Remote file(s): %s\n" % files
 
-            message += "\nError log:\n%s\n" % log.getvalue()
+            if not log is None:
+                message += "\nError log:\n%s\n" % log.getvalue()
 
             send_email("Retrace Server <%s>" % CONFIG["EmailNotifyFrom"],
                        task.get_notify(),
@@ -431,102 +433,75 @@ def start_vmcore():
 
     # cross-arch: we need to use chroot
     if hostarch != kernelver.arch:
-        cfgdir = os.path.join(CONFIG["SaveDir"], "kernel-%s" % kernelver.arch)
-        tmpdir = os.path.join(CONFIG["SaveDir"], "kernel-%s.tmp" % kernelver.arch)
-        wait = False
-        if not os.path.isdir(cfgdir):
-            try:
-                os.mkdir(tmpdir)
-            except OSError as ex:
-                if ex[0] == errno.EEXIST:
-                    wait = True
-                else:
-                    raise ex
+        # we don't save config into task.get_savedir() because it is only
+        # readable by user/group retrace/CONFIG["AuthGroup"].
+        # if a non-retrace user in group mock executes
+        # setgid /usr/bin/mock, he gets permission denied.
+        # this is not a security thing - using mock gives you root anyway
+        cfgdir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
 
-            # no exception - we are the one who prepares the chroot
-            if not wait:
-                # create mock config file
-                try:
-                    with open(os.path.join(tmpdir, "default.cfg"), "w") as mockcfg:
-                        mockcfg.write("config_opts['root'] = 'kernel-%s'\n" % kernelver.arch)
-                        mockcfg.write("config_opts['target_arch'] = '%s'\n" % kernelver.arch)
-                        mockcfg.write("config_opts['chroot_setup_cmd'] = 'install bash coreutils cpio crash rpm shadow-utils'\n")
-                        mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
-                        mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
-                        mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
-                        mockcfg.write("config_opts['plugin_conf']['bind_mount_enable'] = True\n")
-                        mockcfg.write("config_opts['plugin_conf']['bind_mount_opts'] = { \n")
-                        mockcfg.write("    'dirs': [('%s', '%s'),\n" % (CONFIG["RepoDir"], CONFIG["RepoDir"]))
-                        mockcfg.write("             ('%s', '%s'),],\n" % (CONFIG["SaveDir"], CONFIG["SaveDir"]))
-                        mockcfg.write("    'create_dirs': True, }\n")
-                        mockcfg.write("\n")
-                        mockcfg.write("config_opts['yum.conf'] = \"\"\"\n")
-                        mockcfg.write("[main]\n")
-                        mockcfg.write("cachedir=/var/cache/yum\n")
-                        mockcfg.write("debuglevel=1\n")
-                        mockcfg.write("reposdir=/dev/null\n")
-                        mockcfg.write("logfile=/var/log/yum.log\n")
-                        mockcfg.write("retries=20\n")
-                        mockcfg.write("obsoletes=1\n")
-                        mockcfg.write("assumeyes=1\n")
-                        mockcfg.write("syslog_ident=mock\n")
-                        mockcfg.write("syslog_device=\n")
-                        mockcfg.write("\n")
-                        mockcfg.write("#repos\n")
-                        mockcfg.write("\n")
-                        mockcfg.write("[kernel-%s]\n" % kernelver.arch)
-                        mockcfg.write("name=kernel-%s\n" % kernelver.arch)
-                        mockcfg.write("baseurl=%s\n" % CONFIG["KernelChrootRepo"].replace("$ARCH", kernelver.arch))
-                        mockcfg.write("failovermethod=priority\n")
-                        mockcfg.write("\"\"\"\n")
+        # if the directory exists, it is orphaned - nuke it
+        if os.path.isdir(cfgdir):
+            shutil.rmtree(cfgdir)
 
-                    # symlink defaults from /etc/mock
-                    os.symlink("/etc/mock/site-defaults.cfg", os.path.join(tmpdir, "site-defaults.cfg"))
-                    os.symlink("/etc/mock/logging.ini", os.path.join(tmpdir, "logging.ini"))
-                except Exception as ex:
-                    log_error("Unable to create mock config file: %s" % ex)
-                    shutil.rmtree(tmpdir)
-                    fail()
+        mockgid = grp.getgrnam("mock").gr_gid
+        old_umask = os.umask(0027)
+        os.mkdir(cfgdir)
+        os.chown(cfgdir, -1, mockgid)
 
-                child = Popen(["/usr/bin/mock", "--configdir", tmpdir, "init"], stdout=PIPE, stderr=STDOUT)
-                stdout = child.communicate()[0]
-                if child.wait():
-                    log_error("mock exitted with %d:\n%s" % (child.returncode, stdout))
-                    shutil.rmtree(tmpdir)
-                    fail()
+        try:
+            cfgfile = os.path.join(cfgdir, "default.cfg")
+            with open(cfgfile, "w") as mockcfg:
+                mockcfg.write("config_opts['root'] = '%d-kernel'\n" % task.get_taskid())
+                mockcfg.write("config_opts['target_arch'] = '%s'\n" % kernelver.arch)
+                mockcfg.write("config_opts['chroot_setup_cmd'] = 'install bash coreutils cpio crash findutils rpm shadow-utils'\n")
+                mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
+                mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
+                mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
+                mockcfg.write("config_opts['plugin_conf']['bind_mount_enable'] = True\n")
+                mockcfg.write("config_opts['plugin_conf']['bind_mount_opts'] = { \n")
+                mockcfg.write("    'dirs': [('%s', '%s'),\n" % (CONFIG["RepoDir"], CONFIG["RepoDir"]))
+                mockcfg.write("             ('%s', '%s'),],\n" % (task.get_savedir(), task.get_savedir()))
+                mockcfg.write("    'create_dirs': True, }\n")
+                mockcfg.write("\n")
+                mockcfg.write("config_opts['yum.conf'] = \"\"\"\n")
+                mockcfg.write("[main]\n")
+                mockcfg.write("cachedir=/var/cache/yum\n")
+                mockcfg.write("debuglevel=1\n")
+                mockcfg.write("reposdir=/dev/null\n")
+                mockcfg.write("logfile=/var/log/yum.log\n")
+                mockcfg.write("retries=20\n")
+                mockcfg.write("obsoletes=1\n")
+                mockcfg.write("assumeyes=1\n")
+                mockcfg.write("syslog_ident=mock\n")
+                mockcfg.write("syslog_device=\n")
+                mockcfg.write("\n")
+                mockcfg.write("#repos\n")
+                mockcfg.write("\n")
+                mockcfg.write("[kernel-%s]\n" % kernelver.arch)
+                mockcfg.write("name=kernel-%s\n" % kernelver.arch)
+                mockcfg.write("baseurl=%s\n" % CONFIG["KernelChrootRepo"].replace("$ARCH", kernelver.arch))
+                mockcfg.write("failovermethod=priority\n")
+                mockcfg.write("\"\"\"\n")
 
-                try:
-                    os.rename(tmpdir, cfgdir)
-                except OSError as ex:
-                    if ex[0] == errno.EEXIST:
-                        pass
-                    else:
-                        raise ex
+            os.chown(cfgfile, -1, mockgid)
 
-        # someone else is preparing the chroot, wait for him to finish
-        if wait:
-            i = 0
-            while i < 1800 and not os.path.isdir(cfgdir):
-                i += 1
-                time.sleep(1)
+            # symlink defaults from /etc/mock
+            os.symlink("/etc/mock/site-defaults.cfg", os.path.join(cfgdir, "site-defaults.cfg"))
+            os.symlink("/etc/mock/logging.ini", os.path.join(cfgdir, "logging.ini"))
+        except Exception as ex:
+            log_error("Unable to create mock config file: %s" % ex)
+            fail()
+        finally:
+            os.umask(old_umask)
 
-            # error
-            if i >= 1800:
-                log_error("Waiting for chroot timed out")
-                fail()
-
-        lockfile = os.path.join(cfgdir, ".lock")
-        i = 0
-        while i < 1800 and not lock(lockfile):
-            i += 1
-            time.sleep(1)
-
-        # error
-        if i >= 1800:
-            log_error("Waiting for chroot lock timed out")
+        child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "init"], stdout=PIPE, stderr=STDOUT)
+        stdout = child.communicate()[0]
+        if child.wait():
+            log_error("mock exitted with %d:\n%s" % (child.returncode, stdout))
             fail()
 
-        # we have the lock, let's work
+        # no locks required, mock locks itself
         try:
             vmlinux = prepare_debuginfo(vmcore, cfgdir, kernelver=cmdline.kernelver)
 
@@ -575,30 +550,14 @@ def start_vmcore():
 
         except Exception as ex:
             log_error(str(ex))
-            unlock(lockfile)
             fail()
 
-        unlock(lockfile)
     else:
-        # only let one worker unpack the same debuginfo at one time
-        lockfile = os.path.join("/tmp", "%s.lock" % kernelver)
-        i = 0
-        while i < 1800 and not lock(lockfile):
-            i += 1
-            time.sleep(1)
-
-        if i >= 1800:
-            log_error("waiting for debuginfo timed out")
-            fail()
-
         try:
             vmlinux = prepare_debuginfo(vmcore, kernelver=cmdline.kernelver)
         except Exception as ex:
             log_error("prepare_debuginfo failed: %s" % str(ex))
-            unlock(lockfile)
             fail()
-
-        unlock(lockfile)
 
         task.set_status(STATUS_BACKTRACE)
         log_info(STATUS[STATUS_BACKTRACE])
@@ -704,7 +663,8 @@ def start_vmcore():
 
                 message += "Remote file(s): %s\n" % files
 
-            message += "\nLog:\n%s\n" % log.getvalue()
+            if not log is None:
+                message += "\nLog:\n%s\n" % log.getvalue()
 
             send_email("Retrace Server <%s>" % CONFIG["EmailNotifyFrom"],
                        task.get_notify(),
@@ -720,10 +680,10 @@ def start_vmcore():
     if log:
         task.set_log(log.getvalue())
 
-    # add a symlink to log to misc directory
-    # use underscore so that the log is first in the list
-    os.symlink(task._get_file_path(RetraceTask.LOG_FILE),
-               os.path.join(task._get_file_path(RetraceTask.MISC_DIR), "retrace-log"))
+        # add a symlink to log to misc directory
+        # use underscore so that the log is first in the list
+        os.symlink(task._get_file_path(RetraceTask.LOG_FILE),
+                   os.path.join(task._get_file_path(RetraceTask.MISC_DIR), "retrace-log"))
 
     task.set_status(STATUS_SUCCESS)
 

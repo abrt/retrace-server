@@ -1741,6 +1741,10 @@ class RetraceTask:
     def remove(self):
         """Completely removes the task directory."""
         self.clean()
+        kerneldir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % self._taskid)
+        if os.path.isdir(kerneldir):
+            shutil.rmtree(kerneldir)
+
         shutil.rmtree(self._savedir)
 
 ### read config on import ###

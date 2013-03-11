@@ -22,7 +22,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Interact with retrace-server's chroot")
     parser.add_argument("task_id", help="Task ID")
     parser.add_argument("action", help="Desired action (%s)" % "|".join(ACTIONS))
-    parser.add_argument("--priv", default=False, action="store_true", help="Run with root privileges")
     args = parser.parse_args()
 
     if not args.action in ACTIONS:
@@ -56,10 +55,7 @@ if __name__ == "__main__":
 
     if task.get_type() == TASK_RETRACE_INTERACTIVE:
         if args.action == "shell":
-            cmdline = ["mock", "--configdir", task.get_savedir(), "shell"]
-            if not args.priv:
-                cmdline.append("--unpriv")
-
+            cmdline = ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell"]
             print_cmdline(cmdline)
             os.execvp(cmdline[0], cmdline)
         if args.action == "gdb":
@@ -69,10 +65,8 @@ if __name__ == "__main__":
                 sys.stderr.write("executable contains forbidden characters.\n")
                 exit(1)
 
-            cmdline = ["mock", "--configdir", task.get_savedir(), "shell",
+            cmdline = ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell",
                        "gdb '%s' /var/spool/abrt/crash/coredump" % executable]
-            if not args.priv:
-                cmdline.append("--unpriv")
 
             print_cmdline(cmdline)
             os.execvp(cmdline[0], cmdline)
@@ -95,25 +89,22 @@ if __name__ == "__main__":
                 else:
                     cmdline = ["crash", "-s", vmcore, vmlinux]
             else:
-                cfgdir = os.path.join(CONFIG["SaveDir"], "kernel-%s" % kernelver.arch)
+                cfgdir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
                 vmlinux = prepare_debuginfo(vmcore, chroot=cfgdir)
                 if task.has_crashrc():
-                    cmdline = ["mock", "--configdir", cfgdir,
-                               "shell", "crash -s %s %s" % (vmcore, vmlinux)]
-                else:
-                    cmdline = ["mock", "--configdir", cfgdir,
+                    cmdline = ["/usr/bin/mock", "--configdir", cfgdir,
                                "shell", "crash -s -i %s %s %s" % (task.get_crashrc_path(), vmcore, vmlinux)]
-                if not args.priv:
-                    cmdline.append("--unpriv")
+                else:
+                    cmdline = ["/usr/bin/mock", "--configdir", cfgdir,
+                               "shell", "crash -s %s %s" % (vmcore, vmlinux)]
 
             print_cmdline(cmdline)
             os.execvp(cmdline[0], cmdline)
 
         if args.action == "shell":
-            if arch != hostarch:
-                cmdline = ["mock", "--configdir", os.path.join(CONFIG["SaveDir"], "kernel-%s" % arch), "shell"]
-                if not args.priv:
-                    cmdline.append("--unpriv")
+            if kernelver.arch != hostarch:
+                cmdline = ["/usr/bin/mock", "--configdir",
+                           os.path.join(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid()), "shell"]
 
                 print_cmdline(cmdline)
                 os.execvp(cmdline[0], cmdline)
