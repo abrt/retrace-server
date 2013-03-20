@@ -1,9 +1,9 @@
 AC_INIT([retrace-server],
-	[1.8],
+	[1.9],
 	[crash-catcher@fedorahosted.org])
 
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign silent-rules])
+AM_INIT_AUTOMAKE([-Wall foreign silent-rules])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 
 AC_DISABLE_STATIC

@@ -132,6 +132,34 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Wed Mar 20 2013 Michal Toman <mtoman@redhat.com> 1.9-1
+- guess debuginfo name correctly for <= el4
+- rename _log to retrace-log
+- fix cross-arch vmcores processing
+- debug mode checked by default in task manager
+- fix typos
+- touch task directory when using retrace-server-interact
+- forward kernel version from command line correctly
+- parse flavoured kernel version correctly
+- allow to send notification e-mails
+- symlink retrace_log to MISC_DIR
+- do not die on download error
+- rework front page
+- be able to specify custom core location
+- do not die if makedumpfile fails
+- make FTP buffer size configurable
+- fix detaching from httpd
+- add more logging
+- fix paths of DF_BIN and TAR_BIN
+- fix dependencies
+- unify access to task directory elements
+- display the progress of FTP download
+- add notes & case no. boxes
+- run bt_filter on vmcores automatically
+- add timestamps to logs
+- enable free space check in task manager
+- urlencode hyperlinks
+
 * Fri Nov 2 2012 Michal Toman <mtoman@redhat.com> 1.8-1
 - use standard python mechanisms for logging
 - determine archive types with file magic
