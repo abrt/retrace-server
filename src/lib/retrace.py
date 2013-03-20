@@ -1083,7 +1083,7 @@ def human_readable_size(bytes):
 
     return "%.2f %s" % (size, UNITS[unit])
 
-class KernelVer:
+class KernelVer(object):
     FLAVOUR =  [ "debug", "highbank", "hugemem",
                  "kirkwood", "largesmp", "PAE", "omap",
                  "smp", "tegra", "xen", "xenU" ]
@@ -1091,6 +1091,17 @@ class KernelVer:
     ARCH = [ "i386", "i486", "i586", "i686", "x86_64",
              "ppc", "ppc64", "ppc64iseries", "s390", "s390x",
              "armv5tel", "armv7l", "armv7hl", "armv7hnl", "ia64" ]
+
+    @property
+    def arch(self):
+        if self._arch in ["i486", "i586", "i686"]:
+            return "i386"
+
+        return self._arch
+
+    @arch.setter
+    def arch(self, value):
+        self._arch = value
 
     def __init__(self, kernelver_str):
         log_debug("Parsing kernel version '%s'" % kernelver_str)
@@ -1101,10 +1112,10 @@ class KernelVer:
                 kernelver_str = kernelver_str[:-len(kf) - 1]
                 break
 
-        self.arch = None
+        self._arch = None
         for ka in KernelVer.ARCH:
             if kernelver_str.endswith(".%s" % ka):
-                self.arch = ka
+                self._arch = ka
                 kernelver_str = kernelver_str[:-len(ka) - 1]
                 break
 
@@ -1118,13 +1129,13 @@ class KernelVer:
                     break
 
         log_debug("Version: '%s'; Release: '%s'; Arch: '%s'; Flavour: '%s'"
-                  % (self.version, self.release, self.arch, self.flavour))
+                  % (self.version, self.release, self._arch, self.flavour))
 
     def __str__(self):
         result = "%s-%s" % (self.version, self.release)
 
-        if self.arch:
-            result = "%s.%s" % (result, self.arch)
+        if self._arch:
+            result = "%s.%s" % (result, self._arch)
 
         if self.flavour:
             result = "%s.%s" % (result, self.flavour)
@@ -1135,7 +1146,7 @@ class KernelVer:
         return self.__str__()
 
     def package_name(self, debug=False):
-        if self.arch is None:
+        if self._arch is None:
             raise Exception, "Architecture is required for building package name"
 
         base = "kernel"
@@ -1144,10 +1155,10 @@ class KernelVer:
         if debug:
             base = "%s-debuginfo" % base
 
-        return "%s-%s-%s.%s.rpm" % (base, self.version, self.release, self.arch)
+        return "%s-%s-%s.%s.rpm" % (base, self.version, self.release, self._arch)
 
     def needs_arch(self):
-        return self.arch is None
+        return self._arch is None
 
 class RetraceTask:
     """Represents Retrace server's task."""
