@@ -1150,7 +1150,7 @@ class KernelVer(object):
             raise Exception, "Architecture is required for building package name"
 
         base = "kernel"
-        if self.flavour:
+        if self.flavour and not (debug and ".EL" in self.release):
             base = "%s-%s" % (base, self.flavour)
         if debug:
             base = "%s-debuginfo" % base
