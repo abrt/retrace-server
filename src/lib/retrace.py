@@ -481,7 +481,8 @@ def find_kernel_debuginfo(kernelver):
     vers = [kernelver]
 
     if kernelver.arch == "i386":
-        for arch in ["i486", "i586", "i686"]:
+        vers = []
+        for arch in ["i386", "i486", "i586", "i686"]:
             cand = KernelVer(str(kernelver))
             cand.arch = arch
             vers.append(cand)
@@ -490,17 +491,20 @@ def find_kernel_debuginfo(kernelver):
     for release in os.listdir(CONFIG["RepoDir"]):
         for ver in vers:
             testfile = os.path.join(CONFIG["RepoDir"], release, "Packages", ver.package_name(debug=True))
+            log_debug("Trying debuginfo file: %s" % testfile)
             if os.path.isfile(testfile):
                 return testfile
 
             # should not happen, but anyway...
             testfile = os.path.join(CONFIG["RepoDir"], release, ver.package_name(debug=True))
+            log_debug("Trying debuginfo file: %s" % testfile)
             if os.path.isfile(testfile):
                 return testfile
 
     # koji-like root
     for ver in vers:
-        testfile = os.path.join(CONFIG["KojiRoot"], "packages", "kernel", ver.version, ver.release, ver.arch, ver.package_name(debug=True))
+        testfile = os.path.join(CONFIG["KojiRoot"], "packages", "kernel", ver.version, ver.release, ver._arch, ver.package_name(debug=True))
+        log_debug("Trying debuginfo file: %s" % testfile)
         if os.path.isfile(testfile):
             return testfile
 
@@ -513,11 +517,12 @@ def find_kernel_debuginfo(kernelver):
 
         for ver in vers:
             pkgname = ver.package_name(debug=True)
-            url = CONFIG["KernelDebuginfoURL"].replace("$VERSION", ver.version).replace("$RELEASE", ver.release).replace("$ARCH", ver.arch)
+            url = CONFIG["KernelDebuginfoURL"].replace("$VERSION", ver.version).replace("$RELEASE", ver.release).replace("$ARCH", ver._arch)
             if not url.endswith("/"):
                 url += "/"
             url += pkgname
 
+            log_debug("Trying debuginfo URL: %s" % url)
             with open("/dev/null", "w") as null:
                 retcode = call(["wget", "-nv", "-P", downloaddir, url], stdout=null, stderr=null)
 
