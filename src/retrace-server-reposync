@@ -25,7 +25,7 @@ def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
     yumtmp = tempfile.NamedTemporaryFile(mode="w", delete=False,
                                          prefix="repo", suffix=".conf")
     yumtmp.write(globalyumcfg)
-    yumtmp.write("\n[%s]\n" % targetid)
+    yumtmp.write("[%s]\n" % targetid)
     yumtmp.write("name=%s\n" % targetid)
     yumtmp.write("baseurl=%s\n" % repourl)
     yumtmp.write(localyumcfg)
@@ -42,8 +42,8 @@ def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
             yb = yum.YumBase()
             yb.doConfigSetup(fn=yumtmp.name)
             if not yb.setCacheDir():
-                sys.stderr.write("Unable to initialize yum cache\n")
                 sys.stderr = old_stderr
+                sys.stderr.write("Unable to initialize yum cache\n")
                 return -1
 
             cachedir = os.path.join(yb.repos._cachedir, targetid)
@@ -55,13 +55,19 @@ def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
                 repo.disable()
                 repo.close()
             yb.repos.repos[targetid].enable()
-            yb.repos.doSetup()
+
+            try:
+                yb.repos.doSetup()
+            except Exception as ex:
+                sys.stderr = old_stderr
+                sys.stderr.write("[%s] %s\n" % (time.strftime("%Y-%m-%d %H:%M"), ex))
+                return -1
 
             try:
                 yb.repos.populateSack()
             except Exception as ex:
-                sys.stderr.write("[%s] %s\n" % (time.strftime("%Y-%m-%d %H:%M"), ex))
                 sys.stderr = old_stderr
+                sys.stderr.write("[%s] %s\n" % (time.strftime("%Y-%m-%d %H:%M"), ex))
                 return -1
 
             packages = yb.pkgSack.returnPackages()
@@ -75,6 +81,9 @@ def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
                     download.append(package)
 
             errors = yb.downloadPkgs(download)
+            for error in errors:
+                old_stderr.write("An error occured during download\n%s: %s" % (error, errors[error]))
+
             for package in download:
                 downloadpath = package.localPkg()
                 pkgname = os.path.basename(downloadpath)
@@ -102,7 +111,7 @@ def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
             os.unlink(yumtmp.name)
             shutil.rmtree(yb.repos.repos[targetid].cachedir)
         except Exception as ex:
-            print "Unable to clean up: %s." % ex
+            sys.stderr.write("Unable to clean up: %s." % ex)
             return -1
 
     return retcode
