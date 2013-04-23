@@ -26,6 +26,7 @@ ALLOWED_FILES = {
   "coredump": 0,
   "executable": 512,
   "package": 128,
+  "packages": (1 << 20), # 1MB
   "os_release": 128,
   "os_release_in_rootdir": 128,
   "rootdir": 256,

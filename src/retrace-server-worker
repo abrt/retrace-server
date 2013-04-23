@@ -203,7 +203,11 @@ def start_retrace():
     missing = []
     fafrepo = ""
 
-    if CONFIG["UseFafPackages"]:
+    packagesfile = os.path.join(crashdir, "packages")
+    if os.path.isfile(packagesfile):
+        with open(packagesfile, "r") as f:
+            packages = f.read.split()
+    elif CONFIG["UseFafPackages"]:
         packages = ["bash", "cpio", "glibc-debuginfo"]
         child = Popen(["/usr/bin/faf-c2p", "--hardlink-dir", CONFIG["FafLinkDir"],
                        os.path.join(crashdir, "coredump")], stdout=PIPE, stderr=PIPE)
