@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import argparse
+import errno
 import os
 import grp
 import pwd
@@ -20,19 +21,20 @@ TARGET_GROUP = CONFIG["AuthGroup"]
 
 BUFSIZE = 1 << 22 # 4 MB
 
-def sync_using_yum(targetid, repourl):
+def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
     yumtmp = tempfile.NamedTemporaryFile(mode="w", delete=False,
                                          prefix="repo", suffix=".conf")
-    yumtmp.write("[%s]\n" % targetid)
+    yumtmp.write(globalyumcfg)
+    yumtmp.write("\n[%s]\n" % targetid)
     yumtmp.write("name=%s\n" % targetid)
     yumtmp.write("baseurl=%s\n" % repourl)
+    yumtmp.write(localyumcfg)
     yumtmp.close()
 
     pkgdir = os.path.join(CONFIG["RepoDir"], targetid, "Packages")
 
     try:
         with open(os.path.join(CONFIG["LogDir"], "reposync_yum.log"), "a") as yumlog:
-            # Shut up yum!
             old_stderr = sys.stderr
             sys.stderr = yumlog
 
@@ -64,24 +66,35 @@ def sync_using_yum(targetid, repourl):
 
             packages = yb.pkgSack.returnPackages()
             retcode = 0
+            download = []
 
             for package in packages:
+                rpmname = package.remote_url.rsplit("/", 1)[1]
+                pkgpath = os.path.join(pkgdir, rpmname)
+                if not os.path.isfile(pkgpath) or os.path.getsize(pkgpath) != package.size:
+                    download.append(package)
+
+            errors = yb.downloadPkgs(download)
+            for package in download:
+                downloadpath = package.localPkg()
+                pkgname = os.path.basename(downloadpath)
+                targetpath = os.path.join(pkdir, pkgname)
+
+                if not os.path.isfile(downloadpath):
+                    # error message should be listed in errors
+                    continue
+
+                if os.path.isfile(targetpath):
+                    os.unlink(targetpath)
+
                 try:
-                    rpmname = package.remote_url.rsplit("/", 1)[1]
-                    pkgpath = os.path.join(pkgdir, rpmname)
-                    if not os.path.isfile(pkgpath) or os.path.getsize(pkgpath) != package.size:
-                        with open(pkgpath, "wb") as targetfile:
-                            url = urllib2.urlopen(package.remote_url)
-                            try:
-                                buf = url.read(BUFSIZE)
-                                while buf:
-                                    targetfile.write(buf)
-                                    buf = url.read(BUFSIZE)
-                            finally:
-                                url.close()
-                except Exception as ex:
-                    sys.stderr.write("[%s] Error downloading '%s': %s\n" % (time.strftime("%Y-%m-%d %H:%M"), rpmname, ex))
-                    retcode += 1
+                    os.rename(downloadpath, targetpath)
+                except OSError as ex:
+                    if ex.errno != errno.EXDEV:
+                        raise
+
+                    shutil.copy2(downloadpath, targetpath)
+                    os.unlink(downloadpath)
             # END YUM
     finally:
         sys.stderr = old_stderr
@@ -201,9 +214,18 @@ if __name__ == "__main__":
             if filename.endswith(".rpm"):
                 os.rename(os.path.join(targetdir, filename), os.path.join(pkgdir, filename))
 
+        globalyumcfg = ""
+        if hasattr(plugin, "yumcfg"):
+            globalyumcfg = plugin.yumcfg.replace("$ARCH", arch).replace("$VER", version)
+
         # run rsync
         for repo in plugin.repos:
             retcode = -1
+            localyumcfg = ""
+            if isinstance(repo, tuple):
+                repo, localyumcfg = repo
+                localyumcfg = localyumcfg.replace("$ARCH", arch).replace("$VER", version)
+
             for mirror in repo:
                 repourl = mirror.replace("$ARCH", arch).replace("$VER", version)
 
@@ -213,7 +235,7 @@ if __name__ == "__main__":
                 if repourl.startswith("http://") or \
                    repourl.startswith("https://") or \
                    repourl.startswith("ftp://"):
-                    retcode = sync_using_yum(targetid, repourl)
+                    retcode = sync_using_yum(targetid, repourl, globalyumcfg, localyumcfg)
                 else:
                     if repourl.startswith("rsync://"):
                         files = [repourl]
