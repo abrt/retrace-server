@@ -1,8 +1,8 @@
 #!/usr/bin/python
-
 import argparse
 import errno
 import os
+import logging
 import grp
 import pwd
 import rpm
@@ -31,7 +31,13 @@ def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
     yumtmp.write(localyumcfg)
     yumtmp.close()
 
+    with open(yumtmp.name, "r") as f:
+        log_debug("Using yum config from %s\n%s" % (yumtmp.name, f.read()))
+
     pkgdir = os.path.join(CONFIG["RepoDir"], targetid, "Packages")
+    tmpdir = os.path.join(CONFIG["RepoDir"], "temp", targetid)
+    if not os.path.isdir(tmpdir):
+        os.makedirs(tmpdir)
 
     try:
         with open(os.path.join(CONFIG["LogDir"], "reposync_yum.log"), "a") as yumlog:
@@ -43,7 +49,7 @@ def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
             yb.doConfigSetup(fn=yumtmp.name)
             if not yb.setCacheDir():
                 sys.stderr = old_stderr
-                sys.stderr.write("Unable to initialize yum cache\n")
+                log_error("Unable to initialize yum cache")
                 return -1
 
             cachedir = os.path.join(yb.repos._cachedir, targetid)
@@ -60,14 +66,14 @@ def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
                 yb.repos.doSetup()
             except Exception as ex:
                 sys.stderr = old_stderr
-                sys.stderr.write("[%s] %s\n" % (time.strftime("%Y-%m-%d %H:%M"), ex))
+                log.error(str(ex))
                 return -1
 
             try:
                 yb.repos.populateSack()
             except Exception as ex:
                 sys.stderr = old_stderr
-                sys.stderr.write("[%s] %s\n" % (time.strftime("%Y-%m-%d %H:%M"), ex))
+                log_error(str(ex))
                 return -1
 
             packages = yb.pkgSack.returnPackages()
@@ -78,7 +84,10 @@ def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
                 rpmname = package.remote_url.rsplit("/", 1)[1]
                 pkgpath = os.path.join(pkgdir, rpmname)
                 if not os.path.isfile(pkgpath) or os.path.getsize(pkgpath) != package.size:
+                    log_info("%s will be downloaded" % rpmname)
                     download.append(package)
+                else:
+                    log_debug("%s is already downloaded, skipping" % rpmname)
 
             errors = yb.downloadPkgs(download)
             for error in errors:
@@ -87,7 +96,7 @@ def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
             for package in download:
                 downloadpath = package.localPkg()
                 pkgname = os.path.basename(downloadpath)
-                targetpath = os.path.join(pkdir, pkgname)
+                targetpath = os.path.join(pkgdir, pkgname)
 
                 if not os.path.isfile(downloadpath):
                     # error message should be listed in errors
@@ -111,7 +120,7 @@ def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
             os.unlink(yumtmp.name)
             shutil.rmtree(yb.repos.repos[targetid].cachedir)
         except Exception as ex:
-            sys.stderr.write("Unable to clean up: %s." % ex)
+            log_error("Unable to clean up: %s." % ex)
             return -1
 
     return retcode
@@ -156,7 +165,7 @@ def clean_rawhide_repo(release):
             for ver in vers:
                 for filename in packages[package][ver]:
                     if i < pkgcnt - CONFIG["KeepRawhideLatest"]:
-                        print "Removing %s" % filename
+                        log_info("Removing %s" % filename)
                         os.unlink(os.path.join(pkgdir, filename))
                 i += 1
 
@@ -166,7 +175,11 @@ if __name__ == "__main__":
     argparser.add_argument("distribution", type=str, help="Distribution name")
     argparser.add_argument("version", type=str, help="Release version")
     argparser.add_argument("architecture", type=str, help="CPU architecture")
+    argparser.add_argument("-v", "--verbose", action="store_const",
+                           default=logging.INFO, const=logging.DEBUG)
     args = argparser.parse_args()
+
+    logging.basicConfig(level=args.verbose)
 
     distribution = args.distribution
     version = args.version
@@ -181,10 +194,10 @@ if __name__ == "__main__":
         os.setgid(gr.gr_gid)
         pw = pwd.getpwnam(TARGET_USER)
         os.setuid(pw.pw_uid)
-        print "Privileges set to '%s:%s'." % (TARGET_USER, TARGET_GROUP)
+        log_info("Privileges set to '%s:%s'." % (TARGET_USER, TARGET_GROUP))
     except Exception as ex:
-        print "Unable to change privileges to '%s:%s'.\n%s\nExitting..." \
-               % (TARGET_USER, TARGET_GROUP, str(ex))
+        log_error("Unable to change privileges to '%s:%s'" % (TARGET_USER, TARGET_GROUP))
+        log_error(str(ex))
         sys.exit(6)
 
     # load plugin
@@ -195,19 +208,19 @@ if __name__ == "__main__":
             break
 
     if not plugin:
-        print "Unknown distribution: '%s'" % distribution
+        log_error("Unknown distribution: '%s'" % distribution)
         sys.exit(1)
 
     targetid = "%s-%s-%s" % (distribution, version, arch)
     lockfile = "/tmp/retrace-reposync-lock-%s" % targetid
 
     if os.path.isfile(lockfile):
-        print "Another process with repository download is running."
+        log_error("Another process with repository download is running")
         sys.exit(2)
 
     # set lock
     if not lock(lockfile):
-        print "Unable to set lock."
+        log_error("Unable to set lock")
         sys.exit(3)
 
     null = open("/dev/null", "w")
@@ -227,8 +240,10 @@ if __name__ == "__main__":
         if hasattr(plugin, "yumcfg"):
             globalyumcfg = plugin.yumcfg.replace("$ARCH", arch).replace("$VER", version)
 
+        i = 0
         # run rsync
         for repo in plugin.repos:
+            i += 1
             retcode = -1
             localyumcfg = ""
             if isinstance(repo, tuple):
@@ -237,8 +252,8 @@ if __name__ == "__main__":
 
             for mirror in repo:
                 repourl = mirror.replace("$ARCH", arch).replace("$VER", version)
-
-                print "Downloading packages from '%s'..." % repourl,
+                log_info("[%d / %d] Repo: %s" % (i, len(plugin.repos), repourl))
+                log_info("Downloading packages")
                 sys.stdout.flush()
 
                 if repourl.startswith("http://") or \
@@ -255,26 +270,27 @@ if __name__ == "__main__":
                             for package in os.listdir(repourl):
                                 files.append(os.path.join(repourl, package))
                         except Exception as ex:
-                            print "Error: %s. Trying another mirror..." % ex
+                            log_warn("Download failed: %s" % ex)
+                            log_info("Trying another mirror")
                             continue
 
                     retcode = call(["rsync", "-t"] + files + [pkgdir], stdout=null, stderr=null)
 
                 if retcode == 0:
-                    print "OK"
+                    log_info("Download succeeded")
                     break
 
-                print "Error. Trying another mirror..."
+                log_warn("Download failed, trying another mirror")
 
             if retcode != 0:
-                print "No more mirrors to try."
+                log_error("Download failed, no more mirrors to try")
 
         if version.lower() == "rawhide":
-            print "Cleaning rawhide repo..."
+            log_info("Cleaning rawhide repo...")
             clean_rawhide_repo(targetid)
 
         # run createrepo
-        print "Running createrepo on '%s'..." % targetdir,
+        log_info("Running createrepo on '%s'..." % targetdir)
         sys.stdout.flush()
 
         cmd = ["createrepo", targetdir]
@@ -300,7 +316,7 @@ if __name__ == "__main__":
         unlock(lockfile)
 
     if retcode != 0:
-        print "Failed"
+        log_error("Failed")
         sys.exit(4)
 
-    print "OK"
+    log_info("Repository synchronization finished successfully")
