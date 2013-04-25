@@ -2,10 +2,10 @@
 ==========
 
 Each supported distribution needs to have its proper plugin. The plugin
-itself consists of 3 parts:
+itself consists of 2 parts:
 
 * plugin file - A python file dropped in /usr/share/retrace-server/plugins
-                containing:
+                containing the following elements:
 
   - distribution: String considered plugin name and identifier.
 
@@ -14,28 +14,39 @@ itself consists of 3 parts:
   - guessparser:  Parser able to guess release from package's name. Can not
                   be relied on (e.g. el6 does not give enough information).
 
+  - yumcfg:       a string that will be appended to yum config file for all
+                  repositories
+
   - repos:        An array of public repositories and their mirrors.
-                  The synchronization is realized using rsync, so repository
-                  path is either a directory in the filesystem, rsync:// URL,
-                  http:// URL or ftp:// URL.
+                  The synchronization is realized using rsync or yum, so
+                  repository path is either a directory in the filesystem,
+                  rsync:// URL, http:// URL or ftp:// URL. $ARCH and $VER
+                  meta-variables are expanded to appropriate strings.
+                  The repo is either defined as list of mirrors or
+                  a two-member tuple where the first member is the same
+                  list of mirrors and second is a part of yum config file
+                  that will only be appended to the repo.
                   Example:
                   repos = [
-                            [ #repo1
-                              /srv/repos/repo1_mirror1,
-                              rsync://repo1/mirror2,
-                            ],
-                            [ #repo2
-                              ftp://repo2/repo2_mirror1,
-                              /srv/repos/repo2_mirror2,
-                            ],
-                            [ #repo3
-                              rsync://repo3/mirror1,
-                            ],
-                          ]
-
-* local repos file - A .repo file dropped in /etc/yum.repos.d to access local
-                     repositories created by retrace-server-reposync
-                     (by default /var/cache/retrace-server/dist-ver-arch)
+                    [ #repo1
+                      /srv/repos/repo1_mirror1,
+                      rsync://repo1/mirror2,
+                    ],
+                    [ #repo2
+                      ftp://repo2/repo2_mirror1,
+                      /srv/repos/repo2_mirror2,
+                    ],
+                    [ #repo3
+                      rsync://repo3/mirror1,
+                    ],
+                    ( #repo4
+                      [
+                        "rsync://repo4/mirror1",
+                        "http://repo4/mirror2",
+                      ],
+                      "gpgcheck = 0", # local yum config
+                    ),
+                  ]
 
 * GPG keys - Files containig GPG keys to verify downloaded package's signature.
              Dropped in /usr/share/retrace-server/gpg.
@@ -48,8 +59,7 @@ Retrace server needs to maintain local copies of repositories containing all
 versions of all packages. This job is realized by retrace-server-reposync tool
 by running 'retrace-server-reposync distribution version architecture' where
 'distribution' is a plugin name (see 1. Plugins). The retrace-server-reposync
-tool should be set up in root's crontab (it drops privileges ASAP) to run
-1-2 times a day.
+tool should be set up in retrace's crontab.
 
 3. Garbage collection
 =====================
@@ -77,4 +87,5 @@ every hour.
 ==========
 
 At the moment you need to disable SELinux to make Retrace server work properly.
-We are working on the policy.
+We are working on the policy, however the code changes too quickly to maintain
+a long-term working policy.
