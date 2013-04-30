@@ -93,16 +93,19 @@ HANDLE_ARCHIVE = {
   "application/x-xz-compressed-tar": {
     "unpack": [TAR_BIN, "xJf"],
     "size": ([XZ_BIN, "--list", "--robot"], re.compile("^totals[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+([0-9]+).*")),
+    "type": ARCHIVE_XZ,
   },
 
   "application/x-gzip": {
     "unpack": [TAR_BIN, "xzf"],
     "size": ([GZIP_BIN, "--list"], re.compile("^[^0-9]*[0-9]+[^0-9]+([0-9]+).*$")),
+    "type": ARCHIVE_GZ,
   },
 
   "application/x-tar": {
     "unpack": [TAR_BIN, "xf"],
     "size": (["ls", "-l"], re.compile("^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+([0-9]+).*$")),
+    "type": ARCHIVE_TAR,
   },
 }
 
@@ -133,6 +136,7 @@ CONFIG = {
   "UseWorkDir": False,
   "RequireHTTPS": True,
   "AllowAPIDelete": False,
+  "AllowExternalDir": False,
   "AllowInteractive": False,
   "AllowTaskManager": False,
   "TaskManagerAuthDelete": False,

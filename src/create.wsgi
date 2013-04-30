@@ -26,13 +26,19 @@ def application(environ, start_response):
         return response(start_response, "415 Unsupported Media Type",
                         _("Specified archive format is not supported"))
 
-    if not request.content_length:
+    if request.content_length is None:
         return response(start_response, "411 Length Required",
                         _("You need to set Content-Length header properly"))
 
     if request.content_length > CONFIG["MaxPackedSize"] * 1048576:
         return response(start_response, "413 Request Entity Too Large",
                         _("Specified archive is too large"))
+
+    if (not CONFIG["AllowExternalDir"] and
+        "X-CoreFileDirectory" in request.headers):
+        return response(start_response, "403 Forbidden",
+                        _("X-CoreFileDirectory header has been disabled "
+                          "by server administrator"))
 
     if CONFIG["UseWorkDir"]:
         workdir = CONFIG["WorkDir"]
@@ -71,18 +77,45 @@ def application(environ, start_response):
         return response(start_response, "503 Service Unavailable",
                         _("Retrace server is fully loaded at the moment"))
 
+    if "X-CoreFileDirectory" in request.headers:
+        coredir = request.headers["X-CoreFileDirectory"]
+        if not os.path.isdir(coredir):
+            return response(start_response, "404 Not Found", _("The directory "
+                            "specified in 'X-CoreFileDirectory' does not exist"))
+
+        files = os.listdir(coredir)
+        if len(files) != 1:
+            return response(start_response, "501 Not Implemented",
+                            _("There are %d files in the '%s' directory. Only "
+                              "a single archive is supported at the moment") %
+                              (len(files), coredir))
+
+        filepath = os.path.join(coredir, files[0])
+        archive_meta = HANDLE_ARCHIVE[request.content_type]
+        if ("type" in archive_meta and
+            get_archive_type(filepath) != archive_meta["type"]):
+            return response(start_response, "409 Conflict",
+                            _("You header specifies '%s' type, but the file "
+                              "type does not match") % request.content_type)
+
+        body_file = open(filepath, "rb")
+    else:
+        body_file = request.body_file
+
     try:
         archive = NamedTemporaryFile(mode="wb", suffix=".tar.xz",
                                      delete=False, dir=task.get_savedir())
-        buf = request.body_file.read(BUFSIZE)
+        buf = body_file.read(BUFSIZE)
         while buf:
             archive.write(buf)
-            buf = request.body_file.read(BUFSIZE)
+            buf = body_file.read(BUFSIZE)
         archive.close()
     except:
         task.remove()
         return response(start_response, "500 Internal Server Error",
                         _("Unable to save archive"))
+    finally:
+        body_file.close()
 
     size = unpacked_size(archive.name, request.content_type)
     if not size:
