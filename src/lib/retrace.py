@@ -1313,7 +1313,7 @@ class RetraceTask:
 
     def get_age(self):
         """Returns the age of the task in hours."""
-        return int(time.time() - os.path.getatime(self._savedir)) / 3600
+        return int(time.time() - os.path.getmtime(self._savedir)) / 3600
 
     def get_type(self):
         """Returns task type. If TYPE_FILE is missing,
