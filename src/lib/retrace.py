@@ -51,6 +51,16 @@ REQUIRED_FILES = {
   TASK_VMCORE_INTERACTIVE:  ["vmcore"],
 }
 
+SUFFIX_MAP = {
+  ARCHIVE_GZ: ".gz",
+  ARCHIVE_BZ2: ".bz2",
+  ARCHIVE_XZ: ".xz",
+  ARCHIVE_ZIP: ".zip",
+  ARCHIVE_7Z: ".7z",
+  ARCHIVE_TAR: ".tar",
+  ARCHIVE_UNKNOWN: "",
+}
+
 #characters, numbers, dash (utf-8, iso-8859-2 etc.)
 INPUT_CHARSET_PARSER = re.compile("^([a-zA-Z0-9\-]+)(,.*)?$")
 #en_GB, sk-SK, cs, fr etc.
@@ -664,40 +674,39 @@ def get_archive_type(path):
     log_debug("unknown file type, unpacking finished")
     return ARCHIVE_UNKNOWN
 
-def unpack_vmcore(path):
-    parentdir = path.rsplit("/", 1)[0]
-    vmcore = os.path.join(parentdir, "vmcore")
-    if path != vmcore and os.path.isfile(vmcore):
-        raise Exception, "'vmcore' already exists"
+def rename_with_suffix(frompath, topath):
+    suffix = SUFFIX_MAP[get_archive_type(frompath)]
+    if not topath.endswith(suffix):
+        topath = "%s%s" % (topath, suffix)
 
-    os.rename(path, vmcore)
-    filetype = get_archive_type(vmcore)
+    os.rename(frompath, topath)
+
+    return topath
+
+def unpack_vmcore(path):
+    parentdir = os.path.dirname(path)
+    archivebase = os.path.join(parentdir, "archive")
+    archive = rename_with_suffix(path, archivebase)
+    filetype = get_archive_type(archive)
     while filetype != ARCHIVE_UNKNOWN:
         files = set(f for (f, s) in get_files_sizes(parentdir))
         if filetype == ARCHIVE_GZ:
-            vmcoregz = "%s.gz" % vmcore
-            os.rename(vmcore, vmcoregz)
-            check_run(["gunzip", vmcoregz])
-
-            if not os.path.isfile(vmcore):
-                log_warn("expected file not present, maybe gunzip failed?")
+            check_run(["gunzip", archive])
         elif filetype == ARCHIVE_BZ2:
-            check_run(["bunzip2", vmcore])
+            check_run(["bunzip2", archive])
         elif filetype == ARCHIVE_XZ:
-            vmcorexz = "%s.xz" % vmcore
-            os.rename(vmcore, vmcorexz)
-            check_run(["unxz", vmcorexz])
-
-            if not os.path.isfile(vmcore):
-                log_warn("expected file not present, maybe unxz failed?")
+            check_run(["unxz", archive])
         elif filetype == ARCHIVE_ZIP:
-            check_run(["unzip", vmcore, "-d", parentdir])
+            check_run(["unzip", archive, "-d", parentdir])
         elif filetype == ARCHIVE_7Z:
-            check_run(["7za", "e", "-o%s" % parentdir, vmcore])
+            check_run(["7za", "e", "-o%s" % parentdir, archive])
         elif filetype == ARCHIVE_TAR:
-            check_run(["tar", "-C", parentdir, "-xf", vmcore])
+            check_run(["tar", "-C", parentdir, "-xf", archive])
         else:
             raise Exception, "Unknown archive type"
+
+        if os.path.isfile(archive):
+            os.unlink(archive)
 
         files_sizes = get_files_sizes(parentdir)
         newfiles = [f for (f, s) in files_sizes]
@@ -708,7 +717,7 @@ def unpack_vmcore(path):
             vmcore_candidate += 1
 
         if len(diff) > 1:
-            os.rename(newfiles[vmcore_candidate], vmcore)
+            archive = rename_with_suffix(newfiles[vmcore_candidate], archivebase)
             for filename in newfiles:
                 if not filename in diff or \
                    filename == newfiles[vmcore_candidate]:
@@ -717,7 +726,7 @@ def unpack_vmcore(path):
                 os.unlink(filename)
 
         elif len(diff) == 1:
-            os.rename(diff.pop(), vmcore)
+            archive = rename_with_suffix(diff.pop(), archivebase)
 
         # just be explicit here - if no file changed, an archive
         # has most probably been unpacked to a file with same name
@@ -729,7 +738,9 @@ def unpack_vmcore(path):
             if os.path.isdir(fullpath):
                 shutil.rmtree(fullpath)
 
-        filetype = get_archive_type(vmcore)
+        filetype = get_archive_type(archive)
+
+    os.rename(archive, os.path.join(parentdir, "vmcore"))
 
 def get_task_est_time(taskdir):
     return 180
