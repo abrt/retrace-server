@@ -512,7 +512,8 @@ def start_vmcore():
             # generate the log
             with open("/dev/null", "w") as null:
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                               "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                               "crash", "--minimal", "-s", vmcore, vmlinux],
+                              stdin=PIPE, stdout=PIPE, stderr=null)
                 kernellog = child.communicate("log\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'log' exitted with %d" % child.returncode)
@@ -566,7 +567,7 @@ def start_vmcore():
         task.set_status(STATUS_BACKTRACE)
         log_info(STATUS[STATUS_BACKTRACE])
 
-        child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+        child = Popen(["crash", "--minimal", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
         kernellog = child.communicate("log\nquit\n")[0]
         if child.wait():
             log_warn("crash 'log' exited with %d" % child.returncode)

@@ -612,7 +612,8 @@ def prepare_debuginfo(vmcore, chroot=None, kernelver=None):
         child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
     stdout = child.communicate("mod\nquit")[0]
     if child.returncode:
-        raise Exception, "crash exitted with %d:\n%s" % (child.returncode, stdout)
+        log_warn("Unable to list modules: crash exited with %d:\n%s" % (child.returncode, stdout))
+        return vmlinux
 
     modules = []
     for line in stdout.splitlines():
