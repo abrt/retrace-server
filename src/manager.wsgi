@@ -110,6 +110,8 @@ def application(environ, start_response):
         if "kernelver" in get:
             try:
                 kernelver = KernelVer(get["kernelver"][0])
+                if kernelver.arch is None:
+                    raise Exception
             except Exception as ex:
                 return response(start_response, "403 Forbidden", _("Please use VRA format for kernel version (eg. 2.6.32-287.el6.x86_64)"))
 
