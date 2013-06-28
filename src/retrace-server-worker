@@ -66,7 +66,10 @@ def fail(exitcode=1):
 
     task.set_finished_time(int(time.time()))
     stats["duration"] = int(time.time()) - stats["starttime"]
-    save_crashstats(stats)
+    try:
+        save_crashstats(stats)
+    except Exception as ex:
+        log_warn("Failed to save crash statistics: %s" % str(ex))
     if not task.get_type() in [TASK_DEBUG, TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
         task.clean()
 
