@@ -516,9 +516,14 @@ def find_kernel_debuginfo(kernelver):
             if os.path.isfile(testfile):
                 return testfile
 
+    if ver.rt:
+        basename = "kernel-rt"
+    else:
+        basename = "kernel"
+
     # koji-like root
     for ver in vers:
-        testfile = os.path.join(CONFIG["KojiRoot"], "packages", "kernel", ver.version, ver.release, ver._arch, ver.package_name(debug=True))
+        testfile = os.path.join(CONFIG["KojiRoot"], "packages", basename, ver.version, ver.release, ver._arch, ver.package_name(debug=True))
         log_debug("Trying debuginfo file: %s" % testfile)
         if os.path.isfile(testfile):
             return testfile
@@ -532,7 +537,7 @@ def find_kernel_debuginfo(kernelver):
 
         for ver in vers:
             pkgname = ver.package_name(debug=True)
-            url = CONFIG["KernelDebuginfoURL"].replace("$VERSION", ver.version).replace("$RELEASE", ver.release).replace("$ARCH", ver._arch)
+            url = CONFIG["KernelDebuginfoURL"].replace("$VERSION", ver.version).replace("$RELEASE", ver.release).replace("$ARCH", ver._arch).replace("$BASENAME", basename)
             if not url.endswith("/"):
                 url += "/"
             url += pkgname
@@ -1150,8 +1155,10 @@ class KernelVer(object):
                     self.release = self.release[:-len(kf)]
                     break
 
-        log_debug("Version: '%s'; Release: '%s'; Arch: '%s'; Flavour: '%s'"
-                  % (self.version, self.release, self._arch, self.flavour))
+        self.rt = self.release.endswith("rt")
+
+        log_debug("Version: '%s'; Release: '%s'; Arch: '%s'; Flavour: '%s'; Realtime: %s"
+                  % (self.version, self.release, self._arch, self.flavour, self.rt))
 
     def __str__(self):
         result = "%s-%s" % (self.version, self.release)
@@ -1172,8 +1179,12 @@ class KernelVer(object):
             raise Exception, "Architecture is required for building package name"
 
         base = "kernel"
+        if self.rt:
+            base = "%s-rt" % base
+
         if self.flavour and not (debug and ".EL" in self.release):
             base = "%s-%s" % (base, self.flavour)
+
         if debug:
             base = "%s-debuginfo" % base
 
