@@ -623,7 +623,7 @@ def start_vmcore():
         task.add_misc("bt-filter", bt_filter)
 
     if "/" in vmlinux:
-        task.set_crashrc("mod -S %s" % vmlinux.rsplit("/", 1)[0])
+        task.set_crashrc("mod -S %s > %s" % (vmlinux.rsplit("/", 1)[0], os.devnull))
 
     task.set_finished_time(int(time.time()))
     stats["duration"] = int(time.time()) - stats["starttime"]
