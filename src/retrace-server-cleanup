@@ -3,27 +3,6 @@ import os
 import sys
 from retrace import *
 
-WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]+.*retrace-server-worker ([0-9]+)$")
-
-def run_ps():
-    child = Popen(["ps", "-eo", "pid,ppid,etime,cmd"], stdout=PIPE)
-    lines = child.communicate()[0].split("\n")
-
-    return lines
-
-def get_running_tasks(ps_output=None):
-    if not ps_output:
-        ps_output = run_ps()
-
-    result = []
-
-    for line in ps_output:
-        match = WORKER_RUNNING_PARSER.match(line)
-        if match:
-            result.append((int(match.group(1)), int(match.group(3)), match.group(2)))
-
-    return result
-
 def get_process_tree(pid, ps_output):
     result = [pid]
 
