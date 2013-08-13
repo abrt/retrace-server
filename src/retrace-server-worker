@@ -299,7 +299,7 @@ def start_retrace():
             mockcfg.write("[main]\n")
             mockcfg.write("cachedir=/var/cache/yum\n")
             mockcfg.write("debuglevel=1\n")
-            mockcfg.write("reposdir=/dev/null\n")
+            mockcfg.write("reposdir=%s\n" % os.devnull)
             mockcfg.write("logfile=/var/log/yum.log\n")
             mockcfg.write("retries=20\n")
             mockcfg.write("obsoletes=1\n")
@@ -400,7 +400,7 @@ def start_retrace():
     task.set_status(STATUS_SUCCESS)
 
 def mock_find_vmlinux(cfgdir, candidates):
-    with open("/dev/null", "w") as null:
+    with open(os.devnull, "w") as null:
         for cand in candidates:
             child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                            "test", "-f", cand, "&&", "echo", cand], stdout=PIPE, stderr=null)
@@ -475,7 +475,7 @@ def start_vmcore():
                 mockcfg.write("[main]\n")
                 mockcfg.write("cachedir=/var/cache/yum\n")
                 mockcfg.write("debuglevel=1\n")
-                mockcfg.write("reposdir=/dev/null\n")
+                mockcfg.write("reposdir=%s\n" % os.devnull)
                 mockcfg.write("logfile=/var/log/yum.log\n")
                 mockcfg.write("retries=20\n")
                 mockcfg.write("obsoletes=1\n")
@@ -513,7 +513,7 @@ def start_vmcore():
             vmlinux = prepare_debuginfo(vmcore, cfgdir, kernelver=cmdline.kernelver)
 
             # generate the log
-            with open("/dev/null", "w") as null:
+            with open(os.devnull, "w") as null:
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                "crash", "--minimal", "-s", vmcore, vmlinux],
                               stdin=PIPE, stdout=PIPE, stderr=null)

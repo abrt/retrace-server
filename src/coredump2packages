@@ -7,6 +7,7 @@ import subprocess
 import yum
 import sys
 import argparse
+import os
 
 parser = argparse.ArgumentParser(description='Get packages for coredump processing.')
 parser.add_argument('--repos', default='*', metavar='WILDCARD',
@@ -20,7 +21,7 @@ args = parser.parse_args()
 if args.log:
     log = open(args.log, "w")
 else:
-    log = open("/dev/null", "w")
+    log = open(os.devnull, "w")
 
 #
 # Initialize yum, enable only repositories specified via command line

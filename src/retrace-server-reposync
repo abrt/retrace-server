@@ -223,7 +223,7 @@ if __name__ == "__main__":
         log_error("Unable to set lock")
         sys.exit(3)
 
-    null = open("/dev/null", "w")
+    null = open(os.devnull, "w")
 
     try:
         targetdir = os.path.join(CONFIG["RepoDir"], targetid)

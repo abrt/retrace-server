@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
                     targetfile = os.path.join(CONFIG["DropDir"],
                                               "%s-%s.tar.gz" % (filename, time.strftime("%Y%m%d%H%M%S")))
-                    with open("/dev/null", "w") as null:
+                    with open(os.devnull, "w") as null:
                         child = Popen(["tar", "czf", targetfile, task.get_savedir()],
                                       stdout=PIPE, stderr=STDOUT)
                         stdout = child.communicate()[0]

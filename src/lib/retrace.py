@@ -354,7 +354,7 @@ def run_gdb(savedir):
     if '"' in executable or "'" in executable:
         raise Exception, "Executable contains forbidden characters"
 
-    with open("/dev/null", "w") as null:
+    with open(os.devnull, "w") as null:
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
                        "--", "ls", "'%s'" % executable],
                        stdout=PIPE, stderr=null)
@@ -543,7 +543,7 @@ def find_kernel_debuginfo(kernelver):
             url += pkgname
 
             log_debug("Trying debuginfo URL: %s" % url)
-            with open("/dev/null", "w") as null:
+            with open(os.devnull, "w") as null:
                 retcode = call(["wget", "-nv", "-P", downloaddir, url], stdout=null, stderr=null)
 
             if retcode == 0:
@@ -564,7 +564,7 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
         if files[i][0] == "/":
             files[i] = ".%s" % files[i]
 
-    with open("/dev/null", "w") as null:
+    with open(os.devnull, "w") as null:
         rpm2cpio = Popen(["rpm2cpio", debuginfo], stdout=PIPE, stderr=null)
         cpio = Popen(["cpio", "-id"] + files, stdin=rpm2cpio.stdout, stdout=null, stderr=null, cwd=basedir)
         rpm2cpio.wait()
@@ -609,7 +609,7 @@ def prepare_debuginfo(vmcore, chroot=None, kernelver=None):
             raise Exception, "Caching vmlinux failed"
 
     if chroot:
-        with open("/dev/null", "w") as null:
+        with open(os.devnull, "w") as null:
             child = Popen(["/usr/bin/mock", "--configdir", chroot, "shell",
                            "--", "crash", "-s", vmcore, vmlinux],
                            stdin=PIPE, stdout=PIPE, stderr=null)
@@ -1754,7 +1754,7 @@ class RetraceTask:
     def clean(self):
         """Removes all files and directories others than
         results and logs from the task directory."""
-        with open("/dev/null", "w") as null:
+        with open(os.devnull, "w") as null:
             if os.path.isfile(os.path.join(self._savedir, "default.cfg")) and \
                os.path.isfile(os.path.join(self._savedir, "site-defaults.cfg")) and \
                os.path.isfile(os.path.join(self._savedir, "logging.ini")):
