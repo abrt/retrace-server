@@ -609,18 +609,36 @@ def prepare_debuginfo(vmcore, chroot=None, kernelver=None):
     if not debuginfo:
         raise Exception, "Unable to find debuginfo package"
 
+    if "EL" in kernelver.release:
+        if kernelver.flavour is None:
+            pattern = "EL/vmlinux"
+        else:
+            pattern = "EL%s/vmlinux" % kernelver.flavour
+    else:
+        pattern = "/vmlinux"
+
     vmlinux_path = None
     debugfiles = {}
     child = Popen(["rpm", "-qpl", debuginfo], stdout=PIPE)
     lines = child.communicate()[0].splitlines()
     for line in lines:
-        if line.endswith("/vmlinux"):
+        if line.endswith(pattern):
             vmlinux_path = line
             continue
 
         match = KO_DEBUG_PARSER.match(line)
         if not match:
             continue
+
+        # only pick the correct flavour for el4
+        if "EL" in kernelver.release:
+            if kernelver.flavour is None:
+                pattern2 = "EL/"
+            else:
+                pattern2 = "EL%s/" % kernelver.flavour
+
+            if not pattern2 in os.path.dirname(line):
+                continue
 
         # '-' in file name is transformed to '_' in module name
         debugfiles[match.group(1).replace("-", "_")] = line
