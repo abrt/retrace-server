@@ -40,6 +40,13 @@ if __name__ == "__main__":
         ps_output = run_ps()
         running_tasks = get_running_tasks(ps_output)
         for pid, taskid, runtime in running_tasks:
+            # do not kill tasks started from task manager
+            if CONFIG["AllowTaskManager"]:
+                task = RetraceTask(taskid)
+
+                if task.get_managed():
+                    continue
+
             # ToDo: 5 = mm:ss, >5 = hh:mm:ss
             if len(runtime) > 5:
                 log.write("Killing task %d running for %s\n" % (taskid, runtime))
