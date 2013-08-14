@@ -823,7 +823,7 @@ def get_active_tasks():
         except:
             continue
 
-        if task.get_managed():
+        if CONFIG["AllowTaskManager"] and task.get_managed():
             continue
 
         if not task.has_log():
