@@ -430,9 +430,7 @@ def start_vmcore():
 
     kernelcache = os.path.join(CONFIG["RepoDir"], "kernel")
     kerneltmp = os.path.join(kernelcache, "%s.tmp" % kernelver)
-    hostarch = os.uname()[4]
-    if hostarch in ["i486", "i586", "i686"]:
-        hostarch = "i386"
+    hostarch = get_canon_arch(os.uname()[4])
 
     log_info(STATUS[STATUS_INIT])
     task.set_status(STATUS_INIT)

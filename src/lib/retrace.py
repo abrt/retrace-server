@@ -72,7 +72,7 @@ INPUT_ARCH_PARSER = re.compile("^[a-zA-Z0-9_]+$")
 #name-version-arch (fedora-16-x86_64, rhel-6.2-i386, opensuse-12.1-x86_64)
 INPUT_RELEASEID_PARSER = re.compile("^[a-zA-Z0-9]+\-[0-9a-zA-Z\.]+\-[a-zA-Z0-9_]+$")
 
-CORE_ARCH_PARSER = re.compile("core file .*(x86-64|80386)")
+CORE_ARCH_PARSER = re.compile("core file .*(x86-64|80386|ARM)")
 PACKAGE_PARSER = re.compile("^(.+)-([0-9]+(\.[0-9]+)*-[0-9]+)\.([^-]+)$")
 DF_OUTPUT_PARSER = re.compile("^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
 DU_OUTPUT_PARSER = re.compile("^([0-9]+)")
@@ -189,6 +189,19 @@ STATUS = [
   "Post-processing downloaded file",
 ]
 
+ARCHITECTURES = set(["src", "noarch", "i386", "i486", "i586", "i686", "x86_64",
+                     "s390", "s390x", "ppc", "ppc64",  "ppc64iseries", "arm",
+                     "armel", "armhfp", "armv5tel", "armv7l", "armv7hl",
+                     "armv7hnl", "sparc", "sparc64", "mips4kec", "ia64"])
+
+# armhfp is not correct, but there is no way to distinguish armv5/armv6/armv7 coredumps
+# as armhfp (RPM armv7hl) is the only supported now, let's approximate arm = armhfp
+ARCH_MAP = {
+    "i386": set(["i386", "i486", "i586", "i686"]),
+    "armhfp": set(["arm", "armhfp", "armel", "armv5tel", "armv7l", "armv7hl", "armv7hnl"]),
+    "x86_64": set(["x86_64"]),
+}
+
 def now():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -224,6 +237,13 @@ def unlock(lockfile):
         return False
 
     return True
+
+def get_canon_arch(arch):
+    for canon_arch, derived_archs in ARCH_MAP.items():
+        if arch in derived_archs:
+            return canon_arch
+
+    return arch
 
 def read_config():
     parser = ConfigParser.ConfigParser()
@@ -286,20 +306,22 @@ def guess_arch(coredump_path):
             return "i386"
         elif match.group(1) == "x86-64":
             return "x86_64"
+        elif match.group(1) == "ARM":
+            # hack - There is no reliable way to determine which ARM
+            # version the coredump is. At the moment we only support
+            # armv7hl / armhfp - let's approximate arm = armhfp
+            return "armhfp"
 
     result = None
     child = Popen(["strings", coredump_path], stdout=PIPE)
     line = child.stdout.readline()
     while line:
-        if "x86_64" in line:
-            result = "x86_64"
-            break
+        for canon_arch, derived_archs in ARCH_MAP.items():
+            if any(arch in line for arch in derived_archs):
+                result = canon_arch
+                break
 
-        if "i386" in line or \
-           "i486" in line or \
-           "i586" in line or \
-           "i686" in line:
-            result = "i386"
+        if result is not None:
             break
 
         line = child.stdout.readline()
@@ -414,12 +436,16 @@ def is_package_known(package_nvr, arch, releaseid=None):
 
     candidates = []
     for releaseid in releases:
-        if arch in ["i386", "i486", "i586", "i686"]:
-            for a in ["i386", "i486", "i586", "i686"]:
+        for derived_archs in ARCH_MAP.values():
+            if arch not in derived_archs:
+                continue
+
+            for a in derived_archs:
                 candidates.append(os.path.join(CONFIG["RepoDir"], releaseid, "Packages",
                                                "%s.%s.rpm" % (package_nvr, a)))
                 candidates.append(os.path.join(CONFIG["RepoDir"], releaseid,
                                                "%s.%s.rpm" % (package_nvr, a)))
+            break
         else:
             candidates.append(os.path.join(CONFIG["RepoDir"], releaseid, "Packages",
                                            "%s.%s.rpm" % (package_nvr, arch)))
@@ -495,12 +521,13 @@ def get_kernel_release(vmcore):
 def find_kernel_debuginfo(kernelver):
     vers = [kernelver]
 
-    if kernelver.arch == "i386":
-        vers = []
-        for arch in ["i386", "i486", "i586", "i686"]:
-            cand = KernelVer(str(kernelver))
-            cand.arch = arch
-            vers.append(cand)
+    for canon_arch, derived_archs in ARCH_MAP.items():
+        if kernelver.arch == canon_arch:
+            vers = []
+            for arch in derived_archs:
+                cand = KernelVer(str(kernelver))
+                cand.arch = arch
+                vers.append(cand)
 
     # search for the debuginfo RPM
     for release in os.listdir(CONFIG["RepoDir"]):
@@ -819,7 +846,7 @@ def parse_rpm_name(name):
 
     # arch
     match = ARCH_PARSER.match(name)
-    if match and match.group(2) in ["i386", "i586", "i686", "x86_64", "noarch"]:
+    if match and match.group(2) in ARCHITECTURES:
         result["arch"] = match.group(2)
         name = name[:-len(match.group(1))]
 
@@ -1115,16 +1142,11 @@ class KernelVer(object):
                  "kirkwood", "largesmp", "PAE", "omap",
                  "smp", "tegra", "xen", "xenU" ]
 
-    ARCH = [ "i386", "i486", "i586", "i686", "x86_64",
-             "ppc", "ppc64", "ppc64iseries", "s390", "s390x",
-             "armv5tel", "armv7l", "armv7hl", "armv7hnl", "ia64" ]
+    ARCH = ARCHITECTURES
 
     @property
     def arch(self):
-        if self._arch in ["i486", "i586", "i686"]:
-            return "i386"
-
-        return self._arch
+        return get_canon_arch(self._arch)
 
     @arch.setter
     def arch(self, value):

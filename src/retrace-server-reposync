@@ -183,10 +183,7 @@ if __name__ == "__main__":
 
     distribution = args.distribution
     version = args.version
-    arch = args.architecture
-
-    if arch == "i686":
-        arch = "i386"
+    arch = get_canon_arch(args.architecture)
 
     # drop privilegies if possible
     try:
