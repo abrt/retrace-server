@@ -406,7 +406,7 @@ def run_gdb(savedir):
                           "-ex 'info sharedlib' "
                           "-ex 'print (char*)__abort_msg' "
                           "-ex 'print (char*)__glib_assert_msg' "
-                          "-ex 'info registers' "
+                          "-ex 'info all-registers' "
                           "-ex 'disassemble'" % executable)
 
         copyin = call(["/usr/bin/mock", "--configdir", savedir, "--copyin",
