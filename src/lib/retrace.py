@@ -1822,6 +1822,27 @@ class RetraceTask:
                     # ToDo advanced handling
                     pass
 
+    def reset(self):
+        """Remove all generated files and only keep the raw crash data"""
+        for filename in [RetraceTask.BACKTRACE_FILE, RetraceTask.CRASHRC_FILE,
+                         RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
+                         RetraceTask.PROGRESS_FILE, RetraceTask.STARTED_FILE,
+                         RetraceTask.STATUS_FILE]:
+            try:
+                os.unlink(os.path.join(self._savedir, filename))
+            except OSError as ex:
+                # ignore 'No such file or directory'
+                if ex.errno != errno.ENOENT:
+                    raise
+
+        miscdir = os.path.join(self._savedir, RetraceTask.MISC_DIR)
+        for filename in os.listdir(miscdir):
+            os.unlink(os.path.join(miscdir, filename))
+
+        kerneldir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % self._taskid)
+        if os.path.isdir(kerneldir):
+            shutil.rmtree(kerneldir)
+
     def remove(self):
         """Completely removes the task directory."""
         self.clean()
