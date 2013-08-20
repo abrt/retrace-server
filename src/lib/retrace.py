@@ -902,7 +902,11 @@ def parse_rpm_name(name):
     return result
 
 def init_crashstats_db():
+    # create the database group-writable and world-readable
+    old_umask = os.umask(0113)
     con = sqlite3.connect(os.path.join(CONFIG["SaveDir"], CONFIG["DBFile"]))
+    os.umask(old_umask)
+
     query = con.cursor()
     query.execute("PRAGMA foreign_keys = ON")
     query.execute("""
