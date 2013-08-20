@@ -620,8 +620,16 @@ def start_vmcore():
 
         task.add_misc("bt-filter", bt_filter)
 
+    crashrc_lines = []
+
     if "/" in vmlinux:
-        task.set_crashrc("mod -S %s > %s" % (vmlinux.rsplit("/", 1)[0], os.devnull))
+        crashrc_lines.append("mod -S %s > %s" % (vmlinux.rsplit("/", 1)[0], os.devnull))
+
+    miscdir = os.path.join(task.get_savedir(), RetraceTask.MISC_DIR)
+    crashrc_lines.append("cd %s" % miscdir)
+
+    if len(crashrc_lines) > 0:
+        task.set_crashrc("%s\n" % "\n".join(crashrc_lines))
 
     task.set_finished_time(int(time.time()))
     stats["duration"] = int(time.time()) - stats["starttime"]
