@@ -1522,6 +1522,7 @@ class RetraceTask:
 
             if url.startswith("FTP "):
                 filename = url[4:].strip()
+                log_info("Retrieving FTP file '%s'" % filename)
 
                 ftp = None
                 try:
@@ -1544,7 +1545,38 @@ class RetraceTask:
                 finally:
                     if ftp:
                         ftp_close(ftp)
+            elif url.startswith("/") or url.startswith("file:///"):
+                if url.startswith("file://"):
+                    url = url[7:]
+
+                log_info("Retrieving local file '%s'" % url)
+
+                if not os.path.isfile(url):
+                    errors.append((url, "File not found"))
+                    continue
+
+                filename = os.path.basename(url)
+                targetfile = os.path.join(crashdir, filename)
+
+                try:
+                    log_debug("Trying hardlink")
+                    os.link(url, targetfile)
+                except:
+                    log_debug("Failed, copying")
+                    try:
+                        shutil.copy(url, targetfile)
+                    except Exception as ex:
+                        errors.append((url, str(ex)))
+                        continue
+
+                downloaded.append(url)
             else:
+                log_info("Retrieving remote file '%s'" % url)
+
+                if "/" not in url:
+                    errors.append((url, "malformed URL"))
+                    continue
+
                 child = Popen(["wget", "-nv", "-P", crashdir, url], stdout=PIPE, stderr=STDOUT)
                 stdout = child.communicate()[0]
                 if child.wait():

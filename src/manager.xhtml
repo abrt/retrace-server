@@ -69,6 +69,11 @@
         font-size: 14px;
       }
 
+      .center
+      {
+        text-align: center;
+      }
+
       input.url
       {
         width: 800px;
@@ -154,6 +159,11 @@
         text-align: center;
         margin-bottom: 20px;
       }
+
+      code
+      {
+        font-family: monospace;
+      }
     </style>
   </head>
   <body>
@@ -165,6 +175,7 @@
     <form method="post" action="{create_custom_url}" id="custom">
       <span class="formhead">Custom core location:</span> <input type="text" name="custom_url" class="url" />
       <input type="submit" value="Create" class="submit" />
+      <div class="center">Any URL that <code>wget</code> can download or a local path (<code>file:///foo/bar</code> or just <code>/foo/bar</code>)</div>
     </form>
     <div id="main">
       <div id="left">

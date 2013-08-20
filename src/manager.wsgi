@@ -212,7 +212,7 @@ def application(environ, start_response):
         task.set_managed(True)
         task.set_url("%s/%d" % (match.group(1), task.get_taskid()))
 
-        starturl = "%s/%d/start" % (match.group(1), task.get_taskid())
+        starturl = "%s/%d/start?debug=debug" % (match.group(1), task.get_taskid())
 
         return response(start_response, "302 Found", "", [("Location", starturl)])
     elif filename:
