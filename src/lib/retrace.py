@@ -170,6 +170,7 @@ CONFIG = {
   "AuthGroup": "retrace",
   "EmailNotify": False,
   "EmailNotifyFrom": "retrace@localhost",
+  "CaseNumberURL": "",
 }
 
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \

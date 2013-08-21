@@ -463,6 +463,14 @@ def application(environ, start_response):
                 if task.has_caseno():
                     caseno = str(task.get_caseno())
 
+                    url = CONFIG["CaseNumberURL"].strip()
+                    if len(url) > 0:
+                        try:
+                            link = url % task.get_caseno()
+                            caseno = "<a href=\"%s\">%d</a>" % (link, task.get_caseno())
+                        except:
+                            pass
+
                 files = ""
                 if task.has_downloaded():
                     files = task.get_downloaded()
@@ -490,6 +498,14 @@ def application(environ, start_response):
                 caseno = ""
                 if task.has_caseno():
                     caseno = str(task.get_caseno())
+
+                    url = CONFIG["CaseNumberURL"].strip()
+                    if len(url) > 0:
+                        try:
+                            link = url % task.get_caseno()
+                            caseno = "<a href=\"%s\">%d</a>" % (link, task.get_caseno())
+                        except:
+                            pass
 
                 files = ""
                 if task.has_remote():
