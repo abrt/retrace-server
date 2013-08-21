@@ -132,6 +132,29 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Wed Aug 21 2013 Michal Toman <mtoman@redhat.com> 1.10-1
+- add possibility to make case number clickable
+- support local files in 'Custom core location'
+- create the stats database group-writable
+- do not die when saving stats fails
+- add possibility to restart task
+- do not show the output of 'mod -S' in crash
+- change directory to $MISCDIR after jumping to crash
+- load correct flavour for el4 kernels
+- do not kill tasks started from task manager
+- do not die if task manager is disabled
+- add basic support for ARM
+- find correct debuginfo for realtime kernels
+- fix httpd config for apache 2.4
+- use mtime instead of atime in RetraceTask.get_age()
+- use correct suffixes when unpacking archives
+- do not die if module list can't be read from vmcore
+- add support for X-CoreFileDirectory header
+- add support for tweaking yum config in reposync
+- rework reposync logging
+- accept package list in the archive with crash data
+- try harder to find ix86 debuginfo in koji
+
 * Wed Mar 20 2013 Michal Toman <mtoman@redhat.com> 1.9-1
 - guess debuginfo name correctly for <= el4
 - rename _log to retrace-log
