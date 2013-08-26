@@ -72,7 +72,7 @@ INPUT_ARCH_PARSER = re.compile("^[a-zA-Z0-9_]+$")
 #name-version-arch (fedora-16-x86_64, rhel-6.2-i386, opensuse-12.1-x86_64)
 INPUT_RELEASEID_PARSER = re.compile("^[a-zA-Z0-9]+\-[0-9a-zA-Z\.]+\-[a-zA-Z0-9_]+$")
 
-CORE_ARCH_PARSER = re.compile("core file,? .*(x86-64|80386|ARM|IBM S/390)")
+CORE_ARCH_PARSER = re.compile("core file,? .*(x86-64|80386|ARM|IBM S/390|64-bit PowerPC)")
 PACKAGE_PARSER = re.compile("^(.+)-([0-9]+(\.[0-9]+)*-[0-9]+)\.([^-]+)$")
 DF_OUTPUT_PARSER = re.compile("^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
 DU_OUTPUT_PARSER = re.compile("^([0-9]+)")
@@ -202,6 +202,7 @@ ARCH_MAP = {
     "armhfp": set(["arm", "armhfp", "armel", "armv5tel", "armv7l", "armv7hl", "armv7hnl"]),
     "x86_64": set(["x86_64"]),
     "s390x": set(["s390x"]),
+    "ppc64": set(["ppc64"]),
 }
 
 def now():
@@ -315,6 +316,8 @@ def guess_arch(coredump_path):
             return "armhfp"
         elif match.group(1) == "IBM S/390":
             return "s390x"
+        elif match.group(1) == "64-bit PowerPC":
+            return "ppc64"
 
     result = None
     child = Popen(["strings", coredump_path], stdout=PIPE)
