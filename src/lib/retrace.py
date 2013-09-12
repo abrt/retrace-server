@@ -123,6 +123,8 @@ FTP_SUPPORTED_EXTENSIONS = [".tar.gz", ".tgz", ".tarz", ".tar.bz2", ".tar.xz",
                             ".tar", ".gz", ".bz2", ".xz", ".Z", ".zip"]
 
 REPO_PREFIX = "retrace-"
+EXPLOITABLE_PLUGIN_PATH = "/usr/libexec/abrt-gdb-exploitable"
+EXPLOITABLE_SEPARATOR = "== EXPLOITABLE ==\n"
 
 TASKPASS_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -398,16 +400,27 @@ def run_gdb(savedir):
         if chmod != 0:
             raise Exception, "Unable to chmod the executable"
 
+        child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
+                       "--", "ls", "'%s'" % EXPLOITABLE_PLUGIN_PATH],
+                       stdout=PIPE, stderr=null)
+        add_exploitable = child.communicate()[0].strip() == EXPLOITABLE_PLUGIN_PATH
+
         batfile = os.path.join(savedir, "gdb.sh")
         with open(batfile, "w") as gdbfile:
-            gdbfile.write("gdb -batch -ex 'file %s' "
+            gdbfile.write("gdb -batch ")
+            if add_exploitable:
+                gdbfile.write("-ex 'python execfile(\"/usr/libexec/abrt-gdb-exploitable\")' ")
+            gdbfile.write("-ex 'file %s' "
                           "-ex 'core-file /var/spool/abrt/crash/coredump' "
                           "-ex 'thread apply all backtrace 2048 full' "
                           "-ex 'info sharedlib' "
                           "-ex 'print (char*)__abort_msg' "
                           "-ex 'print (char*)__glib_assert_msg' "
-                          "-ex 'info all-registers' "
-                          "-ex 'disassemble'" % executable)
+                          "-ex 'info registers' "
+                          "-ex 'disassemble' " % executable)
+            if add_exploitable:
+                gdbfile.write("-ex 'echo %s' "
+                              "-ex 'abrt-exploitable'" % EXPLOITABLE_SEPARATOR)
 
         copyin = call(["/usr/bin/mock", "--configdir", savedir, "--copyin",
                        batfile, "/var/spool/abrt/gdb.sh"],
@@ -430,10 +443,14 @@ def run_gdb(savedir):
     if child.wait():
         raise Exception("Running GDB failed")
 
+    exploitable = None
+    if EXPLOITABLE_SEPARATOR in backtrace:
+        backtrace, exploitable = backtrace.rsplit(EXPLOITABLE_SEPARATOR, 1)
+
     if not backtrace:
         raise Exception("An unusable backtrace has been generated")
 
-    return backtrace
+    return backtrace, exploitable
 
 def is_package_known(package_nvr, arch, releaseid=None):
     if releaseid is None:

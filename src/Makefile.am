@@ -28,6 +28,7 @@ interface_PYTHON = backtrace.wsgi \
                    create.wsgi \
                    checkpackage.wsgi \
                    delete.wsgi \
+                   exploitable.wsgi \
                    index.wsgi \
                    log.wsgi \
                    manager.wsgi \
