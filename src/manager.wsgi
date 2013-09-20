@@ -100,6 +100,13 @@ def application(environ, start_response):
             except:
                 return response(start_response, "500 Internal Server Error", _("Unable to create a new task"))
 
+            if "caseno" in get:
+                try:
+                    task.set_caseno(int(get["caseno"][0]))
+                except:
+                    # caseno is invalid number - do nothing, it can be set later
+                    pass
+
         if not task.get_managed():
             return response(start_response, "403 Forbidden", _("Task does not belong to task manager"))
 
@@ -247,6 +254,7 @@ def application(environ, start_response):
         else:
             startcontent = "    <form method=\"get\" action=\"%s/start\">" \
                            "      Kernel VRA (empty to autodetect): <input name=\"kernelver\" type=\"text\" id=\"kernelver\" /><br />" \
+                           "      Case no.: <input name=\"caseno\" type=\"text\" id=\"caseno\" /><br />" \
                            "      E-mail notification: <input name=\"notify\" type=\"text\" id=\"notify\" /><br />" \
                            "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" checked=\"checked\" />Be more verbose in case of error<br />" \
                            "      <input type=\"submit\" value=\"%s\" id=\"start\" class=\"button\" />" \
