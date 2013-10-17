@@ -193,15 +193,19 @@ STATUS = [
 ]
 
 ARCHITECTURES = set(["src", "noarch", "i386", "i486", "i586", "i686", "x86_64",
-                     "s390", "s390x", "ppc", "ppc64",  "ppc64iseries", "arm",
+                     "s390", "s390x", "ppc", "ppc64",  "ppc64iseries",
                      "armel", "armhfp", "armv5tel", "armv7l", "armv7hl",
                      "armv7hnl", "sparc", "sparc64", "mips4kec", "ia64"])
 
 # armhfp is not correct, but there is no way to distinguish armv5/armv6/armv7 coredumps
 # as armhfp (RPM armv7hl) is the only supported now, let's approximate arm = armhfp
+
+# "arm" has been intentionally removed - when guessing architecture, it matches
+# "alarm" or "hdparm" and thus leads to wrong results.
+# As soon as plain "arm" needs to be supported, this needs to be solved properly.
 ARCH_MAP = {
     "i386": set(["i386", "i486", "i586", "i686"]),
-    "armhfp": set(["arm", "armhfp", "armel", "armv5tel", "armv7l", "armv7hl", "armv7hnl"]),
+    "armhfp": set(["armhfp", "armel", "armv5tel", "armv7l", "armv7hl", "armv7hnl"]),
     "x86_64": set(["x86_64"]),
     "s390x": set(["s390x"]),
     "ppc64": set(["ppc64"]),
