@@ -1358,7 +1358,11 @@ class RetraceTask:
         tmpfilename = self._get_file_path("%s.tmp" % key)
         filename = self._get_file_path(key)
         if mode == "a":
-            shutil.copyfile(filename, tmpfilename)
+            try:
+                shutil.copyfile(filename, tmpfilename)
+            except IOError as ex:
+                if ex[0] != errno.ENOENT:
+                    raise
 
         with open(tmpfilename, mode) as f:
             f.write(value)
