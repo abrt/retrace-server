@@ -1590,12 +1590,19 @@ class RetraceTask:
                 filename = os.path.basename(url)
                 targetfile = os.path.join(crashdir, filename)
 
-                try:
-                    log_debug("Trying hardlink")
-                    os.link(url, targetfile)
-                except:
-                    log_debug("Failed, copying")
+                copy = True
+                if get_archive_type(url) == ARCHIVE_UNKNOWN:
                     try:
+                        log_debug("Trying hardlink")
+                        os.link(url, targetfile)
+                        copy = False
+                        log_debug("Succeeded")
+                    except:
+                        log_debug("Failed")
+
+                if copy:
+                    try:
+                        log_debug("Copying")
                         shutil.copy(url, targetfile)
                     except Exception as ex:
                         errors.append((url, str(ex)))
