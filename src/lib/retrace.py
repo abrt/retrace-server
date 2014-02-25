@@ -1677,7 +1677,15 @@ class RetraceTask:
                     strip_vmcore(vmcore, kernelver)
                     dur = int(time.time() - start)
                     st = os.stat(vmcore)
-                    os.chmod(vmcore, st.st_mode | stat.S_IRGRP)
+                    if (st.st_mode & stat.S_IRGRP) == 0:
+                        try:
+                            os.chmod(vmcore, st.st_mode | stat.S_IRGRP)
+                        except Exception as ex:
+                            log_warn("File '%s' is not group readable and chmod"
+                                     " failed. The process will continue but if"
+                                     " it fails this is the likely cause."
+                                     % vmcore)
+
                     log_info("Stripped size: %s" % human_readable_size(st.st_size))
                     log_info("Makedumpfile took %d seconds and saved %s" % (dur, human_readable_size(oldsize - st.st_size)))
 
