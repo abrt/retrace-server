@@ -572,7 +572,7 @@ def application(environ, start_response):
 
         for fname in tasklist:
             available.append("<tr><td><a href=\"%s/%s\">%s</a></td></tr>" \
-                             % (match.group(1), urllib.quote_plus(fname), fname))
+                             % (match.group(1), urllib.quote(fname), fname))
         available_str = _("FTP files")
 
     custom_url = "%s/__custom__" % match.group(1)
