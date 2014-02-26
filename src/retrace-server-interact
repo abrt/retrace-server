@@ -5,12 +5,13 @@ import os
 import pwd
 import sys
 from retrace import *
+from subprocess import list2cmdline
 
 ACTIONS = ["shell", "gdb", "crash", "printdir", "delete"]
 
 def print_cmdline(cmdline):
     sys.stderr.write("If you want to execute the command manually, you can run\n")
-    sys.stderr.write("$ %s\n\n" % " ".join(cmdline))
+    sys.stderr.write("$ %s\n\n" % list2cmdline(cmdline))
 
 if __name__ == "__main__":
     groups = [grp.getgrgid(g).gr_name for g in os.getgroups()]
