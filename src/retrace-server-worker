@@ -426,6 +426,8 @@ def start_vmcore():
 
         log_debug("Determined kernel version: %s" % kernelver)
 
+    task.set_kernelver(str(kernelver))
+
     stats["package"] = "kernel"
     stats["version"] = "%s-%s" % (kernelver.version, kernelver.release)
     stats["arch"] = kernelver.arch

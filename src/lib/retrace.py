@@ -1273,6 +1273,7 @@ class RetraceTask:
     CRASHRC_FILE = "crashrc"
     DOWNLOADED_FILE = "downloaded"
     FINISHED_FILE = "finished_time"
+    KERNELVER_FILE = "kernelver"
     LOG_FILE = "retrace_log"
     MANAGED_FILE = "managed"
     MISC_DIR = "misc"
@@ -1496,6 +1497,19 @@ class RetraceTask:
             return []
 
         return result.splitlines()
+
+    def has_kernelver(self):
+        """Verifies whether KERNELVER_FILE is present in the task directory."""
+        return self.has(RetraceTask.KERNELVER_FILE)
+
+    def get_kernelver(self):
+        """Returns None if there is no KERNELVER_FILE in the task directory,
+        KERNELVER_FILE's contents otherwise."""
+        return self.get(RetraceTask.KERNELVER_FILE, maxlen=1 << 16)
+
+    def set_kernelver(self, value):
+        """Atomically writes given value into KERNELVER_FILE."""
+        self.set_atomic(RetraceTask.KERNELVER_FILE, value)
 
     def has_notes(self):
         return self.has(RetraceTask.NOTES_FILE)
