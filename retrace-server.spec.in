@@ -132,6 +132,20 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Thu Feb 27 2014 Michal Toman <mtoman@redhat.com> 1.11-1
+- do not die trying to chmod a hardling
+- do not hardlink unpacked vmcores
+- print command line formatted correctly
+- allow submitting vmcores with spaces in file name
+- do not run makedumpfile when not necessary
+- allow to specify kernel VRA with custom cores
+- do not require the trailing slash in task manager URL
+- do not kill retrace-server-cleanup when retrace_log does not exist
+- cache kernel version into task directory
+- add support for ppc64, s390x
+- include floating point registers in userspace backtraces
+- execute ABRT's exploitability plugin if available
+
 * Wed Aug 21 2013 Michal Toman <mtoman@redhat.com> 1.10-1
 - add possibility to make case number clickable
 - support local files in 'Custom core location'
