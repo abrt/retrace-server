@@ -95,6 +95,8 @@ KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+\.[^ \t]*)$
 # OSRELEASE=2.6.32-209.el6.x86_64
 OSRELEASE_VAR_PARSER = re.compile("^OSRELEASE=(.*)$")
 
+DUMP_LEVEL_PARSER = re.compile("^[ \t]*dump_level[ \t]*:[ \t]*([0-9]+).*$")
+
 WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]+.*retrace-server-worker ([0-9]+)( .*)?$")
 
 UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB"]
@@ -711,6 +713,37 @@ def prepare_debuginfo(vmcore, chroot=None, kernelver=None):
     cache_files_from_debuginfo(debuginfo, debugdir_base, todo)
 
     return vmlinux
+
+def get_vmcore_dump_level(task, vmlinux=None):
+    vmcore_path = os.path.join(task.get_savedir(), "crash", "vmcore")
+    if not os.path.isfile(vmcore_path):
+        return None
+
+    dmesg_path = os.path.join(task.get_savedir(), RetraceTask.MISC_DIR, "dmesg")
+    if os.path.isfile(dmesg_path):
+        os.unlink(dmesg_path)
+
+    with open(os.devnull, "w") as null:
+        cmd = ["makedumpfile", "-D", "--dump-dmesg", vmcore_path, dmesg_path]
+        if vmlinux is not None:
+            cmd.append("-x")
+            cmd.append(vmlinux)
+
+        result = None
+        child = Popen(cmd, stdout=PIPE, stderr=null)
+        line = child.stdout.readline()
+        while line:
+            match = DUMP_LEVEL_PARSER.match(line)
+            line = child.stdout.readline()
+            if match is None:
+                continue
+
+            result = int(match.group(1))
+            child.terminate()
+            break
+
+        child.wait()
+        return result
 
 def get_files_sizes(directory):
     result = []
@@ -1696,7 +1729,20 @@ class RetraceTask:
             if os.path.isfile(vmcore):
                 oldsize = os.path.getsize(vmcore)
                 log_info("Vmcore size: %s" % human_readable_size(oldsize))
-                if CONFIG["VmcoreDumpLevel"] > 0 and CONFIG["VmcoreDumpLevel"] < 32:
+
+                dump_level = get_vmcore_dump_level(self)
+                if dump_level is None:
+                    log_warn("Unable to determine vmcore dump level")
+                else:
+                    log_debug("Vmcore dump level is %d" % dump_level)
+
+                skip_makedumpfile = CONFIG["VmcoreDumpLevel"] <= 0 or CONFIG["VmcoreDumpLevel"] >= 32
+                if (dump_level is not None and
+                    (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
+                    log_info("Stripping to %d would have no effect" % CONFIG["VmcoreDumpLevel"])
+                    skip_makedumpfile = True
+
+                if not skip_makedumpfile:
                     log_debug("Executing makedumpfile")
                     start = time.time()
                     strip_vmcore(vmcore, kernelver)
