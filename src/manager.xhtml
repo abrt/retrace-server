@@ -31,7 +31,7 @@
       {
         width: 100%;
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 30px;
       }
 
       #custom
@@ -69,6 +69,11 @@
         font-size: 14px;
       }
 
+      .formsubhead
+      {
+        font-size: 14px;
+      }
+
       .center
       {
         text-align: center;
@@ -86,6 +91,12 @@
         padding: 4px;
         width: 250px;
         margin: 4px;
+      }
+
+      input.checkbox
+      {
+        width: auto;
+        margin-left: 40px;
       }
 
       a:link {
@@ -173,9 +184,15 @@
       <input type="submit" value="Filter" class="submit" />
     </form>
     <form method="post" action="{create_custom_url}" id="custom">
-      <span class="formhead">Custom core location:</span> <input type="text" name="custom_url" class="url" />
-      <input type="submit" value="Create" class="submit" />
-      <div class="center">Any URL that <code>wget</code> can download or a local path (<code>file:///foo/bar</code> or just <code>/foo/bar</code>)</div>
+      <div>
+        <span class="formsubhead">Kernel VRA (empty to autodetect):</span> <input type="text" name="vra" />
+        <input type="checkbox" checked="checked" name="debug" class="checkbox" /><span class="formsubhead"> Be more verbose in case of error</span>
+      </div>
+      <div>
+        <span class="formhead">Custom core location:</span> <input type="text" name="custom_url" class="url" />
+        <input type="submit" value="Create" class="submit" />
+        <div class="center">Any URL that <code>wget</code> can download or a local path (<code>file:///foo/bar</code> or just <code>/foo/bar</code>)</div>
+      </div>
     </form>
     <div id="main">
       <div id="left">

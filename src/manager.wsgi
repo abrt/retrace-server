@@ -208,6 +208,24 @@ def application(environ, start_response):
         return response(start_response, "302 Found", "", [("Location", match.group(1))])
     elif filename and filename == "__custom__":
         POST = urlparse.parse_qs(request.body, keep_blank_values=1)
+
+        qs_base = []
+        if "debug" in POST and POST["debug"][0] == "on":
+            qs_base.append("debug=debug")
+
+        if "vra" in POST:
+            vra = POST["vra"][0]
+
+            if len(vra.strip()) > 0:
+                try:
+                    kver = KernelVer(vra)
+                    if kver.arch is None:
+                        raise Exception
+                except:
+                    return response(start_response, "403 Forbidden", _("Please use VRA format for kernel version (eg. 2.6.32-287.el6.x86_64)"))
+
+                qs_base.append("kernelver=%s" % urllib.quote(vra))
+
         try:
             task = RetraceTask()
         except Exception as ex:
@@ -219,7 +237,9 @@ def application(environ, start_response):
         task.set_managed(True)
         task.set_url("%s/%d" % (match.group(1), task.get_taskid()))
 
-        starturl = "%s/%d/start?debug=debug" % (match.group(1), task.get_taskid())
+        starturl = "%s/%d/start" % (match.group(1), task.get_taskid())
+        if len(qs_base) > 0:
+            starturl = "%s?%s" % (starturl, "&".join(qs_base))
 
         return response(start_response, "302 Found", "", [("Location", starturl)])
     elif filename:
