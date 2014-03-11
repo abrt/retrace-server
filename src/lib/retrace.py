@@ -165,6 +165,7 @@ CONFIG = {
   "WgetKernelDebuginfos": False,
   "KernelDebuginfoURL": "http://kojipkgs.fedoraproject.org/packages/kernel/$VERSION/$RELEASE/$ARCH/",
   "VmcoreDumpLevel": 0,
+  "VmcoreRunKmem": 0,
   "RequireGPGCheck": True,
   "UseCreaterepoUpdate": False,
   "DBFile": "stats.db",

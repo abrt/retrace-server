@@ -530,12 +530,31 @@ def start_vmcore():
                     log_warn("crash 'bt -a' exitted with %d" % child.returncode)
                     crash_bt_a = None
 
-                child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                               "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
-                crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
-                if child.wait():
-                    log_warn("crash 'kmem -f' exitted with %d" % child.returncode)
-                    crash_kmem_f = None
+                crash_kmem_f = None
+                if CONFIG["VmcoreRunKmem"] == 1:
+                    child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                                   "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                    crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
+                    if child.wait():
+                        log_warn("crash 'kmem -f' exitted with %d" % child.returncode)
+                        crash_kmem_f = None
+
+                if CONFIG["VmcoreRunKmem"] == 2:
+                    child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                                   "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                    crash_kmem_f = child.communicate("set hash off\nkmem -f\nset hash on\nquit\n")[0]
+                    if child.wait():
+                        log_warn("crash 'kmem -f' exitted with %d" % child.returncode)
+                        crash_kmem_f = None
+
+                crash_kmem_z = None
+                if CONFIG["VmcoreRunKmem"] == 3:
+                    child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                                   "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                    crash_kmem_z = child.communicate("kmem -z\nquit\n")[0]
+                    if child.wait():
+                        log_warn("crash 'kmem -z' exitted with %d" % child.returncode)
+                        crash_kmem_z = None
 
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
@@ -583,11 +602,28 @@ def start_vmcore():
             log_warn("crash 'bt -a' exited with %d" % child.returncode)
             crash_bt_a = None
 
-        child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-        crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
-        if child.wait():
-            log_warn("crash 'kmem -f' exited with %d" % child.returncode)
-            crash_kmem_f = None
+        crash_kmem_f = None
+        if CONFIG["VmcoreRunKmem"] == 1:
+            child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
+            if child.wait():
+                log_warn("crash 'kmem -f' exited with %d" % child.returncode)
+                crash_kmem_f = None
+
+        if CONFIG["VmcoreRunKmem"] == 2:
+            child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            crash_kmem_f = child.communicate("set hash off\nkmem -f\nset hash on\nquit\n")[0]
+            if child.wait():
+                log_warn("crash 'kmem -f' exited with %d" % child.returncode)
+                crash_kmem_f = None
+
+        crash_kmem_z = None
+        if CONFIG["VmcoreRunKmem"] == 3:
+            child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            crash_kmem_z = child.communicate("kmem -z\nquit\n")[0]
+            if child.wait():
+                log_warn("crash 'kmem -z' exited with %d" % child.returncode)
+                crash_kmem_z = None
 
         child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
         crash_sys = child.communicate("sys\nquit\n")[0]
@@ -612,6 +648,8 @@ def start_vmcore():
         task.add_misc("bt-a", crash_bt_a)
     if crash_kmem_f:
         task.add_misc("kmem-f", crash_kmem_f)
+    if crash_kmem_z:
+        task.add_misc("kmem-z", crash_kmem_z)
     if crash_sys:
         task.add_misc("sys", crash_sys)
     if crash_sys_c:
