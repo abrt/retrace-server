@@ -132,9 +132,13 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Thu May 13 2014 Michal Toman <mtoman@redhat.com> 1.11-2
+- fix changelog
+- do not run 'kmem' crash command by default
+
 * Thu Feb 27 2014 Michal Toman <mtoman@redhat.com> 1.11-1
-- do not die trying to chmod a hardling
-- do not hardlink unpacked vmcores
+- do not die trying to chmod a hardlink
+- only hardlink unpacked vmcores
 - print command line formatted correctly
 - allow submitting vmcores with spaces in file name
 - do not run makedumpfile when not necessary
