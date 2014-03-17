@@ -1737,6 +1737,15 @@ class RetraceTask:
                 else:
                     log_debug("Vmcore dump level is %d" % dump_level)
 
+                st = os.stat(vmcore)
+                if (st.st_mode & stat.S_IRGRP) == 0:
+                    try:
+                        os.chmod(vmcore, st.st_mode | stat.S_IRGRP)
+                    except Exception as ex:
+                        log_warn("File '%s' is not group readable and chmod"
+                                 " failed. The process will continue but if"
+                                 " it fails this is the likely cause."
+                                 % vmcore)
                 skip_makedumpfile = CONFIG["VmcoreDumpLevel"] <= 0 or CONFIG["VmcoreDumpLevel"] >= 32
                 if (dump_level is not None and
                     (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
@@ -1748,15 +1757,6 @@ class RetraceTask:
                     start = time.time()
                     strip_vmcore(vmcore, kernelver)
                     dur = int(time.time() - start)
-                    st = os.stat(vmcore)
-                    if (st.st_mode & stat.S_IRGRP) == 0:
-                        try:
-                            os.chmod(vmcore, st.st_mode | stat.S_IRGRP)
-                        except Exception as ex:
-                            log_warn("File '%s' is not group readable and chmod"
-                                     " failed. The process will continue but if"
-                                     " it fails this is the likely cause."
-                                     % vmcore)
 
                     log_info("Stripped size: %s" % human_readable_size(st.st_size))
                     log_info("Makedumpfile took %d seconds and saved %s" % (dur, human_readable_size(oldsize - st.st_size)))
