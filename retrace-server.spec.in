@@ -132,7 +132,7 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
-* Thu May 13 2014 Michal Toman <mtoman@redhat.com> 1.11-2
+* Thu Mar 13 2014 Michal Toman <mtoman@redhat.com> 1.11-2
 - fix changelog
 - do not run 'kmem' crash command by default
 
