@@ -41,7 +41,8 @@ TASK_TYPES = [TASK_RETRACE, TASK_DEBUG, TASK_VMCORE,
               TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]
 
 ARCHIVE_UNKNOWN, ARCHIVE_GZ, ARCHIVE_ZIP, \
-  ARCHIVE_BZ2, ARCHIVE_XZ, ARCHIVE_TAR, ARCHIVE_7Z = xrange(7)
+  ARCHIVE_BZ2, ARCHIVE_XZ, ARCHIVE_TAR, \
+  ARCHIVE_7Z, ARCHIVE_LZOP = xrange(8)
 
 REQUIRED_FILES = {
   TASK_RETRACE:             ["coredump", "executable", "package"],
@@ -58,6 +59,7 @@ SUFFIX_MAP = {
   ARCHIVE_ZIP: ".zip",
   ARCHIVE_7Z: ".7z",
   ARCHIVE_TAR: ".tar",
+  ARCHIVE_LZOP: ".lzop",
   ARCHIVE_UNKNOWN: "",
 }
 
@@ -783,6 +785,9 @@ def get_archive_type(path):
     elif "tar archive" in filetype:
         log_debug("tar detected")
         return ARCHIVE_TAR
+    elif "lzop compressed data" in filetype:
+        log_debug("lzop detected")
+        return ARCHIVE_LZOP
 
     log_debug("unknown file type, unpacking finished")
     return ARCHIVE_UNKNOWN
@@ -815,6 +820,8 @@ def unpack_vmcore(path):
             check_run(["7za", "e", "-o%s" % parentdir, archive])
         elif filetype == ARCHIVE_TAR:
             check_run(["tar", "-C", parentdir, "-xf", archive])
+        elif filetype == ARCHIVE_LZOP:
+            check_run(["lzop", "-d", archive])
         else:
             raise Exception, "Unknown archive type"
 

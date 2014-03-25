@@ -26,6 +26,7 @@ Requires: bzip2
 Requires: tar
 Requires: p7zip
 Requires: unzip
+Requires: lzop
 Requires: elfutils
 Requires: createrepo
 Requires: mod_wsgi
