@@ -141,6 +141,7 @@ CONFIG = {
   "MaxUnpackedSize": 600,
   "MinStorageLeft": 10240,
   "DeleteTaskAfter": 120,
+  "DeleteFailedTaskAfter": 24,
   "ArchiveTaskAfter": 0,
   "KeepRawhideLatest": 3,
   "KojiRoot": "/mnt/koji",

@@ -123,3 +123,21 @@ if __name__ == "__main__":
                 if task.get_age() >= CONFIG["DeleteTaskAfter"]:
                     log.write("Deleting old task %s\n" % filename)
                     task.remove()
+
+        if CONFIG["DeleteFailedTaskAfter"] > 0:
+            # clean up old failed tasks
+            try:
+                files = os.listdir(CONFIG["SaveDir"])
+            except OSError, ex:
+                files = []
+                log.write("Error listing task directory: %s\n" % ex)
+
+            for filename in files:
+                try:
+                    task = RetraceTask(filename)
+                except:
+                    continue
+
+                if task.get_age() >= CONFIG["DeleteFailedTaskAfter"] and task.get_status() == STATUS_FAIL:
+                    log.write("Deleting old failed task %s\n" % filename)
+                    task.remove()
