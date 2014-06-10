@@ -95,7 +95,7 @@ KO_DEBUG_PARSER = re.compile("^.*/([a-zA-Z0-9_\-]+)\.ko\.debug$")
 # 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
 KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+\.[^ \t]*)$")
 # OSRELEASE=2.6.32-209.el6.x86_64
-OSRELEASE_VAR_PARSER = re.compile("^OSRELEASE=(.*)$")
+OSRELEASE_VAR_PARSER = re.compile("^OSRELEASE=([^%]*)$")
 
 DUMP_LEVEL_PARSER = re.compile("^[ \t]*dump_level[ \t]*:[ \t]*([0-9]+).*$")
 
