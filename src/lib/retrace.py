@@ -13,6 +13,7 @@ import smtplib
 import sqlite3
 import stat
 import time
+import urllib
 from argparser import *
 from webob import Request
 from yum import YumBase
@@ -181,6 +182,8 @@ CONFIG = {
   "CaseNumberURL": "",
 }
 
+ARCH_HOSTS = {}
+
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \
 STATUS_STATS, STATUS_FINISHING, STATUS_SUCCESS, STATUS_FAIL, \
 STATUS_DOWNLOADING, STATUS_POSTPROCESS = xrange(10)
@@ -280,6 +283,12 @@ def read_config():
             CONFIG[key] = get("retrace", key)
         except ConfigParser.NoOptionError:
             pass
+
+    if "archhosts" in parser.sections():
+        for arch, host in parser.items("archhosts"):
+            host = host.strip()
+            if host:
+                ARCH_HOSTS[arch] = host
 
 def free_space(path):
     child = Popen([DF_BIN, "-B", "1", path], stdout=PIPE)
@@ -1379,6 +1388,48 @@ class RetraceTask:
         key_sanitized = key.replace("/", "_").replace(" ", "_")
         return os.path.join(self._savedir, key_sanitized)
 
+    def _start_local(self, debug=False, kernelver=None, arch=None):
+        cmdline = ["/usr/bin/retrace-server-worker", "%d" % self._taskid]
+        if debug:
+            cmdline.append("-v")
+
+        if kernelver is not None:
+            cmdline.append("--kernelver")
+            cmdline.append(kernelver)
+
+        if arch is not None:
+            cmdline.append("--arch")
+            cmdline.append(arch)
+
+        return call(cmdline)
+
+    def _start_remote(self, host, debug=False, kernelver=None, arch=None):
+        starturl = "%s/%d/start" % (host, self._taskid)
+        qs = {}
+        if debug:
+            qs["debug"] = ""
+
+        if kernelver:
+            qs["kernelver"] = kernelver
+
+        if arch:
+            qs["arch"] = arch
+
+        qs_text = urllib.urlencode(qs)
+
+        if qs_text:
+            starturl = "%s?%s" % (starturl, qs_text)
+
+        url = urllib.urlopen(starturl)
+        status = url.getcode()
+        url.close()
+
+        # 1/0 just to be consitent with call() in _start_local
+        if status != 201:
+            return 1
+
+        return 0
+
     def get_taskid(self):
         """Returns task's ID"""
         return self._taskid
@@ -1386,6 +1437,23 @@ class RetraceTask:
     def get_savedir(self):
         """Returns task's savedir"""
         return self._savedir
+
+    def start(self, debug=False, kernelver=None, arch=None):
+        crashdir = os.path.join(self._savedir, "crash")
+        if arch is None:
+            if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
+                filename = os.path.join(crashdir, "vmcore")
+            else:
+                filename = os.path.join(crashdir, "coredump")
+
+            task_arch = guess_arch(filename)
+        else:
+            task_arch = arch
+
+        if task_arch in ARCH_HOSTS:
+            return self._start_remote(ARCH_HOSTS[task_arch])
+
+        return self._start_local()
 
     def set(self, key, value, mode="w"):
         if not mode in ["w", "a"]:

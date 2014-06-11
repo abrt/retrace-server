@@ -198,7 +198,7 @@ def application(environ, start_response):
     if task.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
         strip_vmcore(os.path.join(crashdir, "vmcore"))
 
-    call(["/usr/bin/retrace-server-worker", "%d" % task.get_taskid()])
+    task.start()
 
     return response(start_response, "201 Created", "",
                     [("X-Task-Id", "%d" % task.get_taskid()),

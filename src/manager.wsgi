@@ -110,10 +110,9 @@ def application(environ, start_response):
         if not task.get_managed():
             return response(start_response, "403 Forbidden", _("Task does not belong to task manager"))
 
-        cmdline = ["/usr/bin/retrace-server-worker", str(task.get_taskid())]
-        if "debug" in get:
-            cmdline.append("-v")
-
+        debug = "debug" in get
+        kernelver = None
+        arch = None
         if "kernelver" in get:
             try:
                 kernelver = KernelVer(get["kernelver"][0])
@@ -122,15 +121,13 @@ def application(environ, start_response):
             except Exception as ex:
                 return response(start_response, "403 Forbidden", _("Please use VRA format for kernel version (eg. 2.6.32-287.el6.x86_64)"))
 
-            cmdline.append("--kernelver")
-            cmdline.append(str(kernelver))
-            cmdline.append("--arch")
-            cmdline.append(kernelver.arch)
+            kernelver = str(kernelver)
+            arch = kernelver.arch
 
         if "notify" in get:
             task.set_notify(filter(None, set(n.strip() for n in get["notify"][0].replace(";", ",").split(","))))
 
-        call(cmdline)
+        task.start(debug=debug, kernelver=kernelver, arch=arch)
 
         # ugly, ugly, ugly! retrace-server-worker double-forks and needs a while to spawn
         time.sleep(2)
