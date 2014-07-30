@@ -1451,9 +1451,10 @@ class RetraceTask:
             task_arch = arch
 
         if task_arch in ARCH_HOSTS:
-            return self._start_remote(ARCH_HOSTS[task_arch])
+            return self._start_remote(ARCH_HOSTS[task_arch], debug=debug,
+                                      kernelver=kernelver, arch=arch)
 
-        return self._start_local()
+        return self._start_local(debug=debug, kernelver=kernelver, arch=arch)
 
     def set(self, key, value, mode="w"):
         if not mode in ["w", "a"]:
