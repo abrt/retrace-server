@@ -119,7 +119,7 @@ def application(environ, start_response):
                 if kernelver.arch is None:
                     raise Exception
             except Exception as ex:
-                return response(start_response, "403 Forbidden", _("Please use VRA format for kernel version (eg. 2.6.32-287.el6.x86_64)"))
+                return response(start_response, "403 Forbidden", _("Please use VRA format for kernel version (e.g. 2.6.32-287.el6.x86_64)"))
 
             kernelver = str(kernelver)
             arch = kernelver.arch
@@ -219,7 +219,7 @@ def application(environ, start_response):
                     if kver.arch is None:
                         raise Exception
                 except:
-                    return response(start_response, "403 Forbidden", _("Please use VRA format for kernel version (eg. 2.6.32-287.el6.x86_64)"))
+                    return response(start_response, "403 Forbidden", _("Please use VRA format for kernel version (e.g. 2.6.32-287.el6.x86_64)"))
 
                 qs_base.append("kernelver=%s" % urllib.quote(vra))
 
@@ -270,7 +270,7 @@ def application(environ, start_response):
             status = get_status_for_task_manager(task, _=_)
         else:
             startcontent = "    <form method=\"get\" action=\"%s/start\">" \
-                           "      Kernel VRA (empty to autodetect): <input name=\"kernelver\" type=\"text\" id=\"kernelver\" /><br />" \
+                           "      Kernel version (empty to autodetect): <input name=\"kernelver\" type=\"text\" id=\"kernelver\" /> e.g. <code>2.6.32-287.el6.x86_64</code><br />" \
                            "      Case no.: <input name=\"caseno\" type=\"text\" id=\"caseno\" /><br />" \
                            "      E-mail notification: <input name=\"notify\" type=\"text\" id=\"notify\" /><br />" \
                            "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" checked=\"checked\" />Be more verbose in case of error<br />" \
