@@ -30,7 +30,32 @@ def kill_process_and_childs(process_id, ps_output=None):
 
     return result
 
+def check_config():
+    if CONFIG["DeleteTaskAfter"] > 0 and CONFIG["ArchiveTaskAfter"] > 0:
+        winner = "archiving"
+        if CONFIG["DeleteTaskAfter"] < CONFIG["ArchiveTaskAfter"]:
+            winner = "deleting"
+
+        sys.stderr.write("WARNING: Both DeleteTaskAfter and ArchiveTaskAfter "
+                         "are enabled, however they are mutually exclusive "
+                         "settings. With your current settings only %s will "
+                         "take place. Please check retrace-server.conf and "
+                         "disable either DeleteTaskAfter or ArchiveTaskAfter "
+                         "by setting its value to 0.\n" % winner)
+
+    if (CONFIG["DeleteFailedTaskAfter"] > 0 and
+        CONFIG["DeleteTaskAfter"] > 0 and
+        CONFIG["DeleteTaskAfter"] < CONFIG["DeleteFailedTaskAfter"]):
+        sys.stderr.write("ERROR: DeleteTaskAfter is set to a lower value than "
+                         "DeleteFailedTaskAfter. Check retrace-server.conf, "
+                         "did you accidentally reverse the values for "
+                         "DeleteTaskAfter and DeleteFailedTaskAfter? "
+                         "Not touching any tasks.\n")
+        exit(1)
+
 if __name__ == "__main__":
+    check_config()
+
     logfile = os.path.join(CONFIG["LogDir"], "cleanup.log")
 
     with open(logfile, "a") as log:
