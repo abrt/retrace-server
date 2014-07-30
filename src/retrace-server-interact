@@ -7,7 +7,7 @@ import sys
 from retrace import *
 from subprocess import list2cmdline
 
-ACTIONS = ["shell", "gdb", "crash", "printdir", "delete"]
+ACTIONS = ["shell", "gdb", "crash", "printdir", "delete", "set-success", "set-fail"]
 
 def print_cmdline(cmdline):
     sys.stderr.write("If you want to execute the command manually, you can run\n")
@@ -23,6 +23,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Interact with retrace-server's chroot")
     parser.add_argument("task_id", help="Task ID")
     parser.add_argument("action", help="Desired action (%s)" % "|".join(ACTIONS))
+    parser.add_argument("-f", "--force", action="store_true", default=False,
+                        help="Run `set-success` or `set-fail` action even if the task is still running")
     args = parser.parse_args()
 
     if not args.action in ACTIONS:
@@ -52,6 +54,26 @@ if __name__ == "__main__":
             exit(1)
 
         task.remove()
+        exit(0)
+
+    if args.action == "set-success":
+        if task.is_running() and not args.force:
+            sys.stderr.write("The task is still running and the effect of this "
+                             "action will most probably be overwritten. If you "
+                             "want to execute it anyway, use --force.\n")
+            exit(0)
+
+        task.set_status(STATUS_SUCCESS)
+        exit(0)
+
+    if args.action == "set-fail":
+        if task.is_running() and not args.force:
+            sys.stderr.write("The task is still running and the effect of this "
+                             "action will most probably be overwritten. If you "
+                             "want to execute it anyway, use --force.\n")
+            exit(0)
+
+        task.set_status(STATUS_FAIL)
         exit(0)
 
     if task.get_type() == TASK_RETRACE_INTERACTIVE:
