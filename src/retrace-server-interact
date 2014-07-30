@@ -4,6 +4,7 @@ import grp
 import os
 import pwd
 import sys
+import time
 from retrace import *
 from subprocess import list2cmdline
 
@@ -64,6 +65,8 @@ if __name__ == "__main__":
             exit(0)
 
         task.set_status(STATUS_SUCCESS)
+        if not task.has_finished_time():
+            task.set_finished_time(int(time.time()))
         exit(0)
 
     if args.action == "set-fail":
@@ -74,6 +77,8 @@ if __name__ == "__main__":
             exit(0)
 
         task.set_status(STATUS_FAIL)
+        if not task.has_finished_time():
+            task.set_finished_time(int(time.time()))
         exit(0)
 
     if task.get_type() == TASK_RETRACE_INTERACTIVE:
