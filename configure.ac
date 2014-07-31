@@ -1,5 +1,5 @@
 AC_INIT([retrace-server],
-	[1.11],
+	[1.12],
 	[crash-catcher@fedorahosted.org])
 
 AC_CONFIG_MACRO_DIR([m4])

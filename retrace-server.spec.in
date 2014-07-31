@@ -133,6 +133,15 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Thu Jul 31 2014 Michal Toman <mtoman@redhat.com> 1.12-1
+- do not run kmem on vmcores by default
+- fix group readability of vmcores
+- add support for lzop compression
+- add DeleteFailedTaskAfter config option
+- add arch-based remote execution
+- add set-success and set-fail actions to retrace-server-interact
+- add config sanity checks to retrace-server-cleanup
+
 * Thu Mar 13 2014 Michal Toman <mtoman@redhat.com> 1.11-2
 - fix changelog
 - do not run 'kmem' crash command by default
