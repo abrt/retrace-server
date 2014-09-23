@@ -121,8 +121,8 @@ def application(environ, start_response):
             except Exception as ex:
                 return response(start_response, "403 Forbidden", _("Please use VRA format for kernel version (e.g. 2.6.32-287.el6.x86_64)"))
 
-            kernelver = str(kernelver)
             arch = kernelver.arch
+            kernelver = str(kernelver)
 
         if "notify" in get:
             task.set_notify(filter(None, set(n.strip() for n in get["notify"][0].replace(";", ",").split(","))))
