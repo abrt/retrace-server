@@ -75,7 +75,7 @@ INPUT_ARCH_PARSER = re.compile("^[a-zA-Z0-9_]+$")
 #name-version-arch (fedora-16-x86_64, rhel-6.2-i386, opensuse-12.1-x86_64)
 INPUT_RELEASEID_PARSER = re.compile("^[a-zA-Z0-9]+\-[0-9a-zA-Z\.]+\-[a-zA-Z0-9_]+$")
 
-CORE_ARCH_PARSER = re.compile("core file,? .*(x86-64|80386|ARM|IBM S/390|64-bit PowerPC)")
+CORE_ARCH_PARSER = re.compile("core file,? .*(x86-64|80386|ARM|aarch64|IBM S/390|64-bit PowerPC)")
 PACKAGE_PARSER = re.compile("^(.+)-([0-9]+(\.[0-9]+)*-[0-9]+)\.([^-]+)$")
 DF_OUTPUT_PARSER = re.compile("^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
 DU_OUTPUT_PARSER = re.compile("^([0-9]+)")
@@ -202,9 +202,10 @@ STATUS = [
 ]
 
 ARCHITECTURES = set(["src", "noarch", "i386", "i486", "i586", "i686", "x86_64",
-                     "s390", "s390x", "ppc", "ppc64",  "ppc64iseries",
+                     "s390", "s390x", "ppc", "ppc64", "ppc64le", "ppc64iseries",
                      "armel", "armhfp", "armv5tel", "armv7l", "armv7hl",
-                     "armv7hnl", "sparc", "sparc64", "mips4kec", "ia64"])
+                     "armv7hnl", "aarch64", "sparc", "sparc64", "mips4kec",
+                     "ia64"])
 
 # armhfp is not correct, but there is no way to distinguish armv5/armv6/armv7 coredumps
 # as armhfp (RPM armv7hl) is the only supported now, let's approximate arm = armhfp
@@ -218,6 +219,8 @@ ARCH_MAP = {
     "x86_64": set(["x86_64"]),
     "s390x": set(["s390x"]),
     "ppc64": set(["ppc64"]),
+    "ppc64le": set(["ppc64le"]),
+    "aarch64": set(["aarch64"]),
 }
 
 def now():
@@ -335,9 +338,14 @@ def guess_arch(coredump_path):
             # version the coredump is. At the moment we only support
             # armv7hl / armhfp - let's approximate arm = armhfp
             return "armhfp"
+        elif match.group(1) == "aarch64":
+            return "aarch64"
         elif match.group(1) == "IBM S/390":
             return "s390x"
         elif match.group(1) == "64-bit PowerPC":
+            if "LSB" in output:
+                return "ppc64le"
+
             return "ppc64"
 
     result = None
@@ -356,6 +364,11 @@ def guess_arch(coredump_path):
 
     child.kill()
     child.stdout.close()
+
+    # "ppc64le" matches both ppc64 and ppc64le
+    # if file magic says little endian, fix it
+    if result == "ppc64" and "LSB" in output:
+        result = "ppc64le"
 
     return result
 
