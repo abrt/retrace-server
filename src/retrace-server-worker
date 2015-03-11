@@ -335,10 +335,10 @@ def start_retrace():
     retrace_run(25, ["/usr/bin/mock", "init", "--configdir", task.get_savedir()])
     if CONFIG["UseFafPackages"]:
         retrace_run(26, ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell", "--",
-                         "bash", "-c", "'for PKG in /packages/*; do rpm2cpio \\$PKG | " \
-                         "cpio -muid --quiet; done'"])
+                         "bash -c 'for PKG in /packages/*; "
+                         "do rpm2cpio $PKG | cpio -muid --quiet; done'"])
     retrace_run(27, ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell",
-                     "--", "chgrp", "-R", "mockbuild", "/var/spool/abrt/crash"])
+                     "--", "chgrp -R mockbuild /var/spool/abrt/crash"])
 
     # generate backtrace
     task.set_status(STATUS_BACKTRACE)
@@ -405,7 +405,7 @@ def mock_find_vmlinux(cfgdir, candidates):
     with open(os.devnull, "w") as null:
         for cand in candidates:
             child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                           "test", "-f", cand, "&&", "echo", cand], stdout=PIPE, stderr=null)
+                           "test -f %s && echo %s" % (cand, cand)], stdout=PIPE, stderr=null)
             output = child.communicate()[0].strip()
             child.wait()
             if output == cand:
@@ -517,14 +517,14 @@ def start_vmcore():
             # generate the log
             with open(os.devnull, "w") as null:
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                               "crash", "--minimal", "-s", vmcore, vmlinux],
+                               "crash --minimal -s %s %s" % (vmcore, vmlinux)],
                               stdin=PIPE, stdout=PIPE, stderr=null)
                 kernellog = child.communicate("log\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'log' exitted with %d" % child.returncode)
 
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                               "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                               "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
                 crash_bt_a = child.communicate("bt -a\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'bt -a' exitted with %d" % child.returncode)
@@ -533,7 +533,7 @@ def start_vmcore():
                 crash_kmem_f = None
                 if CONFIG["VmcoreRunKmem"] == 1:
                     child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                   "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                                   "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
                     crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
                     if child.wait():
                         log_warn("crash 'kmem -f' exitted with %d" % child.returncode)
@@ -541,7 +541,7 @@ def start_vmcore():
 
                 if CONFIG["VmcoreRunKmem"] == 2:
                     child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                   "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                                   "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
                     crash_kmem_f = child.communicate("set hash off\nkmem -f\nset hash on\nquit\n")[0]
                     if child.wait():
                         log_warn("crash 'kmem -f' exitted with %d" % child.returncode)
@@ -550,28 +550,28 @@ def start_vmcore():
                 crash_kmem_z = None
                 if CONFIG["VmcoreRunKmem"] == 3:
                     child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                   "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                                   "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
                     crash_kmem_z = child.communicate("kmem -z\nquit\n")[0]
                     if child.wait():
                         log_warn("crash 'kmem -z' exitted with %d" % child.returncode)
                         crash_kmem_z = None
 
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                               "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                               "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
                 crash_sys = child.communicate("sys\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'sys' exitted with %d" % child.returncode)
                     crash_sys = None
 
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                               "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                               "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
                 crash_sys_c = child.communicate("sys -c\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'sys -c' exitted with %d" % child.returncode)
                     crash_sys_c = None
 
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                               "crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=null)
+                               "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
                 crash_foreach_bt = child.communicate("foreach bt\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'foreach bt' exitted with %d" % child.returncode)

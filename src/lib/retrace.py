@@ -419,21 +419,21 @@ def run_gdb(savedir):
 
     with open(os.devnull, "w") as null:
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
-                       "--", "ls", "'%s'" % executable],
+                       "--", "ls '%s'" % executable],
                        stdout=PIPE, stderr=null)
         output = child.communicate()[0]
         if output.strip() != executable:
             raise Exception("The appropriate package set could not be installed")
 
         chmod = call(["/usr/bin/mock", "shell", "--configdir", savedir,
-                      "--", "/bin/chmod", "a+r", "'%s'" % executable],
+                      "--", "/bin/chmod a+r '%s'" % executable],
                       stdout=null, stderr=null)
 
         if chmod != 0:
             raise Exception, "Unable to chmod the executable"
 
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
-                       "--", "ls", "'%s'" % EXPLOITABLE_PLUGIN_PATH],
+                       "--", "ls '%s'" % EXPLOITABLE_PLUGIN_PATH],
                        stdout=PIPE, stderr=null)
         add_exploitable = child.communicate()[0].strip() == EXPLOITABLE_PLUGIN_PATH
 
@@ -461,13 +461,13 @@ def run_gdb(savedir):
             raise Exception("Unable to copy GDB launcher into chroot")
 
         chmod = call(["/usr/bin/mock", "--configdir", savedir, "shell",
-                      "--", "/bin/chmod", "a+rx", "/var/spool/abrt/gdb.sh"],
+                      "--", "/bin/chmod a+rx /var/spool/abrt/gdb.sh"],
                      stdout=null, stderr=null)
         if chmod:
             raise Exception("Unable to chmod GDB launcher")
 
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
-                       "--", "su", "mockbuild", "-c", "'/bin/sh /var/spool/abrt/gdb.sh'",
+                       "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh'",
                        # redirect GDB's stderr, ignore mock's stderr
                        "2>&1"], stdout=PIPE, stderr=null)
 
@@ -712,7 +712,7 @@ def prepare_debuginfo(vmcore, chroot=None, kernelver=None):
     if chroot:
         with open(os.devnull, "w") as null:
             child = Popen(["/usr/bin/mock", "--configdir", chroot, "shell",
-                           "--", "crash", "-s", vmcore, vmlinux],
+                           "--", "crash -s %s %s" % (vmcore, vmlinux)],
                            stdin=PIPE, stdout=PIPE, stderr=null)
     else:
         child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
