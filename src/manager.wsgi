@@ -306,13 +306,13 @@ def application(environ, start_response):
                     else:
                         debugger = "gdb"
 
-                interactive = "<tr><td colspan=\"2\">%s</td></tr>" \
-                              "<tr><td colspan=\"2\">%s <code>retrace-server-interact %s shell</code></td></tr>" \
-                              "<tr><td colspan=\"2\">%s <code>retrace-server-interact %s %s</code></td></tr>" \
-                              "<tr><td colspan=\"2\">%s <code>man retrace-server-interact</code> %s</td></tr>" \
-                              % (_("This is an interactive task"), _("You can jump to the chrooted shell with:"), filename,
-                                 _("You can jump directly to the debugger with:"), filename, debugger,
-                                 _("see"), _("for further information about cmdline flags"))
+                    interactive = "<tr><td colspan=\"2\">%s</td></tr>" \
+                                  "<tr><td colspan=\"2\">%s <code>retrace-server-interact %s shell</code></td></tr>" \
+                                  "<tr><td colspan=\"2\">%s <code>retrace-server-interact %s %s</code></td></tr>" \
+                                  "<tr><td colspan=\"2\">%s <code>man retrace-server-interact</code> %s</td></tr>" \
+                                  % (_("This is an interactive task"), _("You can jump to the chrooted shell with:"), filename,
+                                     _("You can jump directly to the debugger with:"), filename, debugger,
+                                     _("see"), _("for further information about cmdline flags"))
             elif task.has_log():
                 backtracewindow = "<h2>Log:</h2><textarea class=\"backtrace\">%s</textarea>" % task.get_log()
 
