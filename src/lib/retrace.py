@@ -1437,6 +1437,7 @@ class RetraceTask:
     BACKTRACE_FILE = "retrace_backtrace"
     CASENO_FILE = "caseno"
     CRASHRC_FILE = "crashrc"
+    CRASH_CMD_FILE = "crash_cmd"
     DOWNLOADED_FILE = "downloaded"
     FINISHED_FILE = "finished_time"
     KERNELVER_FILE = "kernelver"
@@ -1493,6 +1494,7 @@ class RetraceTask:
                 for i in xrange(CONFIG["TaskPassLength"]):
                     pwdfile.write(generator.choice(TASKPASS_ALPHABET))
 
+            self.set_crash_cmd("crash")
             os.makedirs(os.path.join(self._savedir, RetraceTask.MISC_DIR))
             os.umask(oldmask)
         else:
@@ -2132,6 +2134,14 @@ class RetraceTask:
         """Writes data to CRASHRC_FILE"""
         self.set(RetraceTask.CRASHRC_FILE, data)
 
+    def get_crash_cmd(self):
+        """Gets the contents of CRASH_CMD_FILE"""
+        return self.get(RetraceTask.CRASH_CMD_FILE, maxlen=1 << 22)
+
+    def set_crash_cmd(self, data):
+        """Writes data to CRASH_CMD_FILE"""
+        self.set(RetraceTask.CRASH_CMD_FILE, data)
+
     def has_started_time(self):
         """Verifies whether STARTED_FILE exists"""
         return self.has(RetraceTask.STARTED_FILE)
@@ -2213,7 +2223,8 @@ class RetraceTask:
               RetraceTask.NOTIFY_FILE, RetraceTask.PASSWORD_FILE,
               RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
               RetraceTask.TYPE_FILE, RetraceTask.MISC_DIR,
-              RetraceTask.CRASHRC_FILE, RetraceTask.URL_FILE ]:
+              RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
+              RetraceTask.URL_FILE ]:
 
                 path = os.path.join(self._savedir, f)
                 try:
@@ -2232,8 +2243,8 @@ class RetraceTask:
                          RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
                          RetraceTask.PROGRESS_FILE, RetraceTask.STARTED_FILE,
                          RetraceTask.STATUS_FILE, RetraceTask.MOCK_DEFAULT_CFG,
-                         RetraceTask.MOCK_SITE_DEFAULTS_CFG,
-                         RetraceTask.MOCK_LOGGING_INI]:
+                         RetraceTask.MOCK_SITE_DEFAULTS_CFG, RetraceTask.MOCK_LOGGING_INI,
+                         RetraceTask.CRASH_CMD_FILE]:
             try:
                 os.unlink(os.path.join(self._savedir, filename))
             except OSError as ex:
