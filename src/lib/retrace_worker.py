@@ -514,7 +514,7 @@ class RetraceWorker(object):
             kernelver = custom_kernelver
             kernelver_str = custom_kernelver.kernelver_str
         else:
-            kernelver = get_kernel_release(vmcore)
+            kernelver = get_kernel_release(vmcore, task.get_crash_cmd())
             if not kernelver:
                 log_error("Unable to determine kernel version")
                 self._fail()
@@ -616,7 +616,7 @@ class RetraceWorker(object):
             # no locks required, mock locks itself
             try:
                 self.hook_pre_prepare_debuginfo()
-                vmlinux = prepare_debuginfo(vmcore, cfgdir, kernelver=kernelver)
+                vmlinux = prepare_debuginfo(vmcore, cfgdir, kernelver=kernelver, crash_cmd=task.get_crash_cmd())
                 self.hook_post_prepare_debuginfo()
 
                 self.hook_pre_retrace()
@@ -690,7 +690,7 @@ class RetraceWorker(object):
         else:
             try:
                 self.hook_pre_prepare_debuginfo()
-                vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver)
+                vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver, crash_cmd=task.get_crash_cmd())
                 self.hook_post_prepare_debuginfo()
             except Exception as ex:
                 log_error("prepare_debuginfo failed: %s" % str(ex))
@@ -700,12 +700,12 @@ class RetraceWorker(object):
             task.set_status(STATUS_BACKTRACE)
             log_info(STATUS[STATUS_BACKTRACE])
 
-            child = Popen(["crash", "--minimal", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(task.get_crash_cmd().split() + ["--minimal", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             kernellog = child.communicate("log\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'log' exited with %d" % child.returncode)
 
-            child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             crash_bt_a = child.communicate("bt -a\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'bt -a' exited with %d" % child.returncode)
@@ -713,14 +713,14 @@ class RetraceWorker(object):
 
             crash_kmem_f = None
             if CONFIG["VmcoreRunKmem"] == 1:
-                child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+                child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
                 crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'kmem -f' exited with %d" % child.returncode)
                     crash_kmem_f = None
 
             if CONFIG["VmcoreRunKmem"] == 2:
-                child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+                child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
                 crash_kmem_f = child.communicate("set hash off\nkmem -f\nset hash on\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'kmem -f' exited with %d" % child.returncode)
@@ -728,25 +728,25 @@ class RetraceWorker(object):
 
             crash_kmem_z = None
             if CONFIG["VmcoreRunKmem"] == 3:
-                child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+                child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
                 crash_kmem_z = child.communicate("kmem -z\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'kmem -z' exited with %d" % child.returncode)
                     crash_kmem_z = None
 
-            child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(task.get_crash_cmd().split() +  ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             crash_sys = child.communicate("sys\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'sys' exited with %d" % child.returncode)
                 crash_sys = None
 
-            child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             crash_sys_c = child.communicate("sys -c\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'sys -c' exited with %d" % child.returncode)
                 crash_sys_c = None
 
-            child = Popen(["crash", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             crash_foreach_bt = child.communicate("foreach bt\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'foreach bt' exited with %d" % child.returncode)

@@ -106,7 +106,7 @@ if __name__ == "__main__":
         if task.has_kernelver():
             kernelver = KernelVer(task.get_kernelver())
         else:
-            kernelver = get_kernel_release(vmcore)
+            kernelver = get_kernel_release(vmcore, task.get_crash_cmd())
 
         hostarch = os.uname()[4]
         if hostarch in ["i486", "i586", "i686"]:
@@ -114,14 +114,14 @@ if __name__ == "__main__":
 
         if args.action == "crash":
             if kernelver.arch == hostarch:
-                vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver)
+                vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver, crash_cmd=task.get_crash_cmd())
                 if task.has_crashrc():
-                    cmdline = ["crash", "-i", task.get_crashrc_path(), vmcore, vmlinux]
+                    cmdline = task.get_crash_cmd().split() + ["-i", task.get_crashrc_path(), vmcore, vmlinux]
                 else:
-                    cmdline = ["crash", vmcore, vmlinux]
+                    cmdline = task.get_crash_cmd().split() + [vmcore, vmlinux]
             else:
                 cfgdir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
-                vmlinux = prepare_debuginfo(vmcore, chroot=cfgdir, kernelver=kernelver)
+                vmlinux = prepare_debuginfo(vmcore, chroot=cfgdir, kernelver=kernelver, crash_cmd=task.get_crash_cmd())
                 if task.has_crashrc():
                     cmdline = ["/usr/bin/mock", "--configdir", cfgdir,
                                "shell", "crash -i %s %s %s" % (task.get_crashrc_path(), vmcore, vmlinux)]
