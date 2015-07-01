@@ -818,6 +818,16 @@ if __name__ == "__main__":
 
     tasktype = task.get_type()
 
+    if task.has("custom_executable"):
+        shutil.copyfile(task._get_file_path("custom_executable"),
+                        os.path.join(crashdir, "executable"))
+    if task.has("custom_package"):
+        shutil.copyfile(task._get_file_path("custom_package"),
+                        os.path.join(crashdir, "package"))
+    if task.has("custom_os_release"):
+        shutil.copyfile(task._get_file_path("custom_os_release"),
+                        os.path.join(crashdir, "os_release"))
+
     for required_file in REQUIRED_FILES[tasktype]:
         if not os.path.isfile(os.path.join(crashdir, required_file)):
             log_error("Crash directory does not contain required file '%s'" % required_file)

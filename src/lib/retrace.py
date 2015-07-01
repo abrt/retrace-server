@@ -885,6 +885,47 @@ def unpack_vmcore(path):
 
     os.rename(archive, os.path.join(parentdir, "vmcore"))
 
+
+def unpack_coredump(path):
+    processed = set()
+    parentdir = os.path.dirname(path)
+    files = set(f for (f, s) in get_files_sizes(parentdir))
+    # Keep unpacking
+    while len(files - processed) > 0:
+        archive = list(files - processed)[0]
+        filetype = get_archive_type(archive)
+        if filetype == ARCHIVE_GZ:
+            check_run(["gunzip", archive])
+        elif filetype == ARCHIVE_BZ2:
+            check_run(["bunzip2", archive])
+        elif filetype == ARCHIVE_XZ:
+            check_run(["unxz", archive])
+        elif filetype == ARCHIVE_ZIP:
+            check_run(["unzip", archive, "-d", parentdir])
+        elif filetype == ARCHIVE_7Z:
+            check_run(["7za", "e", "-o%s" % parentdir, archive])
+        elif filetype == ARCHIVE_TAR:
+            check_run(["tar", "-C", parentdir, "-xf", archive])
+        elif filetype == ARCHIVE_LZOP:
+            check_run(["lzop", "-d", archive])
+
+        if os.path.isfile(archive) and filetype != ARCHIVE_UNKNOWN:
+            os.unlink(archive)
+        processed.add(archive)
+
+        files = set(f for (f, s) in get_files_sizes(parentdir))
+
+    # If coredump is not present, the biggest file becomes it
+    if "coredump" not in os.listdir(parentdir):
+        os.rename(get_files_sizes(parentdir)[0][0],
+                  os.path.join(parentdir, "coredump"))
+
+    for filename in os.listdir(parentdir):
+        fullpath = os.path.join(parentdir, filename)
+        if os.path.isdir(fullpath):
+            shutil.rmtree(fullpath)
+
+
 def get_task_est_time(taskdir):
     return 180
 
@@ -1768,10 +1809,16 @@ class RetraceTask:
 
             if unpack:
                 fullpath = os.path.join(crashdir, filename)
-                try:
-                    unpack_vmcore(fullpath)
-                except Exception as ex:
-                    errors.append((fullpath, str(ex)))
+                if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
+                    try:
+                        unpack_vmcore(fullpath)
+                    except Exception as ex:
+                        errors.append((fullpath, str(ex)))
+                if self.get_type() in [TASK_RETRACE, TASK_RETRACE_INTERACTIVE]:
+                    try:
+                        unpack_coredump(fullpath)
+                    except Exception as ex:
+                        errors.append((fullpath, str(ex)))
 
         if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
             vmcore = os.path.join(crashdir, "vmcore")
@@ -1851,6 +1898,64 @@ class RetraceTask:
                 if not skip_makedumpfile:
                     log_info("Stripped size: %s" % human_readable_size(st.st_size))
                     log_info("Makedumpfile took %d seconds and saved %s" % (dur, human_readable_size(oldsize - st.st_size)))
+
+        if self.get_type() in [TASK_RETRACE, TASK_RETRACE_INTERACTIVE]:
+            coredump = os.path.join(crashdir, "coredump")
+            files = os.listdir(crashdir)
+            for filename in files:
+                fullpath = os.path.join(crashdir, filename)
+                if os.path.isdir(fullpath):
+                    move_dir_contents(fullpath, crashdir)
+
+            files = os.listdir(crashdir)
+            if len(files) < 1:
+                errors.append(([], "No files found in the tarball"))
+            elif len(files) == 1:
+                if files[0] != "coredump":
+                    os.rename(os.path.join(crashdir, files[0]), coredump)
+            else:
+                coredumps = []
+                for filename in files:
+                    if "coredump" in filename:
+                        coredumps.append(filename)
+
+                # pick the largest file
+                if len(coredumps) < 1:
+                    absfiles = [os.path.join(crashdir, f) for f in files]
+                    files_sizes = [(os.path.getsize(f), f) for f in absfiles]
+                    largest_file = sorted(files_sizes, reverse=True)[0][1]
+                    os.rename(largest_file, coredump)
+                elif len(coredumps) > 1:
+                    absfiles = [os.path.join(crashdir, f) for f in coredumps]
+                    files_sizes = [(os.path.getsize(f), f) for f in absfiles]
+                    largest_file = sorted(files_sizes, reverse=True)[0][1]
+                    os.rename(largest_file, coredump)
+                else:
+                    for filename in files:
+                        if filename == coredumps[0]:
+                            if coredumps[0] != "coredump":
+                                os.rename(os.path.join(crashdir, filename), coredump)
+
+            files = os.listdir(crashdir)
+            for filename in files:
+                if filename in REQUIRED_FILES[self.get_type()]+["release", "os_release"]:
+                    continue
+
+                os.unlink(os.path.join(crashdir, filename))
+
+            if os.path.isfile(coredump):
+                oldsize = os.path.getsize(coredump)
+                log_info("Coredump size: %s" % human_readable_size(oldsize))
+
+                st = os.stat(coredump)
+                if (st.st_mode & stat.S_IRGRP) == 0:
+                    try:
+                        os.chmod(coredump, st.st_mode | stat.S_IRGRP)
+                    except Exception as ex:
+                        log_warn("File '%s' is not group readable and chmod"
+                                 " failed. The process will continue but if"
+                                 " it fails this is the likely cause."
+                                 % coredump)
 
         os.unlink(os.path.join(self._savedir, RetraceTask.REMOTE_FILE))
         self.set_downloaded(", ".join(downloaded))

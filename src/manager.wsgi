@@ -228,8 +228,16 @@ def application(environ, start_response):
         except Exception as ex:
             return response(start_response, "500 Internal Server Error", _("Unable to create a new task"))
 
-        # ToDo - support more
-        task.set_type(TASK_VMCORE_INTERACTIVE)
+        if "task_type" in POST and POST["task_type"][0] == "coredump":
+            task.set_type(TASK_RETRACE_INTERACTIVE)
+            if "package" in POST and POST["package"][0]:
+                task.set("custom_package", POST["package"][0])
+            if "executable" in POST and POST["executable"][0]:
+                task.set("custom_executable", POST["executable"][0])
+            if "os_release" in POST and POST["os_release"][0]:
+                task.set("custom_os_release", POST["os_release"][0])
+        else:
+            task.set_type(TASK_VMCORE_INTERACTIVE)
         task.add_remote(POST["custom_url"][0])
         task.set_managed(True)
         task.set_url("%s/%d" % (match.group(1), task.get_taskid()))
@@ -306,13 +314,13 @@ def application(environ, start_response):
                     else:
                         debugger = "gdb"
 
-                interactive = "<tr><td colspan=\"2\">%s</td></tr>" \
-                              "<tr><td colspan=\"2\">%s <code>retrace-server-interact %s shell</code></td></tr>" \
-                              "<tr><td colspan=\"2\">%s <code>retrace-server-interact %s %s</code></td></tr>" \
-                              "<tr><td colspan=\"2\">%s <code>man retrace-server-interact</code> %s</td></tr>" \
-                              % (_("This is an interactive task"), _("You can jump to the chrooted shell with:"), filename,
-                                 _("You can jump directly to the debugger with:"), filename, debugger,
-                                 _("see"), _("for further information about cmdline flags"))
+                    interactive = "<tr><td colspan=\"2\">%s</td></tr>" \
+                                  "<tr><td colspan=\"2\">%s <code>retrace-server-interact %s shell</code></td></tr>" \
+                                  "<tr><td colspan=\"2\">%s <code>retrace-server-interact %s %s</code></td></tr>" \
+                                  "<tr><td colspan=\"2\">%s <code>man retrace-server-interact</code> %s</td></tr>" \
+                                  % (_("This is an interactive task"), _("You can jump to the chrooted shell with:"), filename,
+                                     _("You can jump directly to the debugger with:"), filename, debugger,
+                                     _("see"), _("for further information about cmdline flags"))
             elif task.has_log():
                 backtracewindow = "<h2>Log:</h2><textarea class=\"backtrace\">%s</textarea>" % task.get_log()
 
