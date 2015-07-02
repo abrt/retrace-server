@@ -1324,6 +1324,7 @@ class KernelVer(object):
 
     def __init__(self, kernelver_str):
         log_debug("Parsing kernel version '%s'" % kernelver_str)
+        self.kernelver_str = kernelver_str
         self.flavour = None
         for kf in KernelVer.FLAVOUR:
             if kernelver_str.endswith(".%s" % kf):
