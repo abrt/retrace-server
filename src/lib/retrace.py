@@ -223,6 +223,17 @@ ARCH_MAP = {
     "aarch64": set(["aarch64"]),
 }
 
+
+class RetraceError(Exception):
+    pass
+
+
+class RetraceWorkerError(RetraceError):
+    def __init__(self, message=None, errorcode=1):
+        super(RetraceWorkerError, self).__init__(message)
+        self.errorcode = errorcode
+
+
 def now():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
