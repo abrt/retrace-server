@@ -2186,7 +2186,9 @@ class RetraceTask:
         for filename in [RetraceTask.BACKTRACE_FILE, RetraceTask.CRASHRC_FILE,
                          RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
                          RetraceTask.PROGRESS_FILE, RetraceTask.STARTED_FILE,
-                         RetraceTask.STATUS_FILE]:
+                         RetraceTask.STATUS_FILE, RetraceTask.MOCK_DEFAULT_CFG,
+                         RetraceTask.MOCK_SITE_DEFAULTS_CFG,
+                         RetraceTask.MOCK_LOGGING_INI]:
             try:
                 os.unlink(os.path.join(self._savedir, filename))
             except OSError as ex:
