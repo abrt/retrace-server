@@ -246,7 +246,8 @@ class RetraceWorker(object):
                     yumcfg.write("failovermethod=priority\n")
 
                 child = Popen(["coredump2packages", os.path.join(crashdir, "coredump"),
-                               "--repos=%s" % repoid, "--config=%s" % yumcfgpath],
+                               "--repos=%s" % repoid, "--config=%s" % yumcfgpath,
+                               "--log=%s" % os.path.join(task.get_savedir(), "c2p_log")],
                               stdout=PIPE, stderr=PIPE)
                 section = 0
                 crash_package_or_component = None
