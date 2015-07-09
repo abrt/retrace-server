@@ -292,7 +292,7 @@ class RetraceWorker(object):
 
         # create mock config file
         try:
-            with open(os.path.join(task.get_savedir(), "default.cfg"), "w") as mockcfg:
+            with open(os.path.join(task.get_savedir(), RetraceTask.MOCK_DEFAULT_CFG), "w") as mockcfg:
                 mockcfg.write("config_opts['root'] = '%d'\n" % task.get_taskid())
                 mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
                 mockcfg.write("config_opts['chroot_setup_cmd'] = '--skip-broken install %s abrt-addon-ccpp shadow-utils gdb rpm'\n" % " ".join(packages))
@@ -334,8 +334,10 @@ class RetraceWorker(object):
                 mockcfg.write("\"\"\"\n")
 
             # symlink defaults from /etc/mock
-            os.symlink("/etc/mock/site-defaults.cfg", os.path.join(task.get_savedir(), "site-defaults.cfg"))
-            os.symlink("/etc/mock/logging.ini", os.path.join(task.get_savedir(), "logging.ini"))
+            os.symlink("/etc/mock/site-defaults.cfg",
+                       os.path.join(task.get_savedir(), RetraceTask.MOCK_SITE_DEFAULTS_CFG))
+            os.symlink("/etc/mock/logging.ini",
+                       os.path.join(task.get_savedir(), RetraceTask.MOCK_LOGGING_INI))
         except Exception as ex:
             log_error("Unable to create mock config file: %s" % ex)
             self._fail()
@@ -475,7 +477,7 @@ class RetraceWorker(object):
             os.chown(cfgdir, -1, mockgid)
 
             try:
-                cfgfile = os.path.join(cfgdir, "default.cfg")
+                cfgfile = os.path.join(cfgdir, RetraceTask.MOCK_DEFAULT_CFG)
                 with open(cfgfile, "w") as mockcfg:
                     mockcfg.write("config_opts['root'] = '%d-kernel'\n" % task.get_taskid())
                     mockcfg.write("config_opts['target_arch'] = '%s'\n" % kernelver.arch)
@@ -512,8 +514,10 @@ class RetraceWorker(object):
                 os.chown(cfgfile, -1, mockgid)
 
                 # symlink defaults from /etc/mock
-                os.symlink("/etc/mock/site-defaults.cfg", os.path.join(cfgdir, "site-defaults.cfg"))
-                os.symlink("/etc/mock/logging.ini", os.path.join(cfgdir, "logging.ini"))
+                os.symlink("/etc/mock/site-defaults.cfg",
+                           os.path.join(task.get_savedir(), RetraceTask.MOCK_SITE_DEFAULTS_CFG))
+                os.symlink("/etc/mock/logging.ini",
+                           os.path.join(task.get_savedir(), RetraceTask.MOCK_LOGGING_INI))
             except Exception as ex:
                 log_error("Unable to create mock config file: %s" % ex)
                 self._fail()
