@@ -601,6 +601,23 @@ def find_kernel_debuginfo(kernelver):
                 cand.arch = arch
                 vers.append(cand)
 
+    if CONFIG["UseFafPackages"]:
+        from pyfaf.storage import getDatabase
+        from pyfaf.queries import get_package_by_nevra
+        db = getDatabase()
+        for ver in vers:
+            p = get_package_by_nevra(db, ver.package_name_base(debug=True),
+                                     0, ver.version, ver.release, ver._arch)
+            if p is None:
+                log_debug("FAF package not found for {0}".format(str(ver)))
+            else:
+                log_debug("FAF package found for {0}".format(str(ver)))
+                if p.has_lob("package"):
+                    log_debug("LOB location {0}".format(p.get_lob_path("package")))
+                    return p.get_lob_path("package")
+                else:
+                    log_debug("LOB not found {0}".format(p.get_lob_path("package")))
+
     # search for the debuginfo RPM
     for release in os.listdir(CONFIG["RepoDir"]):
         for ver in vers:
@@ -1367,10 +1384,7 @@ class KernelVer(object):
     def __repr__(self):
         return self.__str__()
 
-    def package_name(self, debug=False):
-        if self._arch is None:
-            raise Exception, "Architecture is required for building package name"
-
+    def package_name_base(self, debug=False):
         base = "kernel"
         if self.rt:
             base = "%s-rt" % base
@@ -1380,6 +1394,14 @@ class KernelVer(object):
 
         if debug:
             base = "%s-debuginfo" % base
+
+        return base
+
+    def package_name(self, debug=False):
+        if self._arch is None:
+            raise Exception, "Architecture is required for building package name"
+
+        base = self.package_name_base(debug)
 
         return "%s-%s-%s.%s.rpm" % (base, self.version, self.release, self._arch)
 
