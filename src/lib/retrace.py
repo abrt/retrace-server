@@ -485,6 +485,22 @@ def run_gdb(savedir):
     return backtrace, exploitable
 
 def is_package_known(package_nvr, arch, releaseid=None):
+    if CONFIG["UseFafPackages"]:
+        from pyfaf.storage import getDatabase
+        from pyfaf.queries import get_package_by_nevra
+        from rpmUtils.miscutils import splitFilename
+        db = getDatabase()
+        (n, v, r, e, _a) = splitFilename(package_nvr+".mockarch.rpm")
+        for derived_archs in ARCH_MAP.values():
+            if arch not in derived_archs:
+                continue
+            for a in derived_archs:
+                p = get_package_by_nevra(db, n, e or 0, v, r, a)
+                if p is not None:
+                    return True
+        else:
+            return False
+
     if releaseid is None:
         releases = get_supported_releases()
     else:
