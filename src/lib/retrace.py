@@ -223,20 +223,35 @@ ARCH_MAP = {
     "aarch64": set(["aarch64"]),
 }
 
+
+class RetraceError(Exception):
+    pass
+
+
+class RetraceWorkerError(RetraceError):
+    def __init__(self, message=None, errorcode=1):
+        super(RetraceWorkerError, self).__init__(message)
+        self.errorcode = errorcode
+
+
 def now():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+
+logger = logging.getLogger(__name__)
+
+
 def log_info(msg):
-    logging.info("%23s %s" % (now(), msg))
+    logger.info("%23s %s" % (now(), msg))
 
 def log_debug(msg):
-    logging.debug("%22s %s" % (now(), msg))
+    logger.debug("%22s %s" % (now(), msg))
 
 def log_warn(msg):
-    logging.warn("%20s %s" % (now(), msg))
+    logger.warn("%20s %s" % (now(), msg))
 
 def log_error(msg):
-    logging.error("%22s %s" % (now(), msg))
+    logger.error("%22s %s" % (now(), msg))
 
 def lock(lockfile):
     try:
@@ -1309,6 +1324,7 @@ class KernelVer(object):
 
     def __init__(self, kernelver_str):
         log_debug("Parsing kernel version '%s'" % kernelver_str)
+        self.kernelver_str = kernelver_str
         self.flavour = None
         for kf in KernelVer.FLAVOUR:
             if kernelver_str.endswith(".%s" % kf):
@@ -1391,6 +1407,9 @@ class RetraceTask:
     STATUS_FILE = "status"
     TYPE_FILE = "type"
     URL_FILE = "url"
+    MOCK_DEFAULT_CFG = "default.cfg"
+    MOCK_SITE_DEFAULTS_CFG = "site-defaults.cfg"
+    MOCK_LOGGING_INI = "logging.ini"
 
     def __init__(self, taskid=None):
         """Creates a new task if taskid is None,
@@ -2167,7 +2186,9 @@ class RetraceTask:
         for filename in [RetraceTask.BACKTRACE_FILE, RetraceTask.CRASHRC_FILE,
                          RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
                          RetraceTask.PROGRESS_FILE, RetraceTask.STARTED_FILE,
-                         RetraceTask.STATUS_FILE]:
+                         RetraceTask.STATUS_FILE, RetraceTask.MOCK_DEFAULT_CFG,
+                         RetraceTask.MOCK_SITE_DEFAULTS_CFG,
+                         RetraceTask.MOCK_LOGGING_INI]:
             try:
                 os.unlink(os.path.join(self._savedir, filename))
             except OSError as ex:

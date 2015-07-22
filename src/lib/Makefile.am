@@ -1,4 +1,10 @@
-retracelib_PYTHON = __init__.py argparser.py config.py retrace.py
+retracelib_PYTHON = \
+    __init__.py \
+    argparser.py \
+    config.py \
+    retrace.py \
+    retrace_worker.py
+
 retracelibdir = $(pythondir)/retrace
 
 EXTRA_DIST = config.py.in
