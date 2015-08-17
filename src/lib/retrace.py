@@ -183,6 +183,7 @@ CONFIG = {
 }
 
 ARCH_HOSTS = {}
+HOOK_SCRIPTS = {}
 
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \
 STATUS_STATS, STATUS_FINISHING, STATUS_SUCCESS, STATUS_FAIL, \
@@ -307,6 +308,12 @@ def read_config():
             host = host.strip()
             if host:
                 ARCH_HOSTS[arch] = host
+
+    if "hookscripts" in parser.sections():
+        for hook, script in parser.items("hookscripts"):
+            script = script.strip()
+            if script:
+                HOOK_SCRIPTS[hook] = script
 
 def free_space(path):
     child = Popen([DF_BIN, "-B", "1", path], stdout=PIPE)
@@ -2250,6 +2257,12 @@ class RetraceTask:
             shutil.rmtree(kerneldir)
 
         shutil.rmtree(self._savedir)
+
+    def create_worker(self):
+        """Get default worker instance for this task"""
+        # TODO: let it be configurable
+        from retrace_worker import RetraceWorker
+        return RetraceWorker(self)
 
 ### read config on import ###
 read_config()
