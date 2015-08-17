@@ -1022,6 +1022,10 @@ Default 0.
 
 @end itemize
 
+It is also possible to configure custom hook scripts to be run at various
+stages of retracing. See section @command{hookscripts} of the default
+configuration for details.
+
 
 @node Future work
 @chapter Future work
