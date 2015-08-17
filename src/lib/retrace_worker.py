@@ -9,17 +9,6 @@ from plugins import *
 class RetraceWorker(object):
     def __init__(self, task):
         self.task = task
-        self.stats = {
-            "taskid": task.get_taskid(),
-            "package": None,
-            "version": None,
-            "arch": None,
-            "starttime": int(time.time()),
-            "duration": None,
-            "coresize": None,
-            "status": STATUS_FAIL,
-        }
-        self.prerunning = len(get_active_tasks()) - 1
         self.logging_handler = None
 
     def begin_logging(self):
@@ -762,6 +751,17 @@ class RetraceWorker(object):
         task.set_status(STATUS_SUCCESS)
 
     def start(self, kernelver=None, arch=None):
+        self.stats = {
+            "taskid": self.task.get_taskid(),
+            "package": None,
+            "version": None,
+            "arch": None,
+            "starttime": int(time.time()),
+            "duration": None,
+            "coresize": None,
+            "status": STATUS_FAIL,
+        }
+        self.prerunning = len(get_active_tasks()) - 1
         try:
             task = self.task
 
