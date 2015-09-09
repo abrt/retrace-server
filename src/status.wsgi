@@ -27,7 +27,7 @@ def application(environ, start_response):
                         _("Invalid password"))
 
     status = "PENDING"
-    if task.has_log():
+    if task.has_finished_time():
         if task.has_backtrace():
             status = "FINISHED_SUCCESS"
         else:
