@@ -180,6 +180,7 @@ CONFIG = {
   "EmailNotify": False,
   "EmailNotifyFrom": "retrace@localhost",
   "CaseNumberURL": "",
+  "Crashi386": "",
 }
 
 ARCH_HOSTS = {}
@@ -1503,6 +1504,17 @@ class RetraceTask:
             self._savedir = os.path.join(CONFIG["SaveDir"], "%d" % self._taskid)
             if not os.path.isdir(self._savedir):
                 raise Exception, "The task %d does not exist" % self._taskid
+
+    def use_mock(self, kernelver):
+        # Only use mock if we're cross arch, and there's no arch-specific crash available
+        hostarch = get_canon_arch(os.uname()[4])
+        if kernelver.arch == hostarch:
+            return False
+        elif CONFIG["Crash%s" % kernelver.arch] and os.path.isfile(CONFIG["Crash%s" % kernelver.arch]):
+            self.set_crash_cmd(CONFIG["Crash%s" % kernelver.arch])
+            return False
+        else:
+            return True
 
     def _get_file_path(self, key):
         key_sanitized = key.replace("/", "_").replace(" ", "_")

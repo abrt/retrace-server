@@ -531,14 +531,12 @@ class RetraceWorker(object):
 
         kernelcache = os.path.join(CONFIG["RepoDir"], "kernel")
         kerneltmp = os.path.join(kernelcache, "%s.tmp" % kernelver)
-        hostarch = get_canon_arch(os.uname()[4])
 
         log_info(STATUS[STATUS_INIT])
         task.set_status(STATUS_INIT)
         vmlinux = ""
 
-        # cross-arch: we need to use chroot
-        if hostarch != kernelver.arch:
+        if task.use_mock(kernelver):
             self.hook_post_prepare_mock()
 
             # we don't save config into task.get_savedir() because it is only

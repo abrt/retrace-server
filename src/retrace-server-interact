@@ -113,7 +113,7 @@ if __name__ == "__main__":
             hostarch = "i386"
 
         if args.action == "crash":
-            if kernelver.arch == hostarch:
+            if not task.use_mock(kernelver):
                 vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver, crash_cmd=task.get_crash_cmd())
                 if task.has_crashrc():
                     cmdline = task.get_crash_cmd().split() + ["-i", task.get_crashrc_path(), vmcore, vmlinux]
@@ -133,7 +133,7 @@ if __name__ == "__main__":
             os.execvp(cmdline[0], cmdline)
 
         if args.action == "shell":
-            if kernelver.arch != hostarch:
+            if task.get_use_mock(kernelver):
                 cmdline = ["/usr/bin/mock", "--configdir",
                            os.path.join(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid()), "shell"]
 
