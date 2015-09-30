@@ -711,6 +711,7 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
         rpm2cpio.stdout.close()
 
 def prepare_debuginfo(vmcore, chroot=None, kernelver=None, crash_cmd=["crash"]):
+    log_info("Calling prepare_debuginfo with crash_cmd = " + str(crash_cmd))
     if kernelver is None:
         kernelver = get_kernel_release(vmcore, crash_cmd)
 
@@ -773,6 +774,14 @@ def prepare_debuginfo(vmcore, chroot=None, kernelver=None, crash_cmd=["crash"]):
     else:
         child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
     stdout = child.communicate("mod\nquit")[0]
+    if child.returncode == 1 and "el5" in kernelver.release:
+        log_info("Unable to list modules but el5 detected, trying crash fixup for vmss files")
+        crash_cmd.append("--machdep")
+        crash_cmd.append("phys_base=0x200000")
+        log_info("trying crash_cmd = " + str(crash_cmd))
+        child = Popen(crash_cmd + [ "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+        stdout = child.communicate("mod\nquit")[0]
+
     if child.returncode:
         log_warn("Unable to list modules: crash exited with %d:\n%s" % (child.returncode, stdout))
         return vmlinux
@@ -1961,7 +1970,9 @@ class RetraceTask:
                 if not skip_makedumpfile:
                     log_debug("Executing makedumpfile")
                     start = time.time()
-                    strip_vmcore(vmcore, kernelver, self.get_crash_cmd().split())
+                    crash_cmd = self.get_crash_cmd().split()
+                    strip_vmcore(vmcore, kernelver, crash_cmd)
+                    self.set_crash_cmd(' '.join(crash_cmd))
                     dur = int(time.time() - start)
 
                 st = os.stat(vmcore)

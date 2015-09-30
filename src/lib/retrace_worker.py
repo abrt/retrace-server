@@ -688,7 +688,9 @@ class RetraceWorker(object):
         else:
             try:
                 self.hook_pre_prepare_debuginfo()
-                vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver, crash_cmd=task.get_crash_cmd().split())
+                crash_cmd = task.get_crash_cmd().split()
+                vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver, crash_cmd=crash_cmd)
+                task.set_crash_cmd(' '.join(crash_cmd))
                 self.hook_post_prepare_debuginfo()
             except Exception as ex:
                 log_error("prepare_debuginfo failed: %s" % str(ex))

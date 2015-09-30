@@ -114,7 +114,9 @@ if __name__ == "__main__":
 
         if args.action == "crash":
             if not task.use_mock(kernelver):
-                vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver, crash_cmd=task.get_crash_cmd().split())
+                crash_cmd = task.get_crash_cmd().split()
+                vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver, crash_cmd=crash_cmd)
+                task.set_crash_cmd(' '.join(crash_cmd))
                 if task.has_crashrc():
                     cmdline = task.get_crash_cmd().split() + ["-i", task.get_crashrc_path(), vmcore, vmlinux]
                 else:
