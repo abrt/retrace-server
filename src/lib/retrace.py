@@ -557,8 +557,8 @@ def is_package_known(package_nvr, arch, releaseid=None):
 # el6+ vmcores are just proclaimed 'data'. Another thing is that
 # the OSRELEASE in the vmcore sometimes contains architecture
 # and sometimes it does not.
-def get_kernel_release(vmcore, crash_cmd="crash"):
-    child = Popen(crash_cmd.split() + ["--osrelease", vmcore], stdout=PIPE, stderr=STDOUT)
+def get_kernel_release(vmcore, crash_cmd=["crash"]):
+    child = Popen(crash_cmd + ["--osrelease", vmcore], stdout=PIPE, stderr=STDOUT)
     release = child.communicate()[0].strip()
 
     if child.wait() != 0 or \
@@ -710,7 +710,7 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
         cpio.wait()
         rpm2cpio.stdout.close()
 
-def prepare_debuginfo(vmcore, chroot=None, kernelver=None, crash_cmd="crash"):
+def prepare_debuginfo(vmcore, chroot=None, kernelver=None, crash_cmd=["crash"]):
     if kernelver is None:
         kernelver = get_kernel_release(vmcore, crash_cmd)
 
@@ -771,7 +771,7 @@ def prepare_debuginfo(vmcore, chroot=None, kernelver=None, crash_cmd="crash"):
                            "--", "crash -s %s %s" % (vmcore, vmlinux)],
                            stdin=PIPE, stdout=PIPE, stderr=null)
     else:
-        child = Popen(crash_cmd.split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+        child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
     stdout = child.communicate("mod\nquit")[0]
     if child.returncode:
         log_warn("Unable to list modules: crash exited with %d:\n%s" % (child.returncode, stdout))
@@ -1300,7 +1300,7 @@ def check_run(cmd):
     if child.wait():
         raise Exception, "%s exitted with %d: %s" % (cmd[0], child.returncode, stdout)
 
-def strip_vmcore(vmcore, kernelver=None, crash_cmd="crash"):
+def strip_vmcore(vmcore, kernelver=None, crash_cmd=["crash"]):
     try:
         vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver, crash_cmd=crash_cmd)
     except Exception as ex:
@@ -1961,7 +1961,7 @@ class RetraceTask:
                 if not skip_makedumpfile:
                     log_debug("Executing makedumpfile")
                     start = time.time()
-                    strip_vmcore(vmcore, kernelver, self.get_crash_cmd())
+                    strip_vmcore(vmcore, kernelver, self.get_crash_cmd().split())
                     dur = int(time.time() - start)
 
                 st = os.stat(vmcore)

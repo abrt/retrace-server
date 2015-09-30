@@ -514,7 +514,7 @@ class RetraceWorker(object):
             kernelver = custom_kernelver
             kernelver_str = custom_kernelver.kernelver_str
         else:
-            kernelver = get_kernel_release(vmcore, task.get_crash_cmd())
+            kernelver = get_kernel_release(vmcore, task.get_crash_cmd().split())
             if not kernelver:
                 log_error("Unable to determine kernel version")
                 self._fail()
@@ -614,7 +614,7 @@ class RetraceWorker(object):
             # no locks required, mock locks itself
             try:
                 self.hook_pre_prepare_debuginfo()
-                vmlinux = prepare_debuginfo(vmcore, cfgdir, kernelver=kernelver, crash_cmd=task.get_crash_cmd())
+                vmlinux = prepare_debuginfo(vmcore, cfgdir, kernelver=kernelver, crash_cmd=task.get_crash_cmd().split())
                 self.hook_post_prepare_debuginfo()
 
                 self.hook_pre_retrace()
@@ -688,7 +688,7 @@ class RetraceWorker(object):
         else:
             try:
                 self.hook_pre_prepare_debuginfo()
-                vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver, crash_cmd=task.get_crash_cmd())
+                vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver, crash_cmd=task.get_crash_cmd().split())
                 self.hook_post_prepare_debuginfo()
             except Exception as ex:
                 log_error("prepare_debuginfo failed: %s" % str(ex))
