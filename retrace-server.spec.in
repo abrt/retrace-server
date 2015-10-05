@@ -133,6 +133,22 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Mon Oct 05 2015 Michal Toman <mtoman@fedoraproject.org> 1.13-1
+- update handling of RT kernels
+- do not forward error messages from 'strings' to actual stderr
+- do not die if RepoDir has no subdirs
+- allow 32-bit crash to be executed on 64-bit hosts
+- add bits for script hooks
+- better integration with FAF
+- refactor worker
+
+* Wed Mar 11 2015 Michal Toman <mtoman@fedoraproject.org> 1.12-4
+- fix the invocation of mock shell
+
+* Tue Mar 03 2015 Michal Toman <mtoman@fedoraproject.org> 1.12-3
+- manager.wsgi - fix kernelver handling (harshula@redhat.com)
+- add support for ppc64le and aarch64
+
 * Thu Jul 31 2014 Michal Toman <mtoman@redhat.com> 1.12-1
 - do not run kmem on vmcores by default
 - fix group readability of vmcores
