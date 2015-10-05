@@ -372,7 +372,7 @@ def guess_arch(coredump_path):
             return "ppc64"
 
     result = None
-    child = Popen(["strings", coredump_path], stdout=PIPE)
+    child = Popen(["strings", coredump_path], stdout=PIPE, stderr=STDOUT)
     line = child.stdout.readline()
     while line:
         for canon_arch, derived_archs in ARCH_MAP.items():
