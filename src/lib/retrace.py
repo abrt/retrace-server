@@ -1399,7 +1399,7 @@ class KernelVer(object):
                     self.release = self.release[:-len(kf)]
                     break
 
-        self.rt = self.release.endswith("rt")
+        self.rt = "rt" in self.release
 
         log_debug("Version: '%s'; Release: '%s'; Arch: '%s'; Flavour: '%s'; Realtime: %s"
                   % (self.version, self.release, self._arch, self.flavour, self.rt))
