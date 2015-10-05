@@ -642,6 +642,7 @@ def find_kernel_debuginfo(kernelver):
                     log_debug("LOB not found {0}".format(p.get_lob_path("package")))
 
     # search for the debuginfo RPM
+    ver = None
     for release in os.listdir(CONFIG["RepoDir"]):
         for ver in vers:
             testfile = os.path.join(CONFIG["RepoDir"], release, "Packages", ver.package_name(debug=True))
@@ -655,7 +656,7 @@ def find_kernel_debuginfo(kernelver):
             if os.path.isfile(testfile):
                 return testfile
 
-    if ver.rt:
+    if ver is not None and ver.rt:
         basename = "kernel-rt"
     else:
         basename = "kernel"
