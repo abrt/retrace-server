@@ -2160,7 +2160,11 @@ class RetraceTask:
 
     def get_crash_cmd(self):
         """Gets the contents of CRASH_CMD_FILE"""
-        return self.get(RetraceTask.CRASH_CMD_FILE, maxlen=1 << 22)
+        result = self.get(RetraceTask.CRASH_CMD_FILE, maxlen=1 << 22)
+        if result is None:
+            self.set_crash_cmd("crash")
+            return "crash"
+        return result
 
     def set_crash_cmd(self, data):
         """Writes data to CRASH_CMD_FILE"""

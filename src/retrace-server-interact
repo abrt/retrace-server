@@ -135,7 +135,7 @@ if __name__ == "__main__":
             os.execvp(cmdline[0], cmdline)
 
         if args.action == "shell":
-            if task.get_use_mock(kernelver):
+            if task.use_mock(kernelver):
                 cmdline = ["/usr/bin/mock", "--configdir",
                            os.path.join(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid()), "shell"]
 
