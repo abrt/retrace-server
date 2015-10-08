@@ -32,6 +32,7 @@ Requires: createrepo
 Requires: mod_wsgi
 Requires: mod_ssl
 Requires: python-webob
+Requires: sqlite
 Requires: yum-utils
 Requires: crash >= 5.1.7
 Requires: wget
@@ -39,6 +40,7 @@ Requires: kexec-tools
 Requires: python-magic
 Requires(preun): /sbin/install-info
 Requires(post): /sbin/install-info
+Requires(post): /usr/bin/crontab
 
 Obsoletes: abrt-retrace-server < 2.0.3
 Provides: abrt-retrace-server = 2.0.3
