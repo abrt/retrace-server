@@ -1,9 +1,11 @@
 retracelib_PYTHON = \
     __init__.py \
     argparser.py \
-    config.py \
     retrace.py \
     retrace_worker.py
+
+nodist_retracelib_PYTHON = \
+    config.py
 
 retracelibdir = $(pythondir)/retrace
 
