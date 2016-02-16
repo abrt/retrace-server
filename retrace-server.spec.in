@@ -1,4 +1,4 @@
-%{!?python_site: %define python_site %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(0)")}
+%{!?python_site: %global python_site %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(0)")}
 
 Summary: Application for remote coredump analysis
 Name: retrace-server
@@ -135,6 +135,14 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Tue Feb 16 2016 Jakub Filak <jfilak@redhat.com> - 1.14-1
+- generated config.py for the target platform at build time
+- update URL patterns for Fedora repositories
+- spec: add sqlite and cron to requirements
+- set "crash" inside get_crash_cmd file if the file does not exist
+- fix get_use_mock typo
+- use %%global for the nested python_site macro instead of %%define
+
 * Mon Oct 05 2015 Michal Toman <mtoman@fedoraproject.org> 1.13-1
 - update handling of RT kernels
 - do not forward error messages from 'strings' to actual stderr
