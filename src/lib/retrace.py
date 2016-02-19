@@ -157,6 +157,8 @@ CONFIG = {
   "AllowExternalDir": False,
   "AllowInteractive": False,
   "AllowTaskManager": False,
+  "AllowVMCoreTask" : False,
+  "AllowUsrCoreTask" : False,
   "TaskManagerAuthDelete": False,
   "TaskManagerDeleteUsers": [],
   "UseFTPTasks": False,
