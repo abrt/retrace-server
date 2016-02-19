@@ -602,6 +602,18 @@ def application(environ, start_response):
 
     custom_url = "%s/__custom__" % match.group(1)
 
+    vmcore_form = ""
+    if CONFIG["AllowVMCoreTask"]:
+        with open("/usr/share/retrace-server/manager_vmcore_task_form.xhtml") as f:
+            vmcore_form = f.read(1 << 20) # 1MB
+    output = output.replace("{vmcore_task_form}", vmcore_form)
+
+    usrcore_form = ""
+    if CONFIG["AllowUsrCoreTask"]:
+        with open("/usr/share/retrace-server/manager_usrcore_task_form.xhtml") as f:
+            usrcore_form = f.read(1 << 20) # 1MB
+    output = output.replace("{usrcore_task_form}", usrcore_form)
+
     output = output.replace("{title}", title)
     output = output.replace("{sitename}", sitename)
     output = output.replace("{available_str}", available_str)
@@ -618,5 +630,6 @@ def application(environ, start_response):
     output = output.replace("{available}", "\n            ".join(available))
     output = output.replace("{running}", "\n            ".join(running))
     output = output.replace("{finished}", "\n            ".join(finished))
+
 
     return response(start_response, "200 OK", output, [("Content-Type", "text/html")])
