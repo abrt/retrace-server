@@ -146,7 +146,7 @@ following elements:
         guessparser:    Parser able to guess release from package's name. Can not
                         be relied on (e.g. el6 does not give enough information).
 
-        yumcfg:         A string that will be appended to yum config file for all
+        dnfcfg:         A string that will be appended to dnf config file for all
                         repositories
 
         displayrelease: Name of release for displaying in statistics page
@@ -158,13 +158,13 @@ following elements:
         gdb_executable: Path to the gdb executable
 
         repos:          An array of public repositories and their mirrors.
-                        The synchronization is realized using rsync or yum, so
+                        The synchronization is realized using rsync or dnf, so
                         repository path is either a directory in the filesystem,
                         rsync:// URL, http:// URL or ftp:// URL. $ARCH and $VER
                         meta-variables are expanded to appropriate strings.
                         The repo is either defined as list of mirrors or
                         a two-member tuple where the first member is the same
-                        list of mirrors and second is a part of yum config file
+                        list of mirrors and second is a part of dnf config file
                         that will only be appended to the repo.
                         Example:
                         repos = [
@@ -184,7 +184,7 @@ following elements:
                               "rsync://repo4/mirror1",
                               "http://repo4/mirror2",
                             ],
-                            "gpgcheck = 0", # local yum config
+                            "gpgcheck = 0", # local dnf config
                           ),
                         ]
 

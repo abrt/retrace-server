@@ -334,14 +334,15 @@ class RetraceWorker(object):
             # read required packages from coredump
             try:
                 repoid = "%s%s" % (REPO_PREFIX, releaseid)
-                yumcfgpath = os.path.join(self.task.get_savedir(), "yum.conf")
-                with open(yumcfgpath, "w") as yumcfg:
-                    yumcfg.write("[%s]\n" % repoid)
-                    yumcfg.write("name=%s\n" % releaseid)
-                    yumcfg.write("baseurl=file://%s/%s/\n" % (CONFIG["RepoDir"], releaseid))
-                    yumcfg.write("failovermethod=priority\n")
+                dnfcfgpath = os.path.join(self.task.get_savedir(), "dnf.conf")
+                with open(dnfcfgpath, "w") as dnfcfg:
+                    dnfcfg.write("[%s]\n" % repoid)
+                    dnfcfg.write("name=%s\n" % releaseid)
+                    dnfcfg.write("baseurl=file://%s/%s/\n" % (CONFIG["RepoDir"], releaseid))
+                    dnfcfg.write("failovermethod=priority\n")
+
                 child = Popen(["coredump2packages", os.path.join(crashdir, "coredump"),
-                               "--repos=%s" % repoid, "--config=%s" % yumcfgpath,
+                               "--repos=%s" % repoid, "--config=%s" % dnfcfgpath,
                                "--log=%s" % os.path.join(self.task.get_savedir(), "c2p_log")],
                               stdout=PIPE, stderr=PIPE)
                 section = 0
@@ -359,6 +360,7 @@ class RetraceWorker(object):
                         stripped = line.strip()
 
                         # hack - help to depsolver, yum would fail otherwise
+                        # unknow for DNF
                         if distribution == "fedora" and stripped.startswith("gnome"):
                             packages.append("desktop-backgrounds-gnome")
 

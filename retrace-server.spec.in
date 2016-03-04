@@ -56,7 +56,7 @@ BuildRequires: python-six
 %endif
 Requires: mod_ssl
 Requires: sqlite
-Requires: yum-utils
+Requires: dnf
 Requires: crash >= 5.1.7
 Requires: wget
 Requires: kexec-tools
