@@ -6,6 +6,7 @@ import gettext
 import logging
 import magic
 import os
+import grp
 import re
 import random
 import shutil
@@ -1600,12 +1601,17 @@ class RetraceTask:
 
         return self._start_local(debug=debug, kernelver=kernelver, arch=arch)
 
+    def chgrp(self, key):
+        gr = grp.getgrnam(CONFIG["AuthGroup"])
+        os.chown(self._get_file_path(key),-1,gr.gr_gid)
+
     def set(self, key, value, mode="w"):
         if not mode in ["w", "a"]:
             raise ValueError, "mode must be either 'w' or 'a'"
 
         with open(self._get_file_path(key), mode) as f:
             f.write(value)
+            self.chgrp(key)
 
     def set_atomic(self, key, value, mode="w"):
         if not mode in ["w", "a"]:
@@ -1624,6 +1630,7 @@ class RetraceTask:
             f.write(value)
 
         os.rename(tmpfilename, filename)
+        self.chgrp(key)
 
     # 256MB should be enough by default
     def get(self, key, maxlen=268435456):
