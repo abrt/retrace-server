@@ -9,7 +9,7 @@ import shutil
 import sys
 import tempfile
 import rpm
-import yum
+import dnf
 from retrace import *
 
 sys.path.insert(0, "/usr/share/retrace-server")
@@ -23,18 +23,19 @@ TARGET_GROUP = CONFIG["AuthGroup"]
 
 BUFSIZE = 1 << 22 # 4 MB
 
-def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
-    yumtmp = tempfile.NamedTemporaryFile(mode="w", delete=False,
-                                         prefix="repo", suffix=".conf")
-    yumtmp.write(globalyumcfg)
-    yumtmp.write("[%s]\n" % targetid)
-    yumtmp.write("name=%s\n" % targetid)
-    yumtmp.write("baseurl=%s\n" % repourl)
-    yumtmp.write(localyumcfg)
-    yumtmp.close()
 
-    with open(yumtmp.name, "r") as f:
-        log_debug("Using yum config from %s\n%s" % (yumtmp.name, f.read()))
+def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
+    dnftmp = tempfile.NamedTemporaryFile(mode="w", delete=False,
+                                         prefix="repo", suffix=".conf")
+    dnftmp.write(globaldnfcfg)
+    dnftmp.write("[%s]\n" % targetid)
+    dnftmp.write("name=%s\n" % targetid)
+    dnftmp.write("baseurl=%s\n" % repourl)
+    dnftmp.write(localdnfcfg)
+    dnftmp.close()
+
+    with open(dnftmp.name, "r") as f:
+        log_debug("Using dnf config from %s\n%s" % (dnftmp.name, f.read()))
 
     pkgdir = os.path.join(CONFIG["RepoDir"], targetid, "Packages")
     tmpdir = os.path.join(CONFIG["RepoDir"], "temp", targetid)
@@ -42,48 +43,42 @@ def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
         os.makedirs(tmpdir)
 
     try:
-        with open(os.path.join(CONFIG["LogDir"], "reposync_yum.log"), "a") as yumlog:
+        with open(os.path.join(CONFIG["LogDir"], "reposync_dnf.log"), "a") as dnflog:
             old_stderr = sys.stderr
-            sys.stderr = yumlog
+            sys.stderr = dnflog
 
-            # BEGIN YUM
-            yb = yum.YumBase()
-            yb.doConfigSetup(fn=yumtmp.name)
-            if not yb.setCacheDir():
+            # BEGIN DNF
+            dnfbase = dnf.Base()
+            dnfbase.conf.read(filename=dnftmp.name)
+            if not dnfbase.conf.cachedir:
                 sys.stderr = old_stderr
-                log_error("Unable to initialize yum cache")
+                log_error("Unable to initialize DNF cache")
                 return -1
 
-            cachedir = os.path.join(yb.repos._cachedir, targetid)
+            cachedir = os.path.join(dnfbase.conf.cachedir, targetid)
             if os.path.isdir(cachedir):
                 shutil.rmtree(cachedir)
-                yb.setCacheDir()
+            dnfbase.read_all_repos()
 
-            for repo in yb.repos.listEnabled():
+            for repo in dnfbase.repos.iter_enabled():
                 repo.disable()
-                repo.close()
-            yb.repos.repos[targetid].enable()
+
+            dnfbase.repos[targetid].enable()
 
             try:
-                yb.repos.doSetup()
+                # Fill the sack with repository packages
+                dnfbase.fill_sack(load_system_repo=False)
             except Exception as ex:
                 sys.stderr = old_stderr
                 log_error(str(ex))
                 return -1
 
-            try:
-                yb.repos.populateSack()
-            except Exception as ex:
-                sys.stderr = old_stderr
-                log_error(str(ex))
-                return -1
-
-            packages = yb.pkgSack.returnPackages()
+            packages = list(dnfbase.sack.query())
             retcode = 0
             download = []
 
             for package in packages:
-                rpmname = package.remote_url.rsplit("/", 1)[1]
+                rpmname = package.location.rsplit("/", 1)[1]
                 pkgpath = os.path.join(pkgdir, rpmname)
                 if not os.path.isfile(pkgpath) or os.path.getsize(pkgpath) != package.size:
                     log_info("%s will be downloaded" % rpmname)
@@ -91,7 +86,11 @@ def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
                 else:
                     log_debug("%s is already downloaded, skipping" % rpmname)
 
-            errors = yb.downloadPkgs(download)
+
+
+
+
+            errors = dnfbase.download_packages(download)
             for error in errors:
                 old_stderr.write("An error occured during download\n%s: %s" % (error, errors[error]))
 
@@ -115,12 +114,12 @@ def sync_using_yum(targetid, repourl, globalyumcfg="", localyumcfg=""):
 
                     shutil.copy2(downloadpath, targetpath)
                     os.unlink(downloadpath)
-            # END YUM
+            # END DNF
     finally:
         sys.stderr = old_stderr
         try:
-            os.unlink(yumtmp.name)
-            shutil.rmtree(yb.repos.repos[targetid].cachedir)
+            os.unlink(dnftmp.name)
+            shutil.rmtree(dnfbase.repos[targetid].cachedir)
         except Exception as ex:
             log_error("Unable to clean up: %s." % ex)
             return -1
@@ -258,19 +257,19 @@ if __name__ == "__main__":
             if filename.endswith(".rpm"):
                 os.rename(os.path.join(targetdir, filename), os.path.join(pkgdir, filename))
 
-        globalyumcfg = ""
-        if hasattr(plugin, "yumcfg"):
-            globalyumcfg = plugin.yumcfg.replace("$ARCH", arch).replace("$VER", version)
+        globaldnfcfg = ""
+        if hasattr(plugin, "dnfcfg"):
+            globaldnfcfg = plugin.dnfcfg.replace("$ARCH", arch).replace("$VER", version)
 
         i = 0
         # run rsync
         for repo in plugin.repos:
             i += 1
             retcode = -1
-            localyumcfg = ""
+            localdnfcfg = ""
             if isinstance(repo, tuple):
-                repo, localyumcfg = repo
-                localyumcfg = localyumcfg.replace("$ARCH", arch).replace("$VER", version)
+                repo, localdnfcfg = repo
+                localdnfcfg = localdnfcfg.replace("$ARCH", arch).replace("$VER", version)
 
             for mirror in repo:
                 repourl = mirror.replace("$ARCH", arch).replace("$VER", version)
@@ -281,7 +280,7 @@ if __name__ == "__main__":
                 if repourl.startswith("http://") or \
                    repourl.startswith("https://") or \
                    repourl.startswith("ftp://"):
-                    retcode = sync_using_yum(targetid, repourl, globalyumcfg, localyumcfg)
+                    retcode = sync_using_dnf(targetid, repourl, globaldnfcfg, localdnfcfg)
                 else:
                     if repourl.startswith("rsync://"):
                         files = [repourl]
