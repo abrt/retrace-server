@@ -24,16 +24,16 @@ if __name__ == "__main__":
         sys.stderr.write("Task '%d' does not exist\n" % cmdline.task_id)
         exit(1)
 
-    worker = task.create_worker()
-    worker.begin_logging()
-
     if task.has_status():
         if not cmdline.restart:
-            log_error("%s has already been executed for task %d" % (sys.argv[0], cmdline.task_id))
-            log_info("You can use --restart option if you really want to restart the task")
-            worker._fail()
+            sys.stderr.write("%s has already been executed for task %d\n" % (sys.argv[0], cmdline.task_id))
+            sys.stdout.write("You can use --restart option if you really want to restart the task\n")
+            exit(1)
 
         task.reset()
+
+    worker = task.create_worker()
+    worker.begin_logging()
 
     if not cmdline.foreground:
         try:
