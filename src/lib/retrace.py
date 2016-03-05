@@ -1466,6 +1466,7 @@ class RetraceTask:
     STATUS_FILE = "status"
     TYPE_FILE = "type"
     URL_FILE = "url"
+    VMLINUX_FILE = "vmlinux"
     MOCK_DEFAULT_CFG = "default.cfg"
     MOCK_SITE_DEFAULTS_CFG = "site-defaults.cfg"
     MOCK_LOGGING_INI = "logging.ini"
@@ -1797,6 +1798,16 @@ class RetraceTask:
 
     def set_url(self, value):
         self.set(RetraceTask.URL_FILE, value)
+
+    def has_vmlinux(self):
+        return self.has(RetraceTask.VMLINUX_FILE)
+
+    def get_vmlinux(self):
+        """Gets the contents of VMLINUX_FILE"""
+        return self.get(RetraceTask.VMLINUX_FILE, maxlen=1 << 22)
+
+    def set_vmlinux(self, value):
+        self.set(RetraceTask.VMLINUX_FILE, value)
 
     def download_block(self, data):
         self._progress_write_func(data)
