@@ -1468,6 +1468,7 @@ class RetraceTask:
     STATUS_FILE = "status"
     TYPE_FILE = "type"
     URL_FILE = "url"
+    VMLINUX_FILE = "vmlinux"
     MOCK_DEFAULT_CFG = "default.cfg"
     MOCK_SITE_DEFAULTS_CFG = "site-defaults.cfg"
     MOCK_LOGGING_INI = "logging.ini"
@@ -1816,6 +1817,16 @@ class RetraceTask:
 
     def set_url(self, value):
         self.set(RetraceTask.URL_FILE, value)
+
+    def has_vmlinux(self):
+        return self.has(RetraceTask.VMLINUX_FILE)
+
+    def get_vmlinux(self):
+        """Gets the contents of VMLINUX_FILE"""
+        return self.get(RetraceTask.VMLINUX_FILE, maxlen=1 << 22)
+
+    def set_vmlinux(self, value):
+        self.set(RetraceTask.VMLINUX_FILE, value)
 
     def download_block(self, data):
         self._progress_write_func(data)
@@ -2277,7 +2288,8 @@ class RetraceTask:
               RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
               RetraceTask.TYPE_FILE, RetraceTask.MISC_DIR,
               RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
-              RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR ]:
+              RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
+              RetraceTask.VMLINUX_FILE ]:
 
                 path = os.path.join(self._savedir, f)
                 try:
@@ -2297,7 +2309,8 @@ class RetraceTask:
                          RetraceTask.PROGRESS_FILE, RetraceTask.STARTED_FILE,
                          RetraceTask.STATUS_FILE, RetraceTask.MOCK_DEFAULT_CFG,
                          RetraceTask.MOCK_SITE_DEFAULTS_CFG, RetraceTask.MOCK_LOGGING_INI,
-                         RetraceTask.CRASH_CMD_FILE, RetraceTask.MOCK_LOG_DIR]:
+                         RetraceTask.CRASH_CMD_FILE, RetraceTask.MOCK_LOG_DIR,
+                         RetraceTask.VMLINUX_FILE]:
             try:
                 os.unlink(os.path.join(self._savedir, filename))
             except OSError as ex:
