@@ -1799,6 +1799,7 @@ class RetraceTask:
 
         if child.returncode:
             log_warn("Unable to list modules: crash exited with %d:\n%s" % (child.returncode, stdout))
+            self.set_vmlinux(vmlinux)
             return vmlinux
 
         modules = []
@@ -1818,6 +1819,7 @@ class RetraceTask:
 
         cache_files_from_debuginfo(debuginfo, debugdir_base, todo)
 
+        self.set_vmlinux(vmlinux)
         return vmlinux
 
     def strip_vmcore(self, vmcore, kernelver=None, crash_cmd=["crash"]):
