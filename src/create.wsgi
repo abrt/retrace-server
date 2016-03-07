@@ -196,7 +196,7 @@ def application(environ, start_response):
                             _("Required file '%s' is missing") % required_file)
 
     if task.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
-        strip_vmcore(os.path.join(crashdir, "vmcore"))
+        task.strip_vmcore(os.path.join(crashdir, "vmcore"))
 
     task.start()
 

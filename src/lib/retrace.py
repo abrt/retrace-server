@@ -713,100 +713,6 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
         cpio.wait()
         rpm2cpio.stdout.close()
 
-def prepare_debuginfo(vmcore, chroot=None, kernelver=None, crash_cmd=["crash"]):
-    log_info("Calling prepare_debuginfo with crash_cmd = " + str(crash_cmd))
-    if kernelver is None:
-        kernelver = get_kernel_release(vmcore, crash_cmd)
-
-    if kernelver is None:
-        raise Exception, "Unable to determine kernel version"
-
-    debuginfo = find_kernel_debuginfo(kernelver)
-    if not debuginfo:
-        raise Exception, "Unable to find debuginfo package"
-
-    if "EL" in kernelver.release:
-        if kernelver.flavour is None:
-            pattern = "EL/vmlinux"
-        else:
-            pattern = "EL%s/vmlinux" % kernelver.flavour
-    else:
-        pattern = "/vmlinux"
-
-    vmlinux_path = None
-    debugfiles = {}
-    child = Popen(["rpm", "-qpl", debuginfo], stdout=PIPE)
-    lines = child.communicate()[0].splitlines()
-    for line in lines:
-        if line.endswith(pattern):
-            vmlinux_path = line
-            continue
-
-        match = KO_DEBUG_PARSER.match(line)
-        if not match:
-            continue
-
-        # only pick the correct flavour for el4
-        if "EL" in kernelver.release:
-            if kernelver.flavour is None:
-                pattern2 = "EL/"
-            else:
-                pattern2 = "EL%s/" % kernelver.flavour
-
-            if not pattern2 in os.path.dirname(line):
-                continue
-
-        # '-' in file name is transformed to '_' in module name
-        debugfiles[match.group(1).replace("-", "_")] = line
-
-    debugdir_base = os.path.join(CONFIG["RepoDir"], "kernel", kernelver.arch)
-    if not os.path.isdir(debugdir_base):
-        os.makedirs(debugdir_base)
-
-    vmlinux = os.path.join(debugdir_base, vmlinux_path.lstrip("/"))
-    if not os.path.isfile(vmlinux):
-        cache_files_from_debuginfo(debuginfo, debugdir_base, [vmlinux_path])
-        if not os.path.isfile(vmlinux):
-            raise Exception, "Caching vmlinux failed"
-
-    if chroot:
-        with open(os.devnull, "w") as null:
-            child = Popen(["/usr/bin/mock", "--configdir", chroot, "shell",
-                           "--", "crash -s %s %s" % (vmcore, vmlinux)],
-                           stdin=PIPE, stdout=PIPE, stderr=null)
-    else:
-        child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-    stdout = child.communicate("mod\nquit")[0]
-    if child.returncode == 1 and "el5" in kernelver.release:
-        log_info("Unable to list modules but el5 detected, trying crash fixup for vmss files")
-        crash_cmd.append("--machdep")
-        crash_cmd.append("phys_base=0x200000")
-        log_info("trying crash_cmd = " + str(crash_cmd))
-        child = Popen(crash_cmd + [ "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-        stdout = child.communicate("mod\nquit")[0]
-
-    if child.returncode:
-        log_warn("Unable to list modules: crash exited with %d:\n%s" % (child.returncode, stdout))
-        return vmlinux
-
-    modules = []
-    for line in stdout.splitlines():
-        # skip header
-        if "NAME" in line:
-            continue
-
-        if " " in line:
-            modules.append(line.split()[1])
-
-    todo = []
-    for module in modules:
-        if module in debugfiles and \
-           not os.path.isfile(os.path.join(debugdir_base, debugfiles[module].lstrip("/"))):
-            todo.append(debugfiles[module])
-
-    cache_files_from_debuginfo(debuginfo, debugdir_base, todo)
-
-    return vmlinux
 
 def get_vmcore_dump_level(task, vmlinux=None):
     vmcore_path = os.path.join(task.get_savedir(), "crash", "vmcore")
@@ -1312,23 +1218,6 @@ def check_run(cmd):
     if child.wait():
         raise Exception, "%s exitted with %d: %s" % (cmd[0], child.returncode, stdout)
 
-def strip_vmcore(vmcore, kernelver=None, crash_cmd=["crash"]):
-    try:
-        vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver, crash_cmd=crash_cmd)
-    except Exception as ex:
-        log_warn("prepare_debuginfo failed: %s" % ex)
-        return
-
-    newvmcore = "%s.stripped" % vmcore
-    retcode = call(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
-                    "-x", vmlinux, "--message-level", "0", vmcore, newvmcore])
-    if retcode:
-        log_warn("makedumpfile exited with %d" % retcode)
-        if os.path.isfile(newvmcore):
-            os.unlink(newvmcore)
-    else:
-        os.rename(newvmcore, vmcore)
-
 def move_dir_contents(source, dest):
     for filename in os.listdir(source):
         path = os.path.join(source, filename)
@@ -1817,6 +1706,118 @@ class RetraceTask:
                                        self._progress_total_str)
         self.set_atomic(RetraceTask.PROGRESS_FILE, progress)
 
+    def prepare_debuginfo(self, vmcore, chroot=None, kernelver=None, crash_cmd=["crash"]):
+        log_info("Calling prepare_debuginfo with crash_cmd = " + str(crash_cmd))
+        if kernelver is None:
+            kernelver = get_kernel_release(vmcore, crash_cmd)
+
+        if kernelver is None:
+            raise Exception, "Unable to determine kernel version"
+
+        debuginfo = find_kernel_debuginfo(kernelver)
+        if not debuginfo:
+            raise Exception, "Unable to find debuginfo package"
+
+        if "EL" in kernelver.release:
+            if kernelver.flavour is None:
+                pattern = "EL/vmlinux"
+            else:
+                pattern = "EL%s/vmlinux" % kernelver.flavour
+        else:
+            pattern = "/vmlinux"
+
+        vmlinux_path = None
+        debugfiles = {}
+        child = Popen(["rpm", "-qpl", debuginfo], stdout=PIPE)
+        lines = child.communicate()[0].splitlines()
+        for line in lines:
+            if line.endswith(pattern):
+                vmlinux_path = line
+                continue
+
+            match = KO_DEBUG_PARSER.match(line)
+            if not match:
+                continue
+
+            # only pick the correct flavour for el4
+            if "EL" in kernelver.release:
+                if kernelver.flavour is None:
+                    pattern2 = "EL/"
+                else:
+                    pattern2 = "EL%s/" % kernelver.flavour
+
+                if not pattern2 in os.path.dirname(line):
+                    continue
+
+            # '-' in file name is transformed to '_' in module name
+            debugfiles[match.group(1).replace("-", "_")] = line
+
+        debugdir_base = os.path.join(CONFIG["RepoDir"], "kernel", kernelver.arch)
+        if not os.path.isdir(debugdir_base):
+            os.makedirs(debugdir_base)
+
+        vmlinux = os.path.join(debugdir_base, vmlinux_path.lstrip("/"))
+        if not os.path.isfile(vmlinux):
+            cache_files_from_debuginfo(debuginfo, debugdir_base, [vmlinux_path])
+            if not os.path.isfile(vmlinux):
+                raise Exception, "Caching vmlinux failed"
+
+        if chroot:
+            with open(os.devnull, "w") as null:
+                child = Popen(["/usr/bin/mock", "--configdir", chroot, "shell",
+                               "--", "crash -s %s %s" % (vmcore, vmlinux)],
+                              stdin=PIPE, stdout=PIPE, stderr=null)
+        else:
+            child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+        stdout = child.communicate("mod\nquit")[0]
+        if child.returncode == 1 and "el5" in kernelver.release:
+            log_info("Unable to list modules but el5 detected, trying crash fixup for vmss files")
+            crash_cmd.append("--machdep")
+            crash_cmd.append("phys_base=0x200000")
+            log_info("trying crash_cmd = " + str(crash_cmd))
+            child = Popen(crash_cmd + [ "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            stdout = child.communicate("mod\nquit")[0]
+
+        if child.returncode:
+            log_warn("Unable to list modules: crash exited with %d:\n%s" % (child.returncode, stdout))
+            return vmlinux
+
+        modules = []
+        for line in stdout.splitlines():
+            # skip header
+            if "NAME" in line:
+                continue
+
+            if " " in line:
+                modules.append(line.split()[1])
+
+        todo = []
+        for module in modules:
+            if module in debugfiles and \
+               not os.path.isfile(os.path.join(debugdir_base, debugfiles[module].lstrip("/"))):
+                todo.append(debugfiles[module])
+
+        cache_files_from_debuginfo(debuginfo, debugdir_base, todo)
+
+        return vmlinux
+
+    def strip_vmcore(self, vmcore, kernelver=None, crash_cmd=["crash"]):
+        try:
+            vmlinux = self.prepare_debuginfo(self, vmcore, kernelver=kernelver, crash_cmd=crash_cmd)
+        except Exception as ex:
+            log_warn("prepare_debuginfo failed: %s" % ex)
+            return
+
+        newvmcore = "%s.stripped" % vmcore
+        retcode = call(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
+                        "-x", vmlinux, "--message-level", "0", vmcore, newvmcore])
+        if retcode:
+            log_warn("makedumpfile exited with %d" % retcode)
+            if os.path.isfile(newvmcore):
+                os.unlink(newvmcore)
+        else:
+            os.rename(newvmcore, vmcore)
+
     def download_remote(self, unpack=True, timeout=0, kernelver=None):
         """Downloads all remote resources and returns a list of errors."""
         downloaded = []
@@ -1985,7 +1986,7 @@ class RetraceTask:
                     log_debug("Executing makedumpfile")
                     start = time.time()
                     crash_cmd = self.get_crash_cmd().split()
-                    strip_vmcore(vmcore, kernelver, crash_cmd)
+                    self.strip_vmcore(vmcore, kernelver, crash_cmd)
                     self.set_crash_cmd(' '.join(crash_cmd))
                     dur = int(time.time() - start)
 
