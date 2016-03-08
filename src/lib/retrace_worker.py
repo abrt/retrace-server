@@ -415,7 +415,7 @@ class RetraceWorker(object):
         task.set_status(STATUS_INIT)
         log_info(STATUS[STATUS_INIT])
 
-        self._retrace_run(25, ["/usr/bin/mock", "init", "--configdir", task.get_savedir()])
+        self._retrace_run(25, ["/usr/bin/mock", "init", "--resultdir", task.get_savedir() + "/log", "--configdir", task.get_savedir()])
 
         self.hook_post_prepare_mock()
         self.hook_pre_retrace()
