@@ -1,5 +1,7 @@
 #!/usr/bin/python
 from retrace import *
+sys.path.insert(0, "/usr/share/retrace-server/")
+from plugins import PLUGINS
 
 def application(environ, start_response):
     request = Request(environ)
@@ -92,16 +94,31 @@ def application(environ, start_response):
     output = output.replace("{arch_rows}", "\n            ".join(tablerows))
 
     # by release
-    # tricky - no simple way to group by .fcXY
-    query.execute("SELECT COUNT(*) FROM tasks WHERE version LIKE '%.fc15'")
-    row = query.fetchone()
-    output = output.replace("{f15}", str(row[0]))
-    query.execute("SELECT COUNT(*) FROM tasks WHERE version LIKE '%.fc16'")
-    row = query.fetchone()
-    output = output.replace("{f16}", str(row[0]))
-    query.execute("SELECT COUNT(*) FROM tasks WHERE version LIKE '%.fc17'")
-    row = query.fetchone()
-    output = output.replace("{f17}", str(row[0]))
+    versions = {}
+    for entry in PLUGINS:
+        for key in entry.versionlist:
+            versions[key] = entry.displayrelease
+
+    tablerows = []
+    i = 1
+    for key in versions.keys():
+        query.execute("SELECT COUNT(*) FROM tasks WHERE version LIKE '%"+key+"'")
+        row = query.fetchone()
+        retstr = str(versions[key]) + " " + str(key[-1])
+
+        if i % 2:
+            style = "odd"
+        else:
+            style = "even"
+
+        if row[0] > 0:
+            tablerows.append("<tr class=\"%s\">" % style)
+            tablerows.append("  <td>%s</td>" % retstr)
+            tablerows.append("  <td>%s</td>" % str(row[0]))
+            tablerows.append("</tr>")
+            i += 1
+
+    output = output.replace("{release_rows}", "\n            ".join(tablerows))
 
     # most retraced
     query.execute("SELECT package, COUNT(*) as c FROM tasks GROUP BY package \
