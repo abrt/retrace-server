@@ -14,6 +14,7 @@ LONG_TYPES = { TASK_RETRACE: "Coredump retrace",
                TASK_RETRACE_INTERACTIVE: "Coredump retrace - interactive",
                TASK_VMCORE_INTERACTIVE: "VMcore retrace - interactive" }
 
+
 def is_local_task(taskid):
     try:
         RetraceTask(taskid)
@@ -34,6 +35,20 @@ def application(environ, start_response):
 
     _ = parse_http_gettext("%s" % request.accept_language,
                            "%s" % request.accept_charset)
+
+    ftpcallback = """
+        <script>
+        $.ajax({
+          type: "GET",
+          <URL>
+          success: function( returnedData ) {
+            $( '#available' ).html( returnedData );
+            $( '#ftploading' ).hide();
+            $( '#available' ).show();
+          }
+         });
+        </script>
+    """
 
     if not CONFIG["AllowTaskManager"]:
         return response(start_response, "403 Forbidden", _("Task manager was disabled by the server administrator"))
@@ -588,16 +603,22 @@ def application(environ, start_response):
     status_str = _("Status")
 
     if CONFIG["UseFTPTasks"]:
-        available = []
-        rawtasklist = ftp_list_dir(CONFIG["FTPDir"])
+        starturl = "ftp"
+        qs = {}
         if filterexp:
-            tasklist = sorted(fnmatch.filter(rawtasklist, filterexp))
-        else:
-            tasklist = sorted(rawtasklist, cmp=cmp_vmcores_first)
+            qs["filterexp"] = filterexp
 
-        for fname in tasklist:
-            available.append("<tr><td><a href=\"%s/%s\">%s</a></td></tr>" \
-                             % (match.group(1), urllib.quote(fname), fname))
+        qs_text = urllib.urlencode(qs)
+
+        if qs_text:
+            starturl = "\"%s?%s\"" % (starturl, qs_text)
+        else:
+            starturl = "\"" + starturl + "\""
+
+        ftpcallback = ftpcallback.replace("<URL>", "url: %s," %(starturl))
+        output = output.replace("{ftpscript}", ftpcallback)
+    else:
+        output = output.replace("{ftpscript}", "")
         available_str = _("FTP files")
 
     custom_url = "%s/__custom__" % match.group(1)
@@ -627,7 +648,6 @@ def application(environ, start_response):
     output = output.replace("{status_str}", status_str)
     output = output.replace("{create_custom_url}", custom_url)
     # spaces to keep the XML nicely aligned
-    output = output.replace("{available}", "\n            ".join(available))
     output = output.replace("{running}", "\n            ".join(running))
     output = output.replace("{finished}", "\n            ".join(finished))
 
