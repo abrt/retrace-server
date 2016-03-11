@@ -1824,7 +1824,7 @@ class RetraceTask:
 
     def strip_vmcore(self, vmcore, kernelver=None, crash_cmd=["crash"]):
         try:
-            vmlinux = self.prepare_debuginfo(self, vmcore, kernelver=kernelver, crash_cmd=crash_cmd)
+            vmlinux = self.prepare_debuginfo(vmcore, chroot=None, kernelver=kernelver, crash_cmd=crash_cmd)
         except Exception as ex:
             log_warn("prepare_debuginfo failed: %s" % ex)
             return
