@@ -614,7 +614,7 @@ class RetraceWorker(object):
             # no locks required, mock locks itself
             try:
                 self.hook_pre_prepare_debuginfo()
-                vmlinux = prepare_debuginfo(vmcore, cfgdir, kernelver=kernelver, crash_cmd=task.get_crash_cmd().split())
+                vmlinux = task.prepare_debuginfo(vmcore, cfgdir, kernelver=kernelver, crash_cmd=task.get_crash_cmd().split())
                 self.hook_post_prepare_debuginfo()
 
                 self.hook_pre_retrace()
@@ -689,7 +689,7 @@ class RetraceWorker(object):
             try:
                 self.hook_pre_prepare_debuginfo()
                 crash_cmd = task.get_crash_cmd().split()
-                vmlinux = prepare_debuginfo(vmcore, kernelver=kernelver, crash_cmd=crash_cmd)
+                vmlinux = task.prepare_debuginfo(vmcore, kernelver=kernelver, crash_cmd=crash_cmd)
                 task.set_crash_cmd(' '.join(crash_cmd))
                 self.hook_post_prepare_debuginfo()
             except Exception as ex:
