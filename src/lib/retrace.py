@@ -6,6 +6,7 @@ import gettext
 import logging
 import magic
 import os
+import grp
 import re
 import random
 import shutil
@@ -1600,12 +1601,27 @@ class RetraceTask:
 
         return self._start_local(debug=debug, kernelver=kernelver, arch=arch)
 
+    def chgrp(self, key):
+        gr = grp.getgrnam(CONFIG["AuthGroup"])
+        try:
+            os.chown(self._get_file_path(key),-1,gr.gr_gid)
+        except:
+            pass
+
+    def chmod(self, key):
+        try:
+            os.chmod(self._get_file_path(key), stat.S_IRUSR|stat.S_IWUSR|stat.S_IRGRP|stat.S_IROTH)
+        except:
+            pass
+
     def set(self, key, value, mode="w"):
         if not mode in ["w", "a"]:
             raise ValueError, "mode must be either 'w' or 'a'"
 
         with open(self._get_file_path(key), mode) as f:
             f.write(value)
+            self.chgrp(key)
+            self.chmod(key)
 
     def set_atomic(self, key, value, mode="w"):
         if not mode in ["w", "a"]:
@@ -1624,6 +1640,8 @@ class RetraceTask:
             f.write(value)
 
         os.rename(tmpfilename, filename)
+        self.chgrp(key)
+        self.chmod(key)
 
     # 256MB should be enough by default
     def get(self, key, maxlen=268435456):
@@ -2171,6 +2189,10 @@ class RetraceTask:
     def set_crash_cmd(self, data):
         """Writes data to CRASH_CMD_FILE"""
         self.set(RetraceTask.CRASH_CMD_FILE, data)
+        try:
+            os.chmod(self._get_file_path(RetraceTask.CRASH_CMD_FILE), stat.S_IRUSR|stat.S_IWUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IROTH)
+        except:
+            pass
 
     def has_started_time(self):
         """Verifies whether STARTED_FILE exists"""
