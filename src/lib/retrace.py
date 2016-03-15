@@ -1458,6 +1458,7 @@ class RetraceTask:
     LOG_FILE = "retrace_log"
     MANAGED_FILE = "managed"
     MISC_DIR = "misc"
+    MOCK_LOG_DIR = "log"
     NOTES_FILE = "notes"
     NOTIFY_FILE = "notify"
     PASSWORD_FILE = "password"
@@ -2276,7 +2277,7 @@ class RetraceTask:
               RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
               RetraceTask.TYPE_FILE, RetraceTask.MISC_DIR,
               RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
-              RetraceTask.URL_FILE ]:
+              RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR ]:
 
                 path = os.path.join(self._savedir, f)
                 try:
@@ -2296,7 +2297,7 @@ class RetraceTask:
                          RetraceTask.PROGRESS_FILE, RetraceTask.STARTED_FILE,
                          RetraceTask.STATUS_FILE, RetraceTask.MOCK_DEFAULT_CFG,
                          RetraceTask.MOCK_SITE_DEFAULTS_CFG, RetraceTask.MOCK_LOGGING_INI,
-                         RetraceTask.CRASH_CMD_FILE]:
+                         RetraceTask.CRASH_CMD_FILE, RetraceTask.MOCK_LOG_DIR]:
             try:
                 os.unlink(os.path.join(self._savedir, filename))
             except OSError as ex:
