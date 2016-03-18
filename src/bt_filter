@@ -19,10 +19,15 @@
 # 
 #  Author: Flavio Leitner <fleitner@redhat.com>
 #
+#  Debug: Set debug to 1, 2, 3 (for more debugging info)
+#
 #  ChangeLog:
 #   * Wed Nov 4 - Flavio Leitner <fleitner@redhat.com>
 #     PID list report organized to print pids grouped by command
 #     (thanks to Fabio Olive for the suggestion)
+#   * Thu Mar 3 2016 - Steve Johnston <sjohnsto@redhat.com>
+#     Last task/PID read was never being reported due the last line
+#     not being blank
 #
 # Example of usage:
 #
@@ -43,7 +48,7 @@ else:
 
 
 
-version = '0.7'
+version = '0.8'
 
 debug = 0
 
@@ -158,7 +163,19 @@ def backtrace_file_parser(input, bt_hash, bt_proc):
 
         line = input.readline()
 
+    if state == BT_ENDING:
+        hash = backtrace_calc_hash(proc_backtrace)
+        if bt_proc.has_key(hash):
+            bt_proc[hash].append( proc_info )
+        else:
+            bt_proc[hash] = [ proc_info ]
+
+        if not bt_hash.has_key(hash):
+            bt_hash[hash] = proc_backtrace
+
     return
+
+
 
 
 
