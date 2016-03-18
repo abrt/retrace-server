@@ -135,6 +135,22 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Fri Mar 18 2016 Jakub Filak <jfilak@redhat.com> - 1.15-1
+- Correct paths to Fedora development releases
+- Fix small problem with strip_vmcore calling prepare_debuginfo
+- Avoid calling prepare_debuginfo from retrace-server-interact after kernel version detection
+- Move prepare_debuginfo and strip_vmcore inside RetraceTask
+- Add vmlinux file inside RetraceTask
+- Fix bt_filter missing last task/PID read if the last line was not blank
+- Update the release information to be dynamic based off of plugins
+- Including a Red Hat Enterprise Linux plugin
+- Mock logging into retrace task's dir
+- Enforce uniform mode bits for almost all RetraceTask files
+- Fix incorrect group permissions when writing RetraceServer files especially with interactive mode
+- Fix retrace-server-worker --restart backtrace due to unwriteable retrace_log
+- Correct license address
+- Add VMCoreTask and UsrCoreTask to config
+
 * Tue Feb 16 2016 Jakub Filak <jfilak@redhat.com> - 1.14-1
 - generated config.py for the target platform at build time
 - update URL patterns for Fedora repositories
