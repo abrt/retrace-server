@@ -2192,6 +2192,14 @@ class RetraceTask:
 
         self.set(RetraceTask.FINISHED_FILE, "%d" % value)
 
+    def get_default_started_time(self):
+        """Get ctime of the task directory"""
+        return int(os.path.getctime(self._savedir))
+
+    def get_default_finished_time(self):
+        """Get mtime of the task directory"""
+        return int(os.path.getmtime(self._savedir))
+
     def clean(self):
         """Removes all files and directories others than
         results and logs from the task directory."""
