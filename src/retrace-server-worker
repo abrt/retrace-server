@@ -61,4 +61,7 @@ if __name__ == "__main__":
         except Exception as ex:
             log_warn(str(ex))
 
-    worker.start(kernelver=kernelver, arch=cmdline.arch)
+    try:
+        worker.start(kernelver=kernelver, arch=cmdline.arch)
+    except RetraceWorkerError as ex:
+        exit(ex.errorcode)
