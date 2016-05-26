@@ -516,8 +516,7 @@ class RetraceWorker(object):
         else:
             kernelver = get_kernel_release(vmcore, task.get_crash_cmd().split())
             if not kernelver:
-                log_error("Unable to determine kernel version")
-                self._fail()
+                raise Exception("Unable to determine kernel version")
 
             log_debug("Determined kernel version: %s" % kernelver)
 
