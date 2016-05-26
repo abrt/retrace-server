@@ -121,7 +121,7 @@ class RetraceWorker(object):
 
                     message += "Remote file(s): %s\n" % files
 
-                if taks.has_log():
+                if task.has_log():
                     message += "\nError log:\n%s\n" % task.get_log()
 
                 send_email("Retrace Server <%s>" % CONFIG["EmailNotifyFrom"],
@@ -830,7 +830,7 @@ class RetraceWorker(object):
 
                     message += "Remote file(s): %s\n" % files
 
-                if taks.has_log():
+                if task.has_log():
                     message += "\nLog:\n%s\n" % task.get_log()
 
                 send_email("Retrace Server <%s>" % CONFIG["EmailNotifyFrom"],
