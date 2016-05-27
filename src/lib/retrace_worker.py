@@ -121,7 +121,7 @@ class RetraceWorker(object):
 
                     message += "Remote file(s): %s\n" % files
 
-                if taks.has_log():
+                if task.has_log():
                     message += "\nError log:\n%s\n" % task.get_log()
 
                 send_email("Retrace Server <%s>" % CONFIG["EmailNotifyFrom"],
@@ -516,8 +516,7 @@ class RetraceWorker(object):
         else:
             kernelver = get_kernel_release(vmcore, task.get_crash_cmd().split())
             if not kernelver:
-                log_error("Unable to determine kernel version")
-                self._fail()
+                raise Exception("Unable to determine kernel version")
 
             log_debug("Determined kernel version: %s" % kernelver)
 
@@ -830,7 +829,7 @@ class RetraceWorker(object):
 
                     message += "Remote file(s): %s\n" % files
 
-                if taks.has_log():
+                if task.has_log():
                     message += "\nLog:\n%s\n" % task.get_log()
 
                 send_email("Retrace Server <%s>" % CONFIG["EmailNotifyFrom"],
