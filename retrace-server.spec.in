@@ -135,6 +135,15 @@ fi
 %doc COPYING INSTALL README TODO
 
 %changelog
+* Thu Jun 2 2016 Jakub Filak <jfilak@redhat.com> - 1.16-1
+- Log failed to start tasks
+- Gracefully handle the worker errors
+- Move the FTP query operation to an AJAX operation
+- Fix duplicate email if a vmcore task fails to determine the kernel version
+- Fix typo preventing email notifications from working.
+- Correct eu-unstrip parser if FILE is '-'
+- Allow package names with Epoch
+
 * Fri Mar 18 2016 Jakub Filak <jfilak@redhat.com> - 1.15-1
 - Correct paths to Fedora development releases
 - Fix small problem with strip_vmcore calling prepare_debuginfo
