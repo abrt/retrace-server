@@ -32,6 +32,7 @@ interface_PYTHON = backtrace.wsgi \
                    index.wsgi \
                    log.wsgi \
                    manager.wsgi \
+                   ftp.wsgi \
                    settings.wsgi \
                    start.wsgi \
                    stats.wsgi \
