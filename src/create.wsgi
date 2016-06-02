@@ -198,7 +198,10 @@ def application(environ, start_response):
     if task.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
         task.strip_vmcore(os.path.join(crashdir, "vmcore"))
 
-    task.start()
+    retcode = task.start()
+    if retcode != 0:
+        sys.stderr.print("Task {0} failed to start: {1}\n".format(
+                             task.get_taskid(), retcode))
 
     return response(start_response, "201 Created", "",
                     [("X-Task-Id", "%d" % task.get_taskid()),
