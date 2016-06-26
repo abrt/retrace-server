@@ -17,7 +17,6 @@ import time
 import urllib
 from argparser import *
 from webob import Request
-from yum import YumBase
 from subprocess import *
 from config import *
 

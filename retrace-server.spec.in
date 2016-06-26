@@ -33,7 +33,7 @@ Requires: mod_wsgi
 Requires: mod_ssl
 Requires: python-webob
 Requires: sqlite
-Requires: yum-utils
+Requires: dnf
 Requires: crash >= 5.1.7
 Requires: wget
 Requires: kexec-tools

@@ -408,7 +408,7 @@ To determine which packages need to be installed,
 @command{retrace-server-worker} runs the @command{coredump2packages} tool.
 The tool reads build-ids from the coredump, and tries to find the best
 set of packages (epoch, name, version, release) matching the
-build-ids. Local yum repositories are used as the source of
+build-ids. Local dnf repositories are used as the source of
 packages. GDB requirements are strict, and this is the reason why proper
 backtraces cannot be directly and reliably generated on systems whose
 software is updated:
@@ -432,7 +432,7 @@ generates a mock configuration file and then invokes @command{mock} to
 create the chroot, and to run programs from inside the chroot.
 
 The chroot environment is populated by installing packages using
-@command{yum}. Package installation cannot be avoided, as GDB expects to
+@command{dnf}. Package installation cannot be avoided, as GDB expects to
 operate on an installed system, and on crashes from that system. GDB
 uses plugins written in Python, that are shipped with packages (for
 example see @command{rpm -ql libstdc++}).
@@ -451,7 +451,7 @@ the area GDB operates on.
 No special care is taken to avoid the possibility that GDB will not run
 with the set of packages (fixed versions) as provided by coredump. It is
 expected that any combination of packages user might use in a released
-system satisfies the needs of some version of GDB. Yum selects the
+system satisfies the needs of some version of GDB. Dnf selects the
 newest possible version which has its requirements satisfied.
 
 After finishing the task (by success or failure)
