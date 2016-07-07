@@ -383,13 +383,17 @@ def application(environ, start_response):
         if not ftptask and task.has_downloaded():
             downloaded = "<tr><th>Downloaded resources:</th><td>%s</td></tr>" % task.get_downloaded()
 
-        starttime = ""
+        starttime = task.get_default_started_time()
         if not ftptask and task.has_started_time():
-            starttime = "<tr><th>Started:</th><td>%s</td></tr>" % datetime.datetime.fromtimestamp(task.get_started_time())
+            starttime = task.get_started_time()
 
-        finishtime = ""
+        starttime_str = "<tr><th>Started:</th><td>%s</td></tr>" % datetime.datetime.fromtimestamp(starttime)
+
+        finishtime = task.get_default_finished_time()
         if not ftptask and task.has_finished_time():
-            finishtime = "<tr><th>Finished:</th><td>%s</td></tr>" % datetime.datetime.fromtimestamp(task.get_finished_time())
+            finishtime = task.get_finished_time()
+
+        finishtime_str = "<tr><th>Finished:</th><td>%s</td></tr>" % datetime.datetime.fromtimestamp(finishtime)
 
         caseno = ""
         if not ftptask:
@@ -459,8 +463,8 @@ def application(environ, start_response):
         output = output.replace("{notes}", notes)
         output = output.replace("{unknownext}", unknownext)
         output = output.replace("{downloaded}", downloaded)
-        output = output.replace("{starttime}", starttime)
-        output = output.replace("{finishtime}", finishtime)
+        output = output.replace("{starttime}", starttime_str)
+        output = output.replace("{finishtime}", finishtime_str)
         return response(start_response, "200 OK", output, [("Content-Type", "text/html")])
 
     # menu
@@ -503,9 +507,11 @@ def application(environ, start_response):
                 elif statuscode == STATUS_FAIL:
                     status = " class=\"fail\""
 
-                finishtime = ""
+                finishtime = task.get_default_finished_time()
                 if task.has_finished_time():
-                    finishtime = datetime.datetime.fromtimestamp(task.get_finished_time())
+                    finishtime = task.get_finished_time()
+
+                finishtime_str = datetime.datetime.fromtimestamp(finishtime)
 
                 caseno = ""
                 if task.has_caseno():
@@ -530,18 +536,20 @@ def application(environ, start_response):
                       "  <td>%s</td>" \
                       "  <td>%s</td>" \
                       "  <td>%s</td>" \
-                      "</tr>" % (status, baseurl, taskid, taskid, caseno, files, finishtime)
+                      "</tr>" % (status, baseurl, taskid, taskid, caseno, files, finishtime_str)
 
                 if filterexp and not fnmatch.fnmatch(row, filterexp):
                     continue
 
-                finished.append((finishtime, row))
+                finished.append((finishtime_str, row))
             else:
                 status = get_status_for_task_manager(task, _=_)
 
-                starttime = ""
+                starttime = task.get_default_started_time()
                 if task.has_started_time():
-                    starttime = datetime.datetime.fromtimestamp(task.get_started_time())
+                    starttime = task.get_started_time()
+
+                starttime_str = datetime.datetime.fromtimestamp(starttime)
 
                 caseno = ""
                 if task.has_caseno():
@@ -571,12 +579,12 @@ def application(environ, start_response):
                       "  <td>%s</td>" \
                       "  <td>%s</td>" \
                       "  <td>%s</td>" \
-                      "</tr>" % (baseurl, taskid, taskid, caseno, files, starttime, status)
+                      "</tr>" % (baseurl, taskid, taskid, caseno, files, starttime_str, status)
 
                 if filterexp and not fnmatch.fnmatch(row, filterexp):
                     continue
 
-                running.append((starttime, row))
+                running.append((starttime_str, row))
         else:
             row = "<tr>" \
                   "  <td>" \
