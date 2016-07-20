@@ -228,6 +228,8 @@ ARCH_MAP = {
     "aarch64": set(["aarch64"]),
 }
 
+PYTHON_LABLE_START = "----------PYTHON-START--------"
+PYTHON_LABLE_END   = "----------PYTHON--END---------"
 
 class RetraceError(Exception):
     pass
@@ -470,12 +472,17 @@ def run_gdb(savedir):
                 gdbfile.write("-ex 'python execfile(\"/usr/libexec/abrt-gdb-exploitable\")' ")
             gdbfile.write("-ex 'file %s' "
                           "-ex 'core-file /var/spool/abrt/crash/coredump' "
+                          "-ex 'echo %s' "
+                          "-ex 'py-bt' "
+                          "-ex 'py-list' "
+                          "-ex 'py-locals' "
+                          "-ex 'echo %s' "
                           "-ex 'thread apply all backtrace 2048 full' "
                           "-ex 'info sharedlib' "
                           "-ex 'print (char*)__abort_msg' "
                           "-ex 'print (char*)__glib_assert_msg' "
                           "-ex 'info registers' "
-                          "-ex 'disassemble' " % executable)
+                          "-ex 'disassemble' " % (executable, PYTHON_LABLE_START, PYTHON_LABLE_END))
             if add_exploitable:
                 gdbfile.write("-ex 'echo %s' "
                               "-ex 'abrt-exploitable'" % EXPLOITABLE_SEPARATOR)
@@ -507,6 +514,10 @@ def run_gdb(savedir):
 
     if not backtrace:
         raise Exception("An unusable backtrace has been generated")
+
+    python_labels = PYTHON_LABLE_START+'\n'+PYTHON_LABLE_END
+    if python_labels in backtrace:
+        backtrace = backtrace.replace(python_labels, "")
 
     return backtrace, exploitable
 
