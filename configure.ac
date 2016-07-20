@@ -131,7 +131,7 @@ AC_CONFIG_FILES([
 	src/config/Makefile
 	src/gpg/Makefile
 	src/plugins/Makefile
-	src/lib/Makefile
+	src/retrace/Makefile
 ])
 
 AC_OUTPUT
