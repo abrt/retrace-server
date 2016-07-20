@@ -1,4 +1,4 @@
-SUBDIRS = config gpg lib plugins
+SUBDIRS = config gpg retrace plugins
 
 MAN_TXT = \
     retrace-server-cleanup.txt \
