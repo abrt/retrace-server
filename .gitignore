@@ -57,3 +57,7 @@ src/abrt-retrace-worker
 i386
 i686
 x86_64
+
+#bytecode
+*.pyc
+*.pyo
