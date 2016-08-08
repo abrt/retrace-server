@@ -16,6 +16,8 @@ from retrace import *
 sys.path.insert(0, "/usr/share/retrace-server")
 from plugins import *
 
+CONFIG = config.Config()
+
 TARGET_USER = "retrace"
 TARGET_GROUP = CONFIG["AuthGroup"]
 

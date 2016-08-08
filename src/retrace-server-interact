@@ -8,6 +8,8 @@ import time
 from retrace import *
 from subprocess import list2cmdline
 
+CONFIG = config.Config()
+
 ACTIONS = ["shell", "gdb", "crash", "printdir", "delete", "set-success", "set-fail"]
 
 def print_cmdline(cmdline):

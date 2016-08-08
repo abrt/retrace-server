@@ -1,5 +1,7 @@
 from retrace import *
 
+CONFIG = config.Config()
+
 def application(environ, start_response):
     request = Request(environ)
 

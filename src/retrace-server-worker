@@ -2,6 +2,8 @@
 import sys
 from retrace import *
 
+CONFIG = config.Config()
+
 if __name__ == "__main__":
     cmdline_parser = ArgumentParser(description="Execute a retrace job")
     cmdline_parser.add_argument("task_id", type=int, help="Task ID (%s/<task_id>) must exist" % CONFIG["SaveDir"])

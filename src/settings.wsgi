@@ -1,5 +1,7 @@
 from retrace import *
 
+CONFIG = config.Config()
+
 def application(environ, start_response):
     activetasks = len(get_active_tasks())
     if activetasks >= CONFIG["MaxParallelTasks"]:

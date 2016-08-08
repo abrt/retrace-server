@@ -6,6 +6,8 @@ from retrace import *
 from plugins import *
 
 
+CONFIG = Config()
+
 class RetraceWorker(object):
     def __init__(self, task):
         self.task = task
@@ -310,7 +312,6 @@ class RetraceWorker(object):
                     yumcfg.write("name=%s\n" % releaseid)
                     yumcfg.write("baseurl=file://%s/%s/\n" % (CONFIG["RepoDir"], releaseid))
                     yumcfg.write("failovermethod=priority\n")
-
                 child = Popen(["coredump2packages", os.path.join(crashdir, "coredump"),
                                "--repos=%s" % repoid, "--config=%s" % yumcfgpath,
                                "--log=%s" % os.path.join(task.get_savedir(), "c2p_log")],
