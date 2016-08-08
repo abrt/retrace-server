@@ -17,6 +17,7 @@ sys.path.insert(0, "/usr/share/retrace-server")
 from plugins import *
 
 CONFIG = config.Config()
+plugins = plugins.Plugins()
 
 TARGET_USER = "retrace"
 TARGET_GROUP = CONFIG["AuthGroup"]
@@ -201,7 +202,7 @@ if __name__ == "__main__":
 
     # load plugin
     plugin = None
-    for iplugin in PLUGINS:
+    for iplugin in plugins.all():
         if iplugin.distribution == distribution:
             plugin = iplugin
             break

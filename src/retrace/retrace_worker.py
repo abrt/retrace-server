@@ -3,13 +3,12 @@ import time
 import sys
 sys.path.insert(0, "/usr/share/retrace-server/")
 from retrace import *
-from plugins import *
-
 
 CONFIG = Config()
 
 class RetraceWorker(object):
     def __init__(self, task):
+        self.plugins = Plugins()
         self.task = task
         self.logging_handler = None
 
@@ -246,7 +245,7 @@ class RetraceWorker(object):
                 release = release_file.read(ALLOWED_FILES["os_release"])
 
             version = distribution = None
-            for plugin in PLUGINS:
+            for plugin in self.plugins.all():
                 match = plugin.abrtparser.match(release)
                 if match:
                     version = match.group(1)
@@ -259,7 +258,7 @@ class RetraceWorker(object):
         except Exception as ex:
             log_error("Unable to read distribution and version from 'release' file: %s" % ex)
             log_info("Trying to guess distribution and version")
-            distribution, version = guess_release(crash_package, PLUGINS)
+            distribution, version = guess_release(crash_package, self.plugins.all())
             if distribution and version:
                 log_info("%s-%s" % (distribution, version))
             else:

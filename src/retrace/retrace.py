@@ -20,6 +20,7 @@ from webob import Request
 from yum import YumBase
 from subprocess import *
 from config import *
+from plugins import *
 
 GETTEXT_DOMAIN = "retrace-server"
 
