@@ -472,11 +472,11 @@ def run_gdb(savedir):
                 gdbfile.write("-ex 'python execfile(\"/usr/libexec/abrt-gdb-exploitable\")' ")
             gdbfile.write("-ex 'file %s' "
                           "-ex 'core-file /var/spool/abrt/crash/coredump' "
-                          "-ex 'echo %s' "
+                          "-ex 'echo %s\n' "
                           "-ex 'py-bt' "
                           "-ex 'py-list' "
                           "-ex 'py-locals' "
-                          "-ex 'echo %s' "
+                          "-ex 'echo %s\n' "
                           "-ex 'thread apply all backtrace 2048 full' "
                           "-ex 'info sharedlib' "
                           "-ex 'print (char*)__abort_msg' "
@@ -515,7 +515,7 @@ def run_gdb(savedir):
     if not backtrace:
         raise Exception("An unusable backtrace has been generated")
 
-    python_labels = PYTHON_LABLE_START+'\n'+PYTHON_LABLE_END
+    python_labels = PYTHON_LABLE_START+'\n'+PYTHON_LABLE_END+'\n'
     if python_labels in backtrace:
         backtrace = backtrace.replace(python_labels, "")
 
