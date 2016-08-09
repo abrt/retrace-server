@@ -163,18 +163,7 @@ class RetraceWorker(object):
 
         return output
 
-    def start_retrace(self, custom_arch=None):
-        self.hook_start()
-
-        task = self.task
-        crashdir = os.path.join(task.get_savedir(), "crash")
-        corepath = os.path.join(crashdir, "coredump")
-
-        try:
-            self.stats["coresize"] = os.path.getsize(corepath)
-        except:
-            pass
-
+    def read_architecture(self, custom_arch, corepath):
         if custom_arch:
             log_debug("Using custom architecture: %s" % custom_arch)
             arch = custom_arch
@@ -187,9 +176,9 @@ class RetraceWorker(object):
                 self._fail()
 
             log_debug("Determined architecture: %s" % arch)
+        return arch
 
-        self.stats["arch"] = arch
-
+    def read_package_file(self, crashdir):
         # read package file
         try:
             with open(os.path.join(crashdir, "package"), "r") as package_file:
@@ -197,7 +186,6 @@ class RetraceWorker(object):
         except Exception as ex:
             loging.error("Unable to read crash package from 'package' file: %s" % ex)
             self._fail()
-
         # read package file
         if not INPUT_PACKAGE_PARSER.match(crash_package):
             log_error("Invalid package name: %s" % crash_package)
@@ -207,13 +195,10 @@ class RetraceWorker(object):
         if not pkgdata["name"]:
             log_error("Unable to parse package name: %s" % crash_package)
             self._fail()
+        return (crash_package, pkgdata)
 
-        self.stats["package"] = pkgdata["name"]
-        if pkgdata["epoch"] != 0:
-            self.stats["version"] = "%s:%s-%s" % (pkgdata["epoch"], pkgdata["version"], pkgdata["release"])
-        else:
-            self.stats["version"] = "%s-%s" % (pkgdata["version"], pkgdata["release"])
 
+    def read_release_file(self, crashdir, crash_package):
         # read release, distribution and version from release file
         release_path = None
         rootdir = None
@@ -267,19 +252,9 @@ class RetraceWorker(object):
 
         if "rawhide" in release.lower():
             version = "rawhide"
+        return (release, distribution, version)
 
-        releaseid = "%s-%s-%s" % (distribution, version, arch)
-        if not releaseid in get_supported_releases():
-            log_error("Release '%s' is not supported" % releaseid)
-            self._fail()
-
-        if not is_package_known(crash_package, arch, releaseid):
-            log_error("Package '%s.%s' was not recognized.\nIs it a part of "
-                      "official %s repositories?" % (crash_package, arch, release))
-            self._fail()
-
-        self.hook_pre_prepare_debuginfo()
-
+    def read_packages(self, crashdir, releaseid, crash_package, distribution):
         packages = [crash_package]
         missing = []
         fafrepo = ""
@@ -305,7 +280,7 @@ class RetraceWorker(object):
             # read required packages from coredump
             try:
                 repoid = "%s%s" % (REPO_PREFIX, releaseid)
-                yumcfgpath = os.path.join(task.get_savedir(), "yum.conf")
+                yumcfgpath = os.path.join(self.task.get_savedir(), "yum.conf")
                 with open(yumcfgpath, "w") as yumcfg:
                     yumcfg.write("[%s]\n" % repoid)
                     yumcfg.write("name=%s\n" % releaseid)
@@ -313,7 +288,7 @@ class RetraceWorker(object):
                     yumcfg.write("failovermethod=priority\n")
                 child = Popen(["coredump2packages", os.path.join(crashdir, "coredump"),
                                "--repos=%s" % repoid, "--config=%s" % yumcfgpath,
-                               "--log=%s" % os.path.join(task.get_savedir(), "c2p_log")],
+                               "--log=%s" % os.path.join(self.task.get_savedir(), "c2p_log")],
                               stdout=PIPE, stderr=PIPE)
                 section = 0
                 crash_package_or_component = None
@@ -355,6 +330,44 @@ class RetraceWorker(object):
             except Exception as ex:
                 log_error("Unable to obtain packages from 'coredump' file: %s" % ex)
                 self._fail()
+        return (packages, missing, fafrepo)
+
+    def start_retrace(self, custom_arch=None):
+        self.hook_start()
+
+        task = self.task
+        crashdir = os.path.join(task.get_savedir(), "crash")
+        corepath = os.path.join(crashdir, "coredump")
+
+        try:
+            self.stats["coresize"] = os.path.getsize(corepath)
+        except:
+            pass
+
+        arch = self.read_architecture(custom_arch, corepath)
+        self.stats["arch"] = arch
+
+        crash_package, pkgdata = self.read_package_file(crashdir)
+        self.stats["package"] = pkgdata["name"]
+        if pkgdata["epoch"] != 0:
+            self.stats["version"] = "%s:%s-%s" % (pkgdata["epoch"], pkgdata["version"], pkgdata["release"])
+        else:
+            self.stats["version"] = "%s-%s" % (pkgdata["version"], pkgdata["release"])
+
+        release, distribution, version = self.read_release_file(crashdir, crash_package)
+
+        releaseid = "%s-%s-%s" % (distribution, version, arch)
+        if not releaseid in get_supported_releases():
+            log_error("Release '%s' is not supported" % releaseid)
+            self._fail()
+
+        if not is_package_known(crash_package, arch, releaseid):
+            log_error("Package '%s.%s' was not recognized.\nIs it a part of "
+                      "official %s repositories?" % (crash_package, arch, release))
+            self._fail()
+        self.hook_pre_prepare_debuginfo()
+
+        packages, missing, fafrepo = self.read_packages(crashdir, releaseid, crash_package, distribution)
 
         self.hook_post_prepare_debuginfo()
         self.hook_pre_prepare_mock()
