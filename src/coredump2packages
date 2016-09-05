@@ -211,7 +211,7 @@ def find_duplicates(package_list):
         package1 = package_list[p1]
         for p2 in range(p1 + 1, len(package_list)):
             package2 = package_list[p2]
-            if package1.name == package2.name:
+            if package1.name == package2.name and package1.arch == package2.arch:
                 return package1, package2
     return None, None
 
