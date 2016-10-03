@@ -185,6 +185,25 @@ if __name__ == "__main__":
     version = args.version
     arch = get_canon_arch(args.architecture)
 
+
+    if CONFIG["UseFafPackages"]:
+        log_info("Creating repo from faf")
+        targetid = "%s-%s-%s" % (distribution, version, arch)
+        targetdir = os.path.join(CONFIG["RepoDir"], targetid)
+
+        if not os.path.isdir(targetdir):
+            os.makedirs(targetdir)
+
+        cmd_line = ["retrace-server-reposync-faf", distribution, version, arch,
+                    "--outputdir",  targetdir]
+        child = Popen(cmd_line, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = child.communicate()
+        if child.returncode != 0:
+            log_error("Could not create faf repo")
+            sys.exit(child.returncode)
+        sys.exit(0)
+
+
     # drop privilegies if possible
     try:
         gr = grp.getgrnam(TARGET_GROUP)
