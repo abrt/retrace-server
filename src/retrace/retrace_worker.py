@@ -163,6 +163,15 @@ class RetraceWorker(object):
 
         return output
 
+    def guess_release(self, package, plugins):
+        for plugin in plugins:
+            match = plugin.guessparser.search(package)
+            if match:
+                self.plugin = plugin
+                return plugin.distribution, match.group(1)
+
+        return None, None
+
     def read_architecture(self, custom_arch, corepath):
         if custom_arch:
             log_debug("Using custom architecture: %s" % custom_arch)
@@ -235,6 +244,7 @@ class RetraceWorker(object):
                 if match:
                     version = match.group(1)
                     distribution = plugin.distribution
+                    self.plugin = plugin
                     break
 
             if not version or not distribution:
@@ -243,7 +253,7 @@ class RetraceWorker(object):
         except Exception as ex:
             log_error("Unable to read distribution and version from 'release' file: %s" % ex)
             log_info("Trying to guess distribution and version")
-            distribution, version = guess_release(crash_package, self.plugins.all())
+            distribution, version = self.guess_release(crash_package, self.plugins.all())
             if distribution and version:
                 log_info("%s-%s" % (distribution, version))
             else:
@@ -377,7 +387,8 @@ class RetraceWorker(object):
             with open(os.path.join(task.get_savedir(), RetraceTask.MOCK_DEFAULT_CFG), "w") as mockcfg:
                 mockcfg.write("config_opts['root'] = '%d'\n" % task.get_taskid())
                 mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
-                mockcfg.write("config_opts['chroot_setup_cmd'] = '--skip-broken install %s abrt-addon-ccpp shadow-utils gdb rpm'\n" % " ".join(packages))
+                mockcfg.write("config_opts['chroot_setup_cmd'] = '--skip-broken install %s abrt-addon-ccpp shadow-utils %s rpm'\n" % (" ".join(packages),
+                    self.plugin.gdb_package))
                 mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
                 mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
                 mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
@@ -445,7 +456,7 @@ class RetraceWorker(object):
         log_info(STATUS[STATUS_BACKTRACE])
 
         try:
-            backtrace, exploitable = run_gdb(task.get_savedir())
+            backtrace, exploitable = run_gdb(task.get_savedir(), self.plugin)
         except Exception as ex:
             log_error(str(ex))
             self._fail()

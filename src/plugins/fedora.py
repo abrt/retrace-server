@@ -4,6 +4,8 @@ distribution = "fedora"
 abrtparser = re.compile("^Fedora release ([0-9]+) \(([^\)]+)\)$")
 guessparser = re.compile("\.fc([0-9]+)")
 displayrelease = "Fedora release"
+gdb_package = "gdb"
+gdb_executable = "/usr/bin/gdb"
 versionlist = [
   "fc1",
   "fc2",
