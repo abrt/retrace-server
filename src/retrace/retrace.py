@@ -20,6 +20,7 @@ from webob import Request
 from yum import YumBase
 from subprocess import *
 from config import *
+from plugins import *
 
 GETTEXT_DOMAIN = "retrace-server"
 
@@ -134,58 +135,6 @@ EXPLOITABLE_SEPARATOR = "== EXPLOITABLE ==\n"
 
 TASKPASS_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-CONFIG_FILE = "/etc/retrace-server.conf"
-CONFIG = {
-  "TaskIdLength": 9,
-  "TaskPassLength": 32,
-  "MaxParallelTasks": 10,
-  "MaxPackedSize": 30,
-  "MaxUnpackedSize": 600,
-  "MinStorageLeft": 10240,
-  "DeleteTaskAfter": 120,
-  "DeleteFailedTaskAfter": 24,
-  "ArchiveTaskAfter": 0,
-  "KeepRawhideLatest": 3,
-  "KojiRoot": "/mnt/koji",
-  "DropDir": "/srv/retrace/archive",
-  "LogDir": "/var/log/retrace-server",
-  "RepoDir": "/var/cache/retrace-server",
-  "SaveDir": "/var/spool/retrace-server",
-  "WorkDir": "/tmp/retrace-server",
-  "UseWorkDir": False,
-  "RequireHTTPS": True,
-  "AllowAPIDelete": False,
-  "AllowExternalDir": False,
-  "AllowInteractive": False,
-  "AllowTaskManager": False,
-  "AllowVMCoreTask" : False,
-  "AllowUsrCoreTask" : False,
-  "TaskManagerAuthDelete": False,
-  "TaskManagerDeleteUsers": [],
-  "UseFTPTasks": False,
-  "FTPSSL": False,
-  "FTPHost": "",
-  "FTPUser": "",
-  "FTPPass": "",
-  "FTPDir": "/",
-  "FTPBufferSize": 16,
-  "WgetKernelDebuginfos": False,
-  "KernelDebuginfoURL": "http://kojipkgs.fedoraproject.org/packages/kernel/$VERSION/$RELEASE/$ARCH/",
-  "VmcoreDumpLevel": 0,
-  "VmcoreRunKmem": 0,
-  "RequireGPGCheck": True,
-  "UseCreaterepoUpdate": False,
-  "DBFile": "stats.db",
-  "KernelChrootRepo": "http://dl.fedoraproject.org/pub/fedora/linux/releases/16/Everything/$ARCH/os/",
-  "UseFafPackages": False,
-  "FafLinkDir": "/var/spool/faf/retrace-tmp",
-  "AuthGroup": "retrace",
-  "EmailNotify": False,
-  "EmailNotifyFrom": "retrace@localhost",
-  "CaseNumberURL": "",
-  "Crashi386": "",
-}
-
 ARCH_HOSTS = {}
 HOOK_SCRIPTS = {}
 
@@ -287,39 +236,6 @@ def get_canon_arch(arch):
             return canon_arch
 
     return arch
-
-def read_config():
-    parser = ConfigParser.ConfigParser()
-    parser.read(CONFIG_FILE)
-    for key in CONFIG.keys():
-        vartype = type(CONFIG[key])
-        if vartype is int:
-            get = parser.getint
-        elif vartype is bool:
-            get = parser.getboolean
-        elif vartype is float:
-            get = parser.getfloat
-        elif vartype is list:
-            get = lambda sect, key: parser.get(sect, key).split()
-        else:
-            get = parser.get
-
-        try:
-            CONFIG[key] = get("retrace", key)
-        except ConfigParser.NoOptionError:
-            pass
-
-    if "archhosts" in parser.sections():
-        for arch, host in parser.items("archhosts"):
-            host = host.strip()
-            if host:
-                ARCH_HOSTS[arch] = host
-
-    if "hookscripts" in parser.sections():
-        for hook, script in parser.items("hookscripts"):
-            script = script.strip()
-            if script:
-                HOOK_SCRIPTS[hook] = script
 
 def free_space(path):
     child = Popen([DF_BIN, "-B", "1", path], stdout=PIPE)
@@ -472,11 +388,11 @@ def run_gdb(savedir):
                 gdbfile.write("-ex 'python execfile(\"/usr/libexec/abrt-gdb-exploitable\")' ")
             gdbfile.write("-ex 'file %s' "
                           "-ex 'core-file /var/spool/abrt/crash/coredump' "
-                          "-ex 'echo %s' "
+                          "-ex 'echo %s\n' "
                           "-ex 'py-bt' "
                           "-ex 'py-list' "
                           "-ex 'py-locals' "
-                          "-ex 'echo %s' "
+                          "-ex 'echo %s\n' "
                           "-ex 'thread apply all backtrace 2048 full' "
                           "-ex 'info sharedlib' "
                           "-ex 'print (char*)__abort_msg' "
@@ -515,7 +431,7 @@ def run_gdb(savedir):
     if not backtrace:
         raise Exception("An unusable backtrace has been generated")
 
-    python_labels = PYTHON_LABLE_START+'\n'+PYTHON_LABLE_END
+    python_labels = PYTHON_LABLE_START+'\n'+PYTHON_LABLE_END+'\n'
     if python_labels in backtrace:
         backtrace = backtrace.replace(python_labels, "")
 
@@ -2355,5 +2271,5 @@ class RetraceTask:
         from retrace_worker import RetraceWorker
         return RetraceWorker(self)
 
-### read config on import ###
-read_config()
+### create ConfigClass instance on import ###
+CONFIG = Config()

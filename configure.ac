@@ -132,6 +132,7 @@ AC_CONFIG_FILES([
 	src/gpg/Makefile
 	src/plugins/Makefile
 	src/retrace/Makefile
+	test/Makefile
 ])
 
 AC_OUTPUT

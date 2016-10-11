@@ -5,6 +5,8 @@ import urllib
 import urlparse
 from retrace import *
 
+CONFIG = config.Config()
+
 MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|notify|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
 tableheader = """
           <table>

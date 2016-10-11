@@ -1,8 +1,8 @@
 #!/usr/bin/python
 from retrace import *
 sys.path.insert(0, "/usr/share/retrace-server/")
-from plugins import PLUGINS
 
+plugins = plugins.Plugins()
 def application(environ, start_response):
     request = Request(environ)
     _ = parse_http_gettext("%s" % request.accept_language,
@@ -95,7 +95,7 @@ def application(environ, start_response):
 
     # by release
     versions = {}
-    for entry in PLUGINS:
+    for entry in plugins.all():
         for key in entry.versionlist:
             versions[key] = entry.displayrelease
 

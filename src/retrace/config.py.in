@@ -1,5 +1,131 @@
+#Singleton class for saving path to the configuration file
+
+#Heavily inspired by
+#   http://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html
+#All modules that need reading from configuration file must create instance of
+#   Config. When different path than default is needed, before first
+#   reading from any GLOBAL item, a load(/path/to/the/config/file)
+#   must be called. When this function was not called, is automatically called
+#   before first reading from GLOBAL with default path.
+#Note:all modules share one instance, therefore only one load is needed.
+
 DF_BIN = "@DF_BIN@"
 DU_BIN = "@DU_BIN@"
 GZIP_BIN = "@GZIP_BIN@"
 TAR_BIN = "@TAR_BIN@"
 XZ_BIN = "@XZ_BIN@"
+
+import ConfigParser
+import os
+
+class Config(object):
+    class __config:
+        def __init__(self):
+            self.conf_file_read = False
+
+        GLOBAL = {
+          "TaskIdLength": 9,
+          "TaskPassLength": 32,
+          "MaxParallelTasks": 10,
+          "MaxPackedSize": 30,
+          "MaxUnpackedSize": 600,
+          "MinStorageLeft": 10240,
+          "DeleteTaskAfter": 120,
+          "DeleteFailedTaskAfter": 24,
+          "ArchiveTaskAfter": 0,
+          "KeepRawhideLatest": 3,
+          "KojiRoot": "/mnt/koji",
+          "DropDir": "/srv/retrace/archive",
+          "LogDir": "/var/log/retrace-server",
+          "RepoDir": "/var/cache/retrace-server",
+          "SaveDir": "/var/spool/retrace-server",
+          "WorkDir": "/tmp/retrace-server",
+          "UseWorkDir": False,
+          "RequireHTTPS": True,
+          "AllowAPIDelete": False,
+          "AllowExternalDir": False,
+          "AllowInteractive": False,
+          "AllowTaskManager": False,
+          "AllowVMCoreTask" : False,
+          "AllowUsrCoreTask" : False,
+          "TaskManagerAuthDelete": False,
+          "TaskManagerDeleteUsers": [],
+          "UseFTPTasks": False,
+          "FTPSSL": False,
+          "FTPHost": "",
+          "FTPUser": "",
+          "FTPPass": "",
+          "FTPDir": "/",
+          "FTPBufferSize": 16,
+          "WgetKernelDebuginfos": False,
+          "KernelDebuginfoURL": "http://kojipkgs.fedoraproject.org/packages/kernel/$VERSION/$RELEASE/$ARCH/",
+          "VmcoreDumpLevel": 0,
+          "VmcoreRunKmem": 0,
+          "RequireGPGCheck": True,
+          "UseCreaterepoUpdate": False,
+          "DBFile": "stats.db",
+          "KernelChrootRepo": "http://dl.fedoraproject.org/pub/fedora/linux/releases/16/Everything/$ARCH/os/",
+          "UseFafPackages": False,
+          "FafLinkDir": "/var/spool/faf/retrace-tmp",
+          "AuthGroup": "retrace",
+          "EmailNotify": False,
+          "EmailNotifyFrom": "retrace@localhost",
+          "CaseNumberURL": "",
+          "Crashi386": "",
+        }
+
+        def __getitem__(self, key):
+            if not self.conf_file_read:
+                self.load()
+            return self.GLOBAL[key]
+
+        def load(self, filepath = "/etc/retrace-server.conf"):
+            self.conf_file_read = True
+            #if environment variable set, use rather that
+            env_config_path = os.environ.get('RETRACE_SERVER_CONFIG_PATH')
+            if env_config_path:
+                filepath = env_config_path
+            parser = ConfigParser.ConfigParser()
+            parser.read(filepath)
+            for key in self.GLOBAL.keys():
+                vartype = type(self.GLOBAL[key])
+                if vartype is int:
+                    get = parser.getint
+                elif vartype is bool:
+                    get = parser.getboolean
+                elif vartype is float:
+                    get = parser.getfloat
+                elif vartype is list:
+                    get = lambda sect, key: parser.get(sect, key).split()
+                else:
+                    get = parser.get
+
+                try:
+                    self.GLOBAL[key] = get("retrace", key)
+                except ConfigParser.NoOptionError:
+                    pass
+
+            if "archhosts" in parser.sections():
+                for arch, host in parser.items("archhosts"):
+                    host = host.strip()
+                    if host:
+                        ARCH_HOSTS[arch] = host
+
+            if "hookscripts" in parser.sections():
+                for hook, script in parser.items("hookscripts"):
+                    script = script.strip()
+                    if script:
+                        HOOK_SCRIPTS[hook] = script
+
+    instance = None
+
+    def __new__(cls):
+        if not Config.instance:
+            Config.instance = Config.__config()
+        return Config.instance
+
+    def __getattr__(self, name):
+        return getattr(self.instance, name)
+
+    def __setattr__(self, name):
+        pass
