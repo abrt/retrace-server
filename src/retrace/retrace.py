@@ -316,13 +316,6 @@ def guess_arch(coredump_path):
 
     return result
 
-def guess_release(package, plugins):
-    for plugin in plugins:
-        match = plugin.guessparser.search(package)
-        if match:
-            return plugin.distribution, match.group(1)
-
-    return None, None
 
 def get_supported_releases():
     result = []
@@ -352,7 +345,7 @@ def parse_http_gettext(lang, charset):
 
     return result
 
-def run_gdb(savedir):
+def run_gdb(savedir, plugin):
     #exception is caught on the higher level
     exec_file = open(os.path.join(savedir, "crash", "executable"), "r")
     executable = exec_file.read(ALLOWED_FILES["executable"])
@@ -383,7 +376,7 @@ def run_gdb(savedir):
 
         batfile = os.path.join(savedir, "gdb.sh")
         with open(batfile, "w") as gdbfile:
-            gdbfile.write("gdb -batch ")
+            gdbfile.write("%s -batch " % plugin.gdb_executable)
             if add_exploitable:
                 gdbfile.write("-ex 'python execfile(\"/usr/libexec/abrt-gdb-exploitable\")' ")
             gdbfile.write("-ex 'file %s' "
@@ -393,7 +386,7 @@ def run_gdb(savedir):
                           "-ex 'py-list' "
                           "-ex 'py-locals' "
                           "-ex 'echo %s\n' "
-                          "-ex 'thread apply all backtrace 2048 full' "
+                          "-ex 'thread apply all -ascending backtrace 2048 full' "
                           "-ex 'info sharedlib' "
                           "-ex 'print (char*)__abort_msg' "
                           "-ex 'print (char*)__glib_assert_msg' "
