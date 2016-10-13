@@ -123,6 +123,7 @@ fi
 %{_bindir}/%{name}-interact
 %{_bindir}/%{name}-cleanup
 %{_bindir}/%{name}-reposync
+%{_bindir}/%{name}-reposync-faf
 %{_bindir}/bt_filter
 %{_bindir}/coredump2packages
 %{python_site}/retrace/*

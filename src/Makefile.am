@@ -21,6 +21,7 @@ dist_bin_SCRIPTS = bt_filter \
                    coredump2packages \
                    retrace-server-cleanup \
                    retrace-server-reposync \
+                   retrace-server-reposync-faf \
                    retrace-server-worker \
                    retrace-server-interact
 
