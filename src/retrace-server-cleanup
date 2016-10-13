@@ -95,7 +95,7 @@ if __name__ == "__main__":
                     continue
 
                 task.create_worker().clean_task()
-                task.set_log("Killed by garbage collector\n", True)
+                task.set_log("Task was killed due to running too long or taking too many resources.\n", True)
 
         if CONFIG["ArchiveTaskAfter"] > 0:
             # archive old tasks
