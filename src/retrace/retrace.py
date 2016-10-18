@@ -135,8 +135,6 @@ EXPLOITABLE_SEPARATOR = "== EXPLOITABLE ==\n"
 
 TASKPASS_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-ARCH_HOSTS = {}
-HOOK_SCRIPTS = {}
 
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \
 STATUS_STATS, STATUS_FINISHING, STATUS_SUCCESS, STATUS_FAIL, \
@@ -1406,6 +1404,7 @@ class RetraceTask:
         else:
             task_arch = arch
 
+        ARCH_HOSTS = CONFIG.get_arch_hosts()
         if task_arch in ARCH_HOSTS:
             return self._start_remote(ARCH_HOSTS[task_arch], debug=debug,
                                       kernelver=kernelver, arch=arch)
