@@ -15,7 +15,7 @@ def get_pkglist(db, outputdir, opsys, release, arch):
             print("Adding package: %s-%s-%s" % (pkg.name, pkg.build.version, pkg.build.release))
             yield os.path.relpath(pkg.get_lob_path("package"), outputdir)
 
-def generate_yum_repo(db, outputdir, opsys, release):
+def generate_yum_repo(db, outputdir, opsys, release, arch):
     if not os.path.exists(outputdir):
         os.makedirs(outputdir)
     conf = MetaDataConfig()
@@ -25,7 +25,7 @@ def generate_yum_repo(db, outputdir, opsys, release):
     conf.sumtype = yum.misc._default_checksums[0]
     conf.outputdir = outputdir
     conf.directory = conf.outputdir
-    conf.pkglist = get_pkglist(db, conf.directory, opsys, release)
+    conf.pkglist = get_pkglist(db, conf.directory, opsys, release, arch)
 
     mdgen = MetaDataGenerator(config_obj=conf)
 
