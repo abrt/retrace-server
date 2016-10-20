@@ -9,6 +9,8 @@ from pyfaf.storage import getDatabase
 from pyfaf.queries import get_packages_by_osrelease
 
 def get_pkglist(db, outputdir, opsys, release, arch):
+    if opsys == "rhel":
+        opsys = "Red Hat Enterprise Linux"
     q = get_packages_by_osrelease(db, opsys, release, arch)
     for pkg in q:
         if pkg.has_lob("package"):
