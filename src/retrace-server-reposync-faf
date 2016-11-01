@@ -9,13 +9,15 @@ from pyfaf.storage import getDatabase
 from pyfaf.queries import get_packages_by_osrelease
 
 def get_pkglist(db, outputdir, opsys, release, arch):
+    if opsys == "rhel":
+        opsys = "Red Hat Enterprise Linux"
     q = get_packages_by_osrelease(db, opsys, release, arch)
     for pkg in q:
         if pkg.has_lob("package"):
             print("Adding package: %s-%s-%s" % (pkg.name, pkg.build.version, pkg.build.release))
             yield os.path.relpath(pkg.get_lob_path("package"), outputdir)
 
-def generate_yum_repo(db, outputdir, opsys, release):
+def generate_yum_repo(db, outputdir, opsys, release, arch):
     if not os.path.exists(outputdir):
         os.makedirs(outputdir)
     conf = MetaDataConfig()
@@ -25,7 +27,7 @@ def generate_yum_repo(db, outputdir, opsys, release):
     conf.sumtype = yum.misc._default_checksums[0]
     conf.outputdir = outputdir
     conf.directory = conf.outputdir
-    conf.pkglist = get_pkglist(db, conf.directory, opsys, release)
+    conf.pkglist = get_pkglist(db, conf.directory, opsys, release, arch)
 
     mdgen = MetaDataGenerator(config_obj=conf)
 

@@ -23,6 +23,9 @@ class Config(object):
         def __init__(self):
             self.conf_file_read = False
 
+        HOOK_SCRIPTS = {}
+        ARCH_HOSTS = {}
+
         GLOBAL = {
           "TaskIdLength": 9,
           "TaskPassLength": 32,
@@ -109,13 +112,19 @@ class Config(object):
                 for arch, host in parser.items("archhosts"):
                     host = host.strip()
                     if host:
-                        ARCH_HOSTS[arch] = host
+                        self.ARCH_HOSTS[arch] = host
 
             if "hookscripts" in parser.sections():
                 for hook, script in parser.items("hookscripts"):
                     script = script.strip()
                     if script:
-                        HOOK_SCRIPTS[hook] = script
+                        self.HOOK_SCRIPTS[hook] = script
+
+        def get_hook_scripts(self):
+            return self.HOOK_SCRIPTS
+
+        def get_arch_hosts(self):
+            return self.ARCH_HOSTS
 
     instance = None
 

@@ -24,6 +24,7 @@ class RetraceWorker(object):
 
     def hook_universal(self, hook):
         """Called by the default hook implementations"""
+        HOOK_SCRIPTS = CONFIG.get_hook_scripts()
         if hook in HOOK_SCRIPTS:
             script = HOOK_SCRIPTS[hook].format(
                 hook_name=hook, task_id=self.task.get_taskid(),
