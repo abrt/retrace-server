@@ -1,0 +1,71 @@
+#!/usr/bin/python
+
+import sys
+import os
+import urllib2
+from subprocess import Popen, PIPE
+import argparse
+
+
+argparser = argparse.ArgumentParser(description="Retrace Server plugin checker")
+argparser.add_argument("PLUGIN", type=str, help="Plugin name")
+argparser.add_argument("VERSION", type=str, help="Release version")
+argparser.add_argument("ARCHITECTURE", type=str, help="CPU architecture")
+argparser.add_argument("--plugin-dir", default="/usr/share/retrace-server/plugins",
+                       help="Path to plugins.")
+argparser.add_argument("--only-valid", action='store_true',
+                       help="Print only valid mirrors")
+argparser.add_argument("--only-invalid", action='store_true',
+                       help="Print only invalid mirrors")
+argparser.add_argument("--first-valid", action='store_true',
+                       help="Print first valid mirror per repository.")
+
+args = argparser.parse_args()
+
+# Prepend path and import plugin
+sys.path.insert(0, args.plugin_dir)
+
+try:
+    plugin = __import__(args.PLUGIN)
+except:
+    print "Plugin could not be loaded. Use --plugin-dir if in another location."
+    sys.exit(1)
+
+
+verbose = not(args.first_valid or args.only_valid or args.only_invalid)
+
+for i, r in enumerate(plugin.repos):
+    if verbose:
+        print "Repository {0} - testing".format(i)
+
+    repo_ok = False
+    for p in r:
+        path_ok = False
+        mirror_path = p.replace("$VER", args.VERSION).replace("$ARCH", args.ARCHITECTURE)
+        if p.startswith("http:") or p.startswith("https:") or p.startswith("ftp:"):
+            try:
+                urllib2.urlopen(mirror_path)
+                path_ok = True
+            except Exception as ex:
+                pass
+        elif p.startswith("rsync:"):
+            p = Popen(['rsync', '--list-only', mirror_path], stdout=PIPE, stderr=PIPE)
+            p.communicate()
+            path_ok = not(p.returncode)
+        else:
+            path_ok = os.path.exists(mirror_path)
+
+        repo_ok = repo_ok or path_ok
+        if verbose:
+            print "\t[ {0} ] {1}".format(" OK " if path_ok else "FAIL", mirror_path)
+        else:
+            if args.first_valid and path_ok:
+                print mirror_path
+                break
+            elif args.only_valid and path_ok:
+                print mirror_path
+            elif args.only_invalid and not path_ok:
+                print mirror_path
+
+    if verbose:
+        print "Repository {1} - {0}".format("OK" if repo_ok else "FAIL", i)

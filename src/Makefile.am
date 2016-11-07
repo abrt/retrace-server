@@ -23,7 +23,8 @@ dist_bin_SCRIPTS = bt_filter \
                    retrace-server-reposync \
                    retrace-server-reposync-faf \
                    retrace-server-worker \
-                   retrace-server-interact
+                   retrace-server-interact\
+                   retrace-server-plugin-checker
 
 interface_PYTHON = backtrace.wsgi \
                    create.wsgi \
