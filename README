@@ -7,46 +7,54 @@ itself consists of 2 parts:
 * plugin file - A python file dropped in /usr/share/retrace-server/plugins
                 containing the following elements:
 
-  - distribution: String considered plugin name and identifier.
+  - distribution:   String considered plugin name and identifier.
 
-  - abrtparser:   Parser able to get release from ABRT's os_release file.
+  - abrtparser:     Parser able to get release from ABRT's os_release file.
 
-  - guessparser:  Parser able to guess release from package's name. Can not
-                  be relied on (e.g. el6 does not give enough information).
+  - guessparser:    Parser able to guess release from package's name. Can not
+                    be relied on (e.g. el6 does not give enough information).
 
-  - yumcfg:       a string that will be appended to yum config file for all
-                  repositories
+  - yumcfg:         A string that will be appended to yum config file for all
+                    repositories
 
-  - repos:        An array of public repositories and their mirrors.
-                  The synchronization is realized using rsync or yum, so
-                  repository path is either a directory in the filesystem,
-                  rsync:// URL, http:// URL or ftp:// URL. $ARCH and $VER
-                  meta-variables are expanded to appropriate strings.
-                  The repo is either defined as list of mirrors or
-                  a two-member tuple where the first member is the same
-                  list of mirrors and second is a part of yum config file
-                  that will only be appended to the repo.
-                  Example:
-                  repos = [
-                    [ #repo1
-                      /srv/repos/repo1_mirror1,
-                      rsync://repo1/mirror2,
-                    ],
-                    [ #repo2
-                      ftp://repo2/repo2_mirror1,
-                      /srv/repos/repo2_mirror2,
-                    ],
-                    [ #repo3
-                      rsync://repo3/mirror1,
-                    ],
-                    ( #repo4
-                      [
-                        "rsync://repo4/mirror1",
-                        "http://repo4/mirror2",
+  - displayrelease: Name of release for displaying in statistics page
+
+  - versionlist:    List of all versions that can be shown in statistics page
+
+  - gdb_package:    Name of package, from which the gdb comes from
+
+  - gdb_executable: Path to the gdb executable
+
+  - repos:          An array of public repositories and their mirrors.
+                    The synchronization is realized using rsync or yum, so
+                    repository path is either a directory in the filesystem,
+                    rsync:// URL, http:// URL or ftp:// URL. $ARCH and $VER
+                    meta-variables are expanded to appropriate strings.
+                    The repo is either defined as list of mirrors or
+                    a two-member tuple where the first member is the same
+                    list of mirrors and second is a part of yum config file
+                    that will only be appended to the repo.
+                    Example:
+                    repos = [
+                      [ #repo1
+                        /srv/repos/repo1_mirror1,
+                        rsync://repo1/mirror2,
                       ],
-                      "gpgcheck = 0", # local yum config
-                    ),
-                  ]
+                      [ #repo2
+                        ftp://repo2/repo2_mirror1,
+                        /srv/repos/repo2_mirror2,
+                      ],
+                      [ #repo3
+                        rsync://repo3/mirror1,
+                      ],
+                      ( #repo4
+                        [
+                          "rsync://repo4/mirror1",
+                          "http://repo4/mirror2",
+                        ],
+                        "gpgcheck = 0", # local yum config
+                      ),
+                    ]
 
 * GPG keys - Files containig GPG keys to verify downloaded package's signature.
              Dropped in /usr/share/retrace-server/gpg.
