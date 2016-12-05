@@ -2,8 +2,23 @@
 from retrace import *
 sys.path.insert(0, "/usr/share/retrace-server/")
 
+status_queries = {"SELECT COUNT(*) FROM tasks": "{total}",
+    "SELECT COUNT(*) FROM tasks WHERE status = {0}".format(STATUS_SUCCESS): "{success}",
+    "SELECT COUNT(*) FROM tasks WHERE status = {0}".format(STATUS_FAIL): "{fail}",
+    "SELECT COUNT(*) FROM reportfull": "{denied}",
+    }
+
+def replace_by_count(input, q, key, query):
+    query.execute(q)
+    row = query.fetchone()
+    return input.replace(key, str(row[0]))
+
 plugins = plugins.Plugins()
 def application(environ, start_response):
+
+    con = init_crashstats_db()
+    query = con.cursor()
+
     request = Request(environ)
     _ = parse_http_gettext("%s" % request.accept_language,
                            "%s" % request.accept_charset)
@@ -38,28 +53,9 @@ def application(environ, start_response):
 
     output = output.replace("{host}", environ["HTTP_HOST"])
 
-    con = init_crashstats_db()
-    query = con.cursor()
-
-    # total
-    query.execute("SELECT COUNT(*) FROM tasks")
-    row = query.fetchone()
-    output = output.replace("{total}", str(row[0]))
-
-    # by status
-    query.execute("SELECT status, COUNT(*) FROM tasks GROUP BY status")
-    row = query.fetchone()
-    while row:
-        if int(row[0]) == STATUS_SUCCESS:
-            output = output.replace("{success}", str(row[1]))
-        elif int(row[0]) == STATUS_FAIL:
-            output = output.replace("{fail}", str(row[1]))
-        row = query.fetchone()
-
-    # denied
-    query.execute("SELECT COUNT(*) FROM reportfull")
-    row = query.fetchone()
-    output = output.replace("{denied}", str(row[0]))
+    # fill in statuses
+    for key in status_queries.keys():
+        output = replace_by_count(output, key, status_queries[key], query)
 
     # first retrace
     query.execute("SELECT starttime FROM tasks \
