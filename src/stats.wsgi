@@ -65,11 +65,15 @@ def application(environ, start_response):
     query.execute("SELECT starttime FROM tasks \
                    ORDER BY starttime ASC LIMIT 0,1")
     row = query.fetchone()
-    date = time.localtime(int(row[0]))
-    output = output.replace("{first}", "%04d-%02d-%02d %02d:%02d" % \
-                                       (date.tm_year, date.tm_mon, \
-                                        date.tm_mday, date.tm_hour, \
-                                        date.tm_min))
+    if row:
+        date = time.localtime(int(row[0]))
+        output = output.replace("{first}", "%04d-%02d-%02d %02d:%02d" % \
+                                           (date.tm_year, date.tm_mon, \
+                                            date.tm_mday, date.tm_hour, \
+                                            date.tm_min))
+    else:
+        output = output.replace("{first}", "No retrace yet")
+
 
     # by architecture
     query.execute("SELECT arch, COUNT(*) FROM tasks WHERE arch IS NOT NULL \
