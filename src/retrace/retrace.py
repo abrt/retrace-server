@@ -1652,10 +1652,6 @@ class RetraceTask:
         if kernelver is None:
             raise Exception, "Unable to determine kernel version"
 
-        debuginfo = find_kernel_debuginfo(kernelver)
-        if not debuginfo:
-            raise Exception, "Unable to find debuginfo package"
-
         if "EL" in kernelver.release:
             if kernelver.flavour is None:
                 pattern = "EL/vmlinux"
@@ -1663,6 +1659,25 @@ class RetraceTask:
                 pattern = "EL%s/vmlinux" % kernelver.flavour
         else:
             pattern = "/vmlinux"
+
+        debugdir_base = os.path.join(CONFIG["RepoDir"], "kernel", kernelver.arch)
+        if not os.path.isdir(debugdir_base):
+            os.makedirs(debugdir_base)
+        #
+        # First look in our cache at the "typical" location which is something like
+        # /cores/retrace/repos/kernel/x86_64/usr/lib/debug/lib/modules/2.6.32-504.el6.x86_64
+        #
+        vmlinux = debugdir_base + "/usr/lib/debug/lib/modules/" + str(kernelver) + pattern
+        if os.path.isfile(vmlinux):
+            log_info("Found cached vmlinux at path: " + vmlinux)
+            self.set_vmlinux(vmlinux)
+            return vmlinux
+        else:
+            log_info("Unable to find cached vmlinux at path: " + vmlinux + " - searching for kernel-debuginfo package")
+
+        debuginfo = find_kernel_debuginfo(kernelver)
+        if not debuginfo:
+            raise Exception, "Unable to find debuginfo package"
 
         vmlinux_path = None
         debugfiles = {}
@@ -1689,10 +1704,6 @@ class RetraceTask:
 
             # '-' in file name is transformed to '_' in module name
             debugfiles[match.group(1).replace("-", "_")] = line
-
-        debugdir_base = os.path.join(CONFIG["RepoDir"], "kernel", kernelver.arch)
-        if not os.path.isdir(debugdir_base):
-            os.makedirs(debugdir_base)
 
         vmlinux = os.path.join(debugdir_base, vmlinux_path.lstrip("/"))
         if not os.path.isfile(vmlinux):
