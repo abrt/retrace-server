@@ -4,6 +4,8 @@ SUBDIRS = doc po src test
 DISTCHECK_CONFIGURE_FLAGS = \
         --with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)
 
+dist_doc_DATA = README.md
+
 RPM_DIRS = --define "_sourcedir `pwd`" \
 	   --define "_rpmdir `pwd`" \
 	   --define "_specdir `pwd`" \

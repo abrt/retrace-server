@@ -134,7 +134,7 @@ fi
 %doc %{_mandir}/man1/%{name}-reposync.1*
 %doc %{_mandir}/man1/%{name}-worker.1*
 %doc %{_infodir}/%{name}*
-%doc COPYING INSTALL README TODO
+%doc COPYING README.md
 
 %changelog
 * Thu Jun 2 2016 Jakub Filak <jfilak@redhat.com> - 1.16-1
