@@ -1,3 +1,15 @@
+Retrace server
+==============
+
+Allows users to get backtraces from crashes by retracing core dump files
+remotely.
+
+The server can generate a backtrace from either a user space core dump file or
+a kernel core dump file.
+
+The server accepts request over a simply HTTP API or users can submit core dump
+files for retracing via Web UI.
+
 1. Plugins
 ==========
 
