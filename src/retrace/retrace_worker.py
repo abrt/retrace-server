@@ -920,8 +920,7 @@ class RetraceWorker(object):
 
             for required_file in REQUIRED_FILES[tasktype]:
                 if not os.path.isfile(os.path.join(crashdir, required_file)):
-                    log_error("Crash directory does not contain required file '%s'" % required_file)
-                    self._fail()
+                    raise Exception("Crash directory does not contain required file '%s'" % required_file)
 
             if tasktype in [TASK_RETRACE, TASK_DEBUG, TASK_RETRACE_INTERACTIVE]:
                 self.start_retrace(custom_arch=arch)
