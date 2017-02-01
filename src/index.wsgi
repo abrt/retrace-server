@@ -16,9 +16,9 @@ def application(environ, start_response):
     host = environ["HTTP_HOST"]
     about = "%s %s" % (_("Retrace Server is a service that provides the possibility to analyze "
                          "coredump and generate backtrace over network. "
-                         "You can find further information at Retrace Server&apos;s wiki:"),
-                         "<a href=\"https://fedorahosted.org/abrt/wiki/AbrtRetraceServer\">"
-                         "https://fedorahosted.org/abrt/wiki/AbrtRetraceServer</a>")
+                         "You can find further information at Retrace Server&apos;s github:"),
+                         "<a href=\"https://github.com/abrt/retrace-server">"
+                         "https://github.com/abrt/retrace-server</a>")
     if CONFIG["RequireHTTPS"]:
         https = _("Only the secure HTTPS connection is now allowed by the server. HTTP requests will be denied.")
     else:

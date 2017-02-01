@@ -6,7 +6,7 @@ Version: @PACKAGE_VERSION@
 Release: 1%{?dist}
 License: GPLv2+
 Group: Applications/System
-URL: https://fedorahosted.org/abrt/wiki/AbrtRetraceServer
+URL: https://github.com/abrt/retrace-server
 Source: https://fedorahosted.org/released/%{name}/%{name}-%{version}.tar.gz
 
 BuildArch: noarch
