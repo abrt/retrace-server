@@ -148,6 +148,16 @@ def create_local_config(change_repo_dir):
     # edit env variable RETRACE_SERVER_CONFIG_PATH
     os.environ["RETRACE_SERVER_CONFIG_PATH"] = new_conf_path
 
+    try:
+        os.mkdir("/var/tmp/retrace-server-spool")
+    except:
+        pass
+
+    try:
+        os.mkdir("/var/tmp/retrace-server-repo")
+    except:
+        pass
+
 
 # Parse arguments
 parser = argparse.ArgumentParser(description="Run test for retrace-server.")
