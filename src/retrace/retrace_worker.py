@@ -652,7 +652,7 @@ class RetraceWorker(object):
                         log_warn("crash 'log' exitted with %d" % child.returncode)
 
                     child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                   "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
+                                   "crash --hex -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
                     crash_bt_a = child.communicate("bt -a\nquit\n")[0]
                     if child.wait():
                         log_warn("crash 'bt -a' exitted with %d" % child.returncode)
@@ -699,7 +699,7 @@ class RetraceWorker(object):
                         crash_sys_c = None
 
                     child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                   "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
+                                   "crash --hex -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
                     crash_foreach_bt = child.communicate("foreach bt\nquit\n")[0]
                     if child.wait():
                         log_warn("crash 'foreach bt' exitted with %d" % child.returncode)
@@ -729,7 +729,7 @@ class RetraceWorker(object):
             if child.wait():
                 log_warn("crash 'log' exited with %d" % child.returncode)
 
-            child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(task.get_crash_cmd().split() + ["--hex", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             crash_bt_a = child.communicate("bt -a\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'bt -a' exited with %d" % child.returncode)
@@ -770,7 +770,7 @@ class RetraceWorker(object):
                 log_warn("crash 'sys -c' exited with %d" % child.returncode)
                 crash_sys_c = None
 
-            child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(task.get_crash_cmd().split() + ["--hex", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             crash_foreach_bt = child.communicate("foreach bt\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'foreach bt' exited with %d" % child.returncode)
