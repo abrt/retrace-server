@@ -385,17 +385,24 @@ def application(environ, start_response):
         if not ftptask and task.has_downloaded():
             downloaded = "<tr><th>Downloaded resources:</th><td>%s</td></tr>" % task.get_downloaded()
 
-        starttime = task.get_default_started_time()
-        if not ftptask and task.has_started_time():
-            starttime = task.get_started_time()
+        starttime_str = ""
+        if not ftptask:
+            if task.has_started_time():
+                starttime = task.get_started_time()
+            else:
+                startime = task.get_default_started_time()
 
-        starttime_str = "<tr><th>Started:</th><td>%s</td></tr>" % datetime.datetime.fromtimestamp(starttime)
+            starttime_str = "<tr><th>Started:</th><td>%s</td></tr>" % datetime.datetime.fromtimestamp(starttime)
 
-        finishtime = task.get_default_finished_time()
-        if not ftptask and task.has_finished_time():
-            finishtime = task.get_finished_time()
+        finishtime_str = ""
+        if not ftptask:
+            if task.has_finished_time():
+                finishtime = task.get_finished_time()
+            else:
+                finishtime = task.get_default_finished_time()
 
-        finishtime_str = "<tr><th>Finished:</th><td>%s</td></tr>" % datetime.datetime.fromtimestamp(finishtime)
+
+            finishtime_str = "<tr><th>Finished:</th><td>%s</td></tr>" % datetime.datetime.fromtimestamp(finishtime)
 
         caseno = ""
         if not ftptask:
