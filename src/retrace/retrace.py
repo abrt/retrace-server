@@ -1665,16 +1665,33 @@ class RetraceTask:
             os.makedirs(debugdir_base)
         #
         # First look in our cache at the "typical" location which is something like
-        # /cores/retrace/repos/kernel/x86_64/usr/lib/debug/lib/modules/2.6.32-504.el6.x86_64
+        # CONFIG["RepoDir"]/kernel/x86_64/usr/lib/debug/lib/modules/2.6.32-504.el6.x86_64
         #
-        vmlinux = debugdir_base + "/usr/lib/debug/lib/modules/" + str(kernelver) + pattern
+        log_info("Version: '%s'; Release: '%s'; Arch: '%s'; _arch: '%s'; Flavour: '%s'; Realtime: %s"
+                  % (kernelver.version, kernelver.release, kernelver.arch, kernelver._arch, kernelver.flavour, kernelver.rt))
+        kernel_path = ""
+        if kernelver.version is not None:
+            kernel_path = kernel_path + str(kernelver.version)
+        if kernelver.release is not None:
+            kernel_path = kernel_path + "-" + str(kernelver.release)
+	# Skip the 'arch' on RHEL5 and RHEL4 due to different kernel-debuginfo path to vmlinux
+        if kernelver._arch is not None and "EL" not in kernelver.release and "el5" not in kernelver.release:
+            kernel_path = kernel_path + "." + str(kernelver._arch)
+        if kernelver.flavour is not None:
+            # 'debug' flavours on rhel6 and above require a '.' before the 'debug'
+            if "EL" not in kernelver.release and "el5" not in kernelver.release:
+                kernel_path = kernel_path + "."
+            kernel_path = kernel_path + str(kernelver.flavour)
+
+        vmlinux = debugdir_base + "/usr/lib/debug/lib/modules/" + kernel_path + "/vmlinux"
         if os.path.isfile(vmlinux):
             log_info("Found cached vmlinux at path: " + vmlinux)
             self.set_vmlinux(vmlinux)
             return vmlinux
         else:
-            log_info("Unable to find cached vmlinux at path: " + vmlinux + " - searching for kernel-debuginfo package")
+            log_info("Unable to find cached vmlinux at path: " + vmlinux)
 
+        log_info("Searching for kernel-debuginfo package for " + str(kernelver))
         debuginfo = find_kernel_debuginfo(kernelver)
         if not debuginfo:
             raise Exception, "Unable to find debuginfo package"
