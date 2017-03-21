@@ -15,6 +15,7 @@ import sqlite3
 import stat
 import time
 import urllib
+import hashlib
 from argparser import *
 from webob import Request
 from yum import YumBase
@@ -138,7 +139,7 @@ TASKPASS_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \
 STATUS_STATS, STATUS_FINISHING, STATUS_SUCCESS, STATUS_FAIL, \
-STATUS_DOWNLOADING, STATUS_POSTPROCESS = xrange(10)
+STATUS_DOWNLOADING, STATUS_POSTPROCESS, STATUS_CALCULATING_MD5SUM = xrange(11)
 
 STATUS = [
   "Analyzing crash data",
@@ -151,6 +152,7 @@ STATUS = [
   "Retrace job failed",
   "Downloading remote resources",
   "Post-processing downloaded file",
+  "Calculating md5sum",
 ]
 
 ARCHITECTURES = set(["src", "noarch", "i386", "i486", "i586", "i686", "x86_64",
@@ -1260,6 +1262,7 @@ class RetraceTask:
     CRASHRC_FILE = "crashrc"
     CRASH_CMD_FILE = "crash_cmd"
     DOWNLOADED_FILE = "downloaded"
+    MD5SUM_FILE = "md5sum"
     FINISHED_FILE = "finished_time"
     KERNELVER_FILE = "kernelver"
     LOG_FILE = "retrace_log"
@@ -1497,6 +1500,16 @@ class RetraceTask:
     def get_age(self):
         """Returns the age of the task in hours."""
         return int(time.time() - os.path.getmtime(self._savedir)) / 3600
+
+    def calculate_md5(self, file_name, chunk_size = 65536):
+        hash_md5 = hashlib.md5()
+        with open(file_name, "rb") as f:
+            while True:
+                chunk = f.read(chunk_size)
+                if not chunk:
+                    break
+                hash_md5.update(chunk)
+        return hash_md5.hexdigest()
 
     def get_type(self):
         """Returns task type. If TYPE_FILE is missing,
@@ -1788,6 +1801,7 @@ class RetraceTask:
 
     def download_remote(self, unpack=True, timeout=0, kernelver=None):
         """Downloads all remote resources and returns a list of errors."""
+        md5sums = []
         downloaded = []
         errors = []
 
@@ -1873,6 +1887,12 @@ class RetraceTask:
 
                 filename = url.rsplit("/", 1)[1]
                 downloaded.append(url)
+
+            if self.has_md5sum():
+                self.set_status(STATUS_CALCULATING_MD5SUM)
+                log_info(STATUS[STATUS_CALCULATING_MD5SUM])
+                md5v = self.calculate_md5(os.path.join(crashdir, filename))
+                md5sums.append("{0} {1}".format(md5v, downloaded[-1]))
 
             self.set_status(STATUS_POSTPROCESS)
             log_info(STATUS[STATUS_POSTPROCESS])
@@ -2030,6 +2050,8 @@ class RetraceTask:
                                  % coredump)
 
         os.unlink(os.path.join(self._savedir, RetraceTask.REMOTE_FILE))
+        if md5sums:
+            self.set_md5sum("\n".join(md5sums)+"\n")
         self.set_downloaded(", ".join(downloaded))
 
         return errors
@@ -2123,6 +2145,18 @@ class RetraceTask:
     def set_downloaded(self, value):
         """Writes (not atomically) content to DOWNLOADED_FILE"""
         self.set(RetraceTask.DOWNLOADED_FILE, value)
+
+    def has_md5sum(self):
+        """Verifies whether MD5SUM_FILE exists"""
+        return self.has(RetraceTask.MD5SUM_FILE)
+
+    def get_md5sum(self):
+        """Gets contents of MD5SUM_FILE"""
+        return self.get(RetraceTask.MD5SUM_FILE, maxlen=1 << 22)
+
+    def set_md5sum(self, value):
+        """Writes (not atomically) content to MD5SUM_FILE"""
+        self.set(RetraceTask.MD5SUM_FILE, value)
 
     def has_crashrc(self):
         """Verifies whether CRASHRC_FILE exists"""

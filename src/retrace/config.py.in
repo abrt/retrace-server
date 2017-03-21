@@ -73,6 +73,7 @@ class Config(object):
           "AuthGroup": "retrace",
           "EmailNotify": False,
           "EmailNotifyFrom": "retrace@localhost",
+          "CalculateMd5": True,
           "CaseNumberURL": "",
           "Crashi386": "",
         }

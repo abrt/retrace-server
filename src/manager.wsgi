@@ -144,6 +144,9 @@ def application(environ, start_response):
         if "notify" in get:
             task.set_notify(filter(None, set(n.strip() for n in get["notify"][0].replace(";", ",").split(","))))
 
+        if "md5sum" in get:
+            task.set_md5sum("Enabled")
+
         task.start(debug=debug, kernelver=kernelver, arch=arch)
 
         # ugly, ugly, ugly! retrace-server-worker double-forks and needs a while to spawn
@@ -224,6 +227,9 @@ def application(environ, start_response):
         POST = urlparse.parse_qs(request.body, keep_blank_values=1)
 
         qs_base = []
+        if "md5sum" in POST and POST["md5sum"][0] == "on":
+            qs_base.append("md5sum=md5sum")
+
         if "debug" in POST and POST["debug"][0] == "on":
             qs_base.append("debug=debug")
 
@@ -294,13 +300,18 @@ def application(environ, start_response):
         if not ftptask and task.has_status():
             status = get_status_for_task_manager(task, _=_)
         else:
+            md5sum_enabled = ""
+            if CONFIG["CalculateMd5"]:
+                    md5sum_enabled = "checked=\"checked\""
+
             startcontent = "    <form method=\"get\" action=\"%s/start\">" \
                            "      Kernel version (empty to autodetect): <input name=\"kernelver\" type=\"text\" id=\"kernelver\" /> e.g. <code>2.6.32-287.el6.x86_64</code><br />" \
                            "      Case no.: <input name=\"caseno\" type=\"text\" id=\"caseno\" /><br />" \
                            "      E-mail notification: <input name=\"notify\" type=\"text\" id=\"notify\" /><br />" \
                            "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" checked=\"checked\" />Be more verbose in case of error<br />" \
+                           "      <input type=\"checkbox\" name=\"md5sum\" id=\"md5sum\" %s />Calculate md5 checksum for all downloaded resources<br />" \
                            "      <input type=\"submit\" value=\"%s\" id=\"start\" class=\"button\" />" \
-                           "    </form>" % (request.path_url.rstrip("/"), _("Start task"))
+                           "    </form>" % (request.path_url.rstrip("/"), md5sum_enabled, _("Start task"))
 
             if ftptask:
                 status = _("On remote FTP server")
@@ -394,6 +405,10 @@ def application(environ, start_response):
 
             starttime_str = "<tr><th>Started:</th><td>%s</td></tr>" % datetime.datetime.fromtimestamp(starttime)
 
+        md5sum = ""
+        if not ftptask and task.has_md5sum():
+            md5sum = "<tr><th>Md5sum:</rh><td>%s</td></tr>" % task.get_md5sum()
+
         finishtime_str = ""
         if not ftptask:
             if task.has_finished_time():
@@ -470,6 +485,7 @@ def application(environ, start_response):
         output = output.replace("{interactive}", interactive)
         output = output.replace("{misc}", misc)
         output = output.replace("{notes}", notes)
+        output = output.replace("{md5sum}", md5sum)
         output = output.replace("{unknownext}", unknownext)
         output = output.replace("{downloaded}", downloaded)
         output = output.replace("{starttime}", starttime_str)
@@ -619,6 +635,10 @@ def application(environ, start_response):
     finishtime_str = _("Finished")
     status_str = _("Status")
 
+    md5_enabled = ""
+    if CONFIG["CalculateMd5"]:
+        md5_enabled = 'checked="checked"'
+
     if CONFIG["UseFTPTasks"]:
         starturl = "ftp"
         qs = {}
@@ -667,6 +687,7 @@ def application(environ, start_response):
     # spaces to keep the XML nicely aligned
     output = output.replace("{running}", "\n            ".join(running))
     output = output.replace("{finished}", "\n            ".join(finished))
+    output = output.replace("{md5_enabled}", md5_enabled)
 
 
     return response(start_response, "200 OK", output, [("Content-Type", "text/html")])
