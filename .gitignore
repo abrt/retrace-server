@@ -24,6 +24,7 @@ py-compile
 retrace-server.spec
 retrace-server-[0-9]*
 stamp-h1
+retrace-server-version
 
 #doc
 doc/mdate-sh

@@ -44,6 +44,9 @@ case "$1" in
             exit 0
         ;;
     *)
+            echo "Generating new version ..."
+            ./gen-version
+
             mkdir -p m4
             echo "Creating m4/aclocal.m4 ..."
             test -r m4/aclocal.m4 || touch m4/aclocal.m4
