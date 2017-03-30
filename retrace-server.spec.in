@@ -137,6 +137,48 @@ fi
 %doc COPYING README.md
 
 %changelog
+* Thu Mar 30 2017 Matej Marusak <mmarusak@redhat.com> 1.17.0-1
+- Enable creating releases with makefile
+- Introduce gen-version
+- Do not use fedorahosted.org as source
+- Include md5sum of original archive in summary page
+- Do not try to get default time when ftptask
+- Fix character escape typo
+- Change retrace-server httpd config
+- Modify search for existing vmlinux files in cache to handle older kernel-debuginfos
+- Default to hex mode for crash commands involving backtraces.
+- Create directories for tests if they are not present
+- Don't mention old wiki page
+- Fix double call of _fail method
+- Update README
+- Allow any compression of man pages
+- Autogen without args configures for debugging
+- Run 'configure' at the end of 'autogen'
+- Improve autogen to list and install dependencies
+- Avoid circular dependency on kernel-debuginfo for vmlinux files already in cache
+- Add plugin checking action
+- Update documentation of plugin in README
+- Use short form rhel when creating repository
+- Fix methods arguments
+- Move global variables to config.py.in
+- Recover from missing start/finish task files
+- Change error message in cleanup script
+- Add '-ascending' argument to gdb
+- Use devtoolset-4-gdb when used on RHEL
+- Enable creating repository from faf repository
+- Add 'make check'
+- Correct eu-unstrip parser if FILE is .
+- Not mark packages with different architectures as duplicity
+- Separate worker start_retrace method
+- Add class to wrap plugins accessing
+- Add class to wrap configuration file reading
+- Delete python labels when no python backtrace available
+- Git ignore bytecode
+- Add python backtrace, source and locals into backtrace
+- Move src/lib to src/retrace to make testing retrace-server easier
+- Add "exploitable" into LocationMatch in the httpd.conf
+- Fix invalid syntax error in sys.stderr.print()
+
 * Thu Jun 2 2016 Jakub Filak <jfilak@redhat.com> - 1.16-1
 - Log failed to start tasks
 - Gracefully handle the worker errors
