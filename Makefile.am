@@ -4,9 +4,8 @@ SUBDIRS = doc po src test
 DISTCHECK_CONFIGURE_FLAGS = \
         --with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)
 
-EXTRA_DIST = autogen.sh gen-version retrace-server-version retrace-server.spec.in
-
-dist_doc_DATA = README.md
+EXTRA_DIST = autogen.sh gen-version retrace-server-version retrace-server.spec.in\
+			 README.md
 
 RPM_DIRS = --define "_sourcedir `pwd`" \
 	   --define "_rpmdir `pwd`" \
