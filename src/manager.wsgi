@@ -401,7 +401,7 @@ def application(environ, start_response):
             if task.has_started_time():
                 starttime = task.get_started_time()
             else:
-                startime = task.get_default_started_time()
+                starttime = task.get_default_started_time()
 
             starttime_str = "<tr><th>Started:</th><td>%s</td></tr>" % datetime.datetime.fromtimestamp(starttime)
 
