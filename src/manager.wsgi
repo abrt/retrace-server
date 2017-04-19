@@ -407,7 +407,7 @@ def application(environ, start_response):
 
         md5sum = ""
         if not ftptask and task.has_md5sum():
-            md5sum = "<tr><th>Md5sum:</rh><td>%s</td></tr>" % task.get_md5sum()
+            md5sum = "<tr><th>Md5sum:</th><td>%s</td></tr>" % task.get_md5sum()
 
         finishtime_str = ""
         if not ftptask:
