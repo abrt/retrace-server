@@ -204,7 +204,7 @@ def application(environ, start_response):
             return response(start_response, "403 Forbidden", _("Task does not belong to task manager"))
 
         if not task.has_backtrace():
-            return response(start_response, "404 Forbidden", _("Task does not have a backtrace"))
+            return response(start_response, "404 Forbidden", _("There is no backtrace for the specified task"))
 
         return response(start_response, "200 OK", task.get_backtrace())
     elif match.group(6) and match.group(6).startswith("delete") and \
