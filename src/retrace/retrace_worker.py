@@ -535,6 +535,11 @@ class RetraceWorker(object):
 
         vmcore = os.path.join(task.get_savedir(), "crash", "vmcore")
 
+        try:
+            self.stats["coresize"] = os.path.getsize(vmcore)
+        except:
+            pass
+
         if custom_kernelver is not None:
             kernelver = custom_kernelver
             kernelver_str = custom_kernelver.kernelver_str
