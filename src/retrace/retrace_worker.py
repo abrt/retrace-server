@@ -11,6 +11,7 @@ class RetraceWorker(object):
         self.plugins = Plugins()
         self.task = task
         self.logging_handler = None
+        self.fafrepo = None
 
     def begin_logging(self):
         if self.logging_handler is None:
@@ -378,7 +379,7 @@ class RetraceWorker(object):
             self._fail()
         self.hook_pre_prepare_debuginfo()
 
-        packages, missing, fafrepo = self.read_packages(crashdir, releaseid, crash_package, distribution)
+        packages, missing, self.fafrepo = self.read_packages(crashdir, releaseid, crash_package, distribution)
 
         self.hook_post_prepare_debuginfo()
         self.hook_pre_prepare_mock()
@@ -398,7 +399,7 @@ class RetraceWorker(object):
                 mockcfg.write("    'dirs': [\n")
                 mockcfg.write("              ('%s', '/var/spool/abrt/crash'),\n" % crashdir)
                 if CONFIG["UseFafPackages"]:
-                    mockcfg.write("              ('%s', '/packages'),\n" % fafrepo)
+                    mockcfg.write("              ('%s', '/packages'),\n" % self.fafrepo)
                 mockcfg.write("            ] }\n")
                 mockcfg.write("\n")
                 mockcfg.write("config_opts['yum.conf'] = \"\"\"\n")
@@ -477,8 +478,6 @@ class RetraceWorker(object):
             log_info(STATUS[STATUS_CLEANUP])
 
             self.clean_task()
-            if CONFIG["UseFafPackages"]:
-                shutil.rmtree(fafrepo)
 
             # ignore error: workdir = savedir => workdir is not empty
             if CONFIG["UseWorkDir"]:
@@ -939,6 +938,8 @@ class RetraceWorker(object):
 
     def clean_task(self):
         self.hook_pre_clean_task()
+        if CONFIG["UseFafPackages"] and self.fafrepo:
+            shutil.rmtree(self.fafrepo)
         ret = self.task.clean()
         self.hook_post_clean_task()
         return ret
