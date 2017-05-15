@@ -448,7 +448,7 @@ class RetraceWorker(object):
 
         if CONFIG["UseFafPackages"]:
             self._retrace_run(26, ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell", "--",
-                             "bash -c 'for PKG in /packages/*; "
+                                   "bash -c 'for PKG in /packages/*; "
                              "do rpm2cpio $PKG | cpio -muid --quiet; done'"])
         self._retrace_run(27, ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell",
                          "--", "chgrp -R mockbuild /var/spool/abrt/crash"])
