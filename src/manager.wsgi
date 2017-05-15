@@ -14,7 +14,7 @@ LONG_TYPES = {TASK_RETRACE: "Coredump retrace",
               TASK_DEBUG: "Coredump retrace - debug",
               TASK_VMCORE: "VMcore retrace",
               TASK_RETRACE_INTERACTIVE: "Coredump retrace - interactive",
-              TASK_VMCORE_INTERACTIVE: "VMcore retrace - interactive" }
+              TASK_VMCORE_INTERACTIVE: "VMcore retrace - interactive"}
 
 
 def is_local_task(taskid):
