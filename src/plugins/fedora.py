@@ -8,7 +8,7 @@ gdb_package = "gdb"
 gdb_executable = "/usr/bin/gdb"
 versionlist = [
     "fc1",
-  "fc2",
+    "fc2",
   "fc3",
   "fc4",
   "fc5",
