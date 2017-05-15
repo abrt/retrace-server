@@ -12,7 +12,7 @@ versionlist = [
     "el3",
     "el4",
     "el5",
-  "el6",
+    "el6",
   "el7",
 ]
 repos = [[]]
