@@ -36,8 +36,6 @@
 #  $ chmod +x bt_filter.py
 #  $ bt_filter.py bt.all
 
-
-import os
 import sys
 import fileinput
 if sys.version_info[:2] >= (2, 5):
