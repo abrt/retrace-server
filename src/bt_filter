@@ -96,8 +96,7 @@ def backtrace_get_proc_info(line):
     if debug > 1:
         print "backtrace_get_proc_info: %s[%d]" % (ret)
 
-    return ret
-    
+    return ret    
 
 
 def backtrace_calc_hash(proc_backtrace):
