@@ -177,7 +177,7 @@ def application(environ, start_response):
         except:
             tasktype = TASK_RETRACE
 
-        if not tasktype in TASK_TYPES:
+        if tasktype not in TASK_TYPES:
             tasktype = TASK_RETRACE
 
         if tasktype in [TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE] \
