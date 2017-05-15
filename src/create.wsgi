@@ -202,7 +202,7 @@ def application(environ, start_response):
     retcode = task.start()
     if retcode != 0:
         sys.stderr.write("Task {0} failed to start: {1}\n".format(
-                             task.get_taskid(), retcode))
+            task.get_taskid(), retcode))
 
     return response(start_response, "201 Created", "",
                     [("X-Task-Id", "%d" % task.get_taskid()),
