@@ -95,7 +95,7 @@ def backtrace_get_proc_info(line):
     ret = (cmd, pid)
     if debug > 1:
         print "backtrace_get_proc_info: %s[%d]" % (ret)
-    return ret 
+    return ret
 
 def backtrace_calc_hash(proc_backtrace):
     hash = sha(''.join(proc_backtrace))
@@ -209,7 +209,6 @@ def backtrace_report(bt_hash, bt_proc):
 
         print pid_output
         print "Total of %d PIDs\n" % len(bt_proc[hash])
-            
 
 def main():
     input = fileinput.input()
