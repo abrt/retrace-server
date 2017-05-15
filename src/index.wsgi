@@ -17,8 +17,8 @@ def application(environ, start_response):
     about = "%s %s" % (_("Retrace Server is a service that provides the possibility to analyze "
                          "coredump and generate backtrace over network. "
                          "You can find further information at Retrace Server&apos;s github:"),
-                         "<a href=\"https://github.com/abrt/retrace-server\">"
-                         "https://github.com/abrt/retrace-server</a>")
+                       "<a href=\"https://github.com/abrt/retrace-server\">"
+                       "https://github.com/abrt/retrace-server</a>")
     if CONFIG["RequireHTTPS"]:
         https = _("Only the secure HTTPS connection is now allowed by the server. HTTP requests will be denied.")
     else:
