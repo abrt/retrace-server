@@ -95,9 +95,7 @@ def backtrace_get_proc_info(line):
     ret = (cmd, pid)
     if debug > 1:
         print "backtrace_get_proc_info: %s[%d]" % (ret)
-
-    return ret    
-
+    return ret 
 
 def backtrace_calc_hash(proc_backtrace):
     hash = sha(''.join(proc_backtrace))
@@ -105,7 +103,6 @@ def backtrace_calc_hash(proc_backtrace):
     if debug > 1:
         print "backtrace_calc_hash: %s" % hash_digest
     return hash_digest
-    
 
 #0 [e041ed40] schedule at c06076a4
 def backtrace_clear_frame(line):
@@ -188,8 +185,7 @@ def backtrace_report(bt_hash, bt_proc):
         print "\nBacktrace:"
         backtrace = bt_hash[hash]
         for line in backtrace:
-            print "%s" % line 
-
+            print "%s" % line
         print "PID List:"
         # group all PIDs of the same command
         task_list = {}
