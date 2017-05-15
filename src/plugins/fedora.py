@@ -28,7 +28,7 @@ versionlist = [
     "fc19",
     "fc20",
     "fc21",
-  "fc22",
+    "fc22",
   "fc23",
   "fc24",
 ]
