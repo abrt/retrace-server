@@ -5,8 +5,8 @@
 
 import subprocess
 import sys
-import yum
 import argparse
+import yum
 import os
 
 parser = argparse.ArgumentParser(description='Get packages for coredump processing.')
