@@ -36,7 +36,7 @@ def application(environ, start_response):
                         _("Specified archive is too large"))
 
     if (not CONFIG["AllowExternalDir"] and
-        "X-CoreFileDirectory" in request.headers):
+            "X-CoreFileDirectory" in request.headers):
         return response(start_response, "403 Forbidden",
                         _("X-CoreFileDirectory header has been disabled "
                           "by server administrator"))
