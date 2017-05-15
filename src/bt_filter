@@ -165,7 +165,7 @@ def backtrace_file_parser(input, bt_hash, bt_proc):
         if bt_proc.has_key(hash):
             bt_proc[hash].append(proc_info)
         else:
-            bt_proc[hash] = [ proc_info ]
+            bt_proc[hash] = [proc_info]
 
         if not bt_hash.has_key(hash):
             bt_hash[hash] = proc_backtrace
