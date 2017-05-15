@@ -7,7 +7,7 @@ displayrelease = "Fedora release"
 gdb_package = "gdb"
 gdb_executable = "/usr/bin/gdb"
 versionlist = [
-  "fc1",
+    "fc1",
   "fc2",
   "fc3",
   "fc4",
