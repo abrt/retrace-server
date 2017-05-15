@@ -390,7 +390,7 @@ class RetraceWorker(object):
                 mockcfg.write("config_opts['root'] = '%d'\n" % task.get_taskid())
                 mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
                 mockcfg.write("config_opts['chroot_setup_cmd'] = '--skip-broken install %s abrt-addon-ccpp shadow-utils %s rpm'\n" % (" ".join(packages),
-                    self.plugin.gdb_package))
+                                                                                                                                      self.plugin.gdb_package))
                 mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
                 mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
                 mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
