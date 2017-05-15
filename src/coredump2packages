@@ -4,8 +4,8 @@
 # Uses eu-unstrip and yum.
 
 import subprocess
-import yum
 import sys
+import yum
 import argparse
 import os
 
