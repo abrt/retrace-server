@@ -35,13 +35,12 @@
 #  $ wget http://people.redhat.com/~fleitner/bt_filter/bt_filter.py
 #  $ chmod +x bt_filter.py
 #  $ bt_filter.py bt.all
-# 
 
 
 import os
 import sys
 import fileinput
-if sys.version_info[:2] >= (2,5):
+if sys.version_info[:2] >= (2, 5):
     from hashlib import sha1 as sha
 else:
     from sha import sha
