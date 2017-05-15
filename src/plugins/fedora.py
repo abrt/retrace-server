@@ -12,7 +12,7 @@ versionlist = [
     "fc3",
     "fc4",
     "fc5",
-  "fc6",
+    "fc6",
   "fc7",
   "fc8",
   "fc9",
