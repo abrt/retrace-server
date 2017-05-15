@@ -9,7 +9,7 @@ gdb_executable = "/opt/rh/devtoolset-4/root/usr/bin/gdb"
 versionlist = [
     "el1",
     "el2",
-  "el3",
+    "el3",
   "el4",
   "el5",
   "el6",
