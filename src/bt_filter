@@ -107,7 +107,6 @@ def backtrace_calc_hash(proc_backtrace):
     return hash_digest
     
 
-
 #0 [e041ed40] schedule at c06076a4
 def backtrace_clear_frame(line):
     start = line.find('[')
