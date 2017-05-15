@@ -82,7 +82,7 @@ def application(environ, start_response):
         coredir = request.headers["X-CoreFileDirectory"]
         if not os.path.isdir(coredir):
             return response(start_response, "404 Not Found", _("The directory "
-                            "specified in 'X-CoreFileDirectory' does not exist"))
+                                                               "specified in 'X-CoreFileDirectory' does not exist"))
 
         files = os.listdir(coredir)
         if len(files) != 1:
