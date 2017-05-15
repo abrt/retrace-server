@@ -89,7 +89,7 @@ def application(environ, start_response):
             return response(start_response, "501 Not Implemented",
                             _("There are %d files in the '%s' directory. Only "
                               "a single archive is supported at the moment") %
-                              (len(files), coredir))
+                            (len(files), coredir))
 
         filepath = os.path.join(coredir, files[0])
         archive_meta = HANDLE_ARCHIVE[request.content_type]
