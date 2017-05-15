@@ -94,7 +94,7 @@ def application(environ, start_response):
         filepath = os.path.join(coredir, files[0])
         archive_meta = HANDLE_ARCHIVE[request.content_type]
         if ("type" in archive_meta and
-            get_archive_type(filepath) != archive_meta["type"]):
+                get_archive_type(filepath) != archive_meta["type"]):
             return response(start_response, "409 Conflict",
                             _("You header specifies '%s' type, but the file "
                               "type does not match") % request.content_type)
