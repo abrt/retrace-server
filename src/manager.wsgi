@@ -302,7 +302,7 @@ def application(environ, start_response):
         else:
             md5sum_enabled = ""
             if CONFIG["CalculateMd5"]:
-                    md5sum_enabled = "checked=\"checked\""
+                md5sum_enabled = "checked=\"checked\""
 
             startcontent = "    <form method=\"get\" action=\"%s/start\">" \
                            "      Kernel version (empty to autodetect): <input name=\"kernelver\" type=\"text\" id=\"kernelver\" /> e.g. <code>2.6.32-287.el6.x86_64</code><br />" \
