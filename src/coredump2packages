@@ -6,8 +6,9 @@
 import subprocess
 import sys
 import argparse
-import yum
 import os
+import yum
+
 
 parser = argparse.ArgumentParser(description='Get packages for coredump processing.')
 parser.add_argument('--repos', default='*', metavar='WILDCARD',
