@@ -30,7 +30,7 @@ versionlist = [
     "fc21",
     "fc22",
     "fc23",
-  "fc24",
+    "fc24",
 ]
 
 # Find more details about Fedora Mirroring at:
