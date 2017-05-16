@@ -200,7 +200,7 @@ if __name__ == "__main__":
             os.makedirs(targetdir)
 
         cmd_line = ["retrace-server-reposync-faf", distribution, version, arch,
-                    "--outputdir",  targetdir]
+                    "--outputdir", targetdir]
         child = Popen(cmd_line, stdout=PIPE, stderr=PIPE)
         stdout, stderr = child.communicate()
         if child.returncode != 0:
