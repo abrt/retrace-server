@@ -1,5 +1,5 @@
-from retrace import *
 from tempfile import *
+from retrace import *
 
 CONFIG = config.Config()
 BUFSIZE = 1 << 20 # 1 MB
