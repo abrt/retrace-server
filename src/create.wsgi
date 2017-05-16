@@ -36,7 +36,7 @@ def application(environ, start_response):
                         _("Specified archive is too large"))
 
     if (not CONFIG["AllowExternalDir"] and
-        "X-CoreFileDirectory" in request.headers):
+            "X-CoreFileDirectory" in request.headers):
         return response(start_response, "403 Forbidden",
                         _("X-CoreFileDirectory header has been disabled "
                           "by server administrator"))
@@ -82,19 +82,19 @@ def application(environ, start_response):
         coredir = request.headers["X-CoreFileDirectory"]
         if not os.path.isdir(coredir):
             return response(start_response, "404 Not Found", _("The directory "
-                            "specified in 'X-CoreFileDirectory' does not exist"))
+                                                               "specified in 'X-CoreFileDirectory' does not exist"))
 
         files = os.listdir(coredir)
         if len(files) != 1:
             return response(start_response, "501 Not Implemented",
                             _("There are %d files in the '%s' directory. Only "
                               "a single archive is supported at the moment") %
-                              (len(files), coredir))
+                            (len(files), coredir))
 
         filepath = os.path.join(coredir, files[0])
         archive_meta = HANDLE_ARCHIVE[request.content_type]
         if ("type" in archive_meta and
-            get_archive_type(filepath) != archive_meta["type"]):
+                get_archive_type(filepath) != archive_meta["type"]):
             return response(start_response, "409 Conflict",
                             _("You header specifies '%s' type, but the file "
                               "type does not match") % request.content_type)
@@ -177,7 +177,7 @@ def application(environ, start_response):
         except:
             tasktype = TASK_RETRACE
 
-        if not tasktype in TASK_TYPES:
+        if tasktype not in TASK_TYPES:
             tasktype = TASK_RETRACE
 
         if tasktype in [TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE] \
@@ -202,7 +202,7 @@ def application(environ, start_response):
     retcode = task.start()
     if retcode != 0:
         sys.stderr.write("Task {0} failed to start: {1}\n".format(
-                             task.get_taskid(), retcode))
+            task.get_taskid(), retcode))
 
     return response(start_response, "201 Created", "",
                     [("X-Task-Id", "%d" % task.get_taskid()),

@@ -10,11 +10,11 @@ CONFIG = config.Config()
 
 MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|notify|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
 
-LONG_TYPES = { TASK_RETRACE: "Coredump retrace",
-               TASK_DEBUG: "Coredump retrace - debug",
-               TASK_VMCORE: "VMcore retrace",
-               TASK_RETRACE_INTERACTIVE: "Coredump retrace - interactive",
-               TASK_VMCORE_INTERACTIVE: "VMcore retrace - interactive" }
+LONG_TYPES = {TASK_RETRACE: "Coredump retrace",
+              TASK_DEBUG: "Coredump retrace - debug",
+              TASK_VMCORE: "VMcore retrace",
+              TASK_RETRACE_INTERACTIVE: "Coredump retrace - interactive",
+              TASK_VMCORE_INTERACTIVE: "VMcore retrace - interactive"}
 
 
 def is_local_task(taskid):
@@ -302,7 +302,7 @@ def application(environ, start_response):
         else:
             md5sum_enabled = ""
             if CONFIG["CalculateMd5"]:
-                    md5sum_enabled = "checked=\"checked\""
+                md5sum_enabled = "checked=\"checked\""
 
             startcontent = "    <form method=\"get\" action=\"%s/start\">" \
                            "      Kernel version (empty to autodetect): <input name=\"kernelver\" type=\"text\" id=\"kernelver\" /> e.g. <code>2.6.32-287.el6.x86_64</code><br />" \

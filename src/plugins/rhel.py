@@ -7,12 +7,12 @@ displayrelease = "Red Hat Enterprise Linux release"
 gdb_package = "devtoolset-4-gdb"
 gdb_executable = "/opt/rh/devtoolset-4/root/usr/bin/gdb"
 versionlist = [
-  "el1",
-  "el2",
-  "el3",
-  "el4",
-  "el5",
-  "el6",
-  "el7",
+    "el1",
+    "el2",
+    "el3",
+    "el4",
+    "el5",
+    "el6",
+    "el7",
 ]
 repos = [[]]
