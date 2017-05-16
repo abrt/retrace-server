@@ -48,4 +48,3 @@ def application(environ, start_response):
     output = output.replace("{disclaimer2}", disclaimer2)
 
     return response(start_response, "200 OK", output, [("Content-Type", "text/html")])
-
