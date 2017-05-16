@@ -151,7 +151,7 @@ def clean_rawhide_repo(release):
         ver = "%s-%s" % (pkgdata["version"], pkgdata["release"])
 
         if not pkgdata["name"] in packages:
-            packages[pkgdata["name"]] = { ver: [f] }
+            packages[pkgdata["name"]] = {ver: [f]}
             continue
 
         if ver in packages[pkgdata["name"]]:
