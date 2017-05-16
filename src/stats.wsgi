@@ -3,10 +3,10 @@ from retrace import *
 sys.path.insert(0, "/usr/share/retrace-server/")
 
 status_queries = {"SELECT COUNT(*) FROM tasks": "{total}",
-    "SELECT COUNT(*) FROM tasks WHERE status = {0}".format(STATUS_SUCCESS): "{success}",
-    "SELECT COUNT(*) FROM tasks WHERE status = {0}".format(STATUS_FAIL): "{fail}",
-    "SELECT COUNT(*) FROM reportfull": "{denied}",
-    }
+                  "SELECT COUNT(*) FROM tasks WHERE status = {0}".format(STATUS_SUCCESS): "{success}",
+                  "SELECT COUNT(*) FROM tasks WHERE status = {0}".format(STATUS_FAIL): "{fail}",
+                  "SELECT COUNT(*) FROM reportfull": "{denied}",
+                 }
 
 def replace_by_count(input, q, key, query):
     query.execute(q)
@@ -24,26 +24,26 @@ def application(environ, start_response):
                            "%s" % request.accept_charset)
 
     strings = {
-                "{_Architecture}": _("Architecture"),
-                "{_Architectures}": _("Architectures"),
-                "{_Build-id}": _("Build-id"),
-                "{_Count}": _("Count"),
-                "{_Denied_jobs}": _("Denied jobs"),
-                "{_Failed}": _("Failed"),
-                "{_First_retrace}": _("First retrace"),
-                "{_Global_statistics}": _("Global statistics"),
-                "{_Missing_build-ids}": _("Missing build-ids"),
-                "{_Name}": _("Name"),
-                "{_Release}": _("Release"),
-                "{_Releases}": _("Releases"),
-                "{_Required_packages}": _("Required packages"),
-                "{_Retraced_packages}": _("Retraced packages"),
-                "{_Retrace_Server_statistics}": _("Retrace Server statistics"),
-                "{_Shared_object_name}": _("Shared object name"),
-                "{_Successful}": _("Successful"),
-                "{_Total}": _("Total"),
-                "{_Versions}": _("Versions"),
-              }
+        "{_Architecture}": _("Architecture"),
+        "{_Architectures}": _("Architectures"),
+        "{_Build-id}": _("Build-id"),
+        "{_Count}": _("Count"),
+        "{_Denied_jobs}": _("Denied jobs"),
+        "{_Failed}": _("Failed"),
+        "{_First_retrace}": _("First retrace"),
+        "{_Global_statistics}": _("Global statistics"),
+        "{_Missing_build-ids}": _("Missing build-ids"),
+        "{_Name}": _("Name"),
+        "{_Release}": _("Release"),
+        "{_Releases}": _("Releases"),
+        "{_Required_packages}": _("Required packages"),
+        "{_Retraced_packages}": _("Retraced packages"),
+        "{_Retrace_Server_statistics}": _("Retrace Server statistics"),
+        "{_Shared_object_name}": _("Shared object name"),
+        "{_Successful}": _("Successful"),
+        "{_Total}": _("Total"),
+        "{_Versions}": _("Versions"),
+        }
 
     with open("/usr/share/retrace-server/stats.xhtml") as f:
         output = f.read(1 << 20) # 1 MB
