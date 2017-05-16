@@ -178,7 +178,7 @@ ARCH_MAP = {
 }
 
 PYTHON_LABLE_START = "----------PYTHON-START--------"
-PYTHON_LABLE_END   = "----------PYTHON--END---------"
+PYTHON_LABLE_END = "----------PYTHON--END---------"
 
 class RetraceError(Exception):
     pass
