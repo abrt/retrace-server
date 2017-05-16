@@ -4,7 +4,6 @@ import errno
 import ftplib
 import gettext
 import logging
-import magic
 import os
 import grp
 import re
@@ -16,10 +15,11 @@ import stat
 import time
 import urllib
 import hashlib
+from subprocess import *
+import magic
 from argparser import *
 from webob import Request
 from yum import YumBase
-from subprocess import *
 from config import *
 from plugins import *
 
