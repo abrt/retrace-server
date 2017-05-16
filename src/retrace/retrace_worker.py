@@ -311,9 +311,9 @@ class RetraceWorker(object):
                     if line == "":
                         section += 1
                         continue
-                    elif 0 == section:
+                    elif section == 0:
                         crash_package_or_component = line.strip()
-                    elif 1 == section:
+                    elif section == 1:
                         stripped = line.strip()
 
                         # hack - help to depsolver, yum would fail otherwise
@@ -330,7 +330,7 @@ class RetraceWorker(object):
                                 libdb = True
 
                         packages.append(stripped)
-                    elif 2 == section:
+                    elif section == 2:
                         soname, buildid = line.strip().split(" ", 1)
                         if not soname or soname == "-":
                             soname = None
