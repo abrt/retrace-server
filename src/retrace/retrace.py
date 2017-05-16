@@ -1501,7 +1501,7 @@ class RetraceTask:
         """Returns the age of the task in hours."""
         return int(time.time() - os.path.getmtime(self._savedir)) / 3600
 
-    def calculate_md5(self, file_name, chunk_size = 65536):
+    def calculate_md5(self, file_name, chunk_size=65536):
         hash_md5 = hashlib.md5()
         with open(file_name, "rb") as f:
             while True:
