@@ -1417,7 +1417,7 @@ class RetraceTask:
     def chgrp(self, key):
         gr = grp.getgrnam(CONFIG["AuthGroup"])
         try:
-            os.chown(self._get_file_path(key),-1,gr.gr_gid)
+            os.chown(self._get_file_path(key), -1, gr.gr_gid)
         except:
             pass
 
