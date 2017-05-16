@@ -1987,7 +1987,7 @@ class RetraceTask:
 
                 skip_makedumpfile = CONFIG["VmcoreDumpLevel"] <= 0 or CONFIG["VmcoreDumpLevel"] >= 32
                 if (dump_level is not None and
-                    (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
+                        (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
                     log_info("Stripping to %d would have no effect" % CONFIG["VmcoreDumpLevel"])
                     skip_makedumpfile = True
 
@@ -2293,16 +2293,16 @@ class RetraceTask:
                                stdout=null, stderr=null)
 
         for f in os.listdir(self._savedir):
-            if not f in [ RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
-              RetraceTask.BACKTRACE_FILE, RetraceTask.DOWNLOADED_FILE,
-              RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
-              RetraceTask.MANAGED_FILE, RetraceTask.NOTES_FILE,
-              RetraceTask.NOTIFY_FILE, RetraceTask.PASSWORD_FILE,
-              RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
-              RetraceTask.TYPE_FILE, RetraceTask.MISC_DIR,
-              RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
-              RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
-              RetraceTask.VMLINUX_FILE ]:
+            if not f in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
+                         RetraceTask.BACKTRACE_FILE, RetraceTask.DOWNLOADED_FILE,
+                         RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
+                         RetraceTask.MANAGED_FILE, RetraceTask.NOTES_FILE,
+                         RetraceTask.NOTIFY_FILE, RetraceTask.PASSWORD_FILE,
+                         RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
+                         RetraceTask.TYPE_FILE, RetraceTask.MISC_DIR,
+                         RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
+                         RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
+                         RetraceTask.VMLINUX_FILE]:
 
                 path = os.path.join(self._savedir, f)
                 try:
