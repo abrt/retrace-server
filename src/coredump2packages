@@ -99,7 +99,7 @@ def binary_packages_from_debuginfo_package(debuginfo_package, binobj_path):
         binobj_package_list = yumbase.pkgSack.searchFiles(binobj_path)
         for binobj_package in binobj_package_list:
             log.write("    - {0}".format(str(binobj_package)))
-            if 0 != binobj_package.returnEVR().compare(debuginfo_package.returnEVR()):
+            if binobj_package.returnEVR().compare(debuginfo_package.returnEVR()) != 0:
                 log.write(": NVR doesn't match\n")
                 continue
             log.write(": NVR matches\n")
@@ -279,7 +279,7 @@ while True:
     # Remove the removal_candidate packages from the package list
     for package in package_list[:]:
         if package.base_package_name == removal_candidate.base_package_name and \
-                0 == package.returnEVR().compare(removal_candidate.returnEVR()):
+                package.returnEVR().compare(removal_candidate.returnEVR()) == 0:
             package_list.remove(package)
 
 # Clean coredump_package_list:
