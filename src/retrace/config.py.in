@@ -8,15 +8,14 @@
 #   must be called. When this function was not called, is automatically called
 #   before first reading from GLOBAL with default path.
 #Note:all modules share one instance, therefore only one load is needed.
+import ConfigParser
+import os
 
 DF_BIN = "@DF_BIN@"
 DU_BIN = "@DU_BIN@"
 GZIP_BIN = "@GZIP_BIN@"
 TAR_BIN = "@TAR_BIN@"
 XZ_BIN = "@XZ_BIN@"
-
-import ConfigParser
-import os
 
 class Config(object):
     class __config:
