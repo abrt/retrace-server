@@ -1774,7 +1774,7 @@ class RetraceTask:
             crash_cmd.append("--machdep")
             crash_cmd.append("phys_base=0x200000")
             log_info("trying crash_cmd = " + str(crash_cmd))
-            child = Popen(crash_cmd + [ "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             stdout = child.communicate("mod\nquit")[0]
 
         # If we fail to get the list of modules, is the vmcore even usable?
