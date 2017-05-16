@@ -83,7 +83,7 @@ class Config(object):
                 self.load()
             return self.GLOBAL[key]
 
-        def load(self, filepath = "/etc/retrace-server.conf"):
+        def load(self, filepath="/etc/retrace-server.conf"):
             self.conf_file_read = True
             #if environment variable set, use rather that
             env_config_path = os.environ.get('RETRACE_SERVER_CONFIG_PATH')
