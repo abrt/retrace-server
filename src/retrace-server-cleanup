@@ -46,8 +46,8 @@ def check_config():
                          "by setting its value to 0.\n" % winner)
 
     if (CONFIG["DeleteFailedTaskAfter"] > 0 and
-        CONFIG["DeleteTaskAfter"] > 0 and
-        CONFIG["DeleteTaskAfter"] < CONFIG["DeleteFailedTaskAfter"]):
+            CONFIG["DeleteTaskAfter"] > 0 and
+            CONFIG["DeleteTaskAfter"] < CONFIG["DeleteFailedTaskAfter"]):
         sys.stderr.write("ERROR: DeleteTaskAfter is set to a lower value than "
                          "DeleteFailedTaskAfter. Check retrace-server.conf, "
                          "did you accidentally reverse the values for "
