@@ -357,21 +357,21 @@ def run_gdb(savedir, plugin):
     with open(os.devnull, "w") as null:
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
                        "--", "ls '%s'" % executable],
-                       stdout=PIPE, stderr=null)
+                      stdout=PIPE, stderr=null)
         output = child.communicate()[0]
         if output.strip() != executable:
             raise Exception("The appropriate package set could not be installed")
 
         chmod = call(["/usr/bin/mock", "shell", "--configdir", savedir,
                       "--", "/bin/chmod a+r '%s'" % executable],
-                      stdout=null, stderr=null)
+                     stdout=null, stderr=null)
 
         if chmod != 0:
             raise Exception, "Unable to chmod the executable"
 
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
                        "--", "ls '%s'" % EXPLOITABLE_PLUGIN_PATH],
-                       stdout=PIPE, stderr=null)
+                      stdout=PIPE, stderr=null)
         add_exploitable = child.communicate()[0].strip() == EXPLOITABLE_PLUGIN_PATH
 
         batfile = os.path.join(savedir, "gdb.sh")
@@ -879,11 +879,11 @@ def get_active_tasks():
 
 def parse_rpm_name(name):
     result = {
-      "epoch": 0,
-      "name": None,
-      "version": "",
-      "release": "",
-      "arch": "",
+        "epoch": 0,
+        "name": None,
+        "version": "",
+        "release": "",
+        "arch": "",
     }
 
     # cut off rpm suffix
@@ -981,9 +981,9 @@ def save_crashstats(stats, con=None):
       starttime, duration, coresize, status)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       """,
-      (stats["taskid"], stats["package"], stats["version"],
-       stats["arch"], stats["starttime"], stats["duration"],
-       stats["coresize"], stats["status"]))
+                  (stats["taskid"], stats["package"], stats["version"],
+                   stats["arch"], stats["starttime"], stats["duration"],
+                   stats["coresize"], stats["status"]))
 
     con.commit()
     if close:
@@ -1002,7 +1002,7 @@ def save_crashstats_success(statsid, pre, post, rootsize, con=None):
       INSERT INTO success (taskid, pre, post, rootsize)
       VALUES (?, ?, ?, ?)
       """,
-      (statsid, pre, post, rootsize))
+                  (statsid, pre, post, rootsize))
 
     con.commit()
     if close:
@@ -1051,7 +1051,7 @@ def save_crashstats_build_ids(statsid, buildids, con=None):
           INSERT INTO buildids (taskid, soname, buildid)
           VALUES (?, ?, ?)
           """,
-          (statsid, soname, buildid))
+                      (statsid, soname, buildid))
 
     con.commit()
     if close:
@@ -1068,7 +1068,7 @@ def save_crashstats_reportfull(ip, con=None):
       INSERT INTO reportfull (requesttime, ip)
       VALUES (?, ?)
       """,
-      (int(time.time()), ip))
+                  (int(time.time()), ip))
 
     con.commit()
     if close:
@@ -1171,9 +1171,9 @@ def human_readable_size(bytes):
     return "%.2f %s" % (size, UNITS[unit])
 
 class KernelVer(object):
-    FLAVOUR =  [ "debug", "highbank", "hugemem",
-                 "kirkwood", "largesmp", "PAE", "omap",
-                 "smp", "tegra", "xen", "xenU" ]
+    FLAVOUR = ["debug", "highbank", "hugemem",
+               "kirkwood", "largesmp", "PAE", "omap",
+               "smp", "tegra", "xen", "xenU"]
 
     ARCH = ARCHITECTURES
 
@@ -1672,7 +1672,7 @@ class RetraceTask:
         # First look in our cache for vmlinux at the "typical" location which is something like
         # CONFIG["RepoDir"]/kernel/x86_64/usr/lib/debug/lib/modules/2.6.32-504.el6.x86_64
         log_info("Version: '%s'; Release: '%s'; Arch: '%s'; _arch: '%s'; Flavour: '%s'; Realtime: %s"
-                  % (kernelver.version, kernelver.release, kernelver.arch, kernelver._arch, kernelver.flavour, kernelver.rt))
+                 % (kernelver.version, kernelver.release, kernelver.arch, kernelver._arch, kernelver.flavour, kernelver.rt))
         kernel_path = ""
         if kernelver.version is not None:
             kernel_path = kernel_path + str(kernelver.version)
