@@ -27,15 +27,15 @@ GETTEXT_DOMAIN = "retrace-server"
 
 # filename: max_size (<= 0 unlimited)
 ALLOWED_FILES = {
-  "coredump": 0,
-  "executable": 512,
-  "package": 128,
-  "packages": (1 << 20), # 1MB
-  "os_release": 128,
-  "os_release_in_rootdir": 128,
-  "rootdir": 256,
-  "release": 128,
-  "vmcore": 0,
+    "coredump": 0,
+    "executable": 512,
+    "package": 128,
+    "packages": (1 << 20), # 1MB
+    "os_release": 128,
+    "os_release_in_rootdir": 128,
+    "rootdir": 256,
+    "release": 128,
+    "vmcore": 0,
 }
 
 TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
@@ -49,22 +49,22 @@ ARCHIVE_UNKNOWN, ARCHIVE_GZ, ARCHIVE_ZIP, \
   ARCHIVE_7Z, ARCHIVE_LZOP = xrange(8)
 
 REQUIRED_FILES = {
-  TASK_RETRACE:             ["coredump", "executable", "package"],
-  TASK_DEBUG:               ["coredump", "executable", "package"],
-  TASK_VMCORE:              ["vmcore"],
-  TASK_RETRACE_INTERACTIVE: ["coredump", "executable", "package"],
-  TASK_VMCORE_INTERACTIVE:  ["vmcore"],
+    TASK_RETRACE:             ["coredump", "executable", "package"],
+    TASK_DEBUG:               ["coredump", "executable", "package"],
+    TASK_VMCORE:              ["vmcore"],
+    TASK_RETRACE_INTERACTIVE: ["coredump", "executable", "package"],
+    TASK_VMCORE_INTERACTIVE:  ["vmcore"],
 }
 
 SUFFIX_MAP = {
-  ARCHIVE_GZ: ".gz",
-  ARCHIVE_BZ2: ".bz2",
-  ARCHIVE_XZ: ".xz",
-  ARCHIVE_ZIP: ".zip",
-  ARCHIVE_7Z: ".7z",
-  ARCHIVE_TAR: ".tar",
-  ARCHIVE_LZOP: ".lzop",
-  ARCHIVE_UNKNOWN: "",
+    ARCHIVE_GZ: ".gz",
+    ARCHIVE_BZ2: ".bz2",
+    ARCHIVE_XZ: ".xz",
+    ARCHIVE_ZIP: ".zip",
+    ARCHIVE_7Z: ".7z",
+    ARCHIVE_TAR: ".tar",
+    ARCHIVE_LZOP: ".lzop",
+    ARCHIVE_UNKNOWN: "",
 }
 
 #characters, numbers, dash (utf-8, iso-8859-2 etc.)
@@ -108,23 +108,23 @@ WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[
 UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB"]
 
 HANDLE_ARCHIVE = {
-  "application/x-xz-compressed-tar": {
-    "unpack": [TAR_BIN, "xJf"],
-    "size": ([XZ_BIN, "--list", "--robot"], re.compile("^totals[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+([0-9]+).*")),
-    "type": ARCHIVE_XZ,
-  },
+    "application/x-xz-compressed-tar": {
+        "unpack": [TAR_BIN, "xJf"],
+        "size": ([XZ_BIN, "--list", "--robot"], re.compile("^totals[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+([0-9]+).*")),
+        "type": ARCHIVE_XZ,
+    },
 
-  "application/x-gzip": {
-    "unpack": [TAR_BIN, "xzf"],
-    "size": ([GZIP_BIN, "--list"], re.compile("^[^0-9]*[0-9]+[^0-9]+([0-9]+).*$")),
-    "type": ARCHIVE_GZ,
-  },
+    "application/x-gzip": {
+        "unpack": [TAR_BIN, "xzf"],
+        "size": ([GZIP_BIN, "--list"], re.compile("^[^0-9]*[0-9]+[^0-9]+([0-9]+).*$")),
+        "type": ARCHIVE_GZ,
+    },
 
-  "application/x-tar": {
-    "unpack": [TAR_BIN, "xf"],
-    "size": (["ls", "-l"], re.compile("^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+([0-9]+).*$")),
-    "type": ARCHIVE_TAR,
-  },
+    "application/x-tar": {
+        "unpack": [TAR_BIN, "xf"],
+        "size": (["ls", "-l"], re.compile("^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+([0-9]+).*$")),
+        "type": ARCHIVE_TAR,
+    },
 }
 
 FTP_SUPPORTED_EXTENSIONS = [".tar.gz", ".tgz", ".tarz", ".tar.bz2", ".tar.xz",
@@ -142,17 +142,17 @@ STATUS_STATS, STATUS_FINISHING, STATUS_SUCCESS, STATUS_FAIL, \
 STATUS_DOWNLOADING, STATUS_POSTPROCESS, STATUS_CALCULATING_MD5SUM = xrange(11)
 
 STATUS = [
-  "Analyzing crash data",
-  "Preparing environment for backtrace generation",
-  "Generating backtrace",
-  "Cleaning environment after backtrace generation",
-  "Saving crash statistics",
-  "Finishing task",
-  "Retrace job finished successfully",
-  "Retrace job failed",
-  "Downloading remote resources",
-  "Post-processing downloaded file",
-  "Calculating md5sum",
+    "Analyzing crash data",
+    "Preparing environment for backtrace generation",
+    "Generating backtrace",
+    "Cleaning environment after backtrace generation",
+    "Saving crash statistics",
+    "Finishing task",
+    "Retrace job finished successfully",
+    "Retrace job failed",
+    "Downloading remote resources",
+    "Post-processing downloaded file",
+    "Calculating md5sum",
 ]
 
 ARCHITECTURES = set(["src", "noarch", "i386", "i486", "i586", "i686", "x86_64",
