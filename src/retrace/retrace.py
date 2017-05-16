@@ -1428,7 +1428,7 @@ class RetraceTask:
             pass
 
     def set(self, key, value, mode="w"):
-        if not mode in ["w", "a"]:
+        if mode not in ["w", "a"]:
             raise ValueError, "mode must be either 'w' or 'a'"
 
         with open(self._get_file_path(key), mode) as f:
@@ -1437,7 +1437,7 @@ class RetraceTask:
             self.chmod(key)
 
     def set_atomic(self, key, value, mode="w"):
-        if not mode in ["w", "a"]:
+        if mode not in ["w", "a"]:
             raise ValueError, "mode must be either 'w' or 'a'"
 
         tmpfilename = self._get_file_path("%s.tmp" % key)
@@ -1495,7 +1495,7 @@ class RetraceTask:
 
             return False
         else:
-            return self.has_status() and not self.get_status() in [STATUS_SUCCESS, STATUS_FAIL]
+            return self.has_status() and self.get_status() not in [STATUS_SUCCESS, STATUS_FAIL]
 
     def get_age(self):
         """Returns the age of the task in hours."""
