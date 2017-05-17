@@ -5,11 +5,11 @@ import os
 import logging
 import grp
 import pwd
-import rpm
 import shutil
 import sys
 import tempfile
 import urllib2
+import rpm
 import yum
 from retrace import *
 
