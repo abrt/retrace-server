@@ -14,7 +14,7 @@ import yum
 from retrace import *
 
 sys.path.insert(0, "/usr/share/retrace-server")
-from plugins import *
+from plugins import *  # pylint: disable=wrong-import-position
 
 CONFIG = config.Config()
 plugins = plugins.Plugins()
