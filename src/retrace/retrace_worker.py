@@ -386,6 +386,7 @@ class RetraceWorker(object):
 
         # create mock config file
         try:
+            repopath = os.path.join(CONFIG["RepoDir"], releaseid)
             with open(os.path.join(task.get_savedir(), RetraceTask.MOCK_DEFAULT_CFG), "w") as mockcfg:
                 mockcfg.write("config_opts['root'] = '%d'\n" % task.get_taskid())
                 mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
@@ -397,6 +398,7 @@ class RetraceWorker(object):
                 mockcfg.write("config_opts['plugin_conf']['bind_mount_enable'] = True\n")
                 mockcfg.write("config_opts['plugin_conf']['bind_mount_opts'] = { 'create_dirs': True,\n")
                 mockcfg.write("    'dirs': [\n")
+                mockcfg.write("              ('%s', '%s'),\n" % (repopath, repopath))
                 mockcfg.write("              ('%s', '/var/spool/abrt/crash'),\n" % crashdir)
                 if CONFIG["UseFafPackages"]:
                     mockcfg.write("              ('%s', '/packages'),\n" % self.fafrepo)
@@ -422,7 +424,7 @@ class RetraceWorker(object):
                 mockcfg.write("\n")
                 mockcfg.write("[%s]\n" % distribution)
                 mockcfg.write("name=%s\n" % releaseid)
-                mockcfg.write("baseurl=file://%s/%s/\n" % (CONFIG["RepoDir"], releaseid))
+                mockcfg.write("baseurl=file://%s/\n" % repopath)
                 mockcfg.write("failovermethod=priority\n")
                 if version != "rawhide" and CONFIG["RequireGPGCheck"]:
                     mockcfg.write("gpgkey=file:///usr/share/retrace-server/gpg/%s-%s\n" % (distribution, version))
