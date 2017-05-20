@@ -4,7 +4,8 @@ MAN_TXT = \
     retrace-server-cleanup.txt \
     retrace-server-interact.txt \
     retrace-server-reposync.txt \
-    retrace-server-worker.txt
+    retrace-server-worker.txt \
+    retrace-server-task.txt
 
 #Manual pages are generated from .txt via Docbook
 man1_MANS = ${MAN_TXT:%.txt=%.1}
@@ -24,7 +25,8 @@ dist_bin_SCRIPTS = bt_filter \
                    retrace-server-reposync-faf \
                    retrace-server-worker \
                    retrace-server-interact\
-                   retrace-server-plugin-checker
+                   retrace-server-plugin-checker\
+                   retrace-server-task
 
 interface_PYTHON = backtrace.wsgi \
                    create.wsgi \

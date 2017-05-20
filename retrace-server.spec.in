@@ -38,6 +38,8 @@ Requires: crash >= 5.1.7
 Requires: wget
 Requires: kexec-tools
 Requires: python-magic
+Requires: python-requests
+Requires: python-requests-kerberos
 Requires(preun): /sbin/install-info
 Requires(post): /sbin/install-info
 Requires(post): /usr/bin/crontab
@@ -125,6 +127,7 @@ fi
 %{_bindir}/%{name}-reposync
 %{_bindir}/%{name}-reposync-faf
 %{_bindir}/%{name}-plugin-checker
+%{_bindir}/%{name}-task
 %{_bindir}/bt_filter
 %{_bindir}/coredump2packages
 %{python_site}/retrace/*
@@ -133,6 +136,7 @@ fi
 %doc %{_mandir}/man1/%{name}-interact.1*
 %doc %{_mandir}/man1/%{name}-reposync.1*
 %doc %{_mandir}/man1/%{name}-worker.1*
+%doc %{_mandir}/man1/%{name}-task.1*
 %doc %{_infodir}/%{name}*
 %doc COPYING README.md
 
