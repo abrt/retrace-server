@@ -1,6 +1,7 @@
 import grp
 import time
 import sys
+import distro
 sys.path.insert(0, "/usr/share/retrace-server/")
 from retrace import *
 
@@ -386,17 +387,28 @@ class RetraceWorker(object):
 
         # create mock config file
         try:
+            repopath = os.path.join(CONFIG["RepoDir"], releaseid)
+            linux_dist = distro.linux_distribution(full_distribution_name=False)
             with open(os.path.join(task.get_savedir(), RetraceTask.MOCK_DEFAULT_CFG), "w") as mockcfg:
                 mockcfg.write("config_opts['root'] = '%d'\n" % task.get_taskid())
                 mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
-                mockcfg.write("config_opts['chroot_setup_cmd'] = '--skip-broken install %s abrt-addon-ccpp shadow-utils %s rpm'\n" % (" ".join(packages),
-                                                                                                                                      self.plugin.gdb_package))
+                mockcfg.write("config_opts['chroot_setup_cmd'] = '")
+                if linux_dist[0] == "fedora":
+                    mockcfg.write("--setopt=strict=0")
+                else:
+                    mockcfg.write("--skip-broken")
+                mockcfg.write(" install %s abrt-addon-ccpp shadow-utils %s rpm'\n" % (" ".join(packages),
+                                                                                      self.plugin.gdb_package))
+                mockcfg.write("config_opts['releasever'] = '%s'\n" % linux_dist[1])
+                if linux_dist[0] == "fedora":
+                    mockcfg.write("config_opts['package_manager'] = 'dnf'\n")
                 mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
                 mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
                 mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
                 mockcfg.write("config_opts['plugin_conf']['bind_mount_enable'] = True\n")
                 mockcfg.write("config_opts['plugin_conf']['bind_mount_opts'] = { 'create_dirs': True,\n")
                 mockcfg.write("    'dirs': [\n")
+                mockcfg.write("              ('%s', '%s'),\n" % (repopath, repopath))
                 mockcfg.write("              ('%s', '/var/spool/abrt/crash'),\n" % crashdir)
                 if CONFIG["UseFafPackages"]:
                     mockcfg.write("              ('%s', '/packages'),\n" % self.fafrepo)
@@ -422,7 +434,7 @@ class RetraceWorker(object):
                 mockcfg.write("\n")
                 mockcfg.write("[%s]\n" % distribution)
                 mockcfg.write("name=%s\n" % releaseid)
-                mockcfg.write("baseurl=file://%s/%s/\n" % (CONFIG["RepoDir"], releaseid))
+                mockcfg.write("baseurl=file://%s/\n" % repopath)
                 mockcfg.write("failovermethod=priority\n")
                 if version != "rawhide" and CONFIG["RequireGPGCheck"]:
                     mockcfg.write("gpgkey=file:///usr/share/retrace-server/gpg/%s-%s\n" % (distribution, version))
@@ -585,10 +597,14 @@ class RetraceWorker(object):
 
             try:
                 cfgfile = os.path.join(cfgdir, RetraceTask.MOCK_DEFAULT_CFG)
+                linux_dist = distro.linux_distribution(full_distribution_name=False)
                 with open(cfgfile, "w") as mockcfg:
                     mockcfg.write("config_opts['root'] = '%d-kernel'\n" % task.get_taskid())
                     mockcfg.write("config_opts['target_arch'] = '%s'\n" % kernelver.arch)
                     mockcfg.write("config_opts['chroot_setup_cmd'] = 'install bash coreutils cpio crash findutils rpm shadow-utils'\n")
+                    mockcfg.write("config_opts['releasever'] = '%s'\n" % linux_dist[1])
+                    if linux_dist[0] == "fedora":
+                        mockcfg.write("config_opts['package_manager'] = 'dnf'\n")
                     mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
                     mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
                     mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")

@@ -40,6 +40,7 @@ Requires: kexec-tools
 Requires: python-magic
 Requires: python-requests
 Requires: python-requests-kerberos
+Requires: python-distro
 Requires(preun): /sbin/install-info
 Requires(post): /sbin/install-info
 Requires(post): /usr/bin/crontab
