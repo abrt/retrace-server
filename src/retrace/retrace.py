@@ -445,6 +445,11 @@ def is_package_known(package_nvr, arch, releaseid=None):
                 if p is not None:
                     return True
         else:
+            # Try with noarch
+            p = get_package_by_nevra(db, n, e or 0, v, r, "noarch")
+            if p is not None:
+                return True
+
             return False
 
     if releaseid is None:
