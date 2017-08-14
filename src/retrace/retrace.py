@@ -1935,6 +1935,15 @@ class RetraceTask:
                         unpack_coredump(fullpath)
                     except Exception as ex:
                         errors.append((fullpath, str(ex)))
+                st = os.stat(crashdir)
+                if (st.st_mode & stat.S_IRGRP) == 0 or (st.st_mode & stat.S_IXGRP) == 0:
+                    try:
+                        os.chmod(crashdir, st.st_mode | stat.S_IRGRP | stat.S_IXGRP)
+                    except Exception as ex:
+                        log_warn("Crashdir '%s' is not group readable and chmod"
+                                 " failed. The process will continue but if"
+                                 " it fails this is the likely cause."
+                                 % crashdir)
 
         if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
             vmcore = os.path.join(crashdir, "vmcore")
