@@ -5,8 +5,8 @@ import os
 import pwd
 import sys
 import time
-from retrace import *
 from subprocess import list2cmdline
+from retrace import *
 
 CONFIG = config.Config()
 

@@ -22,7 +22,7 @@ class Plugins(object):
             self.plugins_read = False
             self.PLUGINS = []
 
-        def load(self, plugin_dir = "/usr/share/retrace-server/plugins"):
+        def load(self, plugin_dir="/usr/share/retrace-server/plugins"):
             self.PLUGINS = []
             self.plugins_read = True
             #if environment variable set, use rather that

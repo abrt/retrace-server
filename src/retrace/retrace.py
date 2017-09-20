@@ -4,7 +4,6 @@ import errno
 import ftplib
 import gettext
 import logging
-import magic
 import os
 import grp
 import re
@@ -16,10 +15,11 @@ import stat
 import time
 import urllib
 import hashlib
+from subprocess import *
+import magic
 from argparser import *
 from webob import Request
 from yum import YumBase
-from subprocess import *
 from config import *
 from plugins import *
 
@@ -27,15 +27,15 @@ GETTEXT_DOMAIN = "retrace-server"
 
 # filename: max_size (<= 0 unlimited)
 ALLOWED_FILES = {
-  "coredump": 0,
-  "executable": 512,
-  "package": 128,
-  "packages": (1 << 20), # 1MB
-  "os_release": 128,
-  "os_release_in_rootdir": 128,
-  "rootdir": 256,
-  "release": 128,
-  "vmcore": 0,
+    "coredump": 0,
+    "executable": 512,
+    "package": 128,
+    "packages": (1 << 20), # 1MB
+    "os_release": 128,
+    "os_release_in_rootdir": 128,
+    "rootdir": 256,
+    "release": 128,
+    "vmcore": 0,
 }
 
 TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
@@ -49,22 +49,22 @@ ARCHIVE_UNKNOWN, ARCHIVE_GZ, ARCHIVE_ZIP, \
   ARCHIVE_7Z, ARCHIVE_LZOP = xrange(8)
 
 REQUIRED_FILES = {
-  TASK_RETRACE:             ["coredump", "executable", "package"],
-  TASK_DEBUG:               ["coredump", "executable", "package"],
-  TASK_VMCORE:              ["vmcore"],
-  TASK_RETRACE_INTERACTIVE: ["coredump", "executable", "package"],
-  TASK_VMCORE_INTERACTIVE:  ["vmcore"],
+    TASK_RETRACE:             ["coredump", "executable", "package"],
+    TASK_DEBUG:               ["coredump", "executable", "package"],
+    TASK_VMCORE:              ["vmcore"],
+    TASK_RETRACE_INTERACTIVE: ["coredump", "executable", "package"],
+    TASK_VMCORE_INTERACTIVE:  ["vmcore"],
 }
 
 SUFFIX_MAP = {
-  ARCHIVE_GZ: ".gz",
-  ARCHIVE_BZ2: ".bz2",
-  ARCHIVE_XZ: ".xz",
-  ARCHIVE_ZIP: ".zip",
-  ARCHIVE_7Z: ".7z",
-  ARCHIVE_TAR: ".tar",
-  ARCHIVE_LZOP: ".lzop",
-  ARCHIVE_UNKNOWN: "",
+    ARCHIVE_GZ: ".gz",
+    ARCHIVE_BZ2: ".bz2",
+    ARCHIVE_XZ: ".xz",
+    ARCHIVE_ZIP: ".zip",
+    ARCHIVE_7Z: ".7z",
+    ARCHIVE_TAR: ".tar",
+    ARCHIVE_LZOP: ".lzop",
+    ARCHIVE_UNKNOWN: "",
 }
 
 #characters, numbers, dash (utf-8, iso-8859-2 etc.)
@@ -108,23 +108,23 @@ WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[
 UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB"]
 
 HANDLE_ARCHIVE = {
-  "application/x-xz-compressed-tar": {
-    "unpack": [TAR_BIN, "xJf"],
-    "size": ([XZ_BIN, "--list", "--robot"], re.compile("^totals[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+([0-9]+).*")),
-    "type": ARCHIVE_XZ,
-  },
+    "application/x-xz-compressed-tar": {
+        "unpack": [TAR_BIN, "xJf"],
+        "size": ([XZ_BIN, "--list", "--robot"], re.compile("^totals[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+([0-9]+).*")),
+        "type": ARCHIVE_XZ,
+    },
 
-  "application/x-gzip": {
-    "unpack": [TAR_BIN, "xzf"],
-    "size": ([GZIP_BIN, "--list"], re.compile("^[^0-9]*[0-9]+[^0-9]+([0-9]+).*$")),
-    "type": ARCHIVE_GZ,
-  },
+    "application/x-gzip": {
+        "unpack": [TAR_BIN, "xzf"],
+        "size": ([GZIP_BIN, "--list"], re.compile("^[^0-9]*[0-9]+[^0-9]+([0-9]+).*$")),
+        "type": ARCHIVE_GZ,
+    },
 
-  "application/x-tar": {
-    "unpack": [TAR_BIN, "xf"],
-    "size": (["ls", "-l"], re.compile("^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+([0-9]+).*$")),
-    "type": ARCHIVE_TAR,
-  },
+    "application/x-tar": {
+        "unpack": [TAR_BIN, "xf"],
+        "size": (["ls", "-l"], re.compile("^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+([0-9]+).*$")),
+        "type": ARCHIVE_TAR,
+    },
 }
 
 FTP_SUPPORTED_EXTENSIONS = [".tar.gz", ".tgz", ".tarz", ".tar.bz2", ".tar.xz",
@@ -142,17 +142,17 @@ STATUS_STATS, STATUS_FINISHING, STATUS_SUCCESS, STATUS_FAIL, \
 STATUS_DOWNLOADING, STATUS_POSTPROCESS, STATUS_CALCULATING_MD5SUM = xrange(11)
 
 STATUS = [
-  "Analyzing crash data",
-  "Preparing environment for backtrace generation",
-  "Generating backtrace",
-  "Cleaning environment after backtrace generation",
-  "Saving crash statistics",
-  "Finishing task",
-  "Retrace job finished successfully",
-  "Retrace job failed",
-  "Downloading remote resources",
-  "Post-processing downloaded file",
-  "Calculating md5sum",
+    "Analyzing crash data",
+    "Preparing environment for backtrace generation",
+    "Generating backtrace",
+    "Cleaning environment after backtrace generation",
+    "Saving crash statistics",
+    "Finishing task",
+    "Retrace job finished successfully",
+    "Retrace job failed",
+    "Downloading remote resources",
+    "Post-processing downloaded file",
+    "Calculating md5sum",
 ]
 
 ARCHITECTURES = set(["src", "noarch", "i386", "i486", "i586", "i686", "x86_64",
@@ -178,7 +178,7 @@ ARCH_MAP = {
 }
 
 PYTHON_LABLE_START = "----------PYTHON-START--------"
-PYTHON_LABLE_END   = "----------PYTHON--END---------"
+PYTHON_LABLE_END = "----------PYTHON--END---------"
 
 class RetraceError(Exception):
     pass
@@ -357,21 +357,21 @@ def run_gdb(savedir, plugin):
     with open(os.devnull, "w") as null:
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
                        "--", "ls '%s'" % executable],
-                       stdout=PIPE, stderr=null)
+                      stdout=PIPE, stderr=null)
         output = child.communicate()[0]
         if output.strip() != executable:
             raise Exception("The appropriate package set could not be installed")
 
         chmod = call(["/usr/bin/mock", "shell", "--configdir", savedir,
                       "--", "/bin/chmod a+r '%s'" % executable],
-                      stdout=null, stderr=null)
+                     stdout=null, stderr=null)
 
         if chmod != 0:
             raise Exception, "Unable to chmod the executable"
 
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
                        "--", "ls '%s'" % EXPLOITABLE_PLUGIN_PATH],
-                       stdout=PIPE, stderr=null)
+                      stdout=PIPE, stderr=null)
         add_exploitable = child.communicate()[0].strip() == EXPLOITABLE_PLUGIN_PATH
 
         batfile = os.path.join(savedir, "gdb.sh")
@@ -884,11 +884,11 @@ def get_active_tasks():
 
 def parse_rpm_name(name):
     result = {
-      "epoch": 0,
-      "name": None,
-      "version": "",
-      "release": "",
-      "arch": "",
+        "epoch": 0,
+        "name": None,
+        "version": "",
+        "release": "",
+        "arch": "",
     }
 
     # cut off rpm suffix
@@ -986,9 +986,9 @@ def save_crashstats(stats, con=None):
       starttime, duration, coresize, status)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       """,
-      (stats["taskid"], stats["package"], stats["version"],
-       stats["arch"], stats["starttime"], stats["duration"],
-       stats["coresize"], stats["status"]))
+                  (stats["taskid"], stats["package"], stats["version"],
+                   stats["arch"], stats["starttime"], stats["duration"],
+                   stats["coresize"], stats["status"]))
 
     con.commit()
     if close:
@@ -1007,7 +1007,7 @@ def save_crashstats_success(statsid, pre, post, rootsize, con=None):
       INSERT INTO success (taskid, pre, post, rootsize)
       VALUES (?, ?, ?, ?)
       """,
-      (statsid, pre, post, rootsize))
+                  (statsid, pre, post, rootsize))
 
     con.commit()
     if close:
@@ -1056,7 +1056,7 @@ def save_crashstats_build_ids(statsid, buildids, con=None):
           INSERT INTO buildids (taskid, soname, buildid)
           VALUES (?, ?, ?)
           """,
-          (statsid, soname, buildid))
+                      (statsid, soname, buildid))
 
     con.commit()
     if close:
@@ -1073,7 +1073,7 @@ def save_crashstats_reportfull(ip, con=None):
       INSERT INTO reportfull (requesttime, ip)
       VALUES (?, ?)
       """,
-      (int(time.time()), ip))
+                  (int(time.time()), ip))
 
     con.commit()
     if close:
@@ -1176,9 +1176,9 @@ def human_readable_size(bytes):
     return "%.2f %s" % (size, UNITS[unit])
 
 class KernelVer(object):
-    FLAVOUR =  [ "debug", "highbank", "hugemem",
-                 "kirkwood", "largesmp", "PAE", "omap",
-                 "smp", "tegra", "xen", "xenU" ]
+    FLAVOUR = ["debug", "highbank", "hugemem",
+               "kirkwood", "largesmp", "PAE", "omap",
+               "smp", "tegra", "xen", "xenU"]
 
     ARCH = ARCHITECTURES
 
@@ -1422,7 +1422,7 @@ class RetraceTask:
     def chgrp(self, key):
         gr = grp.getgrnam(CONFIG["AuthGroup"])
         try:
-            os.chown(self._get_file_path(key),-1,gr.gr_gid)
+            os.chown(self._get_file_path(key), -1, gr.gr_gid)
         except:
             pass
 
@@ -1433,7 +1433,7 @@ class RetraceTask:
             pass
 
     def set(self, key, value, mode="w"):
-        if not mode in ["w", "a"]:
+        if mode not in ["w", "a"]:
             raise ValueError, "mode must be either 'w' or 'a'"
 
         with open(self._get_file_path(key), mode) as f:
@@ -1442,7 +1442,7 @@ class RetraceTask:
             self.chmod(key)
 
     def set_atomic(self, key, value, mode="w"):
-        if not mode in ["w", "a"]:
+        if mode not in ["w", "a"]:
             raise ValueError, "mode must be either 'w' or 'a'"
 
         tmpfilename = self._get_file_path("%s.tmp" % key)
@@ -1500,13 +1500,13 @@ class RetraceTask:
 
             return False
         else:
-            return self.has_status() and not self.get_status() in [STATUS_SUCCESS, STATUS_FAIL]
+            return self.has_status() and self.get_status() not in [STATUS_SUCCESS, STATUS_FAIL]
 
     def get_age(self):
         """Returns the age of the task in hours."""
         return int(time.time() - os.path.getmtime(self._savedir)) / 3600
 
-    def calculate_md5(self, file_name, chunk_size = 65536):
+    def calculate_md5(self, file_name, chunk_size=65536):
         hash_md5 = hashlib.md5()
         with open(file_name, "rb") as f:
             while True:
@@ -1677,7 +1677,7 @@ class RetraceTask:
         # First look in our cache for vmlinux at the "typical" location which is something like
         # CONFIG["RepoDir"]/kernel/x86_64/usr/lib/debug/lib/modules/2.6.32-504.el6.x86_64
         log_info("Version: '%s'; Release: '%s'; Arch: '%s'; _arch: '%s'; Flavour: '%s'; Realtime: %s"
-                  % (kernelver.version, kernelver.release, kernelver.arch, kernelver._arch, kernelver.flavour, kernelver.rt))
+                 % (kernelver.version, kernelver.release, kernelver.arch, kernelver._arch, kernelver.flavour, kernelver.rt))
         kernel_path = ""
         if kernelver.version is not None:
             kernel_path = kernel_path + str(kernelver.version)
@@ -1779,7 +1779,7 @@ class RetraceTask:
             crash_cmd.append("--machdep")
             crash_cmd.append("phys_base=0x200000")
             log_info("trying crash_cmd = " + str(crash_cmd))
-            child = Popen(crash_cmd + [ "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             stdout = child.communicate("mod\nquit")[0]
 
         # If we fail to get the list of modules, is the vmcore even usable?
@@ -2001,7 +2001,7 @@ class RetraceTask:
 
                 skip_makedumpfile = CONFIG["VmcoreDumpLevel"] <= 0 or CONFIG["VmcoreDumpLevel"] >= 32
                 if (dump_level is not None and
-                    (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
+                        (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
                     log_info("Stripping to %d would have no effect" % CONFIG["VmcoreDumpLevel"])
                     skip_makedumpfile = True
 
@@ -2307,16 +2307,16 @@ class RetraceTask:
                                stdout=null, stderr=null)
 
         for f in os.listdir(self._savedir):
-            if not f in [ RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
-              RetraceTask.BACKTRACE_FILE, RetraceTask.DOWNLOADED_FILE,
-              RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
-              RetraceTask.MANAGED_FILE, RetraceTask.NOTES_FILE,
-              RetraceTask.NOTIFY_FILE, RetraceTask.PASSWORD_FILE,
-              RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
-              RetraceTask.TYPE_FILE, RetraceTask.MISC_DIR,
-              RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
-              RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
-              RetraceTask.VMLINUX_FILE ]:
+            if not f in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
+                         RetraceTask.BACKTRACE_FILE, RetraceTask.DOWNLOADED_FILE,
+                         RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
+                         RetraceTask.MANAGED_FILE, RetraceTask.NOTES_FILE,
+                         RetraceTask.NOTIFY_FILE, RetraceTask.PASSWORD_FILE,
+                         RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
+                         RetraceTask.TYPE_FILE, RetraceTask.MISC_DIR,
+                         RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
+                         RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
+                         RetraceTask.VMLINUX_FILE]:
 
                 path = os.path.join(self._savedir, f)
                 try:

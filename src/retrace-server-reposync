@@ -5,16 +5,16 @@ import os
 import logging
 import grp
 import pwd
-import rpm
 import shutil
 import sys
 import tempfile
 import urllib2
+import rpm
 import yum
 from retrace import *
 
 sys.path.insert(0, "/usr/share/retrace-server")
-from plugins import *
+from plugins import *  # pylint: disable=wrong-import-position
 
 CONFIG = config.Config()
 plugins = plugins.Plugins()
@@ -151,7 +151,7 @@ def clean_rawhide_repo(release):
         ver = "%s-%s" % (pkgdata["version"], pkgdata["release"])
 
         if not pkgdata["name"] in packages:
-            packages[pkgdata["name"]] = { ver: [f] }
+            packages[pkgdata["name"]] = {ver: [f]}
             continue
 
         if ver in packages[pkgdata["name"]]:
@@ -200,7 +200,7 @@ if __name__ == "__main__":
             os.makedirs(targetdir)
 
         cmd_line = ["retrace-server-reposync-faf", distribution, version, arch,
-                    "--outputdir",  targetdir]
+                    "--outputdir", targetdir]
         child = Popen(cmd_line, stdout=PIPE, stderr=PIPE)
         stdout, stderr = child.communicate()
         if child.returncode != 0:
