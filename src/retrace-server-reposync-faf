@@ -40,7 +40,7 @@ def generate_yum_repo(db, outputdir, opsys, release, arch):
     mdgen.doPkgMetadata()
     mdgen.doRepoMetadata()
     mdgen.doFinalMove()
-    #mdgen.cleanup()
+    mdgen.cleanup()
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Generates yum repo from FAF databse")

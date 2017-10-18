@@ -28,7 +28,7 @@ Requires: p7zip
 Requires: unzip
 Requires: lzop
 Requires: elfutils
-Requires: createrepo
+Requires: createrepo >= 0.9.9-27
 Requires: mod_wsgi
 Requires: mod_ssl
 Requires: python-webob
