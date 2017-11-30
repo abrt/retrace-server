@@ -463,7 +463,7 @@ class RetraceWorker(object):
                                    "bash -c 'for PKG in /packages/*; "
                                    "do rpm2cpio $PKG | cpio -muid --quiet; done'"])
         self._retrace_run(27, ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell",
-                               "--", "chgrp -R mockbuild /var/spool/abrt/crash"])
+                               "--", "chgrp -R mock /var/spool/abrt/crash"])
 
         # generate backtrace
         task.set_status(STATUS_BACKTRACE)

@@ -19,7 +19,7 @@ BuildRequires: xmlto
 
 %{?el6:Requires: python-argparse}
 Requires: rsync
-Requires: mock >= 1.1.11
+Requires: mock >= 1.4.7
 Requires: xz
 Requires: gzip
 Requires: bzip2
