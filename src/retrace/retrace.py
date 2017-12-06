@@ -22,6 +22,7 @@ from webob import Request
 from yum import YumBase
 from config import *
 from plugins import *
+from rpmUtils.miscutils import splitFilename
 
 GETTEXT_DOMAIN = "retrace-server"
 
@@ -85,13 +86,6 @@ DU_OUTPUT_PARSER = re.compile("^([0-9]+)")
 URL_PARSER = re.compile("^/([0-9]+)/?")
 
 REPODIR_NAME_PARSER = re.compile("^[^\-]+\-[^\-]+\-[^\-]+$")
-
-# rpm name parsers
-EPOCH_PARSER = re.compile("^(([0-9]+)\:).*$")
-ARCH_PARSER = re.compile("^.*(\.([0-9a-zA-Z_]+))$")
-RELEASE_PARSER = re.compile("^.*(\-([0-9a-zA-Z\._]+))$")
-VERSION_PARSER = re.compile("^.*(\-([0-9a-zA-Z\._\:]+))$")
-NAME_PARSER = re.compile("^[a-zA-Z0-9_\.\+\-]+$")
 
 KO_DEBUG_PARSER = re.compile("^.*/([a-zA-Z0-9_\-]+)\.ko\.debug$")
 
@@ -430,11 +424,16 @@ def run_gdb(savedir, plugin):
 
     return backtrace, exploitable
 
+def remove_epoch(nvr):
+    pos = nvr.find(":")
+    if pos > 0:
+        return nvr[pos + 1:]
+    return nvr
+
 def is_package_known(package_nvr, arch, releaseid=None):
     if CONFIG["UseFafPackages"]:
         from pyfaf.storage import getDatabase
         from pyfaf.queries import get_package_by_nevra
-        from rpmUtils.miscutils import splitFilename
         db = getDatabase()
         (n, v, r, e, _a) = splitFilename(package_nvr+".mockarch.rpm")
         for derived_archs in ARCH_MAP.values():
@@ -458,6 +457,7 @@ def is_package_known(package_nvr, arch, releaseid=None):
         releases = [releaseid]
 
     candidates = []
+    package_nvr = remove_epoch(package_nvr)
     for releaseid in releases:
         for derived_archs in ARCH_MAP.values():
             if arch not in derived_archs:
@@ -890,47 +890,11 @@ def parse_rpm_name(name):
         "release": "",
         "arch": "",
     }
-
-    # cut off rpm suffix
-    if name.endswith(".rpm"):
-        name = name[:-4]
-
-    # arch
-    match = ARCH_PARSER.match(name)
-    if match and match.group(2) in ARCHITECTURES:
-        result["arch"] = match.group(2)
-        name = name[:-len(match.group(1))]
-
-    # release
-    match = RELEASE_PARSER.match(name)
-    if match:
-        result["release"] = match.group(2)
-        name = name[:-len(match.group(1))]
-
-    # version
-    match = VERSION_PARSER.match(name)
-    if match:
-        result["version"] = match.group(2)
-        name = name[:-len(match.group(1))]
-    else:
-        result["version"] = result["release"]
-        result["release"] = None
-
-    # epoch
-    match = EPOCH_PARSER.match(name)
-    if match:
-        result["epoch"] = int(match.group(2))
-        name = name[len(match.group(1)):]
-    else:
-        match = EPOCH_PARSER.match(result["version"])
-        if match:
-            result["epoch"] = int(match.group(2))
-            result["version"] = result["version"][len(match.group(1)):]
-
-    # raw name - verify allowed characters
-    match = NAME_PARSER.match(name)
-    if match:
-        result["name"] = name
+    (result["name"],
+     result["version"],
+     result["release"],
+     result["epoch"],
+     result["arch"]) = splitFilename(name + ".mockarch.rpm")
 
     return result
 
