@@ -561,9 +561,8 @@ class RetraceWorker(object):
 
             log_debug("Determined kernel version: %s" % kernelver)
 
-        kernelver_str = kernelver.kernelver_str
-
         task.set_kernelver(str(kernelver))
+        kernelver_str = kernelver.kernelver_str
 
         self.stats["package"] = "kernel"
         self.stats["version"] = "%s-%s" % (kernelver.version, kernelver.release)
