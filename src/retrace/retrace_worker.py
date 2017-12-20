@@ -96,91 +96,57 @@ class RetraceWorker(object):
         """After cleaning task"""
         self.hook_universal("post_clean_task")
 
-    def notify_email_success(self):
+    def notify_email(self):
         task = self.task
-        if CONFIG["EmailNotify"] and task.has_notify():
-            try:
-                log_info("Sending e-mail to %s" % ", ".join(task.get_notify()))
+        if not CONFIG["EmailNotify"] or not task.has_notify():
+            return
 
+        try:
+            log_info("Sending e-mail to %s" % ", ".join(task.get_notify()))
+
+            if task.get_status() == STATUS_SUCCESS:
                 message = "The task #%d started on %s succeeded\n\n" % (task.get_taskid(), os.uname()[1])
-
-                if task.has_url():
-                    message += "URL: %s\n" % task.get_url()
-
-                message += "Task directory: %s\n" % task.get_savedir()
-
-                if task.has_started_time():
-                    message += "Started: %s\n" % datetime.datetime.fromtimestamp(task.get_started_time())
-
-                if task.has_finished_time():
-                    message += "Finished: %s\n" % datetime.datetime.fromtimestamp(task.get_finished_time())
-
-                if task.has_remote() or task.has_downloaded():
-                    files = ""
-                    if task.has_remote():
-                        remote = map(lambda x: x[4:] if x.startswith("FTP ") else x, task.get_remote())
-                        files = ", ".join(remote)
-
-                    if task.has_downloaded():
-                        files = ", ".join(filter(None, [task.get_downloaded(), files]))
-
-                    message += "Remote file(s): %s\n" % files
-
-                if task.has_log():
-                    message += "\nLog:\n%s\n" % task.get_log()
-
-                send_email("Retrace Server <%s>" % CONFIG["EmailNotifyFrom"],
-                           task.get_notify(),
-                           "Retrace Task #%d on %s succeded" % (task.get_taskid(), os.uname()[1]),
-                           message)
-
-            except Exception as ex:
-                log_error("Failed to send e-mail: %s" % ex)
-
-    def notify_email_fail(self):
-        task = self.task
-        if CONFIG["EmailNotify"] and task.has_notify():
-            try:
-                log_info("Sending e-mail to %s" % ", ".join(task.get_notify()))
-
+            else:
                 message = "The task #%d on %s failed\n\n" % (task.get_taskid(), os.uname()[1])
 
-                if task.has_url():
-                    message += "URL: %s\n" % task.get_url()
+            if task.has_url():
+                message += "URL: %s\n" % task.get_url()
 
-                message += "Task directory: %s\n" % task.get_savedir()
+            message += "Task directory: %s\n" % task.get_savedir()
 
-                if task.has_started_time():
-                    message += "Started: %s\n" % datetime.datetime.fromtimestamp(task.get_started_time())
+            if task.has_started_time():
+                message += "Started: %s\n" % datetime.datetime.fromtimestamp(task.get_started_time())
 
-                if task.has_remote() or task.has_downloaded():
-                    files = ""
-                    if task.has_remote():
-                        remote = map(lambda x: x[4:] if x.startswith("FTP ") else x, task.get_remote())
-                        files = ", ".join(remote)
+            if task.has_finished_time():
+                message += "Finished: %s\n" % datetime.datetime.fromtimestamp(task.get_finished_time())
 
-                    if task.has_downloaded():
-                        files = ", ".join(filter(None, [task.get_downloaded(), files]))
+            if task.has_remote() or task.has_downloaded():
+                files = ""
+                if task.has_remote():
+                    remote = map(lambda x: x[4:] if x.startswith("FTP ") else x, task.get_remote())
+                    files = ", ".join(remote)
 
-                    message += "Remote file(s): %s\n" % files
+                if task.has_downloaded():
+                    files = ", ".join(filter(None, [task.get_downloaded(), files]))
 
-                if task.has_log():
-                    message += "\nError log:\n%s\n" % task.get_log()
+                message += "Remote file(s): %s\n" % files
 
-                send_email("Retrace Server <%s>" % CONFIG["EmailNotifyFrom"],
-                           task.get_notify(),
-                           "Retrace Task #%d on %s failed" % (task.get_taskid(), os.uname()[1]),
-                           message)
+            if task.has_log():
+                message += "\nLog:\n%s\n" % task.get_log()
 
-            except Exception as ex:
-                log_error("Failed to send e-mail: %s" % ex)
+            send_email("Retrace Server <%s>" % CONFIG["EmailNotifyFrom"],
+                       task.get_notify(),
+                       "Retrace Task #%d on %s succeded" % (task.get_taskid(), os.uname()[1]),
+                       message)
+
+        except Exception as ex:
+            log_error("Failed to send e-mail: %s" % ex)
 
     def _fail(self, errorcode=1):
         task = self.task
         task.set_status(STATUS_FAIL)
-        notify_email_fail()
-
         task.set_finished_time(int(time.time()))
+        self.notify_email()
 
         self.stats["duration"] = int(time.time()) - self.stats["starttime"]
         try:
@@ -889,7 +855,7 @@ class RetraceWorker(object):
         if not task.get_type() in [TASK_VMCORE_INTERACTIVE]:
             self.clean_task()
 
-        notify_email_success()
+        self.notify_email()
         log_info("Retrace took %d seconds" % self.stats["duration"])
         log_info(STATUS[STATUS_SUCCESS])
 
