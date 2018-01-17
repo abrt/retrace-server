@@ -641,16 +641,14 @@ class RetraceWorker(object):
                 os.symlink("/etc/mock/logging.ini",
                            os.path.join(task.get_savedir(), RetraceTask.MOCK_LOGGING_INI))
             except Exception as ex:
-                log_error("Unable to create mock config file: %s" % ex)
-                self._fail()
+                raise Exception("Unable to create mock config file: %s" % ex)
             finally:
                 os.umask(old_umask)
 
             child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "init"], stdout=PIPE, stderr=STDOUT)
             stdout = child.communicate()[0]
             if child.wait():
-                log_error("mock exitted with %d:\n%s" % (child.returncode, stdout))
-                self._fail()
+                raise Exception("mock exitted with %d:\n%s" % (child.returncode, stdout))
 
             self.hook_post_prepare_mock()
 
@@ -725,8 +723,7 @@ class RetraceWorker(object):
                         crash_foreach_bt = None
 
             except Exception as ex:
-                log_error(str(ex))
-                self._fail()
+                raise Exception(str(ex))
 
         else:
             try:
@@ -736,8 +733,7 @@ class RetraceWorker(object):
                 task.set_crash_cmd(' '.join(crash_cmd))
                 self.hook_post_prepare_debuginfo()
             except Exception as ex:
-                log_error("prepare_debuginfo failed: %s" % str(ex))
-                self._fail()
+                raise Exception("prepare_debuginfo failed: %s" % str(ex))
 
             self.hook_pre_retrace()
             task.set_status(STATUS_BACKTRACE)
