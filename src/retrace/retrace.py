@@ -89,12 +89,6 @@ REPODIR_NAME_PARSER = re.compile("^[^\-]+\-[^\-]+\-[^\-]+$")
 
 KO_DEBUG_PARSER = re.compile("^.*/([a-zA-Z0-9_\-]+)\.ko\.debug$")
 
-# parsers for vmcore version
-# 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
-KERNEL_RELEASE_PARSER = re.compile("^([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+\.[^ \t]*)$")
-# OSRELEASE=2.6.32-209.el6.x86_64
-OSRELEASE_VAR_PARSER = re.compile("^OSRELEASE=([^%]*)$")
-
 DUMP_LEVEL_PARSER = re.compile("^[ \t]*dump_level[ \t]*:[ \t]*([0-9]+).*$")
 
 WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]+.*retrace-server-worker ([0-9]+)( .*)?$")
@@ -477,66 +471,90 @@ def is_package_known(package_nvr, arch, releaseid=None):
 
     return any([os.path.isfile(f) for f in candidates])
 
-# tricky
-# crash is not able to process the vmcore from different arch
-# (not even x86_64 and x86). In addition, there are several
-# types of vmcores: running 'file' command on el5- vmcore results
-# into an expected description (x86-64 or 80386 coredump), while
-# el6+ vmcores are just proclaimed 'data'. Another thing is that
-# the OSRELEASE in the vmcore sometimes contains architecture
-# and sometimes it does not.
+
+#
+# In real-world testing, approximately 60% of the time the kernel
+# version of a vmcore can be identified with the crash tool.
+# In the other 40% of the time, we must use some other method.
+#
+# The below function contains a couple regex searches that work
+# across a wide variety of vmcore formats and kernel versions.
+# We do not attempt to identify the file type since this is often not
+# reliable, but we assume the version information exists in some form
+# in the first portion of the file.  Testing has indicated that we do
+# not need to scan the entire file but can rely on a small portion
+# at the start of the file, which helps preserve useful pages in the
+# OS page cache.
+#
+# The following regex's are used for the 40% scenario
+# 1. Look for 'OSRELEASE='.  For example:
+# OSRELEASE=2.6.18-406.el5
+# NOTE: We can get "OSRELEASE=%" so we disallow the '%' character after the '='
+OSRELEASE_VAR_PARSER = re.compile("OSRELEASE=([^%][^\x00\s]+)")
+# 2. Look for "Linux version" string.  Note that this was taken from
+# CAS 'fingerprint' database code.  For more info, see
+# https://bugzilla.redhat.com/show_bug.cgi?id=1535592#c9 and
+# https://github.com/battlemidget/core-analysis-system/blob/master/lib/cas/core.py#L96
+# For exmaple:
+# Linux version 3.10.0-693.11.1.el7.x86_64 (mockbuild@x86-041.build.eng.bos.redhat.com) (gcc version 4.8.5 20150623 (Red Hat 4.8.5-16) (GCC) ) #1 SMP Fri Oct 27 05:39:05 EDT 2017
+LINUX_VERSION_PARSER = re.compile('Linux\sversion\s(\S+)\s+(.*20\d{1,2}|#1\s.*20\d{1,2})')
+# 3. Look for the actual kernel release. For example:
+# 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
+KERNEL_RELEASE_PARSER = re.compile('(\d+\.\d+\.\d+)-(\d+\.[^\x00\s]+)')
 def get_kernel_release(vmcore, crash_cmd=["crash"]):
+    # First use 'crash' to identify the kernel version.
     child = Popen(crash_cmd + ["--osrelease", vmcore], stdout=PIPE, stderr=STDOUT)
     release = child.communicate()[0].strip()
 
+    # If the crash tool fails, we must try some other method.
+    # Read the first small portion of the file and use a few different
+    # regex searches on the file.
     if child.wait() != 0 or \
        not release or \
        "\n" in release or \
        release == "unknown":
-        release = None
-        # crash error, let's search the vmcore on our own
-        vers = {}
-        child = Popen(["strings", "-n", "10", vmcore], stdout=PIPE, stderr=STDOUT)
-        # lots! of output, do not use .communicate()
-        line = child.stdout.readline()
-        while line:
-            line = line.strip()
+        try:
+            fd=open(vmcore)
+            fd.seek(0)
+            blksize = 64000000
+            b = os.read(fd.fileno(),blksize)
+        except IOerror as e:
+            log_error("Failed to get kernel release - failed open/seek/read of file %s with errno(%d - '%s')" % (vmcore, e.errno, e.strerror()))
+            if fd:
+                fd.close()
+            return None
+        release = OSRELEASE_VAR_PARSER.search(b)
+        if release:
+            release = release.group(1)
+        if not release:
+            release = LINUX_VERSION_PARSER.search(b)
+            if release:
+                release = release.group(1)
+        if not release:
+            release = KERNEL_RELEASE_PARSER.search(b)
+            if release:
+                release = release.group(0)
 
-            # OSRELEASE variable is defined in the vmcore,
-            # but crash was not able to find it (cross-arch)
-            match = OSRELEASE_VAR_PARSER.match(line)
-            if match:
-                release = match.group(1)
-                break
+        fd.close()
 
-            # assuming the kernel version will sooner or later
-            # appear in the list of strings contained in the
-            # vmcore
-            match = KERNEL_RELEASE_PARSER.match(line)
-            if match:
-                release = line
-                break
-
-            line = child.stdout.readline()
-
-        # much more output is available, but we don't need any more
-        child.stdout.close()
-        child.kill()
-
+    # Clean up the release before returning or calling KernelVer
     if release is None or release == "unknown":
+        log_error("Failed to get kernel release from file %s" % vmcore)
         return None
+    else:
+        release = release.rstrip('\0 \t\n')
 
     # check whether architecture is present
     try:
         result = KernelVer(release)
     except Exception as ex:
-        log_error(str(ex))
+        log_error("Failed to parse kernel release from file %s, release = %s: %s" % (vmcore, release, str(ex)))
         return None
 
     if result.arch is None:
         result.arch = guess_arch(vmcore)
         if not result.arch:
-            log_error("Unable to determine architecture")
+            log_error("Unable to determine architecture from file %s, release = %s, arch result = %s" % (vmcore, release, result))
             return None
 
     return result
