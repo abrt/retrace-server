@@ -651,7 +651,7 @@ class RetraceWorker(object):
 
             log_debug("Determined kernel version: %s" % kernelver)
 
-        task.set_kernelver(str(kernelver))
+        task.set_kernelver(kernelver)
         kernelver_str = kernelver.kernelver_str
 
         self.stats["package"] = "kernel"
@@ -665,7 +665,7 @@ class RetraceWorker(object):
         task.set_status(STATUS_INIT)
         vmlinux = ""
 
-        if task.use_mock(kernelver):
+        if task.get_mock():
             self.hook_post_prepare_mock()
 
             # we don't save config into task.get_savedir() because it is only
@@ -747,8 +747,7 @@ class RetraceWorker(object):
             # no locks required, mock locks itself
             try:
                 self.hook_pre_prepare_debuginfo()
-                vmlinux = task.prepare_debuginfo(vmcore, cfgdir, kernelver=kernelver,
-                                                 crash_cmd=task.get_crash_cmd().split())
+                vmlinux = task.prepare_debuginfo(vmcore, cfgdir, kernelver=kernelver)
                 self.hook_post_prepare_debuginfo()
             except Exception as ex:
                 raise Exception("prepare_debuginfo failed: %s" % str(ex))
@@ -762,9 +761,7 @@ class RetraceWorker(object):
         else:
             try:
                 self.hook_pre_prepare_debuginfo()
-                crash_cmd = task.get_crash_cmd().split()
-                vmlinux = task.prepare_debuginfo(vmcore, kernelver=kernelver, crash_cmd=crash_cmd)
-                task.set_crash_cmd(' '.join(crash_cmd))
+                vmlinux = task.prepare_debuginfo(vmcore, kernelver=kernelver)
                 self.hook_post_prepare_debuginfo()
             except Exception as ex:
                 raise Exception("prepare_debuginfo failed: %s" % str(ex))
