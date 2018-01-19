@@ -1346,6 +1346,7 @@ class RetraceTask:
         """Creates a new task if taskid is None,
         loads the task with given ID otherwise."""
 
+        self._mock = False
         if taskid is None:
             # create a new task
             # create a retrace-group-writable directory
@@ -1389,16 +1390,15 @@ class RetraceTask:
             if not os.path.isdir(self._savedir):
                 raise Exception("The task %d does not exist" % self._taskid)
 
-    def use_mock(self, kernelver):
-        # Only use mock if we're cross arch, and there's no arch-specific crash available
-        hostarch = get_canon_arch(os.uname()[4])
-        if kernelver.arch == hostarch:
-            return False
-        elif CONFIG["Crash%s" % kernelver.arch] and os.path.isfile(CONFIG["Crash%s" % kernelver.arch]):
-            self.set_crash_cmd(CONFIG["Crash%s" % kernelver.arch])
-            return False
-        else:
-            return True
+    def set_mock(self, value):
+        self._mock = value
+
+    def get_mock(self):
+        return self._mock
+
+    def has_mock(self):
+        """Verifies whether MOCK_SITE_DEFAULTS_CFG is present in the task directory."""
+        return self.has(RetraceTask.MOCK_SITE_DEFAULTS_CFG)
 
     def _get_file_path(self, key):
         key_sanitized = key.replace("/", "_").replace(" ", "_")
@@ -1668,7 +1668,19 @@ class RetraceTask:
 
     def set_kernelver(self, value):
         """Atomically writes given value into KERNELVER_FILE."""
-        self.set_atomic(RetraceTask.KERNELVER_FILE, value)
+        self.set_atomic(RetraceTask.KERNELVER_FILE, str(value))
+        # Only use mock if we're cross arch, and there's no arch-specific crash available
+        # Set crash_cmd based on arch and any config setting
+        hostarch = get_canon_arch(os.uname()[4])
+        if value.arch == hostarch:
+            self.set_crash_cmd("crash")
+            self.set_mock(False)
+        elif CONFIG["Crash%s" % value.arch] and os.path.isfile(CONFIG["Crash%s" % value.arch]):
+            self.set_mock(False)
+            self.set_crash_cmd(CONFIG["Crash%s" % value.arch])
+        else:
+            self.set_mock(True)
+            self.set_crash_cmd("crash")
 
     def has_notes(self):
         return self.has(RetraceTask.NOTES_FILE)
@@ -1764,15 +1776,17 @@ class RetraceTask:
 
         return cmd_output, returncode
 
-    def prepare_debuginfo(self, vmcore, chroot=None, kernelver=None, crash_cmd=["crash"]):
-        log_info("Calling prepare_debuginfo with crash_cmd = " + str(crash_cmd))
+    def prepare_debuginfo(self, vmcore, chroot=None, kernelver=None):
+        log_info("Calling prepare_debuginfo ")
         if kernelver is None:
-            kernelver = get_kernel_release(vmcore, crash_cmd)
+            kernelver = get_kernel_release(vmcore)
 
         if kernelver is None:
             raise Exception("Unable to determine kernel version")
 
-        self.set_kernelver(str(kernelver))
+        self.set_kernelver(kernelver)
+        # Setting kernelver may reset crash_cmd
+        crash_cmd = self.get_crash_cmd().split()
 
         debugdir_base = os.path.join(CONFIG["RepoDir"], "kernel", kernelver.arch)
         if not os.path.isdir(debugdir_base):
@@ -1908,9 +1922,9 @@ class RetraceTask:
 
         return vmlinux
 
-    def strip_vmcore(self, vmcore, kernelver=None, crash_cmd=["crash"]):
+    def strip_vmcore(self, vmcore, kernelver=None):
         try:
-            vmlinux = self.prepare_debuginfo(vmcore, chroot=None, kernelver=kernelver, crash_cmd=crash_cmd)
+            vmlinux = self.prepare_debuginfo(vmcore, chroot=None, kernelver=kernelver)
         except Exception as ex:
             log_warn("prepare_debuginfo failed: %s" % ex)
             return
@@ -2109,9 +2123,7 @@ class RetraceTask:
                 if not skip_makedumpfile:
                     log_debug("Executing makedumpfile")
                     start = time.time()
-                    crash_cmd = self.get_crash_cmd().split()
-                    self.strip_vmcore(vmcore, kernelver, crash_cmd)
-                    self.set_crash_cmd(' '.join(crash_cmd))
+                    self.strip_vmcore(vmcore, kernelver)
                     dur = int(time.time() - start)
 
                 st = os.stat(vmcore)
