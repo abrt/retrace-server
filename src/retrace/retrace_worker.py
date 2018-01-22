@@ -662,16 +662,14 @@ class RetraceWorker(object):
                 os.symlink("/etc/mock/logging.ini",
                            os.path.join(task.get_savedir(), RetraceTask.MOCK_LOGGING_INI))
             except Exception as ex:
-                log_error("Unable to create mock config file: %s" % ex)
-                self._fail()
+                raise Exception("Unable to create mock config file: %s" % ex)
             finally:
                 os.umask(old_umask)
 
             child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "init"], stdout=PIPE, stderr=STDOUT)
             stdout = child.communicate()[0]
             if child.wait():
-                log_error("mock exitted with %d:\n%s" % (child.returncode, stdout))
-                self._fail()
+                raise Exception("mock exitted with %d:\n%s" % (child.returncode, stdout))
 
             self.hook_post_prepare_mock()
 
@@ -680,74 +678,72 @@ class RetraceWorker(object):
                 self.hook_pre_prepare_debuginfo()
                 vmlinux = task.prepare_debuginfo(vmcore, cfgdir, kernelver=kernelver, crash_cmd=task.get_crash_cmd().split())
                 self.hook_post_prepare_debuginfo()
-
-                self.hook_pre_retrace()
-                # generate the log
-                with open(os.devnull, "w") as null:
-                    child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                   "crash --minimal -s %s %s" % (vmcore, vmlinux)],
-                                  stdin=PIPE, stdout=PIPE, stderr=null)
-                    kernellog = child.communicate("log\nquit\n")[0]
-                    if child.wait():
-                        log_warn("crash 'log' exitted with %d" % child.returncode)
-
-                    child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                   "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
-                    crash_bt_a = child.communicate("set hex\nbt -a\nquit\n")[0]
-                    if child.wait():
-                        log_warn("crash 'bt -a' exitted with %d" % child.returncode)
-                        crash_bt_a = None
-
-                    crash_kmem_f = None
-                    if CONFIG["VmcoreRunKmem"] == 1:
-                        child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                       "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
-                        crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
-                        if child.wait():
-                            log_warn("crash 'kmem -f' exitted with %d" % child.returncode)
-                            crash_kmem_f = None
-
-                    if CONFIG["VmcoreRunKmem"] == 2:
-                        child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                       "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
-                        crash_kmem_f = child.communicate("set hash off\nkmem -f\nset hash on\nquit\n")[0]
-                        if child.wait():
-                            log_warn("crash 'kmem -f' exitted with %d" % child.returncode)
-                            crash_kmem_f = None
-
-                    crash_kmem_z = None
-                    if CONFIG["VmcoreRunKmem"] == 3:
-                        child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                       "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
-                        crash_kmem_z = child.communicate("kmem -z\nquit\n")[0]
-                        if child.wait():
-                            log_warn("crash 'kmem -z' exitted with %d" % child.returncode)
-                            crash_kmem_z = None
-
-                    child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                   "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
-                    crash_sys = child.communicate("sys\nquit\n")[0]
-                    if child.wait():
-                        log_warn("crash 'sys' exitted with %d" % child.returncode)
-                        crash_sys = None
-
-                    child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                   "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
-                    crash_sys_c = child.communicate("sys -c\nquit\n")[0]
-                    if child.wait():
-                        log_warn("crash 'sys -c' exitted with %d" % child.returncode)
-                        crash_sys_c = None
-
-                    child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                   "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
-                    crash_foreach_bt = child.communicate("set hex\nforeach bt\nquit\n")[0]
-                    if child.wait():
-                        log_warn("crash 'foreach bt' exitted with %d" % child.returncode)
-                        crash_foreach_bt = None
-
             except Exception as ex:
-                log_error(str(ex))
-                self._fail()
+                raise Exception("prepare_debuginfo failed: %s" % str(ex))
+
+            self.hook_pre_retrace()
+            # generate the log
+            with open(os.devnull, "w") as null:
+                child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                               "crash --minimal -s %s %s" % (vmcore, vmlinux)],
+                              stdin=PIPE, stdout=PIPE, stderr=null)
+                kernellog = child.communicate("log\nquit\n")[0]
+                if child.wait():
+                    log_warn("crash 'log' exitted with %d" % child.returncode)
+
+                child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                               "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
+                crash_bt_a = child.communicate("set hex\nbt -a\nquit\n")[0]
+                if child.wait():
+                    log_warn("crash 'bt -a' exitted with %d" % child.returncode)
+                    crash_bt_a = None
+
+                crash_kmem_f = None
+                if CONFIG["VmcoreRunKmem"] == 1:
+                    child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                                   "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
+                    crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
+                    if child.wait():
+                        log_warn("crash 'kmem -f' exitted with %d" % child.returncode)
+                        crash_kmem_f = None
+
+                if CONFIG["VmcoreRunKmem"] == 2:
+                    child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                                   "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
+                    crash_kmem_f = child.communicate("set hash off\nkmem -f\nset hash on\nquit\n")[0]
+                    if child.wait():
+                        log_warn("crash 'kmem -f' exitted with %d" % child.returncode)
+                        crash_kmem_f = None
+
+                crash_kmem_z = None
+                if CONFIG["VmcoreRunKmem"] == 3:
+                    child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                                   "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
+                    crash_kmem_z = child.communicate("kmem -z\nquit\n")[0]
+                    if child.wait():
+                        log_warn("crash 'kmem -z' exitted with %d" % child.returncode)
+                        crash_kmem_z = None
+
+                child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                               "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
+                crash_sys = child.communicate("sys\nquit\n")[0]
+                if child.wait():
+                    log_warn("crash 'sys' exitted with %d" % child.returncode)
+                    crash_sys = None
+
+                child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                               "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
+                crash_sys_c = child.communicate("sys -c\nquit\n")[0]
+                if child.wait():
+                    log_warn("crash 'sys -c' exitted with %d" % child.returncode)
+                    crash_sys_c = None
+
+                child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                               "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null)
+                crash_foreach_bt = child.communicate("set hex\nforeach bt\nquit\n")[0]
+                if child.wait():
+                    log_warn("crash 'foreach bt' exitted with %d" % child.returncode)
+                    crash_foreach_bt = None
 
         else:
             try:
@@ -757,8 +753,7 @@ class RetraceWorker(object):
                 task.set_crash_cmd(' '.join(crash_cmd))
                 self.hook_post_prepare_debuginfo()
             except Exception as ex:
-                log_error("prepare_debuginfo failed: %s" % str(ex))
-                self._fail()
+                raise Exception("prepare_debuginfo failed: %s" % str(ex))
 
             self.hook_pre_retrace()
             task.set_status(STATUS_BACKTRACE)
