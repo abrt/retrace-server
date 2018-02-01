@@ -15,6 +15,7 @@ import stat
 import time
 import urllib
 import hashlib
+from signal import *
 from subprocess import *
 import magic
 from argparser import *
@@ -500,13 +501,18 @@ KERNEL_RELEASE_PARSER = re.compile('([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+\.[^\x00\s\n
 #
 def get_kernel_release(vmcore, crash_cmd=["crash"]):
     # First use 'crash' to identify the kernel version.
+    # set SIGPIPE to default handler for bz 1540253
+    save = getsignal(SIGPIPE)
+    signal(SIGPIPE, SIG_DFL)
     child = Popen(crash_cmd + ["--osrelease", vmcore], stdout=PIPE, stderr=STDOUT)
     release = child.communicate()[0].strip()
+    ret = child.wait()
+    signal(SIGPIPE, save)
 
     # If the crash tool fails, we must try some other method.
     # Read the first small portion of the file and use a few different
     # regex searches on the file.
-    if child.wait() != 0 or \
+    if ret != 0 or \
        not release or \
        "\n" in release or \
        release == "unknown":
