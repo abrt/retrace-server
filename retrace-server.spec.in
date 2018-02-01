@@ -108,7 +108,6 @@ then
 fi
 
 %files -f %{name}.lang
-%defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}-httpd.conf
 %config(noreplace) %{_sysconfdir}/%{name}.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
