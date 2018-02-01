@@ -1,5 +1,3 @@
-%{!?python_site: %global python_site %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(0)")}
-
 Summary: Application for remote coredump analysis
 Name: retrace-server
 Version: @PACKAGE_VERSION@
@@ -129,7 +127,7 @@ fi
 %{_bindir}/%{name}-task
 %{_bindir}/bt_filter
 %{_bindir}/coredump2packages
-%{python_site}/retrace/*
+%{python_sitelib}/retrace/*
 %{_datadir}/%{name}/*
 %doc %{_mandir}/man1/%{name}-cleanup.1*
 %doc %{_mandir}/man1/%{name}-interact.1*
