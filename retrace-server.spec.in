@@ -25,18 +25,27 @@ Requires: unzip
 Requires: lzop
 Requires: elfutils
 Requires: createrepo >= 0.9.9-27
+%if 0%{?fedora} > 27
+Requires: python2-mod_wsgi
+Requires: python2-webob
+Requires: python2-magic
+Requires: python2-requests
+Requires: python2-requests-kerberos
+Requires: python2-distro
+%else
 Requires: mod_wsgi
-Requires: mod_ssl
 Requires: python-webob
+Requires: python-magic
+Requires: python-requests
+Requires: python-requests-kerberos
+Requires: python-distro
+%endif
+Requires: mod_ssl
 Requires: sqlite
 Requires: yum-utils
 Requires: crash >= 5.1.7
 Requires: wget
 Requires: kexec-tools
-Requires: python-magic
-Requires: python-requests
-Requires: python-requests-kerberos
-Requires: python-distro
 Requires(preun): /sbin/install-info
 Requires(post): /sbin/install-info
 Requires(post): /usr/bin/crontab
