@@ -147,6 +147,150 @@ fi
 %license COPYING
 
 %changelog
+* Thu Feb 01 2018 Matej Marusak <mmarusak@redhat.com> 1.18.0-1
+- mark license as license
+- Update Python 2 dependency declarations to new packaging standards
+- defattr is not needed as this is default
+- use standard python_sitelib macro
+- remove old changelog entries
+- we do not build for el6 any more
+- remove group
+- Remove duplicate RetraceWorker._fail call when start_vmcore fails
+- Add md5sum and kernelver to email notifications, help text to failing notification
+- Convert notify_email_success and notify_email_fail to a single method
+- Create notify_email_success / notify_email_fail helpers
+- Enable packages with epoch
+- Update to new mock
+- Set kernelver and vmlinux as soon as possible
+- reposync: Cleanup is not done by default in createrepo
+- Explicitly state python version in shebangs
+- Fix unreadable crash subdirectory when tarball is submitted without group read permissions
+- Try noarch when checking for package
+- Add pylintrc
+- Use dnf in mock config on Fedora
+- Update mock config for new mock version
+- retrace-server-reposync pylint disable wrong-import-position
+- retrace-server-reposync C: 12, 0: standard import import urllib2 comes before import rpm
+- coredump2packages C:282,16: Comparison should be package.returnEVR().compare(removal_candidate.returnEVR()) == 0
+- create C: 2, 0: standard import from tempfile import * comes before from retrace import *
+- retrace-server-interact C: 9, 0: standard import from subprocess import list2cmdline comes before from retrace import *
+- retrace-server-cleanup C: 49, 0: Wrong continued indentation before
+- retrace C: 8, 0: standard import import os comes before import magic
+- retrace C:1431,11: Consider changing not mode in ['w', 'a'] to mode not in ['w', 'a']
+- retrace C:1990, 0: Wrong continued indentation before block
+- retrace C:1777, 0: No space allowed after bracket
+- retrace C:1504, 0: No space allowed around keyword argument assignment
+- retrace C:1420, 0: Exactly one space required after comma
+- retrace C:360, 0: Wrong continued indentation
+- retrace C:181, 0: Exactly one space required before assignment
+- retrace C: 30, 0: Wrong hanging indentation
+- retrace_worker C:314,25: Comparison should be section == 0
+- plugins C: 25, 0: No space allowed around keyword argument assignment
+- config C: 18, 0: Import import ConfigParser should be placed at the top of the module
+- config C: 86, 0: No space allowed around keyword argument assignment
+- config C: 30, 0: Wrong hanging indentation
+- stats C: 6, 0: Wrong continued indentation
+- settings C: 11, 0: Wrong hanging indentation
+- retrace-server-reposync-faf W: 4, 0: Unused import sys
+- retrace-server-reposync C:203, 0: Exactly one space required after comma
+- retrace-server-reposync C:154, 0: No space allowed after bracket
+- retrace-server-plugin-checker C: 54, 0: Unnecessary parens after 'not' keyword
+- index C: 51, 0: Trailing newlines
+- retrace_worker C: 454, 0: Wrong hanging indentation
+- retrace_worker C: 452, 0: Wrong hanging indentation
+- retrace_worker C: 451, 0: Wrong hanging indentation
+- retrace_worker C: 393, 0: Wrong hanging indentation
+- fedora C: 64, 0: Wrong hanging indentation
+- fedora C: 63, 0: Wrong hanging indentation
+- fedora C: 62, 0: Wrong hanging indentation
+- fedora C: 61, 0: Wrong hanging indentation
+- fedora C: 60, 0: Wrong hanging indentation
+- fedora C: 59, 0: Wrong hanging indentation
+- fedora C: 58, 0: Wrong hanging indentation
+- fedora C: 57, 0: Wrong hanging indentation
+- fedora C: 56, 0: Wrong hanging indentation
+- fedora C: 55, 0: Wrong hanging indentation
+- fedora C: 54, 0: Wrong hanging indentation
+- fedora C: 53, 0: Wrong hanging indentation
+- fedora C: 52, 0: Wrong hanging indentation
+- fedora C: 51, 0: Wrong hanging indentation
+- fedora C: 50, 0: Wrong hanging indentation
+- fedora C: 49, 0: Wrong hanging indentation
+- fedora C: 48, 0: Wrong hanging indentation
+- fedora C: 47, 0: Wrong hanging indentation
+- fedora C: 46, 0: Wrong hanging indentation
+- fedora C: 45, 0: Wrong hanging indentation
+- fedora C: 44, 0: Wrong hanging indentation
+- fedora C: 43, 0: Wrong hanging indentation
+- fedora C: 42, 0: Wrong hanging indentation
+- fedora C: 41, 0: Wrong hanging indentation
+- fedora C: 33, 0: Wrong hanging indentation
+- fedora C: 32, 0: Wrong hanging indentation
+- fedora C: 31, 0: Wrong hanging indentation
+- fedora C: 30, 0: Wrong hanging indentation
+- fedora C: 29, 0: Wrong hanging indentation
+- fedora C: 28, 0: Wrong hanging indentation
+- fedora C: 27, 0: Wrong hanging indentation
+- fedora C: 26, 0: Wrong hanging indentation
+- fedora C: 25, 0: Wrong hanging indentation
+- fedora C: 24, 0: Wrong hanging indentation
+- fedora C: 23, 0: Wrong hanging indentation
+- fedora C: 22, 0: Wrong hanging indentation
+- fedora C: 21, 0: Wrong hanging indentation
+- fedora C: 20, 0: Wrong hanging indentation
+- fedora C: 19, 0: Wrong hanging indentation
+- fedora C: 18, 0: Wrong hanging indentation
+- fedora C: 17, 0: Wrong hanging indentation
+- fedora C: 16, 0: Wrong hanging indentation
+- fedora C: 15, 0: Wrong hanging indentation
+- fedora C: 14, 0: Wrong hanging indentation
+- fedora C: 13, 0: Wrong hanging indentation
+- fedora C: 12, 0: Wrong hanging indentation
+- fedora C: 11, 0: Wrong hanging indentation
+- fedora C: 10, 0: Wrong hanging indentation
+- rhel C: 16, 0: Wrong hanging indentation
+- rhel C: 15, 0: Wrong hanging indentation
+- rhel C: 14, 0: Wrong hanging indentation
+- rhel C: 13, 0: Wrong hanging indentation
+- rhel C: 12, 0: Wrong hanging indentation
+- rhel C: 11, 0: Wrong hanging indentation
+- rhel C: 10, 0: Wrong hanging indentation
+- manager W:305, 0: Bad indentation. Found 20 spaces, expected 16
+- manager C: 17, 0: No space allowed before bracket
+- manager C: 13, 0: No space allowed after bracket
+- index C: 20, 0: Wrong continued indentation
+- create C:180,11: Consider changing not tasktype in TASK_TYPES to tasktype not in TASK_TYPES
+- create C:205, 0: Wrong hanging indentation
+- create C: 97, 0: Wrong continued indentation before block
+- create C: 92, 0: Wrong continued indentation
+- create C: 85, 0: Wrong continued indentation
+- create C: 39, 0: Wrong continued indentation before block
+- coredump2packages C: 10, 0: standard import import os comes before import yum (wrong-import-order)
+- coredump2packages C: 9, 0: standard import import argparse comes before import yum (wrong-import-order)
+- coredump2packages C: 8, 0: standard import import sys comes before import yum (wrong-import-order)
+- br_filter W: 40, 0: Unused import os (unused-import)
+- bt_filter C:212, 0: Trailing whitespace (trailing-whitespace)
+- bt_filter C:188, 0: Trailing whitespace (trailing-whitespace)
+- bt_filter C:168, 0: No space allowed after bracket
+- bt_filter C:136, 0: No space allowed after bracket
+- bt_filter line 137 delete spaces in brakets
+- bt_filter line 109 whitespace
+- bt_filter line 100 whitespace
+- bt_filter line 43 add space in brakets
+- Add commandline client
+- Add aliases into FAF reposync
+- Cleanup tmp FAF repository after failing
+- Write coresize for vmcores
+- Change error message
+- Fix wrong html tag
+- Set zero to non-existing type of tasks
+- Fix typeo in manager.wsgi which creates a backtrace on non-ftp tasks.
+- Bump version of gettext
+- Change path for README.md
+- Fix problem with missing modules on kernel versions with cached vmlinux files.
+- No first retrace time when no existing task
+- Make the reposync tool more verbose if required
+
 * Thu Mar 30 2017 Matej Marusak <mmarusak@redhat.com> 1.17.0-1
 - Enable creating releases with makefile
 - Introduce gen-version
