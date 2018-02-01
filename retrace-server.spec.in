@@ -5,7 +5,6 @@ Name: retrace-server
 Version: @PACKAGE_VERSION@
 Release: 1%{?dist}
 License: GPLv2+
-Group: Applications/System
 URL: https://github.com/abrt/retrace-server
 Source0: https://github.com/abrt/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
 
