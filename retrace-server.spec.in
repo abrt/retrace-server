@@ -16,7 +16,6 @@ BuildRequires: texinfo
 BuildRequires: asciidoc
 BuildRequires: xmlto
 
-%{?el6:Requires: python-argparse}
 Requires: rsync
 Requires: mock >= 1.4.7
 Requires: xz
