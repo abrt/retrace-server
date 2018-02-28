@@ -524,7 +524,7 @@ def get_kernel_release(vmcore, crash_cmd=["crash"]):
             fd.seek(0)
             blksize = 64000000
             b = os.read(fd.fileno(),blksize)
-        except IOerror as e:
+        except OSError as e:
             log_error("Failed to get kernel release - failed open/seek/read of file %s with errno(%d - '%s')" % (vmcore, e.errno, e.strerror()))
             if fd:
                 fd.close()
