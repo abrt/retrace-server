@@ -141,6 +141,7 @@ class RetraceWorker(object):
             if task.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE] and task.get_status() == STATUS_FAIL:
                 message += "\nIf kernel version detection failed (the log shows 'Unable to determine kernel version'), and you know the kernel version, you may try re-starting the task with the 'retrace-server-worker --restart' command.  Please check the log below for more information on why the task failed.  The following example assumes the vmcore's kernel version is 2.6.32-358.el6 on x86_64 arch: \n$ retrace-server-worker --restart --kernelver 2.6.32-358.el6.x86_64 --arch x86_64 %d\n" % task.get_taskid()
                 message += "\nIf this is a test kernel with a non-errata kernel version, or for some reason the kernel-debuginfo repository is unavailable, you can place the kernel-debuginfo RPM at %s/download/ and restart the task with: \n$ retrace-server-worker --restart %d\n" % (CONFIG["RepoDir"], task.get_taskid())
+                message += "\nIf the retrace-log contains a message similar to 'Failing task due to crash exiting with non-zero status and small kernellog size' then the vmcore may be truncated or incomplete and not useable.  Check the md5sum on the manager page and compare with the expected value, and possibly re-upload and resubmit the vmcore.\n"
 
             if task.has_log():
                 message += "\nLog:\n%s\n" % task.get_log()
@@ -158,6 +159,12 @@ class RetraceWorker(object):
         task.set_status(STATUS_FAIL)
         task.set_finished_time(int(time.time()))
         self.notify_email()
+
+        if task.has_log():
+            # add a symlink to log to misc directory
+            # use underscore so that the log is first in the list
+            os.symlink(task._get_file_path(RetraceTask.LOG_FILE),
+                       os.path.join(task._get_file_path(RetraceTask.MISC_DIR), "retrace-log"))
 
         self.stats["duration"] = int(time.time()) - self.stats["starttime"]
         try:
@@ -812,6 +819,10 @@ class RetraceWorker(object):
                 crash_foreach_bt = None
 
         task.set_backtrace(kernellog)
+        # If crash sys command exited with non-zero status and log is less than 1024 bytes, probably it is not useful
+        if not crash_sys_c and len(kernellog) < 1024:
+            raise Exception("Failing task due to crash exiting with non-zero status and small kernellog size = %d bytes" % len(kernellog))
+
         if crash_bt_a:
             task.add_misc("bt-a", crash_bt_a)
         if crash_kmem_f:
