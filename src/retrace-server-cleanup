@@ -97,6 +97,20 @@ if __name__ == "__main__":
                 task.create_worker().clean_task()
                 task.set_log("Task was killed due to running too long or taking too many resources.\n", True)
 
+        md5_tasks = {}
+        total_savings = 0
+        for task in get_md5_tasks():
+            md5 = str.split(task.get_md5sum())[0]
+            if md5 in md5_tasks:
+                worker = task.create_worker()
+                worker.begin_logging()
+                total_savings += worker.dedup_vmcore(md5_tasks[md5])
+                worker.end_logging()
+            else:
+                md5_tasks[md5] = task
+
+        log.write("Total space savings from duplicate task hardlinking (md5sums equal, different inodes): %d MB\n" % (total_savings / 1024 / 1024))
+
         if CONFIG["ArchiveTaskAfter"] > 0:
             # archive old tasks
             try:
