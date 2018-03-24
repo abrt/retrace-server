@@ -906,6 +906,34 @@ def get_active_tasks():
 
     return tasks
 
+def get_md5_tasks():
+    tasks = []
+
+    for filename in os.listdir(CONFIG["SaveDir"]):
+        if len(filename) != CONFIG["TaskIdLength"]:
+            continue
+
+        try:
+            task = RetraceTask(int(filename))
+        except:
+            continue
+
+        if not task.has_status():
+            continue
+        else:
+            status = task.get_status()
+
+        if status != STATUS_SUCCESS and status != STATUS_FAIL:
+            continue
+
+        if not task.has_finished_time():
+            continue
+
+        if task.has_md5sum():
+            tasks.append(task)
+
+    return tasks
+
 def parse_rpm_name(name):
     result = {
         "epoch": 0,

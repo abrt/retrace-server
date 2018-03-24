@@ -567,6 +567,54 @@ class RetraceWorker(object):
 
         return None
 
+    # de-dup self.task's vmcore with md5_tasks's vmcore
+    def dedup_vmcore(self, md5_task):
+        task1 = md5_task   # primary
+        task2 = self.task  # one we are going to try to hardlink and the one that gets logged to
+        v1 = CONFIG["SaveDir"] + "/" + str(task1.get_taskid()) + "/crash/vmcore"
+        v2 = CONFIG["SaveDir"] + "/" + str(task2.get_taskid()) + "/crash/vmcore"
+        try:
+            s1 = os.stat(v1)
+            s2 = os.stat(v2)
+        except:
+            log_warn("Attempt to dedup %s and %s but 'stat' failed on one of the paths" % (v1, v2))
+            return 0
+
+        if s1.st_ino == s2.st_ino:
+            return 0
+        if s1.st_size != s2.st_size:
+            log_warn("Attempt to dedup %s and %s but sizes differ - size1 = %d size2 = %d" % (v1, v2, s1.st_size, s2.st_size))
+            return 0
+        v1_md5 = str.split(task1.get_md5sum())[0]
+        v2_md5 = str.split(task2.get_md5sum())[0]
+        if len(v1_md5) != 32 or len(v2_md5) != 32:
+            return 0
+        if v1_md5 != v2_md5:
+            log_warn("Attempted to dedup %s and %s but md5sums are different" % (v1, v2, v1_md5, v2_md5))
+            return 0
+
+        v2_link = v2 + "-link"
+        try:
+            os.link(v1, v2_link)
+        except:
+            log_warn("Failed to dedup %s and %s - failed to create hard link from %s to %s" % (v1, v2, v2_link, v1))
+            return 0
+        try:
+            os.unlink(v2)
+        except:
+            log_warn("Failed to dedup %s and %s - unlink of %s failed" % (v1, v2, v2));
+            os.unlink(v2_link)
+            return 0
+        try:
+            os.rename(v2_link, v2)
+        except:
+            log_error("ERROR: Failed to dedup %s and %s - rename hardlink %s to %s failed" % (v1, v2, v2_link, v2));
+            return 0
+
+        log_warn("Successful dedup - created hardlink from %s to %s saving %d MB" % (v2, v1, s1.st_size / 1024 / 1024))
+
+        return s1.st_size
+
     def start_vmcore(self, custom_kernelver=None):
         self.hook_start()
 
