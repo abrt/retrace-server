@@ -906,6 +906,23 @@ def get_active_tasks():
 
     return tasks
 
+def get_md5_tasks():
+    tasks = []
+
+    for filename in os.listdir(CONFIG["SaveDir"]):
+        if len(filename) != CONFIG["TaskIdLength"]:
+            continue
+
+        try:
+            task = RetraceTask(int(filename))
+        except:
+            continue
+
+        if task.has_md5sum():
+            tasks.append(task)
+
+    return tasks
+
 def parse_rpm_name(name):
     result = {
         "epoch": 0,
@@ -1809,6 +1826,50 @@ class RetraceTask:
                 os.unlink(newvmcore)
         else:
             os.rename(newvmcore, vmcore)
+
+    # de-dup 'self's vmcore with 'task's vmcore by hard linking 'task's vmcore to 'self's vmcore
+    def dedup_vmcore(self, task):
+        v1 = CONFIG["SaveDir"] + "/" + str(self.get_taskid()) + "/crash/vmcore"
+        v2 = CONFIG["SaveDir"] + "/" + str(task.get_taskid()) + "/crash/vmcore"
+        try:
+            s1 = os.stat(v1)
+            s2 = os.stat(v2)
+        except:
+            task.set_log("Attempt to dedup %s and %s but 'stat' failed on one of the paths\n" % (v1, v2), True)
+            return 0
+
+        if s1.st_ino == s2.st_ino:
+            return 0
+        if s1.st_size != s2.st_size:
+            task.set_log("Attempt to dedup %s and %s but sizes differ - size1 = %d size2 = %d\n" % (v1, v2, s1.st_size, s2.st_size), True)
+            return 0
+        v1_md5 = str.split(self.get_md5sum())[0]
+        v2_md5 = str.split(task.get_md5sum())[0]
+        if v1_md5 != v2_md5:
+            task.set_log("Attempted to dedup %s and %s but md5sums are different\n" % (v1, v2, v1_md5, v2_md5), True)
+            return 0
+
+        v2_link = v2 + "-link"
+        try:
+            os.link(v1, v2_link)
+        except:
+            task.set_log("Failed to dedup %s and %s - failed to create hard link from %s to %s\n" % (v1, v2, v2_link, v1), True)
+            return 0
+        try:
+            os.unlink(v2)
+        except:
+            task.set_log("Failed to dedup %s and %s - unlink of %s failed\n" % (v1, v2, v2), True);
+            os.unlink(v2_link)
+            return 0
+        try:
+            os.rename(v2_link, v2)
+        except:
+            task.set_log("ERROR: Failed to dedup %s and %s - rename hardlink %s to %s failed\n" % (v1, v2, v2_link, v2), True);
+            return 0
+
+        task.set_log("Successfully dedup %s and %s with hardlink saved %d MB\n" % (v1, v2, s1.st_size / 1024 / 1024), True)
+
+        return s1.st_size
 
     def download_remote(self, unpack=True, timeout=0, kernelver=None):
         """Downloads all remote resources and returns a list of errors."""
