@@ -1839,7 +1839,14 @@ class RetraceTask:
         else:
             child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT,
                           encoding='utf-8')
-        stdout = child.communicate("mod\nquit")[0]
+        try:
+            t = 3600
+            if CONFIG["ProcessCommunicateTimeout"]:
+                t = CONFIG["ProcessCommunicateTimeout"]
+            stdout = child.communicate("mod\nquit", timeout=t)[0]
+        except TimeoutExpired:
+            child.kill()
+            raise Exception("WARNING: crash 'mod' command exceeded " + str(t) + " second timeout - damaged vmcore?")
         if child.returncode == 1 and "el5" in kernelver.release:
             log_info("Unable to list modules but el5 detected, trying crash fixup for vmss files")
             crash_cmd.append("--machdep")
