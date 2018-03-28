@@ -75,6 +75,7 @@ class Config(object):
             "CalculateMd5": True,
             "CaseNumberURL": "",
             "Crashi386": "",
+            "ProcessCommunicateTimeout": 3600,
         }
 
         def __getitem__(self, key):
