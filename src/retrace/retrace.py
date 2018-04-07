@@ -1932,6 +1932,7 @@ class RetraceTask:
                 log_info(STATUS[STATUS_CALCULATING_MD5SUM])
                 md5v = self.calculate_md5(os.path.join(crashdir, filename))
                 md5sums.append("{0} {1}".format(md5v, downloaded[-1]))
+                self.set_md5sum("\n".join(md5sums)+"\n")
 
             self.set_status(STATUS_POSTPROCESS)
             log_info(STATUS[STATUS_POSTPROCESS])
@@ -2098,8 +2099,6 @@ class RetraceTask:
                                  % coredump)
 
         os.unlink(os.path.join(self._savedir, RetraceTask.REMOTE_FILE))
-        if md5sums:
-            self.set_md5sum("\n".join(md5sums)+"\n")
         self.set_downloaded(", ".join(downloaded))
 
         return errors
