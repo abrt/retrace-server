@@ -867,9 +867,15 @@ class RetraceWorker(object):
                 crash_foreach_bt = None
 
         task.set_backtrace(kernellog)
-        # If crash sys command exited with non-zero status and log is less than 1024 bytes, probably it is not useful
-        if not crash_sys_c and len(kernellog) < 1024:
-            raise Exception("Failing task due to crash exiting with non-zero status and small kernellog size = %d bytes" % len(kernellog))
+        # If crash sys command exited with non-zero status, we likely have a semi-useful vmcore
+        if not crash_sys_c:
+            # FIXME: Probably a better hueristic can be done here
+            if len(kernellog) < 1024:
+                # If log is less than 1024 bytes, probably it is not useful at all so fail it
+               raise Exception("Failing task due to crash exiting with non-zero status and small kernellog size = %d bytes" % len(kernellog))
+            else:
+                # If log is 1024 bytes or above, try 'crash --minimal'
+                task.set_crash_cmd("crash --minimal")
 
         if crash_bt_a:
             task.add_misc("bt-a", crash_bt_a)
