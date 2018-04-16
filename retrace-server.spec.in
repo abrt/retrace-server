@@ -24,7 +24,11 @@ Requires: p7zip
 Requires: unzip
 Requires: lzop
 Requires: elfutils
+%if 0%{?rhel} == 6 || 0%{?rhel} == 7
+Requires: createrepo
+%else
 Requires: createrepo >= 0.9.9-27
+%endif
 %if 0%{?fedora} > 27
 Requires: python2-mod_wsgi
 Requires: python2-webob
