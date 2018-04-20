@@ -1280,6 +1280,7 @@ class RetraceTask:
 
     BACKTRACE_FILE = "retrace_backtrace"
     CASENO_FILE = "caseno"
+    BUGZILLANO_FILE = "bugzillano"
     CRASHRC_FILE = "crashrc"
     CRASH_CMD_FILE = "crash_cmd"
     DOWNLOADED_FILE = "downloaded"
@@ -2279,6 +2280,26 @@ class RetraceTask:
 
         self.set(RetraceTask.CASENO_FILE, "%d" % data)
 
+    def has_bugzillano(self):
+        """Verifies whether BUGZILLANO_FILE exists"""
+        return self.has(RetraceTask.BUGZILLANO_FILE)
+
+    def get_bugzillano(self):
+        """Gets the bugzilla number from BUGZILLANO_FILE"""
+        result = self.get(RetraceTask.BUGZILLANO_FILE, maxlen=1 << 8)
+        if result is None:
+            return None
+
+        return filter(None, set(n.strip() for n in result.split("\n")))
+
+    def set_bugzillano(self, values):
+        """Writes bugzilla numbers into BUGZILLANO_FILE"""
+        if not isinstance(values, list) or not all([isinstance(v, basestring) for v in values]):
+            raise Exception, "values must be a list of integers"
+
+        self.set_atomic(RetraceTask.BUGZILLANO_FILE,
+                        "%s\n" % "\n".join(filter(None, set(v.strip().replace("\n", " ") for v in values))))
+
     def has_finished_time(self):
         """Verifies whether FINISHED_FILE exists"""
         return self.has(RetraceTask.FINISHED_FILE)
@@ -2328,7 +2349,7 @@ class RetraceTask:
                          RetraceTask.TYPE_FILE, RetraceTask.MISC_DIR,
                          RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
                          RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
-                         RetraceTask.VMLINUX_FILE]:
+                         RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE]:
 
                 path = os.path.join(self._savedir, f)
                 try:

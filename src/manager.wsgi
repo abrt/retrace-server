@@ -8,7 +8,7 @@ from retrace import *
 
 CONFIG = config.Config()
 
-MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|notify|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
+MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|bugzillano|notify|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
 
 LONG_TYPES = {TASK_RETRACE: "Coredump retrace",
               TASK_DEBUG: "Coredump retrace - debug",
@@ -124,6 +124,14 @@ def application(environ, start_response):
                     # caseno is invalid number - do nothing, it can be set later
                     pass
 
+            if "bugzillano" in get:
+                try:
+                    bugzillano = filter(int, set(n.strip() for n in get["bugzillano"][0].replace(";", ",").split(",")))
+                    task.set_bugzillano(bugzillano)
+                except Exception:
+                    # bugzillano is invalid number - do nothing, it can be set later
+                    pass
+
         if not task.get_managed():
             return response(start_response, "403 Forbidden", _("Task does not belong to task manager"))
 
@@ -192,6 +200,25 @@ def application(environ, start_response):
                     return response(start_response, "404 Not Found", _("Case number must be an integer; %s" % ex))
 
                 task.set_caseno(caseno)
+
+        return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
+    elif match.group(6) and match.group(6) == "bugzillano":
+        POST = urlparse.parse_qs(request.body, keep_blank_values=1)
+        try:
+            task = RetraceTask(filename)
+        except Exception:
+            return response(start_response, "404 Not Found", _("There is no such task"))
+
+        if "bugzillano" in POST and len(POST["bugzillano"]) > 0:
+            if not POST["bugzillano"][0]:
+                task.delete(RetraceTask.BUGZILLANO_FILE)
+            else:
+                try:
+                    bugzillano = filter(int, set(n.strip() for n in POST["bugzillano"][0].replace(";", ",").split(",")))
+                except ValueError as ex:
+                    return response(start_response, "404 Not Found", _("Bugzilla numbers must be integers; %s" % ex))
+
+                task.set_bugzillano(bugzillano)
 
         return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "backtrace":
@@ -307,6 +334,7 @@ def application(environ, start_response):
             startcontent = "    <form method=\"get\" action=\"%s/start\">" \
                            "      Kernel version (empty to autodetect): <input name=\"kernelver\" type=\"text\" id=\"kernelver\" /> e.g. <code>2.6.32-287.el6.x86_64</code><br />" \
                            "      Case no.: <input name=\"caseno\" type=\"text\" id=\"caseno\" /><br />" \
+                           "      Bugzilla no.: <input name=\"bugzillano\" type=\"text\" id=\"bugzillano\" /><br />" \
                            "      E-mail notification: <input name=\"notify\" type=\"text\" id=\"notify\" /><br />" \
                            "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" checked=\"checked\" />Be more verbose in case of error<br />" \
                            "      <input type=\"checkbox\" name=\"md5sum\" id=\"md5sum\" %s />Calculate md5 checksum for all downloaded resources<br />" \
@@ -435,6 +463,22 @@ def application(environ, start_response):
                      "  </td>" \
                      "</tr>" % (request.path_url.rstrip("/"), currentcaseno)
 
+        bugzillano = ""
+        if not ftptask:
+            currentbugzillano = ""
+            if task.has_bugzillano():
+                currentbugzillano = "value=\"%s\"" % ", ".join(task.get_bugzillano())
+
+            bugzillano = "<tr>" \
+                     "  <th>Bugzilla no.:</th>" \
+                     "  <td>" \
+                     "    <form method=\"post\" action=\"%s/bugzillano\">" \
+                     "      <input type=\"text\" name=\"bugzillano\" %s/>" \
+                     "      <input type=\"submit\" value=\"Update bugzilla no.\" class=\"button\" />" \
+                     "    </form>" \
+                     "  </td>" \
+                     "</tr>" % (request.path_url.rstrip("/"), currentbugzillano)
+
         back = "<tr><td colspan=\"2\"><a href=\"%s\">%s</a></td></tr>" % (match.group(1), _("Back to task manager"))
 
         notes = ""
@@ -479,6 +523,7 @@ def application(environ, start_response):
         output = output.replace("{backtrace}", backtrace)
         output = output.replace("{backtracewindow}", backtracewindow)
         output = output.replace("{caseno}", caseno)
+        output = output.replace("{bugzillano}", bugzillano)
         output = output.replace("{notify}", notify)
         output = output.replace("{delete}", delete)
         output = output.replace("{delete_yesno}", delete_yesno)
@@ -550,6 +595,10 @@ def application(environ, start_response):
                         except:
                             pass
 
+                bugzillano = ""
+                if task.has_bugzillano():
+                    bugzillano = ", ".join(task.get_bugzillano())
+
                 files = ""
                 if task.has_downloaded():
                     files = task.get_downloaded()
@@ -561,7 +610,9 @@ def application(environ, start_response):
                       "  <td>%s</td>" \
                       "  <td>%s</td>" \
                       "  <td>%s</td>" \
-                      "</tr>" % (status, baseurl, taskid, taskid, caseno, files, finishtime_str)
+                      "  <td>%s</td>" \
+                      "</tr>" % (status, baseurl, taskid, taskid, caseno, bugzillano, files,
+                                 finishtime_str)
 
                 if filterexp and not fnmatch.fnmatch(row, filterexp):
                     continue
@@ -588,6 +639,10 @@ def application(environ, start_response):
                         except:
                             pass
 
+                bugzillano = ""
+                if task.has_bugzillano():
+                    bugzillano = ", ".join(task.get_bugzillano())
+
                 files = ""
                 if task.has_remote():
                     remote = map(lambda x: x[4:] if x.startswith("FTP ") else x, task.get_remote())
@@ -604,7 +659,9 @@ def application(environ, start_response):
                       "  <td>%s</td>" \
                       "  <td>%s</td>" \
                       "  <td>%s</td>" \
-                      "</tr>" % (baseurl, taskid, taskid, caseno, files, starttime_str, status)
+                      "  <td>%s</td>" \
+                      "</tr>" % (baseurl, taskid, taskid, caseno, bugzillano, files, starttime_str,
+                                 status)
 
                 if filterexp and not fnmatch.fnmatch(row, filterexp):
                     continue
@@ -630,6 +687,7 @@ def application(environ, start_response):
     finished_str = _("Finished tasks")
     taskid_str = _("Task ID")
     caseno_str = _("Case no.")
+    bugzillano_str = _("Bugzilla no.")
     files_str = _("File(s)")
     starttime_str = _("Started")
     finishtime_str = _("Finished")
@@ -679,6 +737,7 @@ def application(environ, start_response):
     output = output.replace("{finished_str}", finished_str)
     output = output.replace("{taskid_str}", taskid_str)
     output = output.replace("{caseno_str}", caseno_str)
+    output = output.replace("{bugzillano_str}", bugzillano_str)
     output = output.replace("{files_str}", files_str)
     output = output.replace("{starttime_str}", starttime_str)
     output = output.replace("{finishtime_str}", finishtime_str)
