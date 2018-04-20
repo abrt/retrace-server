@@ -154,6 +154,11 @@
         width: 56px;
       }
 
+      table th.bugzillano
+      {
+        width: 56px;
+      }
+
       table th {
         border: 1px solid black;
         background-color: #ccc;
@@ -200,11 +205,12 @@
         <div id="running">
           <table>
             <tr>
-              <th colspan="5" class="tablename">{running_str}</th>
+              <th colspan="6" class="tablename">{running_str}</th>
             </tr>
             <tr>
               <th class="taskid">{taskid_str}</th>
               <th class="caseno">{caseno_str}</th>
+              <th class="bugzillano">{bugzillano_str}</th>
               <th>{files_str}</th>
               <th class="timestamp">{starttime_str}</th>
               <th class="status">{status_str}</th>
@@ -215,11 +221,12 @@
         <div id="finished">
           <table>
             <tr>
-              <th colspan="4" class="tablename">{finished_str}</th>
+              <th colspan="5" class="tablename">{finished_str}</th>
             </tr>
             <tr>
               <th class="taskid">{taskid_str}</th>
               <th class="caseno">{caseno_str}</th>
+              <th class="bugzillano">{bugzillano_str}</th>
               <th>{files_str}</th>
               <th class="timestamp">{finishtime_str}</th>
             </tr>

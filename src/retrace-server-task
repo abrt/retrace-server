@@ -123,6 +123,19 @@ def parse_caseno(response):
                 return "Case number is not set."
             return candidate
 
+def parse_bugzillano(response):
+    """Parse bugzillano from manager page."""
+    key_string = 'Update bugzilla no.'
+    lines = response.text.split("\n")
+    for line in lines:
+        if key_string in line:
+            first = line.find("value=")+7
+            last = line.find('"', first)
+            candidate = line[first:last]
+            if candidate == key_string:
+                return "Bugzilla number is not set."
+            return candidate
+
 
 def create_new_task(args):
     """Start new task."""
@@ -221,6 +234,9 @@ def create_new_task(args):
 
     if ARGS['caseno']:
         update_caseno(ARGS)
+
+    if ARGS['bugzillano']:
+        update_bugzillano(ARGS)
 
     return (task_id, None)
 
@@ -321,6 +337,27 @@ def get_caseno(args):
     print(caseno)
     return 1
 
+def get_bugzillano(args):
+    """Get bugzilla number of a task."""
+    # Only supported for manager tasks
+    if args['password']:
+        print("Bugzilla numbers are supported for manager and ftp tasks")
+        sys.exit(1)
+
+    LOGGER.info("Getting bugzilla number from server %s",
+                args['server'] + "/manager/" + args['TASK_ID'])
+
+    server = args['server'] + "/manager/" + args['TASK_ID']
+    res = requests.get(server,
+                       verify=(not args['no_verify']),
+                       auth=args['kerberos'])
+
+    if check_response(res, False):
+        print("Error: bugzillano is only supported for manager and ftp tasks")
+        return 0
+    bugzillano = parse_bugzillano(res)
+    print(bugzillano)
+    return 1
 
 def get_backtrace(args):
     """Get a backtrace of the task."""
@@ -407,6 +444,22 @@ def update_caseno(args):
     print("Added case number '{0}' to the task '{1}'"
           .format(args['caseno'], args['TASK_ID']))
 
+def update_bugzillano(args):
+    """Update bugzilla number of the task."""
+    # Only supported for manager tasks
+    if args['password']:
+        print("Case number is only supported for manager and ftp tasks")
+        sys.exit(1)
+    server = args['server'] + "/manager/" + args['TASK_ID'] + "/bugzillano"
+    res = requests.post(server,
+                        data={"bugzillano": args['bugzillano']},
+                        verify=(not args['no_verify']),
+                        auth=args['kerberos'])
+
+    check_response(res)
+    print("Added bugzilla number '{0}' to the task '{1}'"
+          .format(args['bugzillano'], args['TASK_ID']))
+
 if __name__ == "__main__":
     # parse arguments
     PARSER = argparse.ArgumentParser(description=("Create, watch and set"
@@ -463,6 +516,9 @@ if __name__ == "__main__":
         tmp.add_argument("-c", "--caseno",
                          help=("Set caseno to the task."
                                "Only takes affect with -f or -m"))
+        tmp.add_argument("-bz", "--bugzillano",
+                         help=("Set bugzillano to the task."
+                               "Only takes affect with -f or -m"))
 
     TMP = TASK_PARSER.add_parser('get')
     TMP.add_argument("TASK_ID",
@@ -491,6 +547,9 @@ if __name__ == "__main__":
     GET_TYPE.add_argument("-c", "--caseno", action="store_const",
                           dest="get_type", const="caseno",
                           help="Get set case number of the task.")
+    GET_TYPE.add_argument("-bz", "--bugzillano", action="store_const",
+                          dest="get_type", const="bugzillano",
+                          help="Get set bugzilla number of the task.")
 
     TMP = TASK_PARSER.add_parser('set')
     TMP.add_argument("TASK_ID",
@@ -507,6 +566,8 @@ if __name__ == "__main__":
                      help="Set case number of the task.")
     TMP.add_argument("-e", "--email",
                      help="Set email to the task.")
+    TMP.add_argument("-bz", "--bugzillano",
+                     help="Set bugzilla number of the task.")
 
     ARGS = vars(PARSER.parse_args())
 
@@ -575,6 +636,8 @@ if __name__ == "__main__":
             get_email(ARGS)
         elif ARGS['get_type'] == "caseno":
             get_caseno(ARGS)
+        elif ARGS['get_type'] == "bugzillano":
+            get_bugzillano(ARGS)
         else:
             print("Status: {0}".format(get_status(ARGS)))
 
@@ -583,3 +646,5 @@ if __name__ == "__main__":
             update_email(ARGS)
         if ARGS['caseno']:
             update_caseno(ARGS)
+        if ARGS['bugzillano']:
+            update_bugzillano(ARGS)

@@ -10,15 +10,15 @@ SYNOPSIS
 'retrace-server-task' create [-h] [-u | -k] [-t | -m | -f] [-i] [-d]
                              [-s SERVER] [-n] [-v] [-r KERNELVER]
                              [-o OS_RELEASE] [-p PACKAGE] [-x EXECUTABLE]
-                             [-e EMAIL] [-c CASENO]
+                             [-e EMAIL] [-c CASENO] [-bz BUGZILLANO]
                              COREFILE
 
 'retrace-server-task' get [-h] [-p PASSWORD] [-s SERVER] [-n] [-v]
-                          [-t | -b | -m | -e | -c]
+                          [-t | -b | -m | -e | -c | -bz]
                           TASK_ID
 
 'retrace-server-task' set [-h] [-p PASSWORD] [-s SERVER] [-n] [-v]
-                          [-c CASENO] [-e EMAIL]
+                          [-c CASENO] [-e EMAIL] [-bz BUGZILLANO]
                           TASK_ID
 
 DESCRIPTION
@@ -112,6 +112,10 @@ GET OPTIONS
 -b, --backtrace::
    Return the backtrace in a file in the current directory
 
+-bz, --bugzillano::
+   Return the value of the bugzillano field in the task to the terminal.
+   Available only for manager and ftp task.
+
 -c, --caseno::
    Return the value of the caseno field in the task to the terminal.
    Available only for manager and ftp task.
@@ -126,6 +130,9 @@ GET OPTIONS
 
 SET OPTIONS
 -----------
+-bz BUGZILLANO, --bugzillano BUGZILLANO::
+   Write the bugzillano field in the task to BUGZILLANO.
+   Available only for manager and ftp task.
 
 -c CASENO, --caseno CASENO::
    Write the caseno field in the task to CASENO.
@@ -158,6 +165,10 @@ Read the md5sum field for task 925483242
 Write the caseno field for task 925483242 to 01234567
 
    retrace-server-task set --caseno 01234567 925483242
+
+Write the bugzillano field for task 31415926 to 53589793, 23846264
+
+   retrace-server-task set --bugzillano 53589793,23846264 31415926
 
 AUTHORS
 -------
