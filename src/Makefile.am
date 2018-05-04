@@ -26,7 +26,8 @@ dist_bin_SCRIPTS = bt_filter \
                    retrace-server-worker \
                    retrace-server-interact\
                    retrace-server-plugin-checker\
-                   retrace-server-task
+                   retrace-server-task \
+                   retrace-server-bugzilla-refresh
 
 interface_PYTHON = backtrace.wsgi \
                    create.wsgi \

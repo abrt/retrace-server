@@ -32,6 +32,7 @@ Requires: python2-magic
 Requires: python2-requests
 Requires: python2-requests-kerberos
 Requires: python2-distro
+Requires: python2-bugzilla
 %else
 Requires: mod_wsgi
 Requires: python-webob
@@ -39,6 +40,7 @@ Requires: python-magic
 Requires: python-requests
 Requires: python-requests-kerberos
 Requires: python-distro
+Requires: python-bugzilla
 %endif
 Requires: mod_ssl
 Requires: sqlite
@@ -133,6 +135,7 @@ fi
 %{_bindir}/%{name}-reposync-faf
 %{_bindir}/%{name}-plugin-checker
 %{_bindir}/%{name}-task
+%{_bindir}/%{name}-bugzilla-refresh
 %{_bindir}/bt_filter
 %{_bindir}/coredump2packages
 %{python_sitelib}/retrace/*

@@ -1,0 +1,60 @@
+#!/usr/bin/python2
+"""
+Refresh tasks that have bugzilla bugs in an open state to prevent them from getting deleted by
+retrace-server-cleanup tool.
+"""
+
+import os
+import bugzilla
+from retrace import config, RetraceTask
+import time
+
+CONFIG = config.Config()
+
+if __name__ == "__main__":
+
+    logfile = os.path.join(CONFIG["LogDir"], "bugzilla-refresh.log")
+
+    with open(logfile, "a") as log:
+        log.write(time.strftime("[%Y-%m-%d %H:%M:%S] Running bugzilla refresh\n"))
+
+        # connect to bugzilla
+        bz_url = CONFIG["BugzillaURL"]
+        bz_user = CONFIG["BugzillaUsername"]
+        bz_password = CONFIG["BugzillaPassword"]
+        bz_status_list = [x.strip() for x in CONFIG["BugzillaStatus"].split(",")]
+
+        bzapi = bugzilla.Bugzilla(url=bz_url, cookiefile=None, tokenfile=None)
+
+        if bz_user and bz_password:
+            bzapi.login(bz_user, bz_password)
+
+        if bzapi.logged_in:
+            log.write("Successfuly logged in as {0}.\n".format(bz_user))
+        else:
+            log.write("Not logged in. Continue as anonymous user.\n")
+
+        try:
+            files = os.listdir(CONFIG["SaveDir"])
+        except OSError as ex:
+            files = []
+            log.write("Error listing task directory: %s\n" % ex)
+
+        for filename in files:
+            try:
+                task = RetraceTask(filename)
+            except Exception:
+                continue
+
+            if task.has_bugzillano():
+                bz_id_list = task.get_bugzillano()
+                if not bz_id_list:
+                    continue
+
+                bz_list = bzapi.getbugs(bz_id_list)
+
+                for bgz in bz_list:
+                    if bgz and bgz.status not in bz_status_list:
+                        log.write("Modifying time of the task %s\n" % filename)
+                        os.utime(task.get_savedir(), None)
+                        break
