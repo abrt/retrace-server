@@ -74,6 +74,10 @@ class Config(object):
             "EmailNotifyFrom": "retrace@localhost",
             "CalculateMd5": True,
             "CaseNumberURL": "",
+            "BugzillaURL": "https://bugzilla.redhat.com",
+            "BugzillaStatus": "VERIFIED, RELEASE_PENDING, CLOSED",
+            "BugzillaUsername": "",
+            "BugzillaPassword": "",
             "Crashi386": "",
         }
 
