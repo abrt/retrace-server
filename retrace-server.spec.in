@@ -136,6 +136,7 @@ fi
 %{_bindir}/%{name}-plugin-checker
 %{_bindir}/%{name}-task
 %{_bindir}/%{name}-bugzilla-refresh
+%{_bindir}/%{name}-bugzilla-query
 %{_bindir}/bt_filter
 %{_bindir}/coredump2packages
 %{python_sitelib}/retrace/*

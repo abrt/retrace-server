@@ -1,0 +1,117 @@
+#!/usr/bin/python2
+"""
+Query bugzilla for component bugs and search through comments for trigger words. Output results
+to a log and for tasks found in the comments set bugzillano field with bugzilla ids.
+"""
+
+import os
+import re
+import time
+import bugzilla
+from retrace import config, RetraceTask
+
+CONFIG = config.Config()
+
+if __name__ == "__main__":
+
+    logfile = os.path.join(CONFIG["LogDir"], "bugzilla-query.log")
+
+    with open(logfile, "a") as log:
+        log.write(time.strftime("[%Y-%m-%d %H:%M:%S] Running bugzilla query\n"))
+
+        # connect to bugzilla
+        bz_url = CONFIG["BugzillaURL"]
+        bz_user = CONFIG["BugzillaUsername"]
+        bz_password = CONFIG["BugzillaPassword"]
+
+        bzapi = bugzilla.Bugzilla(bz_url, cookiefile=None, tokenfile=None)
+
+        if bz_user and bz_password:
+            bzapi.login(bz_user, bz_password)
+
+        if bzapi.logged_in:
+            log.write("Successfuly logged in as {0}.\n".format(bz_user))
+        else:
+            log.write("Not logged in. Continue as anonymous user.\n")
+
+        query = bzapi.build_query(
+            product="Red Hat Enterprise Linux 7",
+            component="kernel",
+            include_fields=["id"])
+
+        # I don't want to run regex on each and every comment, at first try fast check
+        # if trigger word is in comment and if is, then use slower regex
+        trigger_words = ["retrace-server-interact", "retrace/tasks"]
+
+        regexes = ["retrace-server-interact\s+([0-9]{9})",
+                   CONFIG["SaveDir"] + "/([0-9]{9})/crash/vmcore"]
+
+        query["status"] = ["NEW", "ASSIGNED", "POST", "MODIFIED"]
+
+        found_tasks = {}
+
+        bugs = [x.bug_id for x in bzapi.query(query)]
+
+        while bugs:
+            query = bzapi.build_query(
+                bug_id=bugs[:250],
+                include_fields=["id", "comments"])
+
+            cur_bugs = bzapi.query(query)
+            bugs = bugs[250:]
+            for bug in cur_bugs:
+                found_ids = []
+                for comment in bug.comments:
+                    for i, trigger_word in enumerate(trigger_words):
+                        if trigger_word in comment["text"]:
+                            m = re.findall(regexes[i], comment["text"])
+                            if m:
+                                for bzid in m:
+                                    if bzid not in found_ids:
+                                        found_ids.append(bzid)
+                for f in found_ids:
+                    if f in found_tasks.keys():
+                        found_tasks[f].append(str(bug.bug_id))
+                    else:
+                        found_tasks[f] = [str(bug.bug_id)]
+
+        try:
+            files = sorted(os.listdir(CONFIG["SaveDir"]))
+        except OSError as ex:
+            files = []
+            log.write("Error listing task directory: %s\n" % ex)
+
+        # Find all tasks
+        existing_tasks = []
+        for taskid in files:
+            if not os.path.isdir(os.path.join(CONFIG["SaveDir"], taskid)):
+                continue
+
+            existing_tasks.append(taskid)
+
+        log.write("------------Existing tasks with found bugzillas-----------\n")
+        for taskid in found_tasks.keys():
+            if taskid in existing_tasks:
+                log.write("Task {0} has following bugzilla(s): {1}.\n".format(taskid, ", ".join(found_tasks[taskid])))
+                try:
+                    task = RetraceTask(taskid)
+                except Exception:
+                    continue
+
+                if task.has_bugzillano():
+                    current = task.get_bugzillano()
+                    found = found_tasks[taskid]
+                    # only set bugzillano if some found bugzillas aren't in current bugzillano list
+                    if not set(found).issubset(current):
+                        task.set_bugzillano(current + found)
+                else:
+                    task.set_bugzillano(found_tasks[taskid])
+
+        log.write("\n\n------------Found tasks in bugzillas that do not exist on local system-----------\n")
+        for taskid in found_tasks.keys():
+            if taskid not in existing_tasks:
+                log.write("Unknown task {0} has following bugzilla(s): {1}.\n".format(taskid, ", ".join(found_tasks[taskid])))
+
+        log.write("\n\n------------Existing tasks that no bugzilla was found for-----------\n")
+        no_bz_tasks = [taskid for taskid in existing_tasks if taskid not in found_tasks.keys()]
+        log.write("{0}\n\n".format(", ".join(no_bz_tasks)))
