@@ -56,5 +56,5 @@ if __name__ == "__main__":
                 for bgz in bz_list:
                     if bgz and bgz.status not in bz_status_list:
                         log.write("Modifying time of the task %s\n" % filename)
-                        os.utime(task.get_savedir(), None)
+                        task.reset_age()
                         break

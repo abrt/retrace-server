@@ -42,7 +42,7 @@ if __name__ == "__main__":
         exit(1)
 
     # touch the task directory
-    os.utime(task.get_savedir(), None)
+    task.reset_age()
 
     if args.action == "printdir":
         sys.stdout.write("%s\n" % task.get_savedir())
