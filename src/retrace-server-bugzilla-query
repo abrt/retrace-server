@@ -8,7 +8,7 @@ import os
 import re
 import time
 import bugzilla
-from retrace import config, RetraceTask
+from retrace import BUGZILLA_STATUS, config, RetraceTask
 
 CONFIG = config.Config()
 
@@ -46,7 +46,8 @@ if __name__ == "__main__":
         regexes = ["retrace-server-interact\s+([0-9]{9})",
                    CONFIG["SaveDir"] + "/([0-9]{9})/crash/vmcore"]
 
-        query["status"] = ["NEW", "ASSIGNED", "POST", "MODIFIED"]
+        config_status = [x.strip() for x in CONFIG["BugzillaStatus"].split(",")]
+        query["status"] = list(set(BUGZILLA_STATUS).difference(config_status))
 
         found_tasks = {}
 

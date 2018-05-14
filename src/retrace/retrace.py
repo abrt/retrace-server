@@ -69,6 +69,9 @@ SUFFIX_MAP = {
     ARCHIVE_UNKNOWN: "",
 }
 
+BUGZILLA_STATUS = ["NEW", "ASSIGNED", "ON_DEV", "POST", "MODIFIED", "ON_QA", "VERIFIED",
+                   "RELEASE_PENDING", "CLOSED"]
+
 #characters, numbers, dash (utf-8, iso-8859-2 etc.)
 INPUT_CHARSET_PARSER = re.compile("^([a-zA-Z0-9\-]+)(,.*)?$")
 #en_GB, sk-SK, cs, fr etc.
