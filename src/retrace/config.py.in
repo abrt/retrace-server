@@ -76,8 +76,7 @@ class Config(object):
             "CaseNumberURL": "",
             "BugzillaURL": "https://bugzilla.redhat.com",
             "BugzillaStatus": "VERIFIED, RELEASE_PENDING, CLOSED",
-            "BugzillaUsername": "",
-            "BugzillaPassword": "",
+            "BugzillaCredentials": "",
             "Crashi386": "",
         }
 
