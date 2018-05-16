@@ -597,7 +597,11 @@ def application(environ, start_response):
 
                 bugzillano = ""
                 if task.has_bugzillano():
-                    bugzillano = ", ".join(task.get_bugzillano())
+                    bugzillano = min(task.get_bugzillano(), key=int)
+
+                    bzurl = CONFIG["BugzillaURL"].strip()
+                    if bzurl:
+                        bugzillano = "<a href={0}/{1}>{1}</a>".format(bzurl, bugzillano)
 
                 files = ""
                 if task.has_downloaded():
@@ -641,7 +645,11 @@ def application(environ, start_response):
 
                 bugzillano = ""
                 if task.has_bugzillano():
-                    bugzillano = ", ".join(task.get_bugzillano())
+                    bugzillano = min(task.get_bugzillano(), key=int)
+
+                    bzurl = CONFIG["BugzillaURL"].strip()
+                    if bzurl:
+                        bugzillano = "<a href={0}/{1}>{1}</a>".format(bzurl, bugzillano)
 
                 files = ""
                 if task.has_remote():
