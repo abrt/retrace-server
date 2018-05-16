@@ -20,17 +20,24 @@ if __name__ == "__main__":
 
         # connect to bugzilla
         bz_url = CONFIG["BugzillaURL"]
-        bz_user = CONFIG["BugzillaUsername"]
-        bz_password = CONFIG["BugzillaPassword"]
+        bz_creds = CONFIG["BugzillaCredentials"]
         bz_status_list = [x.strip() for x in CONFIG["BugzillaStatus"].split(",")]
 
-        bzapi = bugzilla.Bugzilla(url=bz_url, cookiefile=None, tokenfile=None)
+        try:
+            bzapi = bugzilla.Bugzilla(url=bz_url, cookiefile=None, tokenfile=None)
+        except (bugzilla.BugzillaError, ValueError) as e:
+            log.write("Exception: {0}".format(e))
+            exit(1)
 
-        if bz_user and bz_password:
-            bzapi.login(bz_user, bz_password)
+        if not bzapi.logged_in and bz_creds:
+            bzapi.readconfig(bz_creds)
+            try:
+                bzapi.connect()
+            except (bugzilla.BugzillaError, ValueError) as e:
+                log.write("Exception: {0}".format(e))
 
         if bzapi.logged_in:
-            log.write("Successfuly logged in as {0}.\n".format(bz_user))
+            log.write("Successfuly logged in as {0}.\n".format(bzapi.user))
         else:
             log.write("Not logged in. Continue as anonymous user.\n")
 
