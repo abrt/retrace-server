@@ -77,6 +77,10 @@ class Config(object):
             "BugzillaURL": "https://bugzilla.redhat.com",
             "BugzillaStatus": "VERIFIED, RELEASE_PENDING, CLOSED",
             "BugzillaCredentials": "",
+            "BugzillaProduct": "Red Hat Enterprise Linux 7",
+            "BugzillaComponent": "kernel",
+            "BugzillaTriggerWords": "",
+            "BugzillaRegExes": "",
             "Crashi386": "",
         }
 
@@ -128,6 +132,9 @@ class Config(object):
 
         def get_arch_hosts(self):
             return self.ARCH_HOSTS
+
+        def get_list(self, key, sep=","):
+            return [val.strip() for val in self.GLOBAL[key].split(sep) if val.strip()]
 
     instance = None
 
