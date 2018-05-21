@@ -21,7 +21,7 @@ if __name__ == "__main__":
         # connect to bugzilla
         bz_url = CONFIG["BugzillaURL"]
         bz_creds = CONFIG["BugzillaCredentials"]
-        bz_status_list = [x.strip() for x in CONFIG["BugzillaStatus"].split(",")]
+        bz_status_list = CONFIG.get_list("BugzillaStatus")
 
         try:
             bzapi = bugzilla.Bugzilla(url=bz_url, cookiefile=None, tokenfile=None)

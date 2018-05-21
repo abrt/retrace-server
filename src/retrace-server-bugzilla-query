@@ -41,19 +41,20 @@ if __name__ == "__main__":
         else:
             log.write("Not logged in. Continue as anonymous user.\n")
 
+        product_list = CONFIG.get_list("BugzillaProduct")
+        component_list = CONFIG.get_list("BugzillaComponent")
+
         query = bzapi.build_query(
-            product="Red Hat Enterprise Linux 7",
-            component="kernel",
+            product=product_list,
+            component=component_list,
             include_fields=["id"])
 
         # I don't want to run regex on each and every comment, at first try fast check
         # if trigger word is in comment and if is, then use slower regex
-        trigger_words = ["retrace-server-interact", "retrace/tasks"]
+        trigger_words = CONFIG.get_list("BugzillaTriggerWords")
+        regexes = CONFIG.get_list("BugzillaRegExes")
 
-        regexes = ["retrace-server-interact\s+([0-9]{9})",
-                   CONFIG["SaveDir"] + "/([0-9]{9})/crash/vmcore"]
-
-        config_status = [x.strip() for x in CONFIG["BugzillaStatus"].split(",")]
+        config_status = CONFIG.get_list("BugzillaStatus")
         query["status"] = list(set(BUGZILLA_STATUS).difference(config_status))
 
         found_tasks = {}
