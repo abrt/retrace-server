@@ -59,7 +59,7 @@ def backtrace_is_starting(line):
         ret = True
 
     if debug > 1:
-        print "backtrace_is_starting: %d" % ret
+        print("backtrace_is_starting: %d" % ret)
     return ret
 
 
@@ -68,7 +68,7 @@ def backtrace_is_ending(line):
     if len(line) <= 2:
         ret = True
     if debug > 1:
-        print "backtrace_is_ending: %d" % ret
+        print("backtrace_is_ending: %d" % ret)
     return ret
 
 
@@ -78,7 +78,7 @@ def backtrace_is_frame(line):
         ret = False
 
     if debug > 1:
-        print "backtrace_is_frame: %d" % ret
+        print("backtrace_is_frame: %d" % ret)
     return ret
 
 
@@ -92,14 +92,14 @@ def backtrace_get_proc_info(line):
     cmd = cmd.strip('"')
     ret = (cmd, pid)
     if debug > 1:
-        print "backtrace_get_proc_info: %s[%d]" % (ret)
+        print("backtrace_get_proc_info: %s[%d]" % (ret))
     return ret
 
 def backtrace_calc_hash(proc_backtrace):
     hash = sha(''.join(proc_backtrace))
     hash_digest = hash.hexdigest()
     if debug > 1:
-        print "backtrace_calc_hash: %s" % hash_digest
+        print("backtrace_calc_hash: %s" % hash_digest)
     return hash_digest
 
 #0 [e041ed40] schedule at c06076a4
@@ -109,7 +109,7 @@ def backtrace_clear_frame(line):
     frame = line[:start] + line[end:]
     frame = frame.strip()
     if debug > 1:
-        print "backtrace_clear_frame: %s" % frame
+        print("backtrace_clear_frame: %s" % frame)
 
     return frame
 
@@ -119,11 +119,11 @@ def backtrace_file_parser(input, bt_hash, bt_proc):
     line = input.readline()
     while line:
         if debug > 0:
-            print "Line: %s" % line
+            print("Line: %s" % line)
         if state == BT_ENDING:
             if backtrace_is_ending(line):
                 if debug > 0:
-                    print "found ending: %s" % line
+                    print("found ending: %s" % line)
                 state = BT_BEGINNING
                 hash = backtrace_calc_hash(proc_backtrace)
                 if bt_proc.has_key(hash):
@@ -140,7 +140,7 @@ def backtrace_file_parser(input, bt_hash, bt_proc):
         if state == BT_BEGINNING:
             if backtrace_is_starting(line):
                 if debug > 0:
-                    print "found starting: %s" % line
+                    print("found starting: %s" % line)
                 state = BT_ENDING
                 proc_backtrace = []
                 proc_info = backtrace_get_proc_info(line)
@@ -149,7 +149,7 @@ def backtrace_file_parser(input, bt_hash, bt_proc):
 
         if backtrace_is_frame(line):
             if debug > 0:
-                print "found frame: %s" % line
+                print("found frame: %s" % line)
             clean_bt_frame = backtrace_clear_frame(line)
             proc_backtrace.append(clean_bt_frame)
 
@@ -173,18 +173,18 @@ def backtrace_file_parser(input, bt_hash, bt_proc):
 
 def backtrace_report(bt_hash, bt_proc):
     if debug > 2:
-        print "-<>-"
-        print bt_proc
-        print "----"
-        print bt_hash
-        print "-<>-"
+        print("-<>-")
+        print(bt_proc)
+        print("----")
+        print(bt_hash)
+        print("-<>-")
 
     for hash in bt_hash:
-        print "\nBacktrace:"
+        print("\nBacktrace:")
         backtrace = bt_hash[hash]
         for line in backtrace:
-            print "%s" % line
-        print "PID List:"
+            print("%s" % line)
+        print("PID List:")
         # group all PIDs of the same command
         task_list = {}
         for task_info in bt_proc[hash]:
@@ -205,13 +205,13 @@ def backtrace_report(bt_hash, bt_proc):
             pid_output = pid_output + line
             line = ''
 
-        print pid_output
-        print "Total of %d PIDs\n" % len(bt_proc[hash])
+        print(pid_output)
+        print("Total of %d PIDs\n" % len(bt_proc[hash]))
 
 def main():
     input = fileinput.input()
     if not input:
-        print "Error opening input file"
+        print("Error opening input file")
         sys.exit(1)
 
     bt_hash = {}
@@ -223,7 +223,7 @@ def main():
 
 
 if __name__ == '__main__':
-    print 'version: %s\n' % version
+    print('version: %s\n' % version)
     main()
     sys.exit(0)
 

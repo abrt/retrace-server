@@ -28,7 +28,7 @@ sys.path.insert(0, args.plugin_dir)
 try:
     plugin = __import__(args.PLUGIN)
 except:
-    print "Plugin could not be loaded. Use --plugin-dir if in another location."
+    print("Plugin could not be loaded. Use --plugin-dir if in another location.")
     sys.exit(1)
 
 
@@ -36,7 +36,7 @@ verbose = not(args.first_valid or args.only_valid or args.only_invalid)
 
 for i, r in enumerate(plugin.repos):
     if verbose:
-        print "Repository {0} - testing".format(i)
+        print("Repository {0} - testing".format(i))
 
     repo_ok = False
     for p in r:
@@ -57,15 +57,15 @@ for i, r in enumerate(plugin.repos):
 
         repo_ok = repo_ok or path_ok
         if verbose:
-            print "\t[ {0} ] {1}".format(" OK " if path_ok else "FAIL", mirror_path)
+            print("\t[ {0} ] {1}".format(" OK " if path_ok else "FAIL", mirror_path))
         else:
             if args.first_valid and path_ok:
-                print mirror_path
+                print(mirror_path)
                 break
             elif args.only_valid and path_ok:
-                print mirror_path
+                print(mirror_path)
             elif args.only_invalid and not path_ok:
-                print mirror_path
+                print(mirror_path)
 
     if verbose:
-        print "Repository {1} - {0}".format("OK" if repo_ok else "FAIL", i)
+        print("Repository {1} - {0}".format("OK" if repo_ok else "FAIL", i))
