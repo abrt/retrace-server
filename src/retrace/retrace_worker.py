@@ -666,7 +666,7 @@ class RetraceWorker(object):
                 shutil.rmtree(cfgdir)
 
             mockgid = grp.getgrnam("mock").gr_gid
-            old_umask = os.umask(0027)
+            old_umask = os.umask(0o027)
             os.mkdir(cfgdir)
             os.chown(cfgdir, -1, mockgid)
 
