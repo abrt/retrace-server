@@ -34,7 +34,7 @@ class Plugins(object):
             try:
                 files = os.listdir(plugin_dir)
             except Exception as ex:
-                print "Unable to list directory '%s': %s" % (plugin_dir, ex)
+                print("Unable to list directory '%s': %s" % (plugin_dir, ex))
                 raise ImportError, ex
 
             for filename in files:
