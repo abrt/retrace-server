@@ -65,7 +65,7 @@ def application(environ, start_response):
 
     try:
         # do not make the task world-readable
-        os.umask(0027)
+        os.umask(0o027)
         task = RetraceTask()
     except:
         return response(start_response, "500 Internal Server Error",

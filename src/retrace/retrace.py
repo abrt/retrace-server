@@ -200,7 +200,7 @@ def log_error(msg):
 
 def lock(lockfile):
     try:
-        fd = os.open(lockfile, os.O_CREAT | os.O_EXCL, 0600)
+        fd = os.open(lockfile, os.O_CREAT | os.O_EXCL, 0o600)
     except OSError as ex:
         if ex[0] == errno.EEXIST:
             return False
@@ -623,7 +623,7 @@ def find_kernel_debuginfo(kernelver):
     if CONFIG["WgetKernelDebuginfos"]:
         downloaddir = os.path.join(CONFIG["RepoDir"], "download")
         if not os.path.isdir(downloaddir):
-            oldmask = os.umask(0007)
+            oldmask = os.umask(0o007)
             os.makedirs(downloaddir)
             os.umask(oldmask)
 
@@ -952,7 +952,7 @@ def parse_rpm_name(name):
 
 def init_crashstats_db():
     # create the database group-writable and world-readable
-    old_umask = os.umask(0113)
+    old_umask = os.umask(0o113)
     con = sqlite3.connect(os.path.join(CONFIG["SaveDir"], CONFIG["DBFile"]))
     os.umask(old_umask)
 
@@ -1311,7 +1311,7 @@ class RetraceTask:
         if taskid is None:
             # create a new task
             # create a retrace-group-writable directory
-            oldmask = os.umask(0007)
+            oldmask = os.umask(0o007)
             self._taskid = None
             generator = random.SystemRandom()
             for i in xrange(50):
@@ -1846,7 +1846,7 @@ class RetraceTask:
 
         crashdir = os.path.join(self._savedir, "crash")
         if not os.path.isdir(crashdir):
-            oldmask = os.umask(0007)
+            oldmask = os.umask(0o007)
             os.makedirs(crashdir)
             os.umask(oldmask)
 
@@ -2146,7 +2146,7 @@ class RetraceTask:
 
         miscdir = os.path.join(self._savedir, RetraceTask.MISC_DIR)
         if not os.path.isdir(miscdir):
-            oldmask = os.umask(0007)
+            oldmask = os.umask(0o007)
             os.makedirs(miscdir)
             os.umask(oldmask)
 
