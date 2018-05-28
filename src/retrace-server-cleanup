@@ -27,7 +27,7 @@ def kill_process_and_childs(process_id, ps_output=None):
     for pid in get_process_tree(process_id, ps_output):
         try:
             os.kill(pid, 9)
-        except OSError, ex:
+        except OSError:
             result = False
 
     return result
@@ -115,7 +115,7 @@ if __name__ == "__main__":
             # archive old tasks
             try:
                 files = os.listdir(CONFIG["SaveDir"])
-            except OSError, ex:
+            except OSError as ex:
                 files = []
                 log.write("Error listing task directory: %s\n" % ex)
 
@@ -151,7 +151,7 @@ if __name__ == "__main__":
             # clean up old tasks
             try:
                 files = os.listdir(CONFIG["SaveDir"])
-            except OSError, ex:
+            except OSError as ex:
                 files = []
                 log.write("Error listing task directory: %s\n" % ex)
 
@@ -169,7 +169,7 @@ if __name__ == "__main__":
             # clean up old failed tasks
             try:
                 files = os.listdir(CONFIG["SaveDir"])
-            except OSError, ex:
+            except OSError as ex:
                 files = []
                 log.write("Error listing task directory: %s\n" % ex)
 
