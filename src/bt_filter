@@ -195,8 +195,7 @@ def backtrace_report(bt_hash, bt_proc):
 
         pid_output = ""
         line = ''
-        tasks = task_list.keys()
-        tasks.sort()
+        tasks = sorted(task_list.keys())
         for t in tasks:
             line = line + "  %s *%d[" % (t, len(task_list[t]))
             for pid in task_list[t]:
