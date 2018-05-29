@@ -126,12 +126,12 @@ def backtrace_file_parser(input, bt_hash, bt_proc):
                     print("found ending: %s" % line)
                 state = BT_BEGINNING
                 hash = backtrace_calc_hash(proc_backtrace)
-                if bt_proc.has_key(hash):
+                if hash in bt_proc:
                     bt_proc[hash].append(proc_info)
                 else:
                     bt_proc[hash] = [proc_info]
 
-                if not bt_hash.has_key(hash):
+                if hash not in bt_hash:
                     bt_hash[hash] = proc_backtrace
 
                 line = input.readline()
@@ -157,12 +157,12 @@ def backtrace_file_parser(input, bt_hash, bt_proc):
 
     if state == BT_ENDING:
         hash = backtrace_calc_hash(proc_backtrace)
-        if bt_proc.has_key(hash):
+        if hash in bt_proc:
             bt_proc[hash].append(proc_info)
         else:
             bt_proc[hash] = [proc_info]
 
-        if not bt_hash.has_key(hash):
+        if hash not in bt_hash:
             bt_hash[hash] = proc_backtrace
 
     return
@@ -188,7 +188,7 @@ def backtrace_report(bt_hash, bt_proc):
         # group all PIDs of the same command
         task_list = {}
         for task_info in bt_proc[hash]:
-            if task_list.has_key(task_info[0]):
+            if task_info[0] in task_list:
                 task_list[task_info[0]].append(task_info[1])
             else:
                 task_list[task_info[0]] = [task_info[1]]
