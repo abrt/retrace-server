@@ -24,6 +24,7 @@ from yum import YumBase
 from config import *
 from plugins import *
 from rpmUtils.miscutils import splitFilename
+import six
 
 GETTEXT_DOMAIN = "retrace-server"
 
@@ -1653,7 +1654,7 @@ class RetraceTask:
         return filter(None, set(n.strip() for n in result.split("\n")))
 
     def set_notify(self, values):
-        if not isinstance(values, list) or not all([isinstance(v, basestring) for v in values]):
+        if not isinstance(values, list) or not all([isinstance(v, six.string_types) for v in values]):
             raise Exception, "values must be a list of strings"
 
         self.set_atomic(RetraceTask.NOTIFY_FILE,
