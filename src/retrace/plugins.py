@@ -44,7 +44,7 @@ class Plugins(object):
                         this = __import__(pluginname)
                     except:
                         continue
-                    if this.__dict__.has_key("distribution") and this.__dict__.has_key("repos"):
+                    if "distribution" in this.__dict__ and "repos" in this.__dict__:
                         self.PLUGINS.append(this)
 
         def all(self):
