@@ -130,7 +130,7 @@ class RetraceWorker(object):
             if task.has_remote() or task.has_downloaded():
                 files = ""
                 if task.has_remote():
-                    remote = map(lambda x: x[4:] if x.startswith("FTP ") else x, task.get_remote())
+                    remote = [x[4:] if x.startswith("FTP ") else x for x in task.get_remote()]
                     files = ", ".join(remote)
 
                 if task.has_downloaded():
