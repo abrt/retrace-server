@@ -1,3 +1,4 @@
+from __future__ import division
 import grp
 import time
 import sys
@@ -611,7 +612,7 @@ class RetraceWorker(object):
             log_error("ERROR: Failed to dedup %s and %s - rename hardlink %s to %s failed" % (v1, v2, v2_link, v2));
             return 0
 
-        log_warn("Successful dedup - created hardlink from %s to %s saving %d MB" % (v2, v1, s1.st_size / 1024 / 1024))
+        log_warn("Successful dedup - created hardlink from %s to %s saving %d MB" % (v2, v1, s1.st_size // 1024 // 1024))
 
         return s1.st_size
 

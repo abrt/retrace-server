@@ -1,3 +1,4 @@
+from __future__ import division
 import ConfigParser
 import datetime
 import errno
@@ -1525,7 +1526,7 @@ class RetraceTask:
 
     def get_age(self):
         """Returns the age of the task in hours."""
-        return int(time.time() - os.path.getmtime(self._savedir)) / 3600
+        return int(time.time() - os.path.getmtime(self._savedir)) // 3600
 
     def reset_age(self):
         """Reset the age of the task to the current time."""
@@ -1682,7 +1683,7 @@ class RetraceTask:
     def download_block(self, data):
         self._progress_write_func(data)
         self._progress_current += len(data)
-        progress = "%d%% (%s / %s)" % ((100 * self._progress_current) / self._progress_total,
+        progress = "%d%% (%s / %s)" % ((100 * self._progress_current) // self._progress_total,
                                        human_readable_size(self._progress_current),
                                        self._progress_total_str)
         self.set_atomic(RetraceTask.PROGRESS_FILE, progress)
