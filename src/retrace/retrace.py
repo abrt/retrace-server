@@ -709,7 +709,7 @@ def get_files_sizes(directory):
         elif os.path.isdir(fullpath):
             result += get_files_sizes(fullpath)
 
-    return sorted(result, key=lambda (f, s): s, reverse=True)
+    return sorted(result, key=lambda f_s: f_s[1], reverse=True)
 
 def get_archive_type(path):
     ms = magic.open(magic.MAGIC_NONE)
