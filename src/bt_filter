@@ -1,22 +1,22 @@
 #!/usr/bin/python2
-# 
+#
 #  Copyright (C) 2009 Flavio Leitner <fleitner@redhat.com>
-#  
+#
 #  This copyrighted material is made available to anyone wishing to use,
 #  modify, copy, or redistribute it subject to the terms and conditions
 #  of the GNU General Public License, either version 2 of the License, or
 #  (at your option) any later version
-# 
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software Foundation,
 #  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
-# 
-# 
+#
+#
 #  Description:
 #    The vmcore usually shows many processes with the same backtrace.
-#    This program groups similar backtraces reducing the amount of 
-#    data to be reviewed. 
-# 
+#    This program groups similar backtraces reducing the amount of
+#    data to be reviewed.
+#
 #  Author: Flavio Leitner <fleitner@redhat.com>
 #
 #  Debug: Set debug to 1, 2, 3 (for more debugging info)
