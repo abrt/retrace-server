@@ -13,10 +13,16 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import StringIO
 import argparse
 import logging
 import sys
+
+if sys.version_info.major == 2:
+#Python 2
+    from StringIO import StringIO
+else:
+#Python 3+
+    from io import StringIO
 
 class ArgumentParser(argparse.ArgumentParser):
     def __init__(self, description=None, prog=sys.argv[0], usage=None,
@@ -39,7 +45,7 @@ class ArgumentParser(argparse.ArgumentParser):
             args._log = None
             logging.basicConfig(level=level)
         else:
-            args._log = StringIO.StringIO()
+            args._log = StringIO()
             logging.basicConfig(level=level, stream=args._log)
 
         return args
