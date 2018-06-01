@@ -22,15 +22,15 @@ import shutil
 from retrace import *
 
 def fatal_error(*args, **kwargs):
-    print (*args, file=sys.stderr, **kwargs)
+    print(*args, file=sys.stderr, **kwargs)
     sys.exit(1)
 
 def error(*args, **kwargs):
-    print (*args, file=sys.stderr, **kwargs)
+    print(*args, file=sys.stderr, **kwargs)
 
 def create_repo(packages, releaseid, version):
     """Create repo with packages passed in arg packages."""
-    print ("Creating repo")
+    print("Creating repo")
 
     conf = config.Config()
 
@@ -82,7 +82,7 @@ def delete_repo(releaseid):
 
     Note: deletes repo even though, if was not created by this script
     """
-    print ("Deleting repo")
+    print("Deleting repo")
     conf = config.Config()
     repo_path = os.path.join(conf["RepoDir"], releaseid)
     if os.path.isdir(repo_path):
@@ -94,7 +94,7 @@ def generate_coredump():
 
     This is done by calling gcore on this script.
     """
-    print ("Creating coredump")
+    print("Creating coredump")
     # use gcore on this process
     gcore_cmd = ['gcore', '-o', "/var/tmp/coredump", str(os.getpid())]
     child = Popen(gcore_cmd, stdout=PIPE, stderr=PIPE)
@@ -198,8 +198,8 @@ else:
 
 # create task
 task = RetraceTask()
-print ("Task ID: "),
-print (task.get_taskid())
+print("Task ID: "),
+print(task.get_taskid())
 
 if args.interactive:
     task.set_type(TASK_RETRACE_INTERACTIVE)
@@ -255,7 +255,7 @@ if not task.has_backtrace():
     fatal_error("There is no backtrace for the specified task")
 
 else:
-    print ("Backtrace is ready")
+    print("Backtrace is ready")
     with open("../backtrace", "w") as backtrace_file:
         bt = task.get_backtrace()
         backtrace_file.write(bt)
