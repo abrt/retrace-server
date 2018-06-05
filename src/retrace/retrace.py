@@ -19,11 +19,11 @@ import hashlib
 from signal import *
 from subprocess import *
 import magic
-from argparser import *
+from .argparser import *
 from webob import Request
 from yum import YumBase
-from config import *
-from plugins import *
+from .config import *
+from .plugins import *
 from rpmUtils.miscutils import splitFilename
 import six
 
@@ -2407,7 +2407,7 @@ class RetraceTask:
     def create_worker(self):
         """Get default worker instance for this task"""
         # TODO: let it be configurable
-        from retrace_worker import RetraceWorker
+        from .retrace_worker import RetraceWorker
         return RetraceWorker(self)
 
 ### create ConfigClass instance on import ###
