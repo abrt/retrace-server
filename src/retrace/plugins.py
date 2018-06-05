@@ -35,7 +35,7 @@ class Plugins(object):
                 files = os.listdir(plugin_dir)
             except Exception as ex:
                 print("Unable to list directory '%s': %s" % (plugin_dir, ex))
-                raise ImportError, ex
+                raise ImportError(ex)
 
             for filename in files:
                 if not filename.startswith("_") and filename.endswith(".py"):

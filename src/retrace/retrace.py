@@ -345,7 +345,7 @@ def run_gdb(savedir, plugin):
     exec_file.close()
 
     if '"' in executable or "'" in executable:
-        raise Exception, "Executable contains forbidden characters"
+        raise Exception("Executable contains forbidden characters")
 
     with open(os.devnull, "w") as null:
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
@@ -360,7 +360,7 @@ def run_gdb(savedir, plugin):
                      stdout=null, stderr=null)
 
         if chmod != 0:
-            raise Exception, "Unable to chmod the executable"
+            raise Exception("Unable to chmod the executable")
 
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
                        "--", "ls '%s'" % EXPLOITABLE_PLUGIN_PATH],
@@ -653,7 +653,7 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
         return
 
     if not os.path.isfile(debuginfo):
-        raise Exception, "Given debuginfo file does not exist"
+        raise Exception("Given debuginfo file does not exist")
 
     # prepend absolute path /usr/lib/debug/... with dot, so that cpio can match it
     for i in xrange(len(files)):
@@ -774,7 +774,7 @@ def unpack_vmcore(path):
         elif filetype == ARCHIVE_LZOP:
             check_run(["lzop", "-d", archive])
         else:
-            raise Exception, "Unknown archive type"
+            raise Exception("Unknown archive type")
 
         if os.path.isfile(archive):
             os.unlink(archive)
@@ -1104,7 +1104,7 @@ def send_email(frm, to, subject, body):
         to = ",".join(to)
 
     if not isinstance(to, str):
-        raise Exception, "'to' must be either string or a list of strings"
+        raise Exception("'to' must be either string or a list of strings")
 
     msg = "From: %s\n" \
           "To: %s\n" \
@@ -1162,7 +1162,7 @@ def check_run(cmd):
     child = Popen(cmd, stdout=PIPE, stderr=STDOUT)
     stdout = child.communicate()[0]
     if child.wait():
-        raise Exception, "%s exitted with %d: %s" % (cmd[0], child.returncode, stdout)
+        raise Exception("%s exitted with %d: %s" % (cmd[0], child.returncode, stdout))
 
 def move_dir_contents(source, dest):
     for filename in os.listdir(source):
@@ -1270,7 +1270,7 @@ class KernelVer(object):
 
     def package_name(self, debug=False):
         if self._arch is None:
-            raise Exception, "Architecture is required for building package name"
+            raise Exception("Architecture is required for building package name")
 
         base = self.package_name_base(debug)
 
@@ -1339,7 +1339,7 @@ class RetraceTask:
                     break
 
             if self._taskid is None:
-                raise Exception, "Unable to create new task"
+                raise Exception("Unable to create new task")
 
             pwdfilepath = os.path.join(self._savedir, RetraceTask.PASSWORD_FILE)
             with open(pwdfilepath, "w") as pwdfile:
@@ -1354,7 +1354,7 @@ class RetraceTask:
             self._taskid = int(taskid)
             self._savedir = os.path.join(CONFIG["SaveDir"], "%d" % self._taskid)
             if not os.path.isdir(self._savedir):
-                raise Exception, "The task %d does not exist" % self._taskid
+                raise Exception("The task %d does not exist" % self._taskid)
 
     def use_mock(self, kernelver):
         # Only use mock if we're cross arch, and there's no arch-specific crash available
@@ -1455,7 +1455,7 @@ class RetraceTask:
 
     def set(self, key, value, mode="w"):
         if mode not in ["w", "a"]:
-            raise ValueError, "mode must be either 'w' or 'a'"
+            raise ValueError("mode must be either 'w' or 'a'")
 
         with open(self._get_file_path(key), mode) as f:
             f.write(value)
@@ -1464,7 +1464,7 @@ class RetraceTask:
 
     def set_atomic(self, key, value, mode="w"):
         if mode not in ["w", "a"]:
-            raise ValueError, "mode must be either 'w' or 'a'"
+            raise ValueError("mode must be either 'w' or 'a'")
 
         tmpfilename = self._get_file_path("%s.tmp" % key)
         filename = self._get_file_path(key)
@@ -1655,7 +1655,7 @@ class RetraceTask:
 
     def set_notify(self, values):
         if not isinstance(values, list) or not all([isinstance(v, six.string_types) for v in values]):
-            raise Exception, "values must be a list of strings"
+            raise Exception("values must be a list of strings")
 
         self.set_atomic(RetraceTask.NOTIFY_FILE,
                         "%s\n" % "\n".join(filter(None, set(v.strip().replace("\n", " ") for v in values))))
@@ -1693,7 +1693,7 @@ class RetraceTask:
             kernelver = get_kernel_release(vmcore, crash_cmd)
 
         if kernelver is None:
-            raise Exception, "Unable to determine kernel version"
+            raise Exception("Unable to determine kernel version")
 
         self.set_kernelver(str(kernelver))
 
@@ -1739,7 +1739,7 @@ class RetraceTask:
             if vmlinux is not None:
                 return vmlinux
             else:
-                raise Exception, "Unable to find debuginfo package and no cached vmlinux file"
+                raise Exception("Unable to find debuginfo package and no cached vmlinux file")
 
         # FIXME: Merge kernel_path with this logic
         if "EL" in kernelver.release:
@@ -1787,7 +1787,7 @@ class RetraceTask:
                 vmlinux = vmlinux_debuginfo
                 self.set_vmlinux(vmlinux)
             else:
-                raise Exception, "Failed vmlinux caching from debuginfo at location: " + vmlinux_debuginfo
+                raise Exception("Failed vmlinux caching from debuginfo at location: " + vmlinux_debuginfo)
 
         # Obtain the list of modules this vmcore requires
         if chroot:
@@ -2115,7 +2115,7 @@ class RetraceTask:
     def has_misc(self, name):
         """Verifies whether a file named 'name' is present in MISC_DIR."""
         if "/" in name:
-            raise Exception, "name may not contain the '/' character"
+            raise Exception("name may not contain the '/' character")
 
         miscdir = os.path.join(self._savedir, RetraceTask.MISC_DIR)
         miscpath = os.path.join(miscdir, name)
@@ -2133,10 +2133,10 @@ class RetraceTask:
     def get_misc(self, name):
         """Gets content of a file named 'name' from MISC_DIR."""
         if "/" in name:
-            raise Exception, "name may not contain the '/' character"
+            raise Exception("name may not contain the '/' character")
 
         if not self.has_misc(name):
-            raise Exception, "There is no record with such name"
+            raise Exception("There is no record with such name")
 
         miscpath = os.path.join(self._savedir, RetraceTask.MISC_DIR, name)
         with open(miscpath, "r") as misc_file:
@@ -2147,11 +2147,11 @@ class RetraceTask:
     def add_misc(self, name, value, overwrite=False):
         """Adds a file named 'name' into MISC_DIR and writes 'value' into it."""
         if "/" in name:
-            raise Exception, "name may not contain the '/' character"
+            raise Exception("name may not contain the '/' character")
 
         if not overwrite and self.has_misc(name):
-            raise Exception, "The record already exists. Use overwrite=True " \
-                             "to force overwrite existing records."
+            raise Exception("The record already exists. Use overwrite=True " \
+                             "to force overwrite existing records.")
 
         miscdir = os.path.join(self._savedir, RetraceTask.MISC_DIR)
         if not os.path.isdir(miscdir):
@@ -2166,7 +2166,7 @@ class RetraceTask:
     def del_misc(self, name):
         """Deletes the file named 'name' from MISC_DIR."""
         if "/" in name:
-            raise Exception, "name may not contain the '/' character"
+            raise Exception("name may not contain the '/' character")
 
         if self.has_misc(name):
             os.unlink(os.path.join(self._savedir, RetraceTask.MISC_DIR, name))
@@ -2174,14 +2174,14 @@ class RetraceTask:
     def get_managed(self):
         """Verifies whether the task is under task management control"""
         if not CONFIG["AllowTaskManager"]:
-            raise Exception, "Task management is disabled"
+            raise Exception("Task management is disabled")
 
         return self.has(RetraceTask.MANAGED_FILE)
 
     def set_managed(self, managed):
         """Puts or removes the task from task management control"""
         if not CONFIG["AllowTaskManager"]:
-            raise Exception, "Task management is disabled"
+            raise Exception("Task management is disabled")
 
         # create the file if it does not exist
         if managed and not self.has(RetraceTask.MANAGED_FILE):
@@ -2263,7 +2263,7 @@ class RetraceTask:
         try:
             data = int(value)
         except ValueError:
-            raise Exception, "set_start_time requires unix timestamp as parameter"
+            raise Exception("set_start_time requires unix timestamp as parameter")
 
         self.set(RetraceTask.STARTED_FILE, "%d" % data)
 
@@ -2284,7 +2284,7 @@ class RetraceTask:
         try:
             data = int(value)
         except ValueError:
-            raise Exception, "set_caseno requires a number as parameter"
+            raise Exception("set_caseno requires a number as parameter")
 
         self.set(RetraceTask.CASENO_FILE, "%d" % data)
 
@@ -2303,7 +2303,7 @@ class RetraceTask:
     def set_bugzillano(self, values):
         """Writes bugzilla numbers into BUGZILLANO_FILE"""
         if not isinstance(values, list) or not all([isinstance(v, basestring) for v in values]):
-            raise Exception, "values must be a list of integers"
+            raise Exception("values must be a list of integers")
 
         self.set_atomic(RetraceTask.BUGZILLANO_FILE,
                         "%s\n" % "\n".join(filter(None, set(v.strip().replace("\n", " ") for v in values))))
@@ -2325,7 +2325,7 @@ class RetraceTask:
         try:
             data = int(value)
         except ValueError:
-            raise Exception, "set_finished_time requires unix timestamp as parameter"
+            raise Exception("set_finished_time requires unix timestamp as parameter")
 
         self.set(RetraceTask.FINISHED_FILE, "%d" % value)
 
