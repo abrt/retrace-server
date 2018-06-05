@@ -4,7 +4,7 @@ import time
 import sys
 import distro
 sys.path.insert(0, "/usr/share/retrace-server/")
-from retrace import *
+from .retrace import *
 
 CONFIG = Config()
 
