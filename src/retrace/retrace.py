@@ -26,6 +26,7 @@ from config import *
 from plugins import *
 from rpmUtils.miscutils import splitFilename
 import six
+from six.moves import range
 
 GETTEXT_DOMAIN = "retrace-server"
 
@@ -43,14 +44,14 @@ ALLOWED_FILES = {
 }
 
 TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
-  TASK_VMCORE_INTERACTIVE = xrange(5)
+  TASK_VMCORE_INTERACTIVE = range(5)
 
 TASK_TYPES = [TASK_RETRACE, TASK_DEBUG, TASK_VMCORE,
               TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]
 
 ARCHIVE_UNKNOWN, ARCHIVE_GZ, ARCHIVE_ZIP, \
   ARCHIVE_BZ2, ARCHIVE_XZ, ARCHIVE_TAR, \
-  ARCHIVE_7Z, ARCHIVE_LZOP = xrange(8)
+  ARCHIVE_7Z, ARCHIVE_LZOP = range(8)
 
 REQUIRED_FILES = {
     TASK_RETRACE:             ["coredump", "executable", "package"],
@@ -133,7 +134,7 @@ TASKPASS_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \
 STATUS_STATS, STATUS_FINISHING, STATUS_SUCCESS, STATUS_FAIL, \
-STATUS_DOWNLOADING, STATUS_POSTPROCESS, STATUS_CALCULATING_MD5SUM = xrange(11)
+STATUS_DOWNLOADING, STATUS_POSTPROCESS, STATUS_CALCULATING_MD5SUM = range(11)
 
 STATUS = [
     "Analyzing crash data",
@@ -657,7 +658,7 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
         raise Exception("Given debuginfo file does not exist")
 
     # prepend absolute path /usr/lib/debug/... with dot, so that cpio can match it
-    for i in xrange(len(files)):
+    for i in range(len(files)):
         if files[i][0] == "/":
             files[i] = ".%s" % files[i]
 
@@ -1320,7 +1321,7 @@ class RetraceTask:
             oldmask = os.umask(0o007)
             self._taskid = None
             generator = random.SystemRandom()
-            for i in xrange(50):
+            for i in range(50):
                 taskid = generator.randint(pow(10, CONFIG["TaskIdLength"] - 1),
                                            pow(10, CONFIG["TaskIdLength"]) - 1)
                 taskdir = os.path.join(CONFIG["SaveDir"], "%d" % taskid)
@@ -1344,7 +1345,7 @@ class RetraceTask:
 
             pwdfilepath = os.path.join(self._savedir, RetraceTask.PASSWORD_FILE)
             with open(pwdfilepath, "w") as pwdfile:
-                for i in xrange(CONFIG["TaskPassLength"]):
+                for i in range(CONFIG["TaskPassLength"]):
                     pwdfile.write(generator.choice(TASKPASS_ALPHABET))
 
             self.set_crash_cmd("crash")
