@@ -110,7 +110,7 @@ if __name__ == "__main__":
         else:
             kernelver = get_kernel_release(vmcore, task.get_crash_cmd().split())
             if kernelver is None:
-                raise Exception, "Unable to determine kernel version"
+                raise Exception("Unable to determine kernel version")
             task.set_kernelver(str(kernelver))
 
         hostarch = os.uname()[4]
