@@ -8,7 +8,6 @@ import pwd
 import shutil
 import sys
 import tempfile
-import urllib2
 import rpm
 import yum
 from retrace import *

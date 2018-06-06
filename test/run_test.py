@@ -14,7 +14,6 @@ Note: might need sudo privileges due to using /var/spool/
 
 from __future__ import print_function
 import os
-import pwd
 import grp
 import argparse
 import sys
