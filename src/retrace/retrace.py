@@ -1650,7 +1650,7 @@ class RetraceTask:
 
     def get_notify(self):
         result = self.get(RetraceTask.NOTIFY_FILE, maxlen=1 << 16)
-        return filter(None, set(n.strip() for n in result.split("\n")))
+        return [email for email in set(n.strip() for n in result.split("\n")) if email]
 
     def set_notify(self, values):
         if not isinstance(values, list) or not all([isinstance(v, six.string_types) for v in values]):
@@ -2297,7 +2297,7 @@ class RetraceTask:
         if result is None:
             return None
 
-        return filter(None, set(n.strip() for n in result.split("\n")))
+        return [bz_number for bz_number in set(n.strip() for n in result.split("\n")) if bz_number]
 
     def set_bugzillano(self, values):
         """Writes bugzilla numbers into BUGZILLANO_FILE"""

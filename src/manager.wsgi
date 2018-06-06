@@ -125,7 +125,7 @@ def application(environ, start_response):
 
             if "bugzillano" in get:
                 try:
-                    bugzillano = filter(int, set(n.strip() for n in get["bugzillano"][0].replace(";", ",").split(",")))
+                    bugzillano = list(filter(int, set(n.strip() for n in get["bugzillano"][0].replace(";", ",").split(","))))
                     task.set_bugzillano(bugzillano)
                 except Exception:
                     # bugzillano is invalid number - do nothing, it can be set later
@@ -149,7 +149,7 @@ def application(environ, start_response):
             kernelver = str(kernelver)
 
         if "notify" in get:
-            task.set_notify(filter(None, set(n.strip() for n in get["notify"][0].replace(";", ",").split(","))))
+            task.set_notify([email for email in set(n.strip() for n in get["notify"][0].replace(";", ",").split(",")) if email])
 
         if "md5sum" in get:
             task.set_md5sum("Enabled")
@@ -179,7 +179,7 @@ def application(environ, start_response):
             return response(start_response, "404 Not Found", _("There is no such task"))
 
         if "notify" in POST and len(POST["notify"]) > 0:
-            task.set_notify(filter(None, set(n.strip() for n in POST["notify"][0].replace(";", ",").split(","))))
+            task.set_notify([email for email in set(n.strip() for n in POST["notify"][0].replace(";", ",").split(",")) if email])
 
         return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "caseno":
@@ -213,7 +213,7 @@ def application(environ, start_response):
                 task.delete(RetraceTask.BUGZILLANO_FILE)
             else:
                 try:
-                    bugzillano = filter(int, set(n.strip() for n in POST["bugzillano"][0].replace(";", ",").split(",")))
+                    bugzillano = list(filter(int, set(n.strip() for n in POST["bugzillano"][0].replace(";", ",").split(","))))
                 except ValueError as ex:
                     return response(start_response, "404 Not Found", _("Bugzilla numbers must be integers; %s" % ex))
 
