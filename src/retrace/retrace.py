@@ -1,5 +1,4 @@
 from __future__ import division
-import ConfigParser
 import datetime
 import errno
 import ftplib
@@ -21,7 +20,6 @@ from subprocess import *
 import magic
 from .argparser import *
 from webob import Request
-from yum import YumBase
 from .config import *
 from .plugins import *
 from rpmUtils.miscutils import splitFilename
