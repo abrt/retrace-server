@@ -1,8 +1,7 @@
 #!/usr/bin/python2
 import fnmatch
 import re
-import urllib
-import urlparse
+from six.moves import urllib
 from retrace import *
 
 CONFIG = config.Config()
@@ -29,7 +28,7 @@ def async_ftp_list_dir(filterexp):
 
     for fname in tasklist:
         available.append("<tr><td><a href=\"manager/%s\">%s</a></td></tr>" \
-                         % (urllib.quote(fname), fname))
+                         % (urllib.parse.quote(fname), fname))
 
     available.append(tablefooter)
     return "\n            ".join(available)
@@ -40,7 +39,7 @@ def application(environ, start_response):
     _ = parse_http_gettext("%s" % request.accept_language,
                            "%s" % request.accept_charset)
 
-    get = urlparse.parse_qs(request.query_string)
+    get = urllib.parse.parse_qs(request.query_string)
     filterexp = None
     if "filterexp" in get:
         filterexp = get["filterexp"][0]

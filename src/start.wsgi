@@ -1,4 +1,4 @@
-import urlparse
+from six.moves import urllib
 from retrace import *
 
 CONFIG = config.Config()
@@ -24,7 +24,7 @@ def application(environ, start_response):
         return response(start_response, "404 Not Found",
                         _("There is no such task"))
 
-    qs = urlparse.parse_qs(request.query_string, keep_blank_values=True)
+    qs = urllib.parse.parse_qs(request.query_string, keep_blank_values=True)
 
     debug = "debug" in qs
 
