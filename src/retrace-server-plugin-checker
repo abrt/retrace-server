@@ -2,9 +2,9 @@
 
 import sys
 import os
-import urllib2
 from subprocess import Popen, PIPE
 import argparse
+from six.moves import urllib
 
 
 argparser = argparse.ArgumentParser(description="Retrace Server plugin checker")
@@ -44,7 +44,7 @@ for i, r in enumerate(plugin.repos):
         mirror_path = p.replace("$VER", args.VERSION).replace("$ARCH", args.ARCHITECTURE)
         if p.startswith("http:") or p.startswith("https:") or p.startswith("ftp:"):
             try:
-                urllib2.urlopen(mirror_path)
+                urllib.request.urlopen(mirror_path)
                 path_ok = True
             except Exception as ex:
                 pass

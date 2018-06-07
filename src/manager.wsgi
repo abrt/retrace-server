@@ -2,8 +2,7 @@
 import datetime
 import fnmatch
 import re
-import urllib
-import urlparse
+from six.moves import urllib
 from retrace import *
 
 CONFIG = config.Config()
@@ -61,7 +60,7 @@ def application(environ, start_response):
 
     filename = match.group(4)
     if filename:
-        filename = urllib.unquote(match.group(4))
+        filename = urllib.parse.unquote(match.group(4))
 
     space = free_space(CONFIG["SaveDir"])
     if space is None:
@@ -79,7 +78,7 @@ def application(environ, start_response):
         return response(start_response, "200 OK", task.get_misc(match.group(9)))
     elif match.group(6) and match.group(6) == "start":
         # start
-        get = urlparse.parse_qs(request.query_string)
+        get = urllib.parse.parse_qs(request.query_string)
         ftptask = False
         try:
             task = RetraceTask(filename)
@@ -162,7 +161,7 @@ def application(environ, start_response):
 
         return response(start_response, "303 See Other", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "savenotes":
-        POST = urlparse.parse_qs(request.body, keep_blank_values=1)
+        POST = urllib.parse.parse_qs(request.body, keep_blank_values=1)
         try:
             task = RetraceTask(filename)
         except:
@@ -173,7 +172,7 @@ def application(environ, start_response):
 
         return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "notify":
-        POST = urlparse.parse_qs(request.body, keep_blank_values=1)
+        POST = urllib.parse.parse_qs(request.body, keep_blank_values=1)
         try:
             task = RetraceTask(filename)
         except:
@@ -184,7 +183,7 @@ def application(environ, start_response):
 
         return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "caseno":
-        POST = urlparse.parse_qs(request.body, keep_blank_values=1)
+        POST = urllib.parse.parse_qs(request.body, keep_blank_values=1)
         try:
             task = RetraceTask(filename)
         except:
@@ -203,7 +202,7 @@ def application(environ, start_response):
 
         return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "bugzillano":
-        POST = urlparse.parse_qs(request.body, keep_blank_values=1)
+        POST = urllib.parse.parse_qs(request.body, keep_blank_values=1)
         try:
             task = RetraceTask(filename)
         except Exception:
@@ -251,7 +250,7 @@ def application(environ, start_response):
 
         return response(start_response, "302 Found", "", [("Location", match.group(1))])
     elif filename and filename == "__custom__":
-        POST = urlparse.parse_qs(request.body, keep_blank_values=1)
+        POST = urllib.parse.parse_qs(request.body, keep_blank_values=1)
 
         qs_base = []
         if "md5sum" in POST and POST["md5sum"][0] == "on":
@@ -271,7 +270,7 @@ def application(environ, start_response):
                 except:
                     return response(start_response, "403 Forbidden", _("Please use VRA format for kernel version (e.g. 2.6.32-287.el6.x86_64)"))
 
-                qs_base.append("kernelver=%s" % urllib.quote(vra))
+                qs_base.append("kernelver=%s" % urllib.parse.quote(vra))
 
         try:
             task = RetraceTask()
@@ -711,7 +710,7 @@ def application(environ, start_response):
         if filterexp:
             qs["filterexp"] = filterexp
 
-        qs_text = urllib.urlencode(qs)
+        qs_text = urllib.parse.urlencode(qs)
 
         if qs_text:
             starturl = "\"%s?%s\"" % (starturl, qs_text)

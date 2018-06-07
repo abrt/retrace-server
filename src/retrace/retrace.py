@@ -13,18 +13,17 @@ import smtplib
 import sqlite3
 import stat
 import time
-import urllib
 import hashlib
 from signal import *
 from subprocess import *
 import magic
-from .argparser import *
+import six
+from six.moves import range, urllib
+from rpmUtils.miscutils import splitFilename
 from webob import Request
+from .argparser import *
 from .config import *
 from .plugins import *
-from rpmUtils.miscutils import splitFilename
-import six
-from six.moves import range
 
 GETTEXT_DOMAIN = "retrace-server"
 
@@ -1398,12 +1397,12 @@ class RetraceTask:
         if arch:
             qs["arch"] = arch
 
-        qs_text = urllib.urlencode(qs)
+        qs_text = urllib.parse.urlencode(qs)
 
         if qs_text:
             starturl = "%s?%s" % (starturl, qs_text)
 
-        url = urllib.urlopen(starturl)
+        url = urllib.request.urlopen(starturl)
         status = url.getcode()
         url.close()
 
