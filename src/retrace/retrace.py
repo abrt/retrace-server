@@ -95,14 +95,16 @@ KO_DEBUG_PARSER = re.compile("^.*/([a-zA-Z0-9_\-]+)\.ko\.debug$")
 
 DUMP_LEVEL_PARSER = re.compile("^[ \t]*dump_level[ \t]*:[ \t]*([0-9]+).*$")
 
-WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]+.*retrace-server-worker ([0-9]+)( .*)?$")
+WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]"
+                                   "+.*retrace-server-worker ([0-9]+)( .*)?$")
 
 UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB"]
 
 HANDLE_ARCHIVE = {
     "application/x-xz-compressed-tar": {
         "unpack": [TAR_BIN, "xJf"],
-        "size": ([XZ_BIN, "--list", "--robot"], re.compile("^totals[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+([0-9]+).*")),
+        "size": ([XZ_BIN, "--list", "--robot"],
+                 re.compile("^totals[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+([0-9]+).*")),
         "type": ARCHIVE_XZ,
     },
 
@@ -114,7 +116,8 @@ HANDLE_ARCHIVE = {
 
     "application/x-tar": {
         "unpack": [TAR_BIN, "xf"],
-        "size": (["ls", "-l"], re.compile("^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+([0-9]+).*$")),
+        "size": (["ls", "-l"],
+                 re.compile("^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+([0-9]+).*$")),
         "type": ARCHIVE_TAR,
     },
 }
@@ -500,7 +503,8 @@ OSRELEASE_VAR_PARSER = re.compile("OSRELEASE=([^%][^\x00\s]+)")
 # https://bugzilla.redhat.com/show_bug.cgi?id=1535592#c9 and
 # https://github.com/battlemidget/core-analysis-system/blob/master/lib/cas/core.py#L96
 # For exmaple:
-# Linux version 3.10.0-693.11.1.el7.x86_64 (mockbuild@x86-041.build.eng.bos.redhat.com) (gcc version 4.8.5 20150623 (Red Hat 4.8.5-16) (GCC) ) #1 SMP Fri Oct 27 05:39:05 EDT 2017
+# Linux version 3.10.0-693.11.1.el7.x86_64 (mockbuild@x86-041.build.eng.bos.redhat.com)
+# (gcc version 4.8.5 20150623 (Red Hat 4.8.5-16) (GCC) ) #1 SMP Fri Oct 27 05:39:05 EDT 2017
 LINUX_VERSION_PARSER = re.compile('Linux\sversion\s(\S+)\s+(.*20\d{1,2}|#1\s.*20\d{1,2})')
 # 3. Look for the actual kernel release. For example:
 # 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
@@ -523,12 +527,13 @@ def get_kernel_release(vmcore, crash_cmd=["crash"]):
        "\n" in release or \
        release == "unknown":
         try:
-            fd=open(vmcore)
+            fd = open(vmcore)
             fd.seek(0)
             blksize = 64000000
             b = os.read(fd.fileno(), blksize)
         except OSError as e:
-            log_error("Failed to get kernel release - failed open/seek/read of file %s with errno(%d - '%s')" % (vmcore, e.errno, e.strerror()))
+            log_error("Failed to get kernel release - failed open/seek/read of file %s with errno(%d - '%s')"
+                      % (vmcore, e.errno, e.strerror()))
             if fd:
                 fd.close()
             return None
@@ -563,7 +568,8 @@ def get_kernel_release(vmcore, crash_cmd=["crash"]):
     if result.arch is None:
         result.arch = guess_arch(vmcore)
         if not result.arch:
-            log_error("Unable to determine architecture from file %s, release = %s, arch result = %s" % (vmcore, release, result))
+            log_error("Unable to determine architecture from file %s, release = %s, arch result = %s"
+                      % (vmcore, release, result))
             return None
 
     return result
@@ -618,7 +624,8 @@ def find_kernel_debuginfo(kernelver):
 
     # koji-like root
     for ver in vers:
-        testfile = os.path.join(CONFIG["KojiRoot"], "packages", basename, ver.version, ver.release, ver._arch, ver.package_name(debug=True))
+        testfile = os.path.join(CONFIG["KojiRoot"], "packages", basename, ver.version, ver.release,
+                                ver._arch, ver.package_name(debug=True))
         log_debug("Trying debuginfo file: %s" % testfile)
         if os.path.isfile(testfile):
             return testfile
@@ -632,7 +639,8 @@ def find_kernel_debuginfo(kernelver):
 
         for ver in vers:
             pkgname = ver.package_name(debug=True)
-            url = CONFIG["KernelDebuginfoURL"].replace("$VERSION", ver.version).replace("$RELEASE", ver.release).replace("$ARCH", ver._arch).replace("$BASENAME", basename)
+            url = CONFIG["KernelDebuginfoURL"].replace("$VERSION", ver.version).replace("$RELEASE", ver.release)\
+                  .replace("$ARCH", ver._arch).replace("$BASENAME", basename)
             if not url.endswith("/"):
                 url += "/"
             url += pkgname
@@ -1703,7 +1711,8 @@ class RetraceTask:
         # First look in our cache for vmlinux at the "typical" location which is something like
         # CONFIG["RepoDir"]/kernel/x86_64/usr/lib/debug/lib/modules/2.6.32-504.el6.x86_64
         log_info("Version: '%s'; Release: '%s'; Arch: '%s'; _arch: '%s'; Flavour: '%s'; Realtime: %s"
-                 % (kernelver.version, kernelver.release, kernelver.arch, kernelver._arch, kernelver.flavour, kernelver.rt))
+                 % (kernelver.version, kernelver.release, kernelver.arch,
+                    kernelver._arch, kernelver.flavour, kernelver.rt))
         kernel_path = ""
         if kernelver.version is not None:
             kernel_path = kernel_path + str(kernelver.version)
@@ -2046,7 +2055,8 @@ class RetraceTask:
                                  % vmcore)
                 if not skip_makedumpfile:
                     log_info("Stripped size: %s" % human_readable_size(st.st_size))
-                    log_info("Makedumpfile took %d seconds and saved %s" % (dur, human_readable_size(oldsize - st.st_size)))
+                    log_info("Makedumpfile took %d seconds and saved %s"
+                             % (dur, human_readable_size(oldsize - st.st_size)))
 
         if self.get_type() in [TASK_RETRACE, TASK_RETRACE_INTERACTIVE]:
             coredump = os.path.join(crashdir, "coredump")
@@ -2241,7 +2251,8 @@ class RetraceTask:
         """Writes data to CRASH_CMD_FILE"""
         self.set(RetraceTask.CRASH_CMD_FILE, data)
         try:
-            os.chmod(self._get_file_path(RetraceTask.CRASH_CMD_FILE), stat.S_IRUSR|stat.S_IWUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IROTH)
+            os.chmod(self._get_file_path(RetraceTask.CRASH_CMD_FILE),
+                     stat.S_IRUSR|stat.S_IWUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IROTH)
         except:
             pass
 

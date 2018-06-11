@@ -140,9 +140,21 @@ class RetraceWorker(object):
                 message += "Remote file(s): %s\n" % files
 
             if task.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE] and task.get_status() == STATUS_FAIL:
-                message += "\nIf kernel version detection failed (the log shows 'Unable to determine kernel version'), and you know the kernel version, you may try re-starting the task with the 'retrace-server-worker --restart' command.  Please check the log below for more information on why the task failed.  The following example assumes the vmcore's kernel version is 2.6.32-358.el6 on x86_64 arch: \n$ retrace-server-worker --restart --kernelver 2.6.32-358.el6.x86_64 --arch x86_64 %d\n" % task.get_taskid()
-                message += "\nIf this is a test kernel with a non-errata kernel version, or for some reason the kernel-debuginfo repository is unavailable, you can place the kernel-debuginfo RPM at %s/download/ and restart the task with: \n$ retrace-server-worker --restart %d\n" % (CONFIG["RepoDir"], task.get_taskid())
-                message += "\nIf the retrace-log contains a message similar to 'Failing task due to crash exiting with non-zero status and small kernellog size' then the vmcore may be truncated or incomplete and not useable.  Check the md5sum on the manager page and compare with the expected value, and possibly re-upload and resubmit the vmcore.\n"
+                message += "\nIf kernel version detection failed (the log shows 'Unable to determine kernel " \
+                           "version'), and you know the kernel version, you may try re-starting the task " \
+                           "with the 'retrace-server-worker --restart' command.  Please check the log below " \
+                           "for more information on why the task failed.  The following example assumes " \
+                           "the vmcore's kernel version is 2.6.32-358.el6 on x86_64 arch: \n" \
+                           "$ retrace-server-worker --restart --kernelver 2.6.32-358.el6.x86_64 --arch x86_64 %d\n" \
+                           % task.get_taskid()
+                message += "\nIf this is a test kernel with a non-errata kernel version, or for some reason " \
+                           "the kernel-debuginfo repository is unavailable, you can place the kernel-debuginfo RPM " \
+                           "at %s/download/ and restart the task with: \n$ retrace-server-worker --restart %d\n" \
+                           % (CONFIG["RepoDir"], task.get_taskid())
+                message += "\nIf the retrace-log contains a message similar to 'Failing task due to crash " \
+                           "exiting with non-zero status and small kernellog size' then the vmcore may be " \
+                           "truncated or incomplete and not useable.  Check the md5sum on the manager page " \
+                           "and compare with the expected value, and possibly re-upload and resubmit the vmcore.\n"
 
             if task.has_log():
                 message += "\nLog:\n%s\n" % task.get_log()
@@ -482,7 +494,8 @@ class RetraceWorker(object):
         task.set_status(STATUS_INIT)
         log_info(STATUS[STATUS_INIT])
 
-        self._retrace_run(25, ["/usr/bin/mock", "init", "--resultdir", task.get_savedir() + "/log", "--configdir", task.get_savedir()])
+        self._retrace_run(25, ["/usr/bin/mock", "init", "--resultdir", task.get_savedir() + "/log", "--configdir",
+                          task.get_savedir()])
 
         self.hook_post_prepare_mock()
         self.hook_pre_retrace()
@@ -584,7 +597,8 @@ class RetraceWorker(object):
         if s1.st_ino == s2.st_ino:
             return 0
         if s1.st_size != s2.st_size:
-            log_warn("Attempt to dedup %s and %s but sizes differ - size1 = %d size2 = %d" % (v1, v2, s1.st_size, s2.st_size))
+            log_warn("Attempt to dedup %s and %s but sizes differ - size1 = %d size2 = %d"
+                     % (v1, v2, s1.st_size, s2.st_size))
             return 0
         v1_md5 = str.split(task1.get_md5sum())[0]
         v2_md5 = str.split(task2.get_md5sum())[0]
@@ -612,7 +626,8 @@ class RetraceWorker(object):
             log_error("ERROR: Failed to dedup %s and %s - rename hardlink %s to %s failed" % (v1, v2, v2_link, v2));
             return 0
 
-        log_warn("Successful dedup - created hardlink from %s to %s saving %d MB" % (v2, v1, s1.st_size // 1024 // 1024))
+        log_warn("Successful dedup - created hardlink from %s to %s saving %d MB"
+                 % (v2, v1, s1.st_size // 1024 // 1024))
 
         return s1.st_size
 
@@ -677,7 +692,8 @@ class RetraceWorker(object):
                 with open(cfgfile, "w") as mockcfg:
                     mockcfg.write("config_opts['root'] = '%d-kernel'\n" % task.get_taskid())
                     mockcfg.write("config_opts['target_arch'] = '%s'\n" % kernelver.arch)
-                    mockcfg.write("config_opts['chroot_setup_cmd'] = 'install bash coreutils cpio crash findutils rpm shadow-utils'\n")
+                    mockcfg.write("config_opts['chroot_setup_cmd'] = 'install bash coreutils cpio "
+                                  "crash findutils rpm shadow-utils'\n")
                     mockcfg.write("config_opts['releasever'] = '%s'\n" % linux_dist[1])
                     if linux_dist[0] == "fedora":
                         mockcfg.write("config_opts['package_manager'] = 'dnf'\n")
@@ -732,7 +748,8 @@ class RetraceWorker(object):
             # no locks required, mock locks itself
             try:
                 self.hook_pre_prepare_debuginfo()
-                vmlinux = task.prepare_debuginfo(vmcore, cfgdir, kernelver=kernelver, crash_cmd=task.get_crash_cmd().split())
+                vmlinux = task.prepare_debuginfo(vmcore, cfgdir, kernelver=kernelver,
+                                                 crash_cmd=task.get_crash_cmd().split())
                 self.hook_post_prepare_debuginfo()
             except Exception as ex:
                 raise Exception("prepare_debuginfo failed: %s" % str(ex))
@@ -815,12 +832,14 @@ class RetraceWorker(object):
             task.set_status(STATUS_BACKTRACE)
             log_info(STATUS[STATUS_BACKTRACE])
 
-            child = Popen(task.get_crash_cmd().split() + ["--minimal", "-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(task.get_crash_cmd().split() + ["--minimal", "-s", vmcore, vmlinux], stdin=PIPE,
+                          stdout=PIPE, stderr=STDOUT)
             kernellog = child.communicate("log\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'log' exited with %d" % child.returncode)
 
-            child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE,
+                          stdout=PIPE, stderr=STDOUT)
             crash_bt_a = child.communicate("set hex\nbt -a\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'bt -a' exited with %d" % child.returncode)
@@ -828,14 +847,16 @@ class RetraceWorker(object):
 
             crash_kmem_f = None
             if CONFIG["VmcoreRunKmem"] == 1:
-                child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+                child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE,
+                              stdout=PIPE, stderr=STDOUT)
                 crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'kmem -f' exited with %d" % child.returncode)
                     crash_kmem_f = None
 
             if CONFIG["VmcoreRunKmem"] == 2:
-                child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+                child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE,
+                              stdout=PIPE, stderr=STDOUT)
                 crash_kmem_f = child.communicate("set hash off\nkmem -f\nset hash on\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'kmem -f' exited with %d" % child.returncode)
@@ -843,25 +864,29 @@ class RetraceWorker(object):
 
             crash_kmem_z = None
             if CONFIG["VmcoreRunKmem"] == 3:
-                child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+                child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE,
+                              stdout=PIPE, stderr=STDOUT)
                 crash_kmem_z = child.communicate("kmem -z\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'kmem -z' exited with %d" % child.returncode)
                     crash_kmem_z = None
 
-            child = Popen(task.get_crash_cmd().split() +  ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(task.get_crash_cmd().split() +  ["-s", vmcore, vmlinux], stdin=PIPE,
+                          stdout=PIPE, stderr=STDOUT)
             crash_sys = child.communicate("sys\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'sys' exited with %d" % child.returncode)
                 crash_sys = None
 
-            child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE,
+                          stdout=PIPE, stderr=STDOUT)
             crash_sys_c = child.communicate("sys -c\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'sys -c' exited with %d" % child.returncode)
                 crash_sys_c = None
 
-            child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE,
+                          stdout=PIPE, stderr=STDOUT)
             crash_foreach_bt = child.communicate("set hex\nforeach bt\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'foreach bt' exited with %d" % child.returncode)
@@ -873,7 +898,8 @@ class RetraceWorker(object):
             # FIXME: Probably a better hueristic can be done here
             if len(kernellog) < 1024:
                 # If log is less than 1024 bytes, probably it is not useful at all so fail it
-                raise Exception("Failing task due to crash exiting with non-zero status and small kernellog size = %d bytes" % len(kernellog))
+                raise Exception("Failing task due to crash exiting with non-zero status and "
+                                "small kernellog size = %d bytes" % len(kernellog))
             else:
                 # If log is 1024 bytes or above, try 'crash --minimal'
                 task.set_crash_cmd("crash --minimal")

@@ -110,7 +110,8 @@ if __name__ == "__main__":
             else:
                 md5_tasks[md5] = task
 
-        log.write("Total space savings from duplicate task hardlinking (md5sums equal, different inodes): %d MB\n" % (total_savings // 1024 // 1024))
+        log.write("Total space savings from duplicate task hardlinking (md5sums equal, different inodes): %d MB\n"
+                  % (total_savings // 1024 // 1024))
 
         if CONFIG["ArchiveTaskAfter"] > 0:
             # archive old tasks

@@ -7,9 +7,11 @@ CONFIG = config.Config()
 if __name__ == "__main__":
     cmdline_parser = ArgumentParser(description="Execute a retrace job")
     cmdline_parser.add_argument("task_id", type=int, help="Task ID (%s/<task_id>) must exist" % CONFIG["SaveDir"])
-    cmdline_parser.add_argument("--restart", action="store_true", default=False, help="Restart the task if it has already been processed")
+    cmdline_parser.add_argument("--restart", action="store_true", default=False,
+                                help="Restart the task if it has already been processed")
     cmdline_parser.add_argument("--foreground", action="store_true", default=False, help="Do not fork to background")
-    cmdline_parser.add_argument("--kernelver", default=None, help="Kernel version (e.g. 2.6.32-287.el6), also needs --arch")
+    cmdline_parser.add_argument("--kernelver", default=None,
+                                help="Kernel version (e.g. 2.6.32-287.el6), also needs --arch")
     cmdline_parser.add_argument("--arch", help="Architecture")
     cmdline = cmdline_parser.parse_args()
 

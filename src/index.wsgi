@@ -26,17 +26,20 @@ def application(environ, start_response):
         https = _("Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because of security reasons.")
     releases = _("The following releases are supported: %s" % ", ".join(sorted(get_supported_releases())))
     active = len(get_active_tasks())
-    running = _("At the moment the server is loaded for %d%% (running %d out of %d jobs)." % (100 * active // CONFIG["MaxParallelTasks"], active, CONFIG["MaxParallelTasks"]))
+    running = _("At the moment the server is loaded for %d%% (running %d out of %d jobs)."
+                % (100 * active // CONFIG["MaxParallelTasks"], active, CONFIG["MaxParallelTasks"]))
     disclaimer1 = _("Your coredump is only kept on the server while the retrace job is running. "
                     "Once the job is finished, the server keeps retrace log and backtrace. "
                     "All the other data (including coredump) are deleted. "
-                    "The retrace log and backtrace are only accessible via unique task ID and password, thus no one (except the author) is allowed to view it. "
+                    "The retrace log and backtrace are only accessible via unique task ID and password, thus no one "
+                    "(except the author) is allowed to view it. "
                     "All the crash information (including backtrace) is deleted after %d hours of inactivity. "
                     "No possibly private data are kept on the server any longer." % CONFIG["DeleteTaskAfter"])
     disclaimer2 = _("Your coredump is only used for retrace purposes. "
                     "Server administrators are not trying to get your private data from coredumps or backtraces. "
                     "Using a secure communication channel (HTTPS) is strictly recommended. "
-                    "Server administrators are not responsible for the problems related to the usage of an insecure channel (such as HTTP).")
+                    "Server administrators are not responsible for the problems related to the usage of "
+                    "an insecure channel (such as HTTP).")
 
     output = output.replace("{title}", title)
     output = output.replace("{welcome}", welcome)

@@ -134,7 +134,8 @@ if __name__ == "__main__":
                 if task.has_vmlinux():
                     vmlinux = task.get_vmlinux()
                 else:
-                    vmlinux = task.prepare_debuginfo(vmcore, chroot=cfgdir, kernelver=kernelver, crash_cmd=task.get_crash_cmd().split())
+                    vmlinux = task.prepare_debuginfo(vmcore, chroot=cfgdir, kernelver=kernelver,
+                                                     crash_cmd=task.get_crash_cmd().split())
                 if task.has_crashrc():
                     cmdline = ["/usr/bin/mock", "--configdir", cfgdir,
                                "shell", "crash -i %s %s %s" % (task.get_crashrc_path(), vmcore, vmlinux)]
