@@ -119,7 +119,8 @@ if __name__ == "__main__":
         log.write("\n\n------------Found tasks in bugzillas that do not exist on local system-----------\n")
         for taskid in found_tasks.keys():
             if taskid not in existing_tasks:
-                log.write("Unknown task {0} has following bugzilla(s): {1}.\n".format(taskid, ", ".join(found_tasks[taskid])))
+                log.write("Unknown task {0} has following bugzilla(s): {1}.\n"
+                          .format(taskid, ", ".join(found_tasks[taskid])))
 
         log.write("\n\n------------Existing tasks that no bugzilla was found for-----------\n")
         no_bz_tasks = [taskid for taskid in existing_tasks if taskid not in found_tasks.keys()]

@@ -7,7 +7,8 @@ from retrace import *
 
 CONFIG = config.Config()
 
-MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|bugzillano|notify|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
+MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|"
+                                "bugzillano|notify|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
 
 LONG_TYPES = {TASK_RETRACE: "Coredump retrace",
               TASK_DEBUG: "Coredump retrace - debug",
@@ -125,7 +126,8 @@ def application(environ, start_response):
 
             if "bugzillano" in get:
                 try:
-                    bugzillano = list(filter(int, set(n.strip() for n in get["bugzillano"][0].replace(";", ",").split(","))))
+                    bugzillano = list(filter(int, set(n.strip() for n in get["bugzillano"][0].
+                                                      replace(";", ",").split(","))))
                     task.set_bugzillano(bugzillano)
                 except Exception:
                     # bugzillano is invalid number - do nothing, it can be set later
@@ -143,13 +145,15 @@ def application(environ, start_response):
                 if kernelver.arch is None:
                     raise Exception
             except Exception as ex:
-                return response(start_response, "403 Forbidden", _("Please use VRA format for kernel version (e.g. 2.6.32-287.el6.x86_64)"))
+                return response(start_response, "403 Forbidden",
+                                _("Please use VRA format for kernel version (e.g. 2.6.32-287.el6.x86_64)"))
 
             arch = kernelver.arch
             kernelver = str(kernelver)
 
         if "notify" in get:
-            task.set_notify([email for email in set(n.strip() for n in get["notify"][0].replace(";", ",").split(",")) if email])
+            task.set_notify([email for email in set(n.strip() for n in get["notify"][0].
+                                                    replace(";", ",").split(",")) if email])
 
         if "md5sum" in get:
             task.set_md5sum("Enabled")
@@ -159,7 +163,8 @@ def application(environ, start_response):
         # ugly, ugly, ugly! retrace-server-worker double-forks and needs a while to spawn
         time.sleep(2)
 
-        return response(start_response, "303 See Other", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
+        return response(start_response, "303 See Other", "",
+                        [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "savenotes":
         POST = urllib.parse.parse_qs(request.body, keep_blank_values=1)
         try:
@@ -179,7 +184,8 @@ def application(environ, start_response):
             return response(start_response, "404 Not Found", _("There is no such task"))
 
         if "notify" in POST and len(POST["notify"]) > 0:
-            task.set_notify([email for email in set(n.strip() for n in POST["notify"][0].replace(";", ",").split(",")) if email])
+            task.set_notify([email for email in set(n.strip() for n in POST["notify"][0].
+                                                    replace(";", ",").split(",")) if email])
 
         return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "caseno":
@@ -213,7 +219,8 @@ def application(environ, start_response):
                 task.delete(RetraceTask.BUGZILLANO_FILE)
             else:
                 try:
-                    bugzillano = list(filter(int, set(n.strip() for n in POST["bugzillano"][0].replace(";", ",").split(","))))
+                    bugzillano = list(filter(int, set(n.strip() for n in POST["bugzillano"][0].
+                                                      replace(";", ",").split(","))))
                 except ValueError as ex:
                     return response(start_response, "404 Not Found", _("Bugzilla numbers must be integers; %s" % ex))
 
@@ -268,7 +275,8 @@ def application(environ, start_response):
                     if kver.arch is None:
                         raise Exception
                 except:
-                    return response(start_response, "403 Forbidden", _("Please use VRA format for kernel version (e.g. 2.6.32-287.el6.x86_64)"))
+                    return response(start_response, "403 Forbidden",
+                                    _("Please use VRA format for kernel version (e.g. 2.6.32-287.el6.x86_64)"))
 
                 qs_base.append("kernelver=%s" % urllib.parse.quote(vra))
 
@@ -331,12 +339,15 @@ def application(environ, start_response):
                 md5sum_enabled = "checked=\"checked\""
 
             startcontent = "    <form method=\"get\" action=\"%s/start\">" \
-                           "      Kernel version (empty to autodetect): <input name=\"kernelver\" type=\"text\" id=\"kernelver\" /> e.g. <code>2.6.32-287.el6.x86_64</code><br />" \
+                           "      Kernel version (empty to autodetect): <input name=\"kernelver\" " \
+                           "type=\"text\" id=\"kernelver\" /> e.g. <code>2.6.32-287.el6.x86_64</code><br />" \
                            "      Case no.: <input name=\"caseno\" type=\"text\" id=\"caseno\" /><br />" \
                            "      Bugzilla no.: <input name=\"bugzillano\" type=\"text\" id=\"bugzillano\" /><br />" \
                            "      E-mail notification: <input name=\"notify\" type=\"text\" id=\"notify\" /><br />" \
-                           "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" checked=\"checked\" />Be more verbose in case of error<br />" \
-                           "      <input type=\"checkbox\" name=\"md5sum\" id=\"md5sum\" %s />Calculate md5 checksum for all downloaded resources<br />" \
+                           "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" checked=\"checked\" />" \
+                           "Be more verbose in case of error<br />" \
+                           "      <input type=\"checkbox\" name=\"md5sum\" id=\"md5sum\" %s />" \
+                           "Calculate md5 checksum for all downloaded resources<br />" \
                            "      <input type=\"submit\" value=\"%s\" id=\"start\" class=\"button\" />" \
                            "    </form>" % (request.path_url.rstrip("/"), md5sum_enabled, _("Start task"))
 
@@ -361,7 +372,8 @@ def application(environ, start_response):
         backtracewindow = ""
         if not ftptask:
             if task.has_backtrace():
-                backtrace = "<tr><td colspan=\"2\"><a href=\"%s/backtrace\">%s</a></td></tr>" % (request.path_url.rstrip("/"), _("Show raw backtrace"))
+                backtrace = "<tr><td colspan=\"2\"><a href=\"%s/backtrace\">%s</a></td></tr>" \
+                            % (request.path_url.rstrip("/"), _("Show raw backtrace"))
                 backtracewindow = "<h2>Backtrace</h2><textarea class=\"backtrace\">%s</textarea>" % task.get_backtrace()
                 if task.get_type() in [TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
                     if task.get_type() == TASK_VMCORE_INTERACTIVE:
@@ -373,8 +385,8 @@ def application(environ, start_response):
                                   "<tr><td colspan=\"2\">%s <code>retrace-server-interact %s shell</code></td></tr>" \
                                   "<tr><td colspan=\"2\">%s <code>retrace-server-interact %s %s</code></td></tr>" \
                                   "<tr><td colspan=\"2\">%s <code>man retrace-server-interact</code> %s</td></tr>" \
-                                  % (_("This is an interactive task"), _("You can jump to the chrooted shell with:"), filename,
-                                     _("You can jump directly to the debugger with:"), filename, debugger,
+                                  % (_("This is an interactive task"), _("You can jump to the chrooted shell with:"),
+                                     filename, _("You can jump directly to the debugger with:"), filename, debugger,
                                      _("see"), _("for further information about cmdline flags"))
             elif task.has_log():
                 backtracewindow = "<h2>Log:</h2><textarea class=\"backtrace\">%s</textarea>" % task.get_log()
@@ -382,7 +394,8 @@ def application(environ, start_response):
         if ftptask or task.is_running(readproc=True) or CONFIG["TaskManagerAuthDelete"]:
             delete = ""
         else:
-            delete = "<tr><td colspan=\"2\"><a href=\"%s/delete\">%s</a></td></tr>" % (request.path_url.rstrip("/"), _("Delete task"))
+            delete = "<tr><td colspan=\"2\"><a href=\"%s/delete\">%s</a></td></tr>" \
+                     % (request.path_url.rstrip("/"), _("Delete task"))
 
         if ftptask:
             # ToDo: determine?
