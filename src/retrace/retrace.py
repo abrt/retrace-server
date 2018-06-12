@@ -148,10 +148,10 @@ STATUS = [
 ]
 
 ARCHITECTURES = {"src", "noarch", "i386", "i486", "i586", "i686", "x86_64",
-                     "s390", "s390x", "ppc", "ppc64", "ppc64le", "ppc64iseries",
-                     "armel", "armhfp", "armv5tel", "armv7l", "armv7hl",
-                     "armv7hnl", "aarch64", "sparc", "sparc64", "mips4kec",
-                     "ia64"}
+                 "s390", "s390x", "ppc", "ppc64", "ppc64le", "ppc64iseries",
+                 "armel", "armhfp", "armv5tel", "armv7l", "armv7hl",
+                 "armv7hnl", "aarch64", "sparc", "sparc64", "mips4kec",
+                 "ia64"}
 
 # armhfp is not correct, but there is no way to distinguish armv5/armv6/armv7 coredumps
 # as armhfp (RPM armv7hl) is the only supported now, let's approximate arm = armhfp

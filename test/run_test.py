@@ -49,7 +49,7 @@ def create_repo(packages, releaseid, version):
                     --installroot={1} --enablerepo=\*debuginfo\* -y\
                     --downloaddir={2} --nogpgcheck\
                     --setopt=\*.skip_if_unavailable=true install {3}'.format(
-                    version, repo_path, repo_path, " ".join(needed_packages)))
+                        version, repo_path, repo_path, " ".join(needed_packages)))
     # call commands one by one
     for cmd in commands:
         c = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
@@ -141,7 +141,7 @@ def create_local_config(change_repo_dir):
                     line = 'SaveDir = /var/tmp/retrace-server-spool\n'
                 if line.startswith("AuthGroup"):
                     line = 'AuthGroup = {0}\n'.format(grp.getgrgid(os.getgid()).
-                                                        gr_name)
+                                                      gr_name)
                 new_file.write(line)
 
     # edit env variable RETRACE_SERVER_CONFIG_PATH
@@ -226,8 +226,8 @@ if not dont_create_repo_arg:
 
     # find missing packages
     packages, missing_unparsed, fafrepo = worker.read_packages(crashdir,
-                                                      releaseid, package,
-                                                      distribution)
+                                                               releaseid, package,
+                                                               distribution)
     #find what provides missing parts
     missing = []
     cmd = ["rpm", "-qf"]
