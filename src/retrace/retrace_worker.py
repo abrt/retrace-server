@@ -873,7 +873,7 @@ class RetraceWorker(object):
             # FIXME: Probably a better hueristic can be done here
             if len(kernellog) < 1024:
                 # If log is less than 1024 bytes, probably it is not useful at all so fail it
-               raise Exception("Failing task due to crash exiting with non-zero status and small kernellog size = %d bytes" % len(kernellog))
+                raise Exception("Failing task due to crash exiting with non-zero status and small kernellog size = %d bytes" % len(kernellog))
             else:
                 # If log is 1024 bytes or above, try 'crash --minimal'
                 task.set_crash_cmd("crash --minimal")
