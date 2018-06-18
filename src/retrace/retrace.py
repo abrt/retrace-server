@@ -97,6 +97,8 @@ DUMP_LEVEL_PARSER = re.compile("^[ \t]*dump_level[ \t]*:[ \t]*([0-9]+).*$")
 
 WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]+.*retrace-server-worker ([0-9]+)( .*)?$")
 
+MD5_PARSER = re.compile("[a-fA-F0-9]{32}")
+
 UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB"]
 
 HANDLE_ARCHIVE = {
@@ -932,8 +934,17 @@ def get_md5_tasks():
         if not task.has_finished_time():
             continue
 
-        if task.has_md5sum():
-            tasks.append(task)
+        if not task.has_vmcore():
+            continue
+
+        if not task.has_md5sum():
+            continue
+
+        md5 = str.split(task.get_md5sum())[0]
+        if not MD5_PARSER.search(md5):
+            continue
+
+        tasks.append(task)
 
     return tasks
 
