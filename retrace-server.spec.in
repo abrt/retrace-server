@@ -52,8 +52,10 @@ Requires: yum-utils
 Requires: crash >= 5.1.7
 Requires: wget
 Requires: kexec-tools
+%if (0%{?rhel} && 0%{?rhel} <= 7) || (0%{?fedora} && 0%{?fedora} <= 27)
 Requires(preun): /sbin/install-info
 Requires(post): /sbin/install-info
+%endif
 Requires(post): /usr/bin/crontab
 
 Obsoletes: abrt-retrace-server < 2.0.3
@@ -93,7 +95,9 @@ getent passwd retrace > /dev/null || useradd --system -g retrace -u %{retrace_gi
 exit 0
 
 %post
+%if (0%{?rhel} && 0%{?rhel} <= 7) || (0%{?fedora} && 0%{?fedora} <= 27)
 /sbin/install-info %{_infodir}/%{name} %{_infodir}/dir 2> /dev/null || :
+%endif
 /usr/sbin/usermod -a -G mock retrace 2> /dev/null || :
 
 if [ "$1" = 1 ]
@@ -116,8 +120,9 @@ fi
 %preun
 if [ "$1" = 0 ]
 then
+%if (0%{?rhel} && 0%{?rhel} <= 7) || (0%{?fedora} && 0%{?fedora} <= 27)
     /sbin/install-info --delete %{_infodir}/retrace-server %{_infodir}/dir 2> /dev/null || :
-
+%endif
 #comment entries in retrace's crontab
     (crontab -u retrace -l 2> /dev/null | sed "s,^\([^#].*\)$,#\1,g") | crontab -u retrace - 2> /dev/null
 fi
