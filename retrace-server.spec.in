@@ -136,7 +136,6 @@ fi
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}/download
 %dir %attr(0750,retrace,retrace) %{_localstatedir}/log/%{name}
 %dir %attr(0770,retrace,retrace) %{_localstatedir}/spool/%{name}
-%dir %{_datadir}/%{name}
 %{_bindir}/%{name}-worker
 %{_bindir}/%{name}-interact
 %{_bindir}/%{name}-cleanup
@@ -148,8 +147,8 @@ fi
 %{_bindir}/%{name}-bugzilla-query
 %{_bindir}/bt_filter
 %{_bindir}/coredump2packages
-%{python_sitelib}/retrace/*
-%{_datadir}/%{name}/*
+%{python_sitelib}/retrace/
+%{_datadir}/%{name}/
 %doc %{_mandir}/man1/%{name}-cleanup.1*
 %doc %{_mandir}/man1/%{name}-interact.1*
 %doc %{_mandir}/man1/%{name}-reposync.1*
