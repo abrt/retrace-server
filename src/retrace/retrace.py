@@ -1304,6 +1304,7 @@ class RetraceTask:
     TYPE_FILE = "type"
     URL_FILE = "url"
     VMLINUX_FILE = "vmlinux"
+    VMCORE_FILE = "crash/vmcore"
     MOCK_DEFAULT_CFG = "default.cfg"
     MOCK_SITE_DEFAULTS_CFG = "site-defaults.cfg"
     MOCK_LOGGING_INI = "logging.ini"
@@ -1677,6 +1678,10 @@ class RetraceTask:
 
     def set_vmlinux(self, value):
         self.set(RetraceTask.VMLINUX_FILE, value)
+
+    def has_vmcore(self):
+        vmcore_path = os.path.join(self._savedir, RetraceTask.VMCORE_FILE)
+        return os.path.isfile(vmcore_path)
 
     def download_block(self, data):
         self._progress_write_func(data)
