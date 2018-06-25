@@ -934,7 +934,7 @@ def get_md5_tasks():
         if not task.has_finished_time():
             continue
 
-        if not task.has_vmcore():
+        if not task.has_vmcore() and not task.has_coredump():
             continue
 
         if not task.has_md5sum():
@@ -1316,6 +1316,7 @@ class RetraceTask:
     URL_FILE = "url"
     VMLINUX_FILE = "vmlinux"
     VMCORE_FILE = "crash/vmcore"
+    COREDUMP_FILE = "crash/coredump"
     MOCK_DEFAULT_CFG = "default.cfg"
     MOCK_SITE_DEFAULTS_CFG = "site-defaults.cfg"
     MOCK_LOGGING_INI = "logging.ini"
@@ -1693,6 +1694,10 @@ class RetraceTask:
     def has_vmcore(self):
         vmcore_path = os.path.join(self._savedir, RetraceTask.VMCORE_FILE)
         return os.path.isfile(vmcore_path)
+
+    def has_coredump(self):
+        coredump_path = os.path.join(self._savedir, RetraceTask.COREDUMP_FILE)
+        return os.path.isfile(coredump_path)
 
     def download_block(self, data):
         self._progress_write_func(data)
