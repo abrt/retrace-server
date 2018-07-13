@@ -383,7 +383,7 @@ def run_gdb(savedir, plugin):
                           "-ex 'py-list' "
                           "-ex 'py-locals' "
                           "-ex 'echo %s\n' "
-                          "-ex 'thread apply all -ascending backtrace 2048 full' "
+                          "-ex 'thread apply all -ascending backtrace full 2048' "
                           "-ex 'info sharedlib' "
                           "-ex 'print (char*)__abort_msg' "
                           "-ex 'print (char*)__glib_assert_msg' "
