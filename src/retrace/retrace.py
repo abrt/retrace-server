@@ -74,32 +74,32 @@ BUGZILLA_STATUS = ["NEW", "ASSIGNED", "ON_DEV", "POST", "MODIFIED", "ON_QA", "VE
                    "RELEASE_PENDING", "CLOSED"]
 
 #characters, numbers, dash (utf-8, iso-8859-2 etc.)
-INPUT_CHARSET_PARSER = re.compile("^([a-zA-Z0-9\-]+)(,.*)?$")
+INPUT_CHARSET_PARSER = re.compile(r"^([a-zA-Z0-9\-]+)(,.*)?$")
 #en_GB, sk-SK, cs, fr etc.
-INPUT_LANG_PARSER = re.compile("^([a-z]{2}([_\-][A-Z]{2})?)(,.*)?$")
+INPUT_LANG_PARSER = re.compile(r"^([a-z]{2}([_\-][A-Z]{2})?)(,.*)?$")
 #characters allowed by Fedora Naming Guidelines
-INPUT_PACKAGE_PARSER = re.compile("^([1-9][0-9]*:)?[a-zA-Z0-9\-\.\_\+]+$")
+INPUT_PACKAGE_PARSER = re.compile(r"^([1-9][0-9]*:)?[a-zA-Z0-9\-\.\_\+]+$")
 #architecture (i386, x86_64, armv7hl, mips4kec)
-INPUT_ARCH_PARSER = re.compile("^[a-zA-Z0-9_]+$")
+INPUT_ARCH_PARSER = re.compile(r"^[a-zA-Z0-9_]+$")
 #name-version-arch (fedora-16-x86_64, rhel-6.2-i386, opensuse-12.1-x86_64)
-INPUT_RELEASEID_PARSER = re.compile("^[a-zA-Z0-9]+\-[0-9a-zA-Z\.]+\-[a-zA-Z0-9_]+$")
+INPUT_RELEASEID_PARSER = re.compile(r"^[a-zA-Z0-9]+\-[0-9a-zA-Z\.]+\-[a-zA-Z0-9_]+$")
 
-CORE_ARCH_PARSER = re.compile("core file,? .*(x86-64|80386|ARM|aarch64|IBM S/390|64-bit PowerPC)")
-PACKAGE_PARSER = re.compile("^(.+)-([0-9]+(\.[0-9]+)*-[0-9]+)\.([^-]+)$")
-DF_OUTPUT_PARSER = re.compile("^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
-DU_OUTPUT_PARSER = re.compile("^([0-9]+)")
-URL_PARSER = re.compile("^/([0-9]+)/?")
+CORE_ARCH_PARSER = re.compile(r"core file,? .*(x86-64|80386|ARM|aarch64|IBM S/390|64-bit PowerPC)")
+PACKAGE_PARSER = re.compile(r"^(.+)-([0-9]+(\.[0-9]+)*-[0-9]+)\.([^-]+)$")
+DF_OUTPUT_PARSER = re.compile(r"^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
+DU_OUTPUT_PARSER = re.compile(r"^([0-9]+)")
+URL_PARSER = re.compile(r"^/([0-9]+)/?")
 
-REPODIR_NAME_PARSER = re.compile("^[^\-]+\-[^\-]+\-[^\-]+$")
+REPODIR_NAME_PARSER = re.compile(r"^[^\-]+\-[^\-]+\-[^\-]+$")
 
-KO_DEBUG_PARSER = re.compile("^.*/([a-zA-Z0-9_\-]+)\.ko\.debug$")
+KO_DEBUG_PARSER = re.compile(r"^.*/([a-zA-Z0-9_\-]+)\.ko\.debug$")
 
-DUMP_LEVEL_PARSER = re.compile("^[ \t]*dump_level[ \t]*:[ \t]*([0-9]+).*$")
+DUMP_LEVEL_PARSER = re.compile(r"^[ \t]*dump_level[ \t]*:[ \t]*([0-9]+).*$")
 
-WORKER_RUNNING_PARSER = re.compile("^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]"
-                                   "+.*retrace-server-worker ([0-9]+)( .*)?$")
+WORKER_RUNNING_PARSER = re.compile(r"^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]"
+                                   r"+.*retrace-server-worker ([0-9]+)( .*)?$")
 
-MD5_PARSER = re.compile("[a-fA-F0-9]{32}")
+MD5_PARSER = re.compile(r"[a-fA-F0-9]{32}")
 
 UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB"]
 
@@ -107,20 +107,20 @@ HANDLE_ARCHIVE = {
     "application/x-xz-compressed-tar": {
         "unpack": [TAR_BIN, "xJf"],
         "size": ([XZ_BIN, "--list", "--robot"],
-                 re.compile("^totals[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+([0-9]+).*")),
+                 re.compile(r"^totals[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+([0-9]+).*")),
         "type": ARCHIVE_XZ,
     },
 
     "application/x-gzip": {
         "unpack": [TAR_BIN, "xzf"],
-        "size": ([GZIP_BIN, "--list"], re.compile("^[^0-9]*[0-9]+[^0-9]+([0-9]+).*$")),
+        "size": ([GZIP_BIN, "--list"], re.compile(r"^[^0-9]*[0-9]+[^0-9]+([0-9]+).*$")),
         "type": ARCHIVE_GZ,
     },
 
     "application/x-tar": {
         "unpack": [TAR_BIN, "xf"],
         "size": (["ls", "-l"],
-                 re.compile("^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+([0-9]+).*$")),
+                 re.compile(r"^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+([0-9]+).*$")),
         "type": ARCHIVE_TAR,
     },
 }
@@ -517,7 +517,7 @@ def is_package_known(package_nvr, arch, releaseid=None):
 # 1. Look for 'OSRELEASE='.  For example:
 # OSRELEASE=2.6.18-406.el5
 # NOTE: We can get "OSRELEASE=%" so we disallow the '%' character after the '='
-OSRELEASE_VAR_PARSER = re.compile("OSRELEASE=([^%][^\x00\s]+)")
+OSRELEASE_VAR_PARSER = re.compile(r"OSRELEASE=([^%][^\x00\s]+)")
 # 2. Look for "Linux version" string.  Note that this was taken from
 # CAS 'fingerprint' database code.  For more info, see
 # https://bugzilla.redhat.com/show_bug.cgi?id=1535592#c9 and
@@ -525,10 +525,10 @@ OSRELEASE_VAR_PARSER = re.compile("OSRELEASE=([^%][^\x00\s]+)")
 # For exmaple:
 # Linux version 3.10.0-693.11.1.el7.x86_64 (mockbuild@x86-041.build.eng.bos.redhat.com)
 # (gcc version 4.8.5 20150623 (Red Hat 4.8.5-16) (GCC) ) #1 SMP Fri Oct 27 05:39:05 EDT 2017
-LINUX_VERSION_PARSER = re.compile('Linux\sversion\s(\S+)\s+(.*20\d{1,2}|#1\s.*20\d{1,2})')
+LINUX_VERSION_PARSER = re.compile(r'Linux\sversion\s(\S+)\s+(.*20\d{1,2}|#1\s.*20\d{1,2})')
 # 3. Look for the actual kernel release. For example:
 # 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
-KERNEL_RELEASE_PARSER = re.compile('(\d+\.\d+\.\d+)-(\d+\.[^\x00\s]+)')
+KERNEL_RELEASE_PARSER = re.compile(r'(\d+\.\d+\.\d+)-(\d+\.[^\x00\s]+)')
 def get_kernel_release(vmcore, crash_cmd=["crash"]):
     # First use 'crash' to identify the kernel version.
     # set SIGPIPE to default handler for bz 1540253
