@@ -18,8 +18,9 @@ from signal import *
 from subprocess import *
 import magic
 import six
+from dnf.subject import Subject
+from  hawkey import FORM_NEVRA
 from six.moves import range, urllib
-from rpmUtils.miscutils import splitFilename
 from webob import Request
 from .argparser import *
 from .config import *
@@ -426,6 +427,23 @@ def run_gdb(savedir, plugin):
         backtrace = backtrace.replace(python_labels, "")
 
     return backtrace, exploitable
+
+
+def splitFilename(filename):
+    """
+    Pass in a standard style rpm fullname
+
+    Return a name, version, release, epoch, arch, e.g.::
+        foo-1.0-1.i386.rpm returns foo, 1.0, 1, i386
+    """
+
+    if filename[-4:] == '.rpm':
+        filename = filename[:-4]
+
+    subject = Subject(filename)
+    possible_nevra = subject.get_nevra_possibilities(forms=FORM_NEVRA)
+    nevra = next(iter(possible_nevra))
+    return nevra.name, nevra.version, nevra.release, nevra.epoch, nevra.arch
 
 def remove_epoch(nvr):
     pos = nvr.find(":")
