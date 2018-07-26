@@ -1,8 +1,8 @@
 import re
 
 distribution = "fedora"
-abrtparser = re.compile("^Fedora release ([0-9]+) \(([^\)]+)\)$")
-guessparser = re.compile("\.fc([0-9]+)")
+abrtparser = re.compile(r"^Fedora release ([0-9]+) \(([^\)]+)\)$")
+guessparser = re.compile(r"\.fc([0-9]+)")
 displayrelease = "Fedora release"
 gdb_package = "gdb"
 gdb_executable = "/usr/bin/gdb"

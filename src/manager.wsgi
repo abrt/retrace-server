@@ -8,8 +8,8 @@ from retrace import *
 
 CONFIG = config.Config()
 
-MANAGER_URL_PARSER = re.compile("^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|"
-                                "bugzillano|notify|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
+MANAGER_URL_PARSER = re.compile(r"^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|"
+                                r"bugzillano|notify|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
 
 LONG_TYPES = {TASK_RETRACE: "Coredump retrace",
               TASK_DEBUG: "Coredump retrace - debug",
