@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 """
 Query bugzilla for component bugs and search through comments for trigger words. Output results
 to a log and for tasks found in the comments set bugzillano field with bugzilla ids.

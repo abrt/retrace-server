@@ -1,4 +1,5 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
+
 from retrace import *
 sys.path.insert(0, "/usr/share/retrace-server/")
 

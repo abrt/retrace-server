@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from retrace import *
 
 CONFIG = config.Config()

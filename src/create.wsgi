@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from tempfile import *
 from retrace import *
 

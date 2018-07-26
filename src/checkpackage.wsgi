@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from retrace import *
 
 def application(environ, start_response):
