@@ -895,6 +895,7 @@ def unpack(archive, mime, targetdir=None):
     return retcode
 
 def response(start_response, status, body="", extra_headers=[]):
+    body = body.encode()
     start_response(status, [("Content-Type", "text/plain"), ("Content-Length", "%d" % len(body))] + extra_headers)
     return [body]
 
