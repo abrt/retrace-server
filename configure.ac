@@ -32,7 +32,7 @@ IT_PROG_INTLTOOL([0.35.0])
 
 dnl ****** END ****************************************
 
-AM_PATH_PYTHON
+AM_PATH_PYTHON([3.6])
 if test -z "$PYTHON"; then
     echo "*** Essential program python not found" 1>&2
     exit 1

@@ -18,8 +18,9 @@ BuildRequires: libtool
 BuildRequires: texinfo
 BuildRequires: asciidoc
 BuildRequires: xmlto
+BuildRequires: python3-six
 %if 0%{fedora} >= 29
-BuildRequires: python2-devel
+BuildRequires: python3-devel
 %endif
 
 Requires: rsync
@@ -32,28 +33,15 @@ Requires: p7zip
 Requires: unzip
 Requires: lzop
 Requires: elfutils
-Requires: createrepo >= 0.9.9-27
-%if 0%{?fedora} > 27
-Requires: python2-mod_wsgi
-Requires: python2-webob
-Requires: python2-magic
-Requires: python2-requests
-Requires: python2-requests-kerberos
-Requires: python2-distro
-Requires: python2-bugzilla
-Requires: python2-six
-BuildRequires: python2-six
-%else
-Requires: mod_wsgi
-Requires: python-webob
-Requires: python-magic
-Requires: python-requests
-Requires: python-requests-kerberos
-Requires: python-distro
-Requires: python-bugzilla
-Requires: python-six
-BuildRequires: python-six
-%endif
+Requires: createrepo_c
+Requires: python3-mod_wsgi
+Requires: python3-webob
+Requires: python3-magic
+Requires: python3-requests
+Requires: python3-requests-kerberos
+Requires: python3-distro
+Requires: python3-bugzilla
+Requires: python3-six
 Requires: mod_ssl
 Requires: sqlite
 Requires: dnf
@@ -99,7 +87,7 @@ mkdir -p ${RPM_BUILD_ROOT}/%{_localstatedir}/spool/%{name}
 mkdir -p ${RPM_BUILD_ROOT}/%{_datadir}/%{name}
 
 %if 0%{fedora} >= 29
-%py_byte_compile %{__python2} ${RPM_BUILD_ROOT}%{_datadir}/%{name}/plugins
+%py_byte_compile %{__python3} ${RPM_BUILD_ROOT}%{_datadir}/%{name}/plugins
 %endif
 
 rm -f ${RPM_BUILD_ROOT}%{_infodir}/dir
@@ -166,7 +154,7 @@ fi
 %{_bindir}/%{name}-bugzilla-query
 %{_bindir}/bt_filter
 %{_bindir}/coredump2packages
-%{python_sitelib}/retrace/
+%{python3_sitelib}/retrace/
 %{_datadir}/%{name}/
 %doc %{_mandir}/man1/%{name}-cleanup.1*
 %doc %{_mandir}/man1/%{name}-interact.1*

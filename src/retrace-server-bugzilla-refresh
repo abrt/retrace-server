@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 """
 Refresh tasks that have bugzilla bugs in an open state to prevent them from getting deleted by
 retrace-server-cleanup tool.

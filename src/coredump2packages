@@ -1,4 +1,4 @@
-#! /usr/bin/python2
+#!/usr/bin/python3
 # -*- coding:utf-8;mode:python -*-
 # Gets list of packages necessary for processing of a coredump.
 # Uses eu-unstrip and dnf.
