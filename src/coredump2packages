@@ -300,12 +300,12 @@ for coredump_package in coredump_package_list[:]:
 # then objects for which the packages were not found.
 #
 if len(coredump_package_list) == 1:
-    print coredump_package_list[0]
+    print(coredump_package_list[0])
 else:
-    print "-"
-print
+    print("-")
+print()
 for package in sorted(package_list):
-    print str(package)
-print
+    print(str(package))
+print()
 for path, build_id in missing_buildid_list:
-    print "{0} {1}".format(path, build_id)
+    print("{0} {1}".format(path, build_id))
