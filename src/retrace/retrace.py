@@ -236,7 +236,7 @@ def get_canon_arch(arch):
     return arch
 
 def free_space(path):
-    child = Popen([DF_BIN, "-B", "1", path], stdout=PIPE)
+    child = Popen([DF_BIN, "-B", "1", path], stdout=PIPE, encoding='utf-8')
     lines = child.communicate()[0].split("\n")
     for line in lines:
         match = DF_OUTPUT_PARSER.match(line)
@@ -246,7 +246,7 @@ def free_space(path):
     return None
 
 def dir_size(path):
-    child = Popen([DU_BIN, "-sb", path], stdout=PIPE)
+    child = Popen([DU_BIN, "-sb", path], stdout=PIPE, encoding='utf-8')
     lines = child.communicate()[0].split("\n")
     for line in lines:
         match = DU_OUTPUT_PARSER.match(line)
@@ -257,7 +257,7 @@ def dir_size(path):
 
 def unpacked_size(archive, mime):
     command, parser = HANDLE_ARCHIVE[mime]["size"]
-    child = Popen(command + [archive], stdout=PIPE)
+    child = Popen(command + [archive], stdout=PIPE, encoding='utf-8')
     lines = child.communicate()[0].split("\n")
     for line in lines:
         match = parser.match(line)
@@ -267,7 +267,7 @@ def unpacked_size(archive, mime):
     return None
 
 def guess_arch(coredump_path):
-    child = Popen(["file", coredump_path], stdout=PIPE)
+    child = Popen(["file", coredump_path], stdout=PIPE, encoding='utf-8')
     output = child.communicate()[0]
     match = CORE_ARCH_PARSER.search(output)
     if match:
@@ -291,7 +291,7 @@ def guess_arch(coredump_path):
             return "ppc64"
 
     result = None
-    child = Popen(["strings", coredump_path], stdout=PIPE, stderr=STDOUT)
+    child = Popen(["strings", coredump_path], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
     line = child.stdout.readline()
     while line:
         for canon_arch, derived_archs in ARCH_MAP.items():
@@ -355,7 +355,7 @@ def run_gdb(savedir, plugin):
     with open(os.devnull, "w") as null:
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
                        "--", "ls '%s'" % executable],
-                      stdout=PIPE, stderr=null)
+                      stdout=PIPE, stderr=null, encoding='utf-8')
         output = child.communicate()[0]
         if output.strip() != executable:
             raise Exception("The appropriate package set could not be installed")
@@ -369,7 +369,7 @@ def run_gdb(savedir, plugin):
 
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
                        "--", "ls '%s'" % EXPLOITABLE_PLUGIN_PATH],
-                      stdout=PIPE, stderr=null)
+                      stdout=PIPE, stderr=null, encoding='utf-8')
         add_exploitable = child.communicate()[0].strip() == EXPLOITABLE_PLUGIN_PATH
 
         batfile = os.path.join(savedir, "gdb.sh")
@@ -409,7 +409,7 @@ def run_gdb(savedir, plugin):
         child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
                        "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh'",
                        # redirect GDB's stderr, ignore mock's stderr
-                       "2>&1"], stdout=PIPE, stderr=null)
+                       "2>&1"], stdout=PIPE, stderr=null, encoding='utf-8')
 
     backtrace = child.communicate()[0].strip()
     if child.wait():
@@ -534,7 +534,7 @@ def get_kernel_release(vmcore, crash_cmd=["crash"]):
     # set SIGPIPE to default handler for bz 1540253
     save = getsignal(SIGPIPE)
     signal(SIGPIPE, SIG_DFL)
-    child = Popen(crash_cmd + ["--osrelease", vmcore], stdout=PIPE, stderr=STDOUT)
+    child = Popen(crash_cmd + ["--osrelease", vmcore], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
     release = child.communicate()[0].strip()
     ret = child.wait()
     signal(SIGPIPE, save)
@@ -688,8 +688,9 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
             files[i] = ".%s" % files[i]
 
     with open(os.devnull, "w") as null:
-        rpm2cpio = Popen(["rpm2cpio", debuginfo], stdout=PIPE, stderr=null)
-        cpio = Popen(["cpio", "-id"] + files, stdin=rpm2cpio.stdout, stdout=null, stderr=null, cwd=basedir)
+        rpm2cpio = Popen(["rpm2cpio", debuginfo], stdout=PIPE, stderr=null, encoding='utf-8')
+        cpio = Popen(["cpio", "-id"] + files, stdin=rpm2cpio.stdout, stdout=null, stderr=null, cwd=basedir,
+                     encoding='utf-8')
         rpm2cpio.wait()
         cpio.wait()
         rpm2cpio.stdout.close()
@@ -900,7 +901,7 @@ def response(start_response, status, body="", extra_headers=[]):
     return [body]
 
 def run_ps():
-    child = Popen(["ps", "-eo", "pid,ppid,etime,cmd"], stdout=PIPE)
+    child = Popen(["ps", "-eo", "pid,ppid,etime,cmd"], stdout=PIPE, encoding='utf-8')
     lines = child.communicate()[0].split("\n")
 
     return lines
@@ -1196,7 +1197,7 @@ def cmp_vmcores_first(str1, str2):
     return cmp(str1, str2)
 
 def check_run(cmd):
-    child = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+    child = Popen(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
     stdout = child.communicate()[0]
     if child.wait():
         raise Exception("%s exitted with %d: %s" % (cmd[0], child.returncode, stdout))
@@ -1801,7 +1802,7 @@ class RetraceTask:
         # Now open the kernel-debuginfo and get a listing of the files we may need
         vmlinux_path = None
         debugfiles = {}
-        child = Popen(["rpm", "-qpl", debuginfo], stdout=PIPE)
+        child = Popen(["rpm", "-qpl", debuginfo], stdout=PIPE, encoding='utf-8')
         lines = child.communicate()[0].splitlines()
         for line in lines:
             if line.endswith(pattern):
@@ -1842,16 +1843,18 @@ class RetraceTask:
             with open(os.devnull, "w") as null:
                 child = Popen(["/usr/bin/mock", "--configdir", chroot, "shell",
                                "--", "crash -s %s %s" % (vmcore, vmlinux)],
-                              stdin=PIPE, stdout=PIPE, stderr=null)
+                              stdin=PIPE, stdout=PIPE, stderr=null, encoding='utf-8')
         else:
-            child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT,
+                          encoding='utf-8')
         stdout = child.communicate("mod\nquit")[0]
         if child.returncode == 1 and "el5" in kernelver.release:
             log_info("Unable to list modules but el5 detected, trying crash fixup for vmss files")
             crash_cmd.append("--machdep")
             crash_cmd.append("phys_base=0x200000")
             log_info("trying crash_cmd = " + str(crash_cmd))
-            child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT,
+                          encoding='utf-8')
             stdout = child.communicate("mod\nquit")[0]
 
         # If we fail to get the list of modules, is the vmcore even usable?
@@ -1975,7 +1978,7 @@ class RetraceTask:
                     errors.append((url, "malformed URL"))
                     continue
 
-                child = Popen(["wget", "-nv", "-P", crashdir, url], stdout=PIPE, stderr=STDOUT)
+                child = Popen(["wget", "-nv", "-P", crashdir, url], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
                 stdout = child.communicate()[0]
                 if child.wait():
                     errors.append((url, "wget exitted with %d: %s" % (child.returncode, stdout)))

@@ -59,7 +59,7 @@ sys.stdout = stdout
 #
 log.write("Running eu-unstrip...\n")
 unstrip_args = ['eu-unstrip', '--core={0}'.format(args.coredump), '-n']
-unstrip_proc = subprocess.Popen(unstrip_args, stdout=subprocess.PIPE)
+unstrip_proc = subprocess.Popen(unstrip_args, stdout=subprocess.PIPE, encoding='utf8')
 unstrip = unstrip_proc.communicate()[0]
 log.write("{0}\n".format(unstrip))
 if not unstrip:
