@@ -318,19 +318,6 @@ if __name__ == "__main__":
         if CONFIG["UseCreaterepoUpdate"]:
             cmd.append("--update")
 
-        # ToDo: Dirty!
-        # With newer version of createrepo the number of packages is limited
-        # by shell's maximum length of argument list. That's why it uses
-        # workers able to split the work and fit into the limit.
-        # 2 workers seem to be enough for Fedora right now, the number may
-        # need increasing in the future.
-        try:
-            import createrepo
-            if "RepoData" in createrepo.__dict__:
-                cmd.append("--workers=2")
-        except:
-            pass
-
         retcode = call(cmd, stdout=null, stderr=null)
     finally:
         if null:
