@@ -173,8 +173,8 @@ def application(environ, start_response):
         except:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
-        if "notes" in POST and len(POST["notes"]) > 0:
-            task.set_notes(POST["notes"][0])
+        if b"notes" in POST and len(POST[b"notes"]) > 0:
+            task.set_notes(POST[b"notes"][0].decode('utf-8'))
 
         return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "notify":
@@ -184,9 +184,9 @@ def application(environ, start_response):
         except:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
-        if "notify" in POST and len(POST["notify"]) > 0:
-            task.set_notify([email for email in set(n.strip() for n in POST["notify"][0].
-                                                    replace(";", ",").split(",")) if email])
+        if b"notify" in POST and len(POST[b"notify"]) > 0:
+            task.set_notify([email for email in set(n.strip() for n in POST[b"notify"][0].decode('utf-8')
+                                                    .replace(";", ",").split(",")) if email])
 
         return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
     elif match.group(6) and match.group(6) == "caseno":
@@ -196,12 +196,12 @@ def application(environ, start_response):
         except:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
-        if "caseno" in POST and len(POST["caseno"]) > 0:
-            if not POST["caseno"][0]:
+        if b"caseno" in POST and len(POST[b"caseno"]) > 0:
+            if not POST[b"caseno"][0]:
                 task.delete(RetraceTask.CASENO_FILE)
             else:
                 try:
-                    caseno = int(POST["caseno"][0])
+                    caseno = int(POST[b"caseno"][0])
                 except Exception as ex:
                     return response(start_response, "404 Not Found", _("Case number must be an integer; %s" % ex))
 
@@ -215,13 +215,13 @@ def application(environ, start_response):
         except Exception:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
-        if "bugzillano" in POST and len(POST["bugzillano"]) > 0:
-            if not POST["bugzillano"][0]:
+        if b"bugzillano" in POST and len(POST[b"bugzillano"]) > 0:
+            if not POST[b"bugzillano"][0]:
                 task.delete(RetraceTask.BUGZILLANO_FILE)
             else:
                 try:
-                    bugzillano = list(filter(int, set(n.strip() for n in POST["bugzillano"][0].
-                                                      replace(";", ",").split(","))))
+                    bugzillano = list(filter(int, set(n.strip() for n in POST[b"bugzillano"][0].decode('utf-8')
+                                                      .replace(";", ",").split(","))))
                 except ValueError as ex:
                     return response(start_response, "404 Not Found", _("Bugzilla numbers must be integers; %s" % ex))
 
@@ -261,14 +261,14 @@ def application(environ, start_response):
         POST = urllib.parse.parse_qs(request.body, keep_blank_values=1)
 
         qs_base = []
-        if "md5sum" in POST and POST["md5sum"][0] == "on":
+        if b"md5sum" in POST and POST[b"md5sum"][0] == b"on":
             qs_base.append("md5sum=md5sum")
 
-        if "debug" in POST and POST["debug"][0] == "on":
+        if b"debug" in POST and POST[b"debug"][0] == b"on":
             qs_base.append("debug=debug")
 
-        if "vra" in POST:
-            vra = POST["vra"][0]
+        if b"vra" in POST:
+            vra = POST[b"vra"][0].decode('utf-8')
 
             if len(vra.strip()) > 0:
                 try:
@@ -286,17 +286,17 @@ def application(environ, start_response):
         except Exception as ex:
             return response(start_response, "500 Internal Server Error", _("Unable to create a new task"))
 
-        if "task_type" in POST and POST["task_type"][0] == "coredump":
+        if b"task_type" in POST and POST[b"task_type"][0] == b"coredump":
             task.set_type(TASK_RETRACE_INTERACTIVE)
-            if "package" in POST and POST["package"][0]:
-                task.set("custom_package", POST["package"][0])
-            if "executable" in POST and POST["executable"][0]:
-                task.set("custom_executable", POST["executable"][0])
-            if "os_release" in POST and POST["os_release"][0]:
-                task.set("custom_os_release", POST["os_release"][0])
+            if b"package" in POST and POST[b"package"][0]:
+                task.set("custom_package", POST[b"package"][0].decode('utf-8'))
+            if b"executable" in POST and POST[b"executable"][0]:
+                task.set("custom_executable", POST[b"executable"][0].decode('utf-8'))
+            if b"os_release" in POST and POST[b"os_release"][0]:
+                task.set("custom_os_release", POST[b"os_release"][0].decode('utf-8'))
         else:
             task.set_type(TASK_VMCORE_INTERACTIVE)
-        task.add_remote(POST["custom_url"][0])
+        task.add_remote(POST[b"custom_url"][0].decode('utf-8'))
         task.set_managed(True)
         task.set_url("%s/%d" % (match.group(1), task.get_taskid()))
 
