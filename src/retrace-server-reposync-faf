@@ -2,7 +2,7 @@
 
 import os
 from argparse import ArgumentParser
-import yum.misc
+from dnf.yum.misc import get_default_chksum_type
 from createrepo import MetaDataGenerator, MetaDataConfig
 from pyfaf.storage import getDatabase
 from pyfaf.queries import get_packages_by_osrelease
@@ -27,7 +27,7 @@ def generate_yum_repo(db, outputdir, opsys, release, arch):
     conf.quiet = False
     conf.verbose = True
     conf.update = False
-    conf.sumtype = yum.misc._default_checksums[0]
+    conf.sumtype = get_default_chksum_type()
     conf.outputdir = outputdir
     conf.directory = conf.outputdir
     conf.pkglist = get_pkglist(db, conf.directory, opsys, release, arch)
