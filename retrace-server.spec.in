@@ -19,9 +19,7 @@ BuildRequires: texinfo
 BuildRequires: asciidoc
 BuildRequires: xmlto
 BuildRequires: python3-six
-%if 0%{fedora} >= 29
 BuildRequires: python3-devel
-%endif
 
 Requires: rsync
 Requires: mock >= 1.4.7
