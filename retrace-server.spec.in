@@ -40,9 +40,10 @@ Requires: python3-requests-kerberos
 Requires: python3-distro
 Requires: python3-bugzilla
 Requires: python3-six
+Requires: python3-dnf
+Requires: python3-hawkey
 Requires: mod_ssl
 Requires: sqlite
-Requires: dnf
 Requires: crash >= 5.1.7
 Requires: wget
 Requires: kexec-tools
