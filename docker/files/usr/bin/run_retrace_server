@@ -1,0 +1,14 @@
+#!/bin/bash
+
+USER_ID=$(id -u)
+GROUP_ID=$(id -g)
+
+# Openshift runs containers with user that has assigned UID >= 1000000000
+# Because there is no record of this user in /etc/passwd, it causes problems with some
+# applications. We edit the /etc/passwd so the user is assigned as retrace-server.
+if [ x"$USER_ID" != x"0" -a x"$USER_ID" != x"997" ];then
+    echo "retrace-server:x:${USER_ID}:${GROUP_ID}::/etc/retrace-server:/sbin/nologin" >> /etc/passwd
+fi
+
+/usr/sbin/uwsgi --ini /etc/uwsgi.ini --logto /var/log/retrace-server/uwsgi_logs &
+apachectl -DFOREGROUND
