@@ -48,11 +48,12 @@ def generate_repo(db, outputdir, opsys, release, arch):
     oth_db = cr.OtherSqlite(oth_db_path)
 
     # Prepare list of packages to process
-    pkg_list = get_pkglist(db, outputdir, opsys, release, arch)
+    pkg_list = list(get_pkglist(db, outputdir, opsys, release, arch))
 
-    pri_xml.set_num_of_pkgs(len(pkg_list))
-    fil_xml.set_num_of_pkgs(len(pkg_list))
-    oth_xml.set_num_of_pkgs(len(pkg_list))
+    pkg_list_len = len(pkg_list)
+    pri_xml.set_num_of_pkgs(pkg_list_len)
+    fil_xml.set_num_of_pkgs(pkg_list_len)
+    oth_xml.set_num_of_pkgs(pkg_list_len)
 
     # Process all packages
     for filename in pkg_list:
