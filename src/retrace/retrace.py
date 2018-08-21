@@ -441,8 +441,12 @@ def splitFilename(filename):
         filename = filename[:-4]
 
     subject = Subject(filename)
-    possible_nevra = subject.get_nevra_possibilities(forms=FORM_NEVRA)
-    nevra = next(iter(possible_nevra))
+    possible_nevra = list(subject.get_nevra_possibilities(forms=FORM_NEVRA))
+    if possible_nevra:
+        nevra = possible_nevra[0]
+    else:
+        return None, None, None, None, None
+
     return nevra.name, nevra.version, nevra.release, nevra.epoch, nevra.arch
 
 def remove_epoch(nvr):
