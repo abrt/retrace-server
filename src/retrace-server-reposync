@@ -204,6 +204,8 @@ if __name__ == "__main__":
         stdout, stderr = child.communicate()
         if child.returncode != 0:
             log_error("Could not create faf repo")
+            log_debug(stderr)
+            log_debug(stdout)
             sys.exit(child.returncode)
         sys.exit(0)
 
