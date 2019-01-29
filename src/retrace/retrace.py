@@ -716,7 +716,7 @@ def get_vmcore_dump_level(task, vmlinux=None):
             cmd.append(vmlinux)
 
         result = None
-        child = Popen(cmd, stdout=PIPE, stderr=null)
+        child = Popen(cmd, stdout=PIPE, stderr=null, encoding='utf-8')
         line = child.stdout.readline()
         while line:
             match = DUMP_LEVEL_PARSER.match(line)
