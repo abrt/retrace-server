@@ -18,4 +18,5 @@ config.py: config.py.in
 	    -e "s|@GZIP_BIN@|$(GZIP)|g" \
 	    -e "s|@TAR_BIN@|$(TAR)|g" \
 	    -e "s|@XZ_BIN@|$(XZ)|g" \
+	    -e "s|@LSOF_BIN@|$(LSOF)|g" \
 	    $< > $@

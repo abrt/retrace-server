@@ -23,6 +23,7 @@ DU_BIN = "@DU_BIN@"
 GZIP_BIN = "@GZIP_BIN@"
 TAR_BIN = "@TAR_BIN@"
 XZ_BIN = "@XZ_BIN@"
+LSOF_BIN = "@LSOF_BIN@"
 
 class Config(object):
     class __config:

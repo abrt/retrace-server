@@ -21,6 +21,7 @@ BuildRequires: xmlto
 %if 0%{fedora} >= 29
 BuildRequires: python2-devel
 %endif
+BuildRequires: lsof
 
 Requires: rsync
 Requires: mock >= 1.4.7
@@ -31,6 +32,7 @@ Requires: tar
 Requires: p7zip
 Requires: unzip
 Requires: lzop
+Requires: lsof
 Requires: elfutils
 Requires: createrepo >= 0.9.9-27
 %if 0%{?fedora} > 27
