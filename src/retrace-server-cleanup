@@ -33,6 +33,25 @@ def kill_process_and_childs(process_id, ps_output=None):
 
     return result
 
+def check_open_crash_file(task):
+    """
+    Check if vmcore or coredump for given task is used by another process.
+    """
+    if task.has_vmcore():
+        crash_path = os.path.join(task.get_savedir(), task.VMCORE_FILE)
+    elif task.has_coredump():
+        crash_path = os.path.join(task.get_savedir(), task.COREDUMP_FILE)
+    else:
+        return False
+
+    lsof = Popen([LSOF_BIN, "+wt", crash_path], stdout=PIPE, encoding='utf-8')
+    pids = lsof.communicate()[0]
+
+    if pids:
+        return True
+
+    return False
+
 def check_config():
     if CONFIG["DeleteTaskAfter"] > 0 and CONFIG["ArchiveTaskAfter"] > 0:
         winner = "archiving"
@@ -164,6 +183,10 @@ if __name__ == "__main__":
                     continue
 
                 if task.get_age() >= CONFIG["DeleteTaskAfter"]:
+                    if check_open_crash_file(task):
+                        log.write("Deletion of task %d skipped - crash file is opened.\n" % task.get_taskid())
+                        continue
+
                     log.write("Deleting old task %s\n" % filename)
                     task.create_worker().remove_task()
 
@@ -182,5 +205,9 @@ if __name__ == "__main__":
                     continue
 
                 if task.get_age() >= CONFIG["DeleteFailedTaskAfter"] and task.get_status() == STATUS_FAIL:
+                    if check_open_crash_file(task):
+                        log.write("Deletion of task %d skipped - crash file is opened.\n" % task.get_taskid())
+                        continue
+
                     log.write("Deleting old failed task %s\n" % filename)
                     task.create_worker().remove_task()
