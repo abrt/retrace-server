@@ -101,6 +101,15 @@ AC_PATH_PROG([XMLTO], [xmlto], [no])
     [exit 1]
 [fi]
 
+AC_PATH_PROG([LSOF], [lsof], [no])
+[if test "$LSOF" = "no"]
+[then]
+    [echo "The lsof program was not found in the search path. Please ensure"]
+    [echo "that it is installed and its directory is included in the search path."]
+    [echo "Then run configure again before attempting to build Retrace server."]
+    [exit 1]
+[fi]
+
 PKG_PROG_PKG_CONFIG
 AC_ARG_WITH([systemdsystemunitdir],
         AS_HELP_STRING([--with-systemdsystemunitdir=DIR], [Directory for systemd service files]),

@@ -18,6 +18,7 @@ BuildRequires: libtool
 BuildRequires: texinfo
 BuildRequires: asciidoc
 BuildRequires: xmlto
+BuildRequires: lsof
 BuildRequires: python3-six
 BuildRequires: python3-devel
 
@@ -30,6 +31,7 @@ Requires: tar
 Requires: p7zip
 Requires: unzip
 Requires: lzop
+Requires: lsof
 Requires: elfutils
 Requires: createrepo_c
 Requires: python3-mod_wsgi
