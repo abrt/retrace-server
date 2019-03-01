@@ -180,6 +180,57 @@ fi
 %license COPYING
 
 %changelog
+* Fri Mar 01 2019 Martin Kutlak <mkutlak@redhat.com> 1.18.1-1
+- cleanup: Add check for opened crash files
+- reposync: Inform why creating of repository failed
+- Correct syntax for gdb backtrace command
+- Refactoring: Too long lines, missing whitespaces
+- Add has_coredump() method to RetraceTask and upate get_md5_tasks()
+- Modify get_md5_tasks to skip tasks with no vmcores or invalid md5sum files
+- Add 'has_vmcore' method to RetraceTask
+- spec: Bytecompile r-s plugins explicitly
+- spec: Remove automake byte-compiled files
+- spec: Correct the file ownership
+- do not require install-info on F28+
+- Adjust indentation according to pylint recommendation
+- py3 compatibility: Replace filter function with a list equivalent
+- py3 compatibility: Adjust urllib, urllib2 and urlparse
+- Fix missing sys import
+- Clean up of unused imports
+- py3 compatibility: Adjust imports
+- py3 compatibility: Resolution of range and xrange
+- py3 compatibility: Replace ConfigParser module with configparser
+- py3 compatibility: Classic division
+- py3 compatibility: Adjust raise statement syntax
+- py3 compatibility: Replace StringIO module with io module
+- py3 compatibility: Removal of tuple parameter unpacking
+- Refactoring: Missing or bad whitespace
+- py3 compatibility: Set literals
+- py3 compatibility: Use 'sorted' built-in function
+- py3 compatibility: Replacement of basestring with six.string_types
+- py3 compatibility: Ensure map function to return a list
+- py3 compatibility: Replacement of 'has_key' with 'in'
+- Make r-s-bugzilla-query query options configurable
+- Load credentials from custom file
+- manager: Make the bugzillano a clickable link
+- Query the remaining bugzilla statuses
+- retrace: Add reset_age method
+- Implement retrace-server-bzquery tool
+- Implement retrace-server-bugzilla-refresh tool
+- Implement bugzilla field
+- py3 compatibility: Octal literals
+- py3 compatibility: try-except statement
+- py3 compatibility: print statement is replaced with a print() function
+- For vmcores that fail crash but have a large enough kernel log, try --minimal
+- Set md5sum as soon as possible.
+- Add dedup_vmcore to RetraceWorker and call from retrace-server-cleanup
+- Fail task if the crash sys command exits with non-zero and kernellog is small
+- Fix typo in exception handling of get_kernel_release
+- Set default signal handler for SIGPIPE before calling Popen on 'crash --osrelease'
+- Improve vmcore kernel parsing for certain scenarios and limit file scanning
+- autogen: correctly parse buildrequires from spec file
+- spec: Do not:x show every single change
+
 * Thu Feb 01 2018 Matej Marusak <mmarusak@redhat.com> 1.18.0-1
 - mark license as license
 - Update Python 2 dependency declarations to new packaging standards
