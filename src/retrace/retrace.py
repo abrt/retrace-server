@@ -521,7 +521,7 @@ def is_package_known(package_nvr, arch, releaseid=None):
 # 1. Look for 'OSRELEASE='.  For example:
 # OSRELEASE=2.6.18-406.el5
 # NOTE: We can get "OSRELEASE=%" so we disallow the '%' character after the '='
-OSRELEASE_VAR_PARSER = re.compile(r"OSRELEASE=([^%][^\x00\s]+)")
+OSRELEASE_VAR_PARSER = re.compile(b"OSRELEASE=([^%][^\x00\s]+)")
 # 2. Look for "Linux version" string.  Note that this was taken from
 # CAS 'fingerprint' database code.  For more info, see
 # https://bugzilla.redhat.com/show_bug.cgi?id=1535592#c9 and
@@ -529,10 +529,10 @@ OSRELEASE_VAR_PARSER = re.compile(r"OSRELEASE=([^%][^\x00\s]+)")
 # For exmaple:
 # Linux version 3.10.0-693.11.1.el7.x86_64 (mockbuild@x86-041.build.eng.bos.redhat.com)
 # (gcc version 4.8.5 20150623 (Red Hat 4.8.5-16) (GCC) ) #1 SMP Fri Oct 27 05:39:05 EDT 2017
-LINUX_VERSION_PARSER = re.compile(r'Linux\sversion\s(\S+)\s+(.*20\d{1,2}|#1\s.*20\d{1,2})')
+LINUX_VERSION_PARSER = re.compile(b'Linux\sversion\s(\S+)\s+(.*20\d{1,2}|#1\s.*20\d{1,2})')
 # 3. Look for the actual kernel release. For example:
 # 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
-KERNEL_RELEASE_PARSER = re.compile(r'(\d+\.\d+\.\d+)-(\d+\.[^\x00\s]+)')
+KERNEL_RELEASE_PARSER = re.compile(b'(\d+\.\d+\.\d+)-(\d+\.[^\x00\s]+)')
 def get_kernel_release(vmcore, crash_cmd=["crash"]):
     # First use 'crash' to identify the kernel version.
     # set SIGPIPE to default handler for bz 1540253
@@ -572,7 +572,7 @@ def get_kernel_release(vmcore, crash_cmd=["crash"]):
             release = KERNEL_RELEASE_PARSER.search(b)
             if release:
                 release = release.group(0)
-
+        release = release.decode('utf-8')
         fd.close()
 
     # Clean up the release before returning or calling KernelVer
