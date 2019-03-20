@@ -26,7 +26,7 @@ def async_ftp_list_dir(filterexp):
     if filterexp:
         tasklist = sorted(fnmatch.filter(rawtasklist, filterexp))
     else:
-        tasklist = sorted(rawtasklist, cmp=cmp_vmcores_first)
+        tasklist = sorted(rawtasklist)
 
     for fname in tasklist:
         available.append("<tr><td><a href=\"manager/%s\">%s</a></td></tr>" \

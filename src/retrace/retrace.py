@@ -1189,17 +1189,6 @@ def ftp_list_dir(ftpdir="/", ftp=None):
 
     return result
 
-def cmp_vmcores_first(str1, str2):
-    vmcore1 = "vmcore" in str1.lower()
-    vmcore2 = "vmcore" in str2.lower()
-
-    if vmcore1 and not vmcore2:
-        return -1
-    elif not vmcore1 and vmcore2:
-        return 1
-
-    return cmp(str1, str2)
-
 def check_run(cmd):
     child = Popen(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
     stdout = child.communicate()[0]
