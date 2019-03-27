@@ -12,7 +12,6 @@
 
     or installed by (two versions based on your package manager):
 
-        $ ./autogen.sh sysdeps --install-yum
         $ ./autogen.sh sysdeps --install-dnf
 
     The dependency installer gets the data from [the rpm spec file](retrace-server.spec.in)
@@ -132,13 +131,7 @@ how to deploy such a server. Each point corresponds with point from section
         coredump, find out which package it comes from - it will be later marked
         as *my-packages*.
 
-        If you use yum run this:
-
-            # yum --downloadonly --releasever=25 --installroot=/var/tmp/local_repo/ \
-            --enablerepo=\*debuginfo\* -y --downloaddir=/var/tmp/local_repo/ \
-            --nogpgcheck install abrt-addon-ccpp shadow-utils gdb rpm *my-packages*
-
-        If you use dnf run this:
+        Run this:
 
             # dnf --releasever=25 --enablerepo=\*debuginfo\* -y --installroot=/var/tmp/local_repo/ \
             download --resolve --destdir /var/tmp/local_repo/ abrt-addon-ccpp shadow-utils \
