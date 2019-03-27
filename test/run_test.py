@@ -38,34 +38,18 @@ def create_repo(packages, releaseid, version):
     needed_packages =\
                   ["abrt-addon-ccpp", "shadow-utils", "gdb", "rpm"] + packages
 
-    #prepare dnf and yum version
-    commands = []
-    commands.append('dnf --releasever={0} --enablerepo=\*debuginfo\* -y\
-                    --installroot={1} download --resolve --destdir {2} {3}'
-                    .format(version, repo_path, repo_path,\
-                    " ".join(needed_packages)))
-    commands.append('yum --downloadonly --releasever={0}\
-                    --installroot={1} --enablerepo=\*debuginfo\* -y\
-                    --downloaddir={2} --nogpgcheck\
-                    --setopt=\*.skip_if_unavailable=true install {3}'.format(
-                        version, repo_path, repo_path, " ".join(needed_packages)))
-    # call commands one by one
-    for cmd in commands:
-        c = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE, encoding='utf-8')
-        stdout, stderr = c.communicate()
-        # if command succeeded, don not try another
-        if c.returncode == 0:
-            break
-        # if command was not found, try another
-        elif c.returncode == 127:
-            continue
-        # if failed, but not with 127 (command does exist)
-        #NOTE if error-msg states: "Failed to synchronize cache for repo"
-            #easiest thing is to go /etc/yum.repos.d/failed_repo and comment
-            #line "skip_if_unavailable=False"
+    cmd = 'dnf --releasever={0} --enablerepo=\*debuginfo\* -y\
+           --installroot={1} download --resolve --destdir {2} {3}'
+           .format(version, repo_path, repo_path,\
+           " ".join(needed_packages))
+
+    c = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE, encoding='utf-8')
+    stdout, stderr = c.communicate()
+    #NOTE if error-msg states: "Failed to synchronize cache for repo"
+        #easiest thing is to go /etc/yum.repos.d/failed_repo and comment
+        #line "skip_if_unavailable=False"
+    if c.returncode != 0:
         fatal_error("Command has failed:\n", stderr)
-    else:
-        fatal_error("Creating repo failed - no command can install packages\n")
 
     # create repo from downloaded packages
     createrepo_cmd = ["createrepo", repo_path]
