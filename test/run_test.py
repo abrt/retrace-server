@@ -12,7 +12,6 @@ Warning: using delete_repo will remove repo, even though it was not created
 Note: might need sudo privileges due to using /var/spool/
 """
 
-from __future__ import print_function
 import os
 import grp
 import argparse
