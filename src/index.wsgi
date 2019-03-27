@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-from __future__ import division
 from retrace import *
 
 CONFIG = config.Config()
