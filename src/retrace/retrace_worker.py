@@ -166,17 +166,24 @@ class RetraceWorker(object):
         except Exception as ex:
             log_error("Failed to send e-mail: %s" % ex)
 
+    def _symlink_log(self):
+        if self.task.has_log():
+            # add a symlink to log to misc directory
+            # use underscore so that the log is first in the list
+            try:
+                os.symlink(self.task._get_file_path(RetraceTask.LOG_FILE),
+                           os.path.join(self.task._get_file_path(RetraceTask.MISC_DIR), "retrace-log"))
+            except OSError as ex:
+                if ex.errno != errno.EEXIST:
+                    raise
+
     def _fail(self, errorcode=1):
         task = self.task
         task.set_status(STATUS_FAIL)
         task.set_finished_time(int(time.time()))
         self.notify_email()
 
-        if task.has_log():
-            # add a symlink to log to misc directory
-            # use underscore so that the log is first in the list
-            os.symlink(task._get_file_path(RetraceTask.LOG_FILE),
-                       os.path.join(task._get_file_path(RetraceTask.MISC_DIR), "retrace-log"))
+        self._symlink_log()
 
         self.stats["duration"] = int(time.time()) - self.stats["starttime"]
         try:
@@ -967,11 +974,7 @@ class RetraceWorker(object):
         log_info("Retrace took %d seconds" % self.stats["duration"])
         log_info(STATUS[STATUS_SUCCESS])
 
-        if task.has_log():
-            # add a symlink to log to misc directory
-            # use underscore so that the log is first in the list
-            os.symlink(task._get_file_path(RetraceTask.LOG_FILE),
-                       os.path.join(task._get_file_path(RetraceTask.MISC_DIR), "retrace-log"))
+        self._symlink_log()
 
         task.set_status(STATUS_SUCCESS)
         self.notify_email()
