@@ -375,7 +375,7 @@ def run_gdb(savedir, plugin):
         with open(batfile, "w") as gdbfile:
             gdbfile.write("%s -batch " % plugin.gdb_executable)
             if add_exploitable:
-                gdbfile.write("-ex 'python execfile(\"/usr/libexec/abrt-gdb-exploitable\")' ")
+                gdbfile.write("-ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' ")
             gdbfile.write("-ex 'file %s' "
                           "-ex 'core-file /var/spool/abrt/crash/coredump' "
                           "-ex 'echo %s\n' "
