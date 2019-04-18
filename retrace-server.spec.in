@@ -34,6 +34,7 @@ Requires: lzop
 Requires: lsof
 Requires: elfutils
 Requires: createrepo_c
+Requires: python3-createrepo_c
 Requires: python3-mod_wsgi
 Requires: python3-webob
 Requires: python3-magic
