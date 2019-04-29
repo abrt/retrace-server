@@ -6,7 +6,7 @@ License: GPLv2+
 URL: https://github.com/abrt/retrace-server
 Source0: https://github.com/abrt/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
 
-%if 0%{fedora} >= 29
+%if 0%{?fedora} >= 29
 # There are Python plugins in /usr/share/retrace-server/plugins
 %global _python_bytecompile_extra 0
 %endif
@@ -88,7 +88,7 @@ mkdir -p ${RPM_BUILD_ROOT}/%{_localstatedir}/log/%{name}
 mkdir -p ${RPM_BUILD_ROOT}/%{_localstatedir}/spool/%{name}
 mkdir -p ${RPM_BUILD_ROOT}/%{_datadir}/%{name}
 
-%if 0%{fedora} >= 29
+%if 0%{?fedora} >= 29
 %py_byte_compile %{__python3} ${RPM_BUILD_ROOT}%{_datadir}/%{name}/plugins
 %endif
 
