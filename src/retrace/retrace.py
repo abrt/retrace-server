@@ -571,7 +571,8 @@ def get_kernel_release(vmcore, crash_cmd=["crash"]):
             release = KERNEL_RELEASE_PARSER.search(b)
             if release:
                 release = release.group(0)
-        release = release.decode('utf-8')
+        if release:
+            release = release.decode('utf-8')
         fd.close()
 
     # Clean up the release before returning or calling KernelVer
