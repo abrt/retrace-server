@@ -2348,7 +2348,7 @@ class RetraceTask:
 
     def set_bugzillano(self, values):
         """Writes bugzilla numbers into BUGZILLANO_FILE"""
-        if not isinstance(values, list) or not all([isinstance(v, basestring) for v in values]):
+        if not isinstance(values, list) or not all([isinstance(v, str) for v in values]):
             raise Exception("values must be a list of integers")
 
         self.set_atomic(RetraceTask.BUGZILLANO_FILE,
