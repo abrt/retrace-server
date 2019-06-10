@@ -537,7 +537,7 @@ def get_kernel_release(vmcore, crash_cmd=["crash"]):
     # set SIGPIPE to default handler for bz 1540253
     save = getsignal(SIGPIPE)
     signal(SIGPIPE, SIG_DFL)
-    child = Popen(crash_cmd + ["--osrelease", vmcore], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+    child = Popen(crash_cmd + ["--osrelease", vmcore], stdout=PIPE, stderr=STDOUT, encoding='ISO-8859-1')
     release = child.communicate()[0].strip()
     ret = child.wait()
     signal(SIGPIPE, save)
@@ -1836,10 +1836,10 @@ class RetraceTask:
             with open(os.devnull, "w") as null:
                 child = Popen(["/usr/bin/mock", "--configdir", chroot, "shell",
                                "--", "crash -s %s %s" % (vmcore, vmlinux)],
-                              stdin=PIPE, stdout=PIPE, stderr=null, encoding='utf-8')
+                              stdin=PIPE, stdout=PIPE, stderr=null, encoding='ISO-8859-1')
         else:
             child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT,
-                          encoding='utf-8')
+                          encoding='ISO-8859-1')
         try:
             t = 3600
             if CONFIG["ProcessCommunicateTimeout"]:
@@ -1854,7 +1854,7 @@ class RetraceTask:
             crash_cmd.append("phys_base=0x200000")
             log_info("trying crash_cmd = " + str(crash_cmd))
             child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT,
-                          encoding='utf-8')
+                          encoding='ISO-8859-1')
             stdout = child.communicate("mod\nquit")[0]
 
         # If we fail to get the list of modules, is the vmcore even usable?

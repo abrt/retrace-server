@@ -770,14 +770,14 @@ class RetraceWorker(object):
             with open(os.devnull, "w") as null:
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                "crash --minimal -s %s %s" % (vmcore, vmlinux)],
-                              stdin=PIPE, stdout=PIPE, stderr=null, encoding='utf-8')
+                              stdin=PIPE, stdout=PIPE, stderr=null, encoding='ISO-8859-1')
                 kernellog = child.communicate("log\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'log' exitted with %d" % child.returncode)
 
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null,
-                               encoding='utf-8')
+                               encoding='ISO-8859-1')
                 crash_bt_a = child.communicate("set hex\nbt -a\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'bt -a' exitted with %d" % child.returncode)
@@ -787,7 +787,7 @@ class RetraceWorker(object):
                 if CONFIG["VmcoreRunKmem"] == 1:
                     child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                    "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null,
-                                   encoding='utf-8')
+                                   encoding='ISO-8859-1')
                     crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
                     if child.wait():
                         log_warn("crash 'kmem -f' exitted with %d" % child.returncode)
@@ -796,7 +796,7 @@ class RetraceWorker(object):
                 if CONFIG["VmcoreRunKmem"] == 2:
                     child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                    "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null,
-                                   encoding='utf-8')
+                                   encoding='ISO-8859-1')
                     crash_kmem_f = child.communicate("set hash off\nkmem -f\nset hash on\nquit\n")[0]
                     if child.wait():
                         log_warn("crash 'kmem -f' exitted with %d" % child.returncode)
@@ -806,7 +806,7 @@ class RetraceWorker(object):
                 if CONFIG["VmcoreRunKmem"] == 3:
                     child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                    "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null,
-                                   encoding='utf-8')
+                                   encoding='ISO-8859-1')
                     crash_kmem_z = child.communicate("kmem -z\nquit\n")[0]
                     if child.wait():
                         log_warn("crash 'kmem -z' exitted with %d" % child.returncode)
@@ -814,7 +814,7 @@ class RetraceWorker(object):
 
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null,
-                               encoding='utf-8')
+                               encoding='ISO-8859-1')
                 crash_sys = child.communicate("sys\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'sys' exitted with %d" % child.returncode)
@@ -822,7 +822,7 @@ class RetraceWorker(object):
 
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null,
-                               encoding='utf-8')
+                               encoding='ISO-8859-1')
                 crash_sys_c = child.communicate("sys -c\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'sys -c' exitted with %d" % child.returncode)
@@ -830,7 +830,7 @@ class RetraceWorker(object):
 
                 child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                "crash -s %s %s" % (vmcore, vmlinux)], stdin=PIPE, stdout=PIPE, stderr=null,
-                               encoding='utf-8')
+                               encoding='ISO-8859-1')
                 crash_foreach_bt = child.communicate("set hex\nforeach bt\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'foreach bt' exitted with %d" % child.returncode)
@@ -851,13 +851,13 @@ class RetraceWorker(object):
             log_info(STATUS[STATUS_BACKTRACE])
 
             child = Popen(task.get_crash_cmd().split() + ["--minimal", "-s", vmcore, vmlinux], stdin=PIPE,
-                          stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+                          stdout=PIPE, stderr=STDOUT, encoding='ISO-8859-1')
             kernellog = child.communicate("log\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'log' exited with %d" % child.returncode)
 
             child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE,
-                          stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+                          stdout=PIPE, stderr=STDOUT, encoding='ISO-8859-1')
             crash_bt_a = child.communicate("set hex\nbt -a\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'bt -a' exited with %d" % child.returncode)
@@ -866,7 +866,7 @@ class RetraceWorker(object):
             crash_kmem_f = None
             if CONFIG["VmcoreRunKmem"] == 1:
                 child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE,
-                              stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+                              stdout=PIPE, stderr=STDOUT, encoding='ISO-8859-1')
                 crash_kmem_f = child.communicate("kmem -f\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'kmem -f' exited with %d" % child.returncode)
@@ -874,7 +874,7 @@ class RetraceWorker(object):
 
             if CONFIG["VmcoreRunKmem"] == 2:
                 child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE,
-                              stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+                              stdout=PIPE, stderr=STDOUT, encoding='ISO-8859-1')
                 crash_kmem_f = child.communicate("set hash off\nkmem -f\nset hash on\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'kmem -f' exited with %d" % child.returncode)
@@ -883,28 +883,28 @@ class RetraceWorker(object):
             crash_kmem_z = None
             if CONFIG["VmcoreRunKmem"] == 3:
                 child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE,
-                              stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+                              stdout=PIPE, stderr=STDOUT, encoding='ISO-8859-1')
                 crash_kmem_z = child.communicate("kmem -z\nquit\n")[0]
                 if child.wait():
                     log_warn("crash 'kmem -z' exited with %d" % child.returncode)
                     crash_kmem_z = None
 
             child = Popen(task.get_crash_cmd().split() +  ["-s", vmcore, vmlinux], stdin=PIPE,
-                          stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+                          stdout=PIPE, stderr=STDOUT, encoding='ISO-8859-1')
             crash_sys = child.communicate("sys\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'sys' exited with %d" % child.returncode)
                 crash_sys = None
 
             child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE,
-                          stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+                          stdout=PIPE, stderr=STDOUT, encoding='ISO-8859-1')
             crash_sys_c = child.communicate("sys -c\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'sys -c' exited with %d" % child.returncode)
                 crash_sys_c = None
 
             child = Popen(task.get_crash_cmd().split() + ["-s", vmcore, vmlinux], stdin=PIPE,
-                          stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+                          stdout=PIPE, stderr=STDOUT, encoding='ISO-8859-1')
             crash_foreach_bt = child.communicate("set hex\nforeach bt\nquit\n")[0]
             if child.wait():
                 log_warn("crash 'foreach bt' exited with %d" % child.returncode)
@@ -933,7 +933,7 @@ class RetraceWorker(object):
         if crash_sys_c:
             task.add_misc("sys-c", crash_sys_c)
         if crash_foreach_bt:
-            child = Popen(["bt_filter"], stdin=PIPE, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+            child = Popen(["bt_filter"], stdin=PIPE, stdout=PIPE, stderr=STDOUT, encoding='ISO-8859-1')
             bt_filter = child.communicate(crash_foreach_bt)[0]
             if child.wait():
                 bt_filter = "bt_filter exitted with %d\n\n%s" % (child.returncode, bt_filter)
