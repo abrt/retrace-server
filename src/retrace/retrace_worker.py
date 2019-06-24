@@ -578,19 +578,6 @@ class RetraceWorker(object):
 
         return True
 
-    def _mock_find_vmlinux(cfgdir, candidates):
-        with open(os.devnull, "w") as null:
-            for cand in candidates:
-                child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                               "test -f %s && echo %s" % (cand, cand)], stdout=PIPE, stderr=null,
-                               encoding='utf-8')
-                output = child.communicate()[0].strip()
-                child.wait()
-                if output == cand:
-                    return cand
-
-        return None
-
     # de-dup self.task's vmcore with md5_tasks's vmcore
     def dedup_vmcore(self, md5_task):
         task1 = md5_task   # primary
