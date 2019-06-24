@@ -602,7 +602,8 @@ class RetraceWorker(object):
         if len(v1_md5) != 32 or len(v2_md5) != 32:
             return 0
         if v1_md5 != v2_md5:
-            log_warn("Attempted to dedup %s and %s but md5sums are different" % (v1, v2, v1_md5, v2_md5))
+            log_warn("Attempted to dedup %s and %s but md5sums are different - v1 = %s v2 = %s)"
+                     % (v1, v2, v1_md5, v2_md5))
             return 0
 
         v2_link = v2 + "-link"
