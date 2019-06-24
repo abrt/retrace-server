@@ -243,7 +243,7 @@ class RetraceWorker(object):
             with open(os.path.join(crashdir, "package"), "r") as package_file:
                 crash_package = package_file.read(ALLOWED_FILES["package"])
         except Exception as ex:
-            loging.error("Unable to read crash package from 'package' file: %s" % ex)
+            log_error("Unable to read crash package from 'package' file: %s" % ex)
             self._fail()
         # read package file
         if not INPUT_PACKAGE_PARSER.match(crash_package):
