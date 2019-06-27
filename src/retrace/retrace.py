@@ -1496,8 +1496,8 @@ class RetraceTask:
             self.chmod(key)
 
     def set_atomic(self, key, value, mode="w"):
-        if mode not in ["w", "a"]:
-            raise ValueError("mode must be either 'w' or 'a'")
+        if mode not in ["w", "a", "wb"]:
+            raise ValueError("mode must be 'w', 'a', or 'wb'")
 
         tmpfilename = self._get_file_path("%s.tmp" % key)
         filename = self._get_file_path(key)
@@ -1600,9 +1600,9 @@ class RetraceTask:
         # max 16 MB
         return self.get(RetraceTask.BACKTRACE_FILE, maxlen=1 << 24)
 
-    def set_backtrace(self, backtrace):
+    def set_backtrace(self, backtrace, mode="w"):
         """Atomically writes given string into BACKTRACE_FILE."""
-        self.set_atomic(RetraceTask.BACKTRACE_FILE, backtrace)
+        self.set_atomic(RetraceTask.BACKTRACE_FILE, backtrace, mode)
 
     def has_log(self):
         """Verifies whether LOG_FILE is present in the task directory."""
@@ -2182,7 +2182,7 @@ class RetraceTask:
 
         return os.listdir(miscdir)
 
-    def get_misc(self, name):
+    def get_misc(self, name, mode="rb"):
         """Gets content of a file named 'name' from MISC_DIR."""
         if "/" in name:
             raise Exception("name may not contain the '/' character")
@@ -2191,12 +2191,12 @@ class RetraceTask:
             raise Exception("There is no record with such name")
 
         miscpath = os.path.join(self._savedir, RetraceTask.MISC_DIR, name)
-        with open(miscpath, "r") as misc_file:
+        with open(miscpath, mode) as misc_file:
             result = misc_file.read(1 << 24) # 16MB
 
         return result
 
-    def add_misc(self, name, value, overwrite=False):
+    def add_misc(self, name, value, overwrite=False, mode="wb"):
         """Adds a file named 'name' into MISC_DIR and writes 'value' into it."""
         if "/" in name:
             raise Exception("name may not contain the '/' character")
@@ -2212,7 +2212,7 @@ class RetraceTask:
             os.umask(oldmask)
 
         miscpath = os.path.join(miscdir, name)
-        with open(miscpath, "w") as misc_file:
+        with open(miscpath, mode) as misc_file:
             misc_file.write(value)
 
     def del_misc(self, name):

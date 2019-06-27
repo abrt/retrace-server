@@ -633,20 +633,22 @@ class RetraceWorker(object):
         cmd_output = None
         returncode = 0
         try:
-            child = Popen(crash_start, stdin=PIPE, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
-            cmd_output = child.communicate(crash_cmdline)[0]
+            child = Popen(crash_start, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            cmd_output = child.communicate(crash_cmdline.encode())[0]
         except OSError as err:
             log_warn("crash command: '%s' triggered OSError " %
-                     crash_cmdline.replace('\r', '; ').replace('\n', '; '))
-            log_warn("  %s" % err)
-        except UnicodeDecodeError as err:
-            log_warn("crash command: '%s' triggered UnicodeDecodeError " %
                      crash_cmdline.replace('\r', '; ').replace('\n', '; '))
             log_warn("  %s" % err)
         except:
             log_warn("crash command: '%s' triggered Unknown exception %s" %
                      crash_cmdline.replace('\r', '; ').replace('\n', '; '))
             log_warn("  %s" % sys.exc_info()[0])
+        try:
+            cmd_output.decode('utf-8')
+        except UnicodeDecodeError as err:
+            log_warn("crash command: '%s' triggered UnicodeDecodeError " %
+                     crash_cmdline.replace('\r', '; ').replace('\n', '; '))
+            log_warn("  %s" % err)
 
         if child.wait():
             log_warn("crash '%s' exitted with %d" % (crash_cmdline.replace('\r', '; ').replace('\n', '; '),
@@ -827,7 +829,7 @@ class RetraceWorker(object):
         crash_foreach_bt, ret = self.run_crash_cmdline(crash_normal,
                                                       "set hex\nforeach bt\nquit\n")
 
-        task.set_backtrace(kernellog)
+        task.set_backtrace(kernellog, "wb")
         # If crash sys command exited with non-zero status, we likely have a semi-useful vmcore
         if not crash_sys_c:
             # FIXME: Probably a better hueristic can be done here
@@ -850,10 +852,10 @@ class RetraceWorker(object):
         if crash_sys_c:
             task.add_misc("sys-c", crash_sys_c)
         if crash_foreach_bt and len(crash_foreach_bt) >= 1024:
-            child = Popen(["bt_filter"], stdin=PIPE, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+            child = Popen([b"bt_filter"], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             bt_filter = child.communicate(crash_foreach_bt)[0]
             if child.wait():
-                bt_filter = "bt_filter exitted with %d\n\n%s" % (child.returncode, bt_filter)
+                bt_filter = b"bt_filter exitted with %d\n\n%s" % (child.returncode, bt_filter)
 
             task.add_misc("bt-filter", bt_filter)
 
