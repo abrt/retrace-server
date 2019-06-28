@@ -45,7 +45,7 @@ else:
 
 
 
-version = '0.8'
+version = '0.9'
 
 debug = 0
 
@@ -96,7 +96,7 @@ def backtrace_get_proc_info(line):
     return ret
 
 def backtrace_calc_hash(proc_backtrace):
-    hash = sha(''.join(proc_backtrace))
+    hash = sha(''.join(proc_backtrace).encode('utf-8'))
     hash_digest = hash.hexdigest()
     if debug > 1:
         print("backtrace_calc_hash: %s" % hash_digest)
