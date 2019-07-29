@@ -1733,11 +1733,19 @@ class RetraceTask:
         returncode = 0
         try:
             child = Popen(crash_start, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-            cmd_output = child.communicate(crash_cmdline.encode())[0]
+            t = 3600
+            if CONFIG["ProcessCommunicateTimeout"]:
+                t = CONFIG["ProcessCommunicateTimeout"]
+            cmd_output = child.communicate(crash_cmdline.encode(), timeout=t)[0]
         except OSError as err:
             log_warn("crash command: '%s' triggered OSError " %
                      crash_cmdline.replace('\r', '; ').replace('\n', '; '))
             log_warn("  %s" % err)
+        except TimeoutExpired as err:
+            child.kill()
+            raise Exception("WARNING: crash command: '%s' exceeded " + str(t) +
+                            " second timeout - damaged vmcore?" %
+                            crash_cmdline.replace('\r', '; ').replace('\n', '; '))
         except:
             log_warn("crash command: '%s' triggered Unknown exception %s" %
                      crash_cmdline.replace('\r', '; ').replace('\n', '; '))
@@ -1862,41 +1870,32 @@ class RetraceTask:
         # Obtain the list of modules this vmcore requires
         if chroot:
             with open(os.devnull, "w") as null:
-                child = Popen(["/usr/bin/mock", "--configdir", chroot, "shell",
-                               "--", "crash -s %s %s" % (vmcore, vmlinux)],
-                              stdin=PIPE, stdout=PIPE, stderr=null, encoding='utf-8')
+                crash_normal = ["/usr/bin/mock", "--configdir", chroot, "shell",
+                                "--", "crash -s %s %s" % (vmcore, vmlinux)]
         else:
-            child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT,
-                          encoding='utf-8')
-        try:
-            t = 3600
-            if CONFIG["ProcessCommunicateTimeout"]:
-                t = CONFIG["ProcessCommunicateTimeout"]
-            stdout = child.communicate("mod\nquit", timeout=t)[0]
-        except TimeoutExpired:
-            child.kill()
-            raise Exception("WARNING: crash 'mod' command exceeded " + str(t) + " second timeout - damaged vmcore?")
-        if child.returncode == 1 and "el5" in kernelver.release:
+            crash_normal = crash_cmd + ["-s", vmcore, vmlinux]
+        stdout, returncode = self.run_crash_cmdline(crash_normal, "mod\nquit")
+        if returncode == 1 and "el5" in kernelver.release:
             log_info("Unable to list modules but el5 detected, trying crash fixup for vmss files")
             crash_cmd.append("--machdep")
             crash_cmd.append("phys_base=0x200000")
             log_info("trying crash_cmd = " + str(crash_cmd))
-            child = Popen(crash_cmd + ["-s", vmcore, vmlinux], stdin=PIPE, stdout=PIPE, stderr=STDOUT,
-                          encoding='utf-8')
-            stdout = child.communicate("mod\nquit")[0]
+            # FIXME: mock
+            crash_normal = crash_cmd + ["-s", vmcore, vmlinux]
+            stdout, returncode = self.run_crash_cmdline(crash_normal, "mod\nquit")
 
         # If we fail to get the list of modules, is the vmcore even usable?
-        if child.returncode:
-            log_warn("Unable to list modules: crash exited with %d:\n%s" % (child.returncode, stdout))
+        if returncode:
+            log_warn("Unable to list modules: crash exited with %d:\n%s" % (returncode, stdout))
             return vmlinux
 
         modules = []
         for line in stdout.splitlines():
             # skip header
-            if "NAME" in line:
+            if b"NAME" in line:
                 continue
 
-            if " " in line:
+            if b" " in line:
                 modules.append(line.split()[1])
 
         todo = []
