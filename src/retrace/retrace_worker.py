@@ -629,34 +629,6 @@ class RetraceWorker(object):
 
         return s1.st_size
 
-    def run_crash_cmdline(self, crash_start, crash_cmdline):
-        cmd_output = None
-        returncode = 0
-        try:
-            child = Popen(crash_start, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-            cmd_output = child.communicate(crash_cmdline.encode())[0]
-        except OSError as err:
-            log_warn("crash command: '%s' triggered OSError " %
-                     crash_cmdline.replace('\r', '; ').replace('\n', '; '))
-            log_warn("  %s" % err)
-        except:
-            log_warn("crash command: '%s' triggered Unknown exception %s" %
-                     crash_cmdline.replace('\r', '; ').replace('\n', '; '))
-            log_warn("  %s" % sys.exc_info()[0])
-        try:
-            cmd_output.decode('utf-8')
-        except UnicodeDecodeError as err:
-            log_warn("crash command: '%s' triggered UnicodeDecodeError " %
-                     crash_cmdline.replace('\r', '; ').replace('\n', '; '))
-            log_warn("  %s" % err)
-
-        if child.wait():
-            log_warn("crash '%s' exitted with %d" % (crash_cmdline.replace('\r', '; ').replace('\n', '; '),
-                     child.returncode))
-            returncode = child.returncode
-
-        return cmd_output, returncode
-
     def start_vmcore(self, custom_kernelver=None):
         self.hook_start()
 
@@ -805,28 +777,28 @@ class RetraceWorker(object):
             crash_minimal = task.get_crash_cmd().split() + ["--minimal", "-s", vmcore, vmlinux]
 
         # Generate the kernel log and run other crash commands
-        kernellog, ret = self.run_crash_cmdline(crash_minimal, "log\nquit\n")
+        kernellog, ret = task.run_crash_cmdline(crash_minimal, "log\nquit\n")
 
-        crash_bt_a, ret = self.run_crash_cmdline(crash_normal, "set hex\nbt -a\nquit\n")
+        crash_bt_a, ret = task.run_crash_cmdline(crash_normal, "set hex\nbt -a\nquit\n")
 
         crash_kmem_f = None
         if CONFIG["VmcoreRunKmem"] == 1:
-            crash_kmem_f, ret = self.run_crash_cmdline(crash_normal, "kmem -f\nquit\n")
+            crash_kmem_f, ret = task.run_crash_cmdline(crash_normal, "kmem -f\nquit\n")
 
         if CONFIG["VmcoreRunKmem"] == 2:
-            crash_kmem_f, ret = self.run_crash_cmdline(crash_normal,
+            crash_kmem_f, ret = task.run_crash_cmdline(crash_normal,
                                                       "set hash off\nkmem -f\nset hash on\nquit\n")
         crash_kmem_z = None
         if CONFIG["VmcoreRunKmem"] == 3:
-            crash_kmem_z, ret = self.run_crash_cmdline(crash_normal, "kmem -z\nquit\n")
+            crash_kmem_z, ret = task.run_crash_cmdline(crash_normal, "kmem -z\nquit\n")
 
-        crash_sys, ret = self.run_crash_cmdline(crash_normal, "sys\nquit\n")
+        crash_sys, ret = task.run_crash_cmdline(crash_normal, "sys\nquit\n")
 
-        crash_sys_c, ret = self.run_crash_cmdline(crash_normal, "sys -c\nquit\n")
+        crash_sys_c, ret = task.run_crash_cmdline(crash_normal, "sys -c\nquit\n")
         if ret != 0:
             crash_sys_c = None
 
-        crash_foreach_bt, ret = self.run_crash_cmdline(crash_normal,
+        crash_foreach_bt, ret = task.run_crash_cmdline(crash_normal,
                                                       "set hex\nforeach bt\nquit\n")
 
         task.set_backtrace(kernellog, "wb")

@@ -1728,6 +1728,34 @@ class RetraceTask:
                                        self._progress_total_str)
         self.set_atomic(RetraceTask.PROGRESS_FILE, progress)
 
+    def run_crash_cmdline(self, crash_start, crash_cmdline):
+        cmd_output = None
+        returncode = 0
+        try:
+            child = Popen(crash_start, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+            cmd_output = child.communicate(crash_cmdline.encode())[0]
+        except OSError as err:
+            log_warn("crash command: '%s' triggered OSError " %
+                     crash_cmdline.replace('\r', '; ').replace('\n', '; '))
+            log_warn("  %s" % err)
+        except:
+            log_warn("crash command: '%s' triggered Unknown exception %s" %
+                     crash_cmdline.replace('\r', '; ').replace('\n', '; '))
+            log_warn("  %s" % sys.exc_info()[0])
+        try:
+            cmd_output.decode('utf-8')
+        except UnicodeDecodeError as err:
+            log_warn("crash command: '%s' triggered UnicodeDecodeError " %
+                     crash_cmdline.replace('\r', '; ').replace('\n', '; '))
+            log_warn("  %s" % err)
+
+        if child.wait():
+            log_warn("crash '%s' exitted with %d" % (crash_cmdline.replace('\r', '; ').replace('\n', '; '),
+                     child.returncode))
+            returncode = child.returncode
+
+        return cmd_output, returncode
+
     def prepare_debuginfo(self, vmcore, chroot=None, kernelver=None, crash_cmd=["crash"]):
         log_info("Calling prepare_debuginfo with crash_cmd = " + str(crash_cmd))
         if kernelver is None:
