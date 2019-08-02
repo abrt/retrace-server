@@ -1890,12 +1890,12 @@ class RetraceTask:
             return vmlinux
 
         modules = []
-        for line in stdout.splitlines():
+        for line in stdout.decode('utf-8').splitlines():
             # skip header
-            if b"NAME" in line:
+            if "NAME" in line:
                 continue
 
-            if b" " in line:
+            if " " in line:
                 modules.append(line.split()[1])
 
         todo = []
