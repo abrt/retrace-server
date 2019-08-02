@@ -39,10 +39,14 @@ create::
 
 set::
     Write (set) information on an existing task. Available only for manager
-    and ftp task.
+    and ftp task. See retrace-server-interact for setting the success or
+    failure of a task. See SET OPTIONS section for list of set options 
+    available.
 
 get::
-   Read (get) information on an existing task.
+   Read (get) information on an existing task. If no parameters specified 
+   the output will default to the task status. See GET OPTIONS section
+   for list of get options available.
 
 batch::
    Very similar to 'create' (has the same parameters) but also waits until
