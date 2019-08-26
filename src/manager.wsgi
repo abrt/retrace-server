@@ -9,7 +9,7 @@ from retrace import *
 CONFIG = config.Config()
 
 MANAGER_URL_PARSER = re.compile(r"^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|"
-                                r"bugzillano|notify|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
+                                r"bugzillano|notify|delete(/(sure/?)?)?|results/([^/]+)/?)?)?)?)?$")
 
 LONG_TYPES = {TASK_RETRACE: "Coredump retrace",
               TASK_DEBUG: "Coredump retrace - debug",
@@ -68,16 +68,16 @@ def application(environ, start_response):
     if space is None:
         return response(start_response, "500 Internal Server Error", _("Unable to obtain free space"))
 
-    if match.group(6) and match.group(6).startswith("misc") and match.group(9):
+    if match.group(6) and match.group(6).startswith("results") and match.group(9):
         try:
             task = RetraceTask(filename)
         except:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
-        if not task.has_misc(match.group(9)):
+        if not task.has_results(match.group(9)):
             return response(start_response, "404 Not Found", _("There is no such record"))
 
-        return response(start_response, "200 OK", task.get_misc(match.group(9)).decode('utf-8','ignore'))
+        return response(start_response, "200 OK", task.get_results(match.group(9)).decode('utf-8','ignore'))
     elif match.group(6) and match.group(6) == "start":
         # start
         get = urllib.parse.parse_qs(request.query_string)
@@ -408,14 +408,14 @@ def application(environ, start_response):
             title = "%s #%s - %s" % (_("Task"), filename, _("Retrace Server Task Manager"))
             taskno = "%s #%s" % (_("Task"), filename)
 
-        misc = ""
+        results = ""
         if not ftptask:
-            misclist = sorted(task.get_misc_list())
-            if misclist:
+            results_list = sorted(task.get_results_list())
+            if results_list:
                 links = []
-                for name in misclist:
-                    links.append("<a href=\"%s/misc/%s\">%s</a>" % (request.path_url.rstrip("/"), name, name))
-                misc = "<tr><th>%s</th><td>%s</td></tr>" % (_("Additional results:"), ", ".join(links))
+                for name in results_list:
+                    links.append("<a href=\"%s/results/%s\">%s</a>" % (request.path_url.rstrip("/"), name, name))
+                results = "<tr><th>%s</th><td>%s</td></tr>" % (_("Additional results:"), ", ".join(links))
 
         if match.group(6) and match.group(6).startswith("delete") and not CONFIG["TaskManagerAuthDelete"]:
             delete_yesno = "<tr><td colspan=\"2\">%s <a href=\"%s/sure\">Yes</a> - <a href=\"%s/%s\">No</a></td></tr>" \
@@ -541,7 +541,7 @@ def application(environ, start_response):
         output = output.replace("{delete}", delete)
         output = output.replace("{delete_yesno}", delete_yesno)
         output = output.replace("{interactive}", interactive)
-        output = output.replace("{misc}", misc)
+        output = output.replace("{results}", results)
         output = output.replace("{notes}", notes)
         output = output.replace("{md5sum}", md5sum)
         output = output.replace("{unknownext}", unknownext)

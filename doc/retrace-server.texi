@@ -862,15 +862,15 @@ The local task is created by clicking @code{Start Task} link in
 the task manager. The task is automatically executed and begins
 downloading remote resources immediately.
 
-@section Miscleanous results
+@section Task results
 
 In addition to the standard @file{retrace_log} and
-@file{retrace_backtrace}, a managet task may contain more than a single
-result. All excessive data may be saved as miscleanous results. These
-are key-value pairs saved into @file{misc} subdirectory within
-the task directory. Each entry is saved into @file{<task_dir>/misc/key}
-file and the contents are the actual value. All miscleanous results
-are accessible from the task manager.
+@file{retrace_backtrace}, a manager task may contain more than a single
+result.  All excessive data may be saved as results. These
+are key-value pairs saved into @file{results} subdirectory within
+the task directory. Each entry is saved into @file{<task_dir>/results/key}
+file and the contents are the actual value. All results are accessible
+from the task manager.
 
 
 @node FAF integration
