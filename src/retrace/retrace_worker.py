@@ -168,11 +168,11 @@ class RetraceWorker(object):
 
     def _symlink_log(self):
         if self.task.has_log():
-            # add a symlink to log to misc directory
+            # add a symlink to log to results directory
             # use underscore so that the log is first in the list
             try:
                 os.symlink(self.task._get_file_path(RetraceTask.LOG_FILE),
-                           os.path.join(self.task._get_file_path(RetraceTask.MISC_DIR), "retrace-log"))
+                           os.path.join(self.task.get_results_dir(), "retrace-log"))
             except OSError as ex:
                 if ex.errno != errno.EEXIST:
                     raise
@@ -528,7 +528,7 @@ class RetraceWorker(object):
 
         task.set_backtrace(backtrace)
         if exploitable is not None:
-            task.add_misc("exploitable", exploitable)
+            task.add_results("exploitable", exploitable)
 
         self.hook_post_retrace()
 
@@ -781,7 +781,7 @@ class RetraceWorker(object):
         # we likely have a semi-useful vmcore
         crash_sys, ret = task.run_crash_cmdline(crash_normal, "sys\nquit\n")
         if ret == 0 and crash_sys:
-            task.add_misc("sys", crash_sys)
+            task.add_results("sys", crash_sys)
         else:
             crash_sys = None
             # FIXME: Probably a better hueristic can be done here
@@ -798,8 +798,8 @@ class RetraceWorker(object):
         if "/" in vmlinux:
             crashrc_lines.append("mod -S %s > %s" % (vmlinux.rsplit("/", 1)[0], os.devnull))
 
-        miscdir = os.path.join(task.get_savedir(), RetraceTask.MISC_DIR)
-        crashrc_lines.append("cd %s" % miscdir)
+        results_dir = task.get_results_dir()
+        crashrc_lines.append("cd %s" % results_dir)
 
         if len(crashrc_lines) > 0:
             task.set_crashrc("%s\n" % "\n".join(crashrc_lines))

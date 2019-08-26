@@ -8,7 +8,7 @@ from retrace import *
 CONFIG = config.Config()
 
 MANAGER_URL_PARSER = re.compile(r"^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|"
-                                r"caseno|notify|delete(/(sure/?)?)?|misc/([^/]+)/?)?)?)?)?$")
+                                r"caseno|notify|delete(/(sure/?)?)?|results/([^/]+)/?)?)?)?)?$")
 tableheader = """
           <table>
             <tr>

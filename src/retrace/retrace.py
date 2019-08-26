@@ -705,7 +705,7 @@ def get_vmcore_dump_level(task, vmlinux=None):
     if not os.path.isfile(vmcore_path):
         return None
 
-    dmesg_path = os.path.join(task.get_savedir(), RetraceTask.MISC_DIR, "dmesg")
+    dmesg_path = os.path.join(task.get_results_dir(), "dmesg")
     if os.path.isfile(dmesg_path):
         os.unlink(dmesg_path)
 
@@ -1324,7 +1324,7 @@ class RetraceTask:
     KERNELVER_FILE = "kernelver"
     LOG_FILE = "retrace_log"
     MANAGED_FILE = "managed"
-    MISC_DIR = "misc"
+    RESULTS_DIR = "results"
     MOCK_LOG_DIR = "log"
     NOTES_FILE = "notes"
     NOTIFY_FILE = "notify"
@@ -1381,7 +1381,7 @@ class RetraceTask:
                     pwdfile.write(generator.choice(TASKPASS_ALPHABET))
 
             self.set_crash_cmd("crash")
-            os.makedirs(os.path.join(self._savedir, RetraceTask.MISC_DIR))
+            os.makedirs(os.path.join(self._savedir, RetraceTask.RESULTS_DIR))
             os.umask(oldmask)
         else:
             # existing task
@@ -2203,64 +2203,71 @@ class RetraceTask:
 
         return errors
 
-    def has_misc(self, name):
-        """Verifies whether a file named 'name' is present in MISC_DIR."""
+    def get_results_dir(self):
+        """Return the directory of results; handls legacy 'misc' dir"""
+        results_dir = os.path.join(self._savedir, RetraceTask.RESULTS_DIR)
+        if not os.path.isdir(results_dir):
+            results_dir = os.path.join(self._savedir, "misc")
+        return results_dir
+
+    def has_results(self, name):
+        """Verifies whether a file named 'name' is present in RESULTS_DIR."""
         if "/" in name:
             raise Exception("name may not contain the '/' character")
 
-        miscdir = os.path.join(self._savedir, RetraceTask.MISC_DIR)
-        miscpath = os.path.join(miscdir, name)
+        results_dir = self.get_results_dir()
+        results_path = os.path.join(results_dir, name)
 
-        return os.path.isdir(miscdir) and os.path.isfile(miscpath)
+        return os.path.isdir(results_dir) and os.path.isfile(results_path)
 
-    def get_misc_list(self):
-        """Lists all files in MISC_DIR."""
-        miscdir = os.path.join(self._savedir, RetraceTask.MISC_DIR)
-        if not os.path.isdir(miscdir):
+    def get_results_list(self):
+        """Lists all files in RESULTS_DIR."""
+        results_dir = self.get_results_dir()
+        if not os.path.isdir(results_dir):
             return []
 
-        return os.listdir(miscdir)
+        return os.listdir(results_dir)
 
-    def get_misc(self, name, mode="rb"):
-        """Gets content of a file named 'name' from MISC_DIR."""
+    def get_results(self, name, mode="rb"):
+        """Gets content of a file named 'name' from RESULTS_DIR."""
         if "/" in name:
             raise Exception("name may not contain the '/' character")
 
-        if not self.has_misc(name):
+        if not self.has_results(name):
             raise Exception("There is no record with such name")
 
-        miscpath = os.path.join(self._savedir, RetraceTask.MISC_DIR, name)
-        with open(miscpath, mode) as misc_file:
-            result = misc_file.read(1 << 24) # 16MB
+        results_path = os.path.join(self.get_results_dir(), name)
+        with open(results_path, mode) as results_file:
+            result = results_file.read(1 << 24) # 16MB
 
         return result
 
-    def add_misc(self, name, value, overwrite=False, mode="wb"):
-        """Adds a file named 'name' into MISC_DIR and writes 'value' into it."""
+    def add_results(self, name, value, overwrite=False, mode="wb"):
+        """Adds a file named 'name' into RESULTS_DIR and writes 'value' into it."""
         if "/" in name:
             raise Exception("name may not contain the '/' character")
 
-        if not overwrite and self.has_misc(name):
+        if not overwrite and self.has_results(name):
             raise Exception("The record already exists. Use overwrite=True " \
                              "to force overwrite existing records.")
 
-        miscdir = os.path.join(self._savedir, RetraceTask.MISC_DIR)
-        if not os.path.isdir(miscdir):
+        results_dir = self.get_results_dir()
+        if not os.path.isdir(results_dir):
             oldmask = os.umask(0o007)
-            os.makedirs(miscdir)
+            os.makedirs(results_dir)
             os.umask(oldmask)
 
-        miscpath = os.path.join(miscdir, name)
-        with open(miscpath, mode) as misc_file:
-            misc_file.write(value)
+        results_path = os.path.join(results_dir, name)
+        with open(results_path, mode) as results_file:
+            results_file.write(value)
 
-    def del_misc(self, name):
-        """Deletes the file named 'name' from MISC_DIR."""
+    def del_results(self, name):
+        """Deletes the file named 'name' from RESULTS_DIR."""
         if "/" in name:
             raise Exception("name may not contain the '/' character")
 
-        if self.has_misc(name):
-            os.unlink(os.path.join(self._savedir, RetraceTask.MISC_DIR, name))
+        if self.has_results(name):
+            os.unlink(os.path.join(self.get_results_dir(), name))
 
     def get_managed(self):
         """Verifies whether the task is under task management control"""
@@ -2446,7 +2453,7 @@ class RetraceTask:
                          RetraceTask.MANAGED_FILE, RetraceTask.NOTES_FILE,
                          RetraceTask.NOTIFY_FILE, RetraceTask.PASSWORD_FILE,
                          RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
-                         RetraceTask.TYPE_FILE, RetraceTask.MISC_DIR,
+                         RetraceTask.TYPE_FILE, RetraceTask.RESULTS_DIR,
                          RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
                          RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
                          RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE]:
@@ -2478,9 +2485,9 @@ class RetraceTask:
                 if ex.errno != errno.ENOENT:
                     raise
 
-        miscdir = os.path.join(self._savedir, RetraceTask.MISC_DIR)
-        for filename in os.listdir(miscdir):
-            os.unlink(os.path.join(miscdir, filename))
+        results_dir = self.get_results_dir()
+        for filename in os.listdir(results_dir):
+            os.unlink(os.path.join(results_dir, filename))
 
         kerneldir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % self._taskid)
         if os.path.isdir(kerneldir):
