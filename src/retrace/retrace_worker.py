@@ -779,57 +779,22 @@ class RetraceWorker(object):
         # Generate the kernel log and run other crash commands
         kernellog, ret = task.run_crash_cmdline(crash_minimal, "log\nquit\n")
 
-        crash_bt_a, ret = task.run_crash_cmdline(crash_normal, "set hex\nbt -a\nquit\n")
-
-        crash_kmem_f = None
-        if CONFIG["VmcoreRunKmem"] == 1:
-            crash_kmem_f, ret = task.run_crash_cmdline(crash_normal, "kmem -f\nquit\n")
-
-        if CONFIG["VmcoreRunKmem"] == 2:
-            crash_kmem_f, ret = task.run_crash_cmdline(crash_normal,
-                                                      "set hash off\nkmem -f\nset hash on\nquit\n")
-        crash_kmem_z = None
-        if CONFIG["VmcoreRunKmem"] == 3:
-            crash_kmem_z, ret = task.run_crash_cmdline(crash_normal, "kmem -z\nquit\n")
-
-        crash_sys, ret = task.run_crash_cmdline(crash_normal, "sys\nquit\n")
-
-        crash_sys_c, ret = task.run_crash_cmdline(crash_normal, "sys -c\nquit\n")
-        if ret != 0:
-            crash_sys_c = None
-
-        crash_foreach_bt, ret = task.run_crash_cmdline(crash_normal,
-                                                      "set hex\nforeach bt\nquit\n")
-
         task.set_backtrace(kernellog, "wb")
-        # If crash sys command exited with non-zero status, we likely have a semi-useful vmcore
-        if not crash_sys_c:
+        # If crash sys command exited with non-zero status,
+        # we likely have a semi-useful vmcore
+        crash_sys, ret = task.run_crash_cmdline(crash_normal, "sys\nquit\n")
+        if ret == 0 and crash_sys:
+            task.add_misc("sys", crash_sys)
+        else:
+            crash_sys = None
             # FIXME: Probably a better hueristic can be done here
             if len(kernellog) < 1024:
-                # If log is less than 1024 bytes, probably it is not useful at all so fail it
+                # If log < 1024 bytes, probably it is not useful so fail task
                 raise Exception("Failing task due to crash exiting with non-zero status and "
                                 "small kernellog size = %d bytes" % len(kernellog))
             else:
                 # If log is 1024 bytes or above, try 'crash --minimal'
                 task.set_crash_cmd("crash --minimal")
-
-        if crash_bt_a:
-            task.add_misc("bt-a", crash_bt_a)
-        if crash_kmem_f:
-            task.add_misc("kmem-f", crash_kmem_f)
-        if crash_kmem_z:
-            task.add_misc("kmem-z", crash_kmem_z)
-        if crash_sys:
-            task.add_misc("sys", crash_sys)
-        if crash_sys_c:
-            task.add_misc("sys-c", crash_sys_c)
-        if crash_foreach_bt and len(crash_foreach_bt) >= 1024:
-            child = Popen([b"bt_filter"], stdin=PIPE, stdout=PIPE, stderr=STDOUT)
-            bt_filter = child.communicate(crash_foreach_bt)[0]
-            if child.wait():
-                bt_filter = b"bt_filter exitted with %d\n\n%s" % (child.returncode, bt_filter)
-
-            task.add_misc("bt-filter", bt_filter)
 
         crashrc_lines = []
 
