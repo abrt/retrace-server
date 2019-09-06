@@ -77,7 +77,7 @@ INPUT_CHARSET_PARSER = re.compile(r"^([a-zA-Z0-9\-]+)(,.*)?$")
 #en_GB, sk-SK, cs, fr etc.
 INPUT_LANG_PARSER = re.compile(r"^([a-z]{2}([_\-][A-Z]{2})?)(,.*)?$")
 #characters allowed by Fedora Naming Guidelines
-INPUT_PACKAGE_PARSER = re.compile(r"^([1-9][0-9]*:)?[a-zA-Z0-9\-\.\_\+]+$")
+INPUT_PACKAGE_PARSER = re.compile(r"^([1-9][0-9]*:)?[a-zA-Z0-9\-\.\_\+\~]+$")
 #architecture (i386, x86_64, armv7hl, mips4kec)
 INPUT_ARCH_PARSER = re.compile(r"^[a-zA-Z0-9_]+$")
 #name-version-arch (fedora-16-x86_64, rhel-6.2-i386, opensuse-12.1-x86_64)
