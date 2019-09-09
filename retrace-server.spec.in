@@ -154,7 +154,6 @@ fi
 %{_bindir}/%{name}-task
 %{_bindir}/%{name}-bugzilla-refresh
 %{_bindir}/%{name}-bugzilla-query
-%{_bindir}/bt_filter
 %{_bindir}/coredump2packages
 %{python3_sitelib}/retrace/
 %{_datadir}/%{name}/
