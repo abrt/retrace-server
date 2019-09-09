@@ -88,10 +88,12 @@ if __name__ == "__main__":
         for pid, taskid, runtime in running_tasks:
             # do not kill tasks started from task manager
             if CONFIG["AllowTaskManager"]:
-                task = RetraceTask(taskid)
-
-                if task.get_managed():
-                    continue
+                try:
+                    task = RetraceTask(taskid)
+                    if task.get_managed():
+                        continue
+                except:
+                    log.write("RetraceTask with taskid %d does not exist\n" % taskid)
 
             # ToDo: 5 = mm:ss, >5 = hh:mm:ss
             if len(runtime) > 5:
