@@ -28,9 +28,10 @@ class RetraceWorker(object):
         """Called by the default hook implementations"""
         HOOK_SCRIPTS = CONFIG.get_hook_scripts()
         if hook in HOOK_SCRIPTS:
+            results_dir = self.task.get_results_dir()
             script = HOOK_SCRIPTS[hook].format(
                 hook_name=hook, task_id=self.task.get_taskid(),
-                task_dir=self.task.get_savedir())
+                task_results_dir=results_dir)
             log_info("Running hook {0} '{1}'".format(hook, script))
             child = Popen(script, shell=True, stdout=PIPE, stderr=PIPE, encoding='utf-8')
             (out, err) = child.communicate()
