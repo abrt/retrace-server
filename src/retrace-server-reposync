@@ -10,13 +10,25 @@ import sys
 import tempfile
 import rpm
 import dnf
-from retrace import *
+
+from subprocess import Popen, PIPE, call
+
+from retrace.retrace import (get_canon_arch,
+                             lock,
+                             log_debug,
+                             log_error,
+                             log_info,
+                             log_warn,
+                             parse_rpm_name,
+                             unlock)
+from retrace.config import Config
+from retrace.plugins import Plugins
 
 sys.path.insert(0, "/usr/share/retrace-server")
-from plugins import *  # pylint: disable=wrong-import-position
 
-CONFIG = config.Config()
-plugins = plugins.Plugins()
+
+CONFIG = Config()
+plugins = Plugins()
 
 TARGET_USER = "retrace"
 TARGET_GROUP = CONFIG["AuthGroup"]

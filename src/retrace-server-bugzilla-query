@@ -9,9 +9,10 @@ import sys
 import re
 import time
 import bugzilla
-from retrace import BUGZILLA_STATUS, config, RetraceTask
+from retrace.retrace import BUGZILLA_STATUS, RetraceTask
+from retrace.config import Config
 
-CONFIG = config.Config()
+CONFIG = Config()
 
 if __name__ == "__main__":
 

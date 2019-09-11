@@ -5,11 +5,13 @@ retrace-server-cleanup tool.
 """
 
 import os
-import bugzilla
-from retrace import config, RetraceTask
 import time
+import bugzilla
 
-CONFIG = config.Config()
+from retrace.retrace import RetraceTask
+from retrace.config import Config
+
+CONFIG = Config()
 
 if __name__ == "__main__":
 

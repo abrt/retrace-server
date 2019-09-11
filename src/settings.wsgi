@@ -1,8 +1,13 @@
 #!/usr/bin/python3
 
-from retrace import *
+from retrace.retrace import (HANDLE_ARCHIVE,
+                             get_active_tasks,
+                             get_supported_releases,
+                             response,
+                             save_crashstats_reportfull)
+from retrace.config import Config
 
-CONFIG = config.Config()
+CONFIG = Config()
 
 def application(environ, start_response):
     activetasks = len(get_active_tasks())

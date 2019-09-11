@@ -6,9 +6,18 @@ import pwd
 import sys
 import time
 from subprocess import list2cmdline
-from retrace import *
 
-CONFIG = config.Config()
+from retrace.retrace import (ALLOWED_FILES,
+                             STATUS_FAIL,
+                             STATUS_SUCCESS,
+                             TASK_RETRACE_INTERACTIVE,
+                             TASK_VMCORE_INTERACTIVE,
+                             KernelVMcore,
+                             KernelVer,
+                             RetraceTask)
+from retrace.config import Config
+
+CONFIG = Config()
 
 ACTIONS = ["shell", "gdb", "crash", "printdir", "delete", "set-success", "set-fail"]
 

@@ -1,9 +1,20 @@
 #!/usr/bin/python3
 import os
 import sys
-from retrace import *
+import re
+import time
 
-CONFIG = config.Config()
+from subprocess import Popen, PIPE, STDOUT
+
+from retrace.retrace import (STATUS_FAIL,
+                             get_active_tasks,
+                             get_md5_tasks,
+                             get_running_tasks,
+                             run_ps,
+                             RetraceTask)
+from retrace.config import Config, LSOF_BIN
+
+CONFIG = Config()
 
 def get_process_tree(pid, ps_output):
     result = [pid]

@@ -1,6 +1,16 @@
 #!/usr/bin/python3
+import sys
+import time
 
-from retrace import *
+from webob import Request
+
+from retrace.retrace import (STATUS_FAIL,
+                             STATUS_SUCCESS,
+                             init_crashstats_db,
+                             parse_http_gettext,
+                             response)
+from retrace.plugins import Plugins
+
 sys.path.insert(0, "/usr/share/retrace-server/")
 
 status_queries = {"SELECT COUNT(*) FROM tasks": "{total}",
@@ -14,7 +24,7 @@ def replace_by_count(input, q, key, query):
     row = query.fetchone()
     return input.replace(key, str(row[0]))
 
-plugins = plugins.Plugins()
+plugins = Plugins()
 def application(environ, start_response):
 
     con = init_crashstats_db()

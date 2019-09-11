@@ -1,12 +1,27 @@
 #!/usr/bin/python3
-
+import os
 import datetime
 import fnmatch
 import re
+import time
 from six.moves import urllib
-from retrace import *
+from webob import Request
 
-CONFIG = config.Config()
+from retrace.retrace import (FTP_SUPPORTED_EXTENSIONS, STATUS, STATUS_DOWNLOADING, STATUS_FAIL,
+                             STATUS_SUCCESS, TASK_DEBUG, TASK_RETRACE, TASK_RETRACE_INTERACTIVE,
+                             TASK_VMCORE, TASK_VMCORE_INTERACTIVE,
+                             free_space,
+                             ftp_close,
+                             ftp_init,
+                             ftp_list_dir,
+                             human_readable_size,
+                             KernelVer,
+                             parse_http_gettext,
+                             response,
+                             RetraceTask)
+from retrace.config import Config
+
+CONFIG = Config()
 
 MANAGER_URL_PARSER = re.compile(r"^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|"
                                 r"bugzillano|notify|delete(/(sure/?)?)?|results/([^/]+)/?)?)?)?)?$")
