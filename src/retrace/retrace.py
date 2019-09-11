@@ -11,19 +11,18 @@ import shutil
 import smtplib
 import sqlite3
 import stat
+import sys
 import time
 import hashlib
-from signal import *
-from subprocess import *
 import magic
 import six
+from signal import getsignal, signal, SIG_DFL, SIGPIPE
+from subprocess import PIPE, STDOUT, call, Popen, TimeoutExpired
+
 from dnf.subject import Subject
-from  hawkey import FORM_NEVRA
+from hawkey import FORM_NEVRA
 from six.moves import range, urllib
-from webob import Request
-from .argparser import *
-from .config import *
-from .plugins import *
+from .config import Config, TAR_BIN, XZ_BIN, GZIP_BIN, DU_BIN, DF_BIN
 
 GETTEXT_DOMAIN = "retrace-server"
 

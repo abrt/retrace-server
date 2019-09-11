@@ -1,8 +1,17 @@
 #!/usr/bin/python3
 import sys
-from retrace import *
+import os
+from argparse import ArgumentParser
 
-CONFIG = config.Config()
+from retrace.retrace import (log_debug,
+                             log_error,
+                             log_warn,
+                             KernelVer,
+                             RetraceTask,
+                             RetraceWorkerError)
+from retrace.config import Config
+
+CONFIG = Config()
 
 if __name__ == "__main__":
     cmdline_parser = ArgumentParser(description="Execute a retrace job")

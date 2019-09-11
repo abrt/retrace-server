@@ -3,9 +3,14 @@
 import fnmatch
 import re
 from six.moves import urllib
-from retrace import *
+from webob import Request
 
-CONFIG = config.Config()
+from retrace.retrace import (ftp_list_dir,
+                             parse_http_gettext,
+                             response)
+from retrace.config import Config
+
+CONFIG = Config()
 
 MANAGER_URL_PARSER = re.compile(r"^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|"
                                 r"caseno|notify|delete(/(sure/?)?)?|results/([^/]+)/?)?)?)?)?$")
