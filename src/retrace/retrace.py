@@ -1310,6 +1310,51 @@ class KernelVer(object):
     def needs_arch(self):
         return self._arch is None
 
+class KernelVMcore:
+    def __init__(self, vmcore_path):
+        self._vmcore_path = vmcore_path
+        self._is_flattened_format = None
+
+    def is_flattened_format(self):
+        """Returns True if vmcore is in makedumpfile flattened format"""
+        if self._is_flattened_format is not None:
+            return self._is_flattened_format
+        try:
+            with open(self._vmcore_path, "rb") as fd:
+                fd.seek(0)
+                # Read 16 bytes (SIG_LEN_MDF from crash-utility makedumpfile.h)
+                b = fd.read(16)
+                self._is_flattened_format = b.startswith(b'makedumpfile')
+        except IOError as e:
+            log_error("Failed to get makedumpfile header - failed open/seek/read of "
+                      "%s with errno(%d - '%s')" %
+                      (self._vmcore_path, e.errno, e.strerror))
+        return self._is_flattened_format
+
+    def convert_flattened_format(self):
+        """Convert a vmcore in makedumpfile flattened format to normal dumpfile format"""
+        """Returns True if conversion has been done and was successful"""
+        if not self._is_flattened_format:
+            log_error("Cannot convert a non-flattened vmcore")
+            return False
+        newvmcore = "%s.normal" % self._vmcore_path
+        try:
+            with open(self._vmcore_path) as fd:
+                retcode = call(["makedumpfile", "-R", newvmcore], stdin=fd)
+                if retcode:
+                    log_warn("makedumpfile -R exited with %d" % retcode)
+                    if os.path.isfile(newvmcore):
+                        os.unlink(newvmcore)
+                else:
+                    os.rename(newvmcore, self._vmcore_path)
+        except IOError as e:
+            log_error("Failed to convert flattened vmcore %s - errno(%d - '%s')" %
+                      (self._vmcore_path, e.errno, e.strerror))
+            return False
+
+        self._is_flattened_format = False
+        return True
+
 class RetraceTask:
     """Represents Retrace server's task."""
 
@@ -2061,7 +2106,7 @@ class RetraceTask:
                                  % crashdir)
 
         if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
-            vmcore = os.path.join(crashdir, "vmcore")
+            vmcore_path = os.path.join(crashdir, "vmcore")
             files = os.listdir(crashdir)
             for filename in files:
                 fullpath = os.path.join(crashdir, filename)
@@ -2073,7 +2118,7 @@ class RetraceTask:
                 errors.append(([], "No files found in the tarball"))
             elif len(files) == 1:
                 if files[0] != "vmcore":
-                    os.rename(os.path.join(crashdir, files[0]), vmcore)
+                    os.rename(os.path.join(crashdir, files[0]), vmcore_path)
             else:
                 vmcores = []
                 for filename in files:
@@ -2085,17 +2130,17 @@ class RetraceTask:
                     absfiles = [os.path.join(crashdir, f) for f in files]
                     files_sizes = [(os.path.getsize(f), f) for f in absfiles]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
-                    os.rename(largest_file, vmcore)
+                    os.rename(largest_file, vmcore_path)
                 elif len(vmcores) > 1:
                     absfiles = [os.path.join(crashdir, f) for f in vmcores]
                     files_sizes = [(os.path.getsize(f), f) for f in absfiles]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
-                    os.rename(largest_file, vmcore)
+                    os.rename(largest_file, vmcore_path)
                 else:
                     for filename in files:
                         if filename == vmcores[0]:
                             if vmcores[0] != "vmcore":
-                                os.rename(os.path.join(crashdir, filename), vmcore)
+                                os.rename(os.path.join(crashdir, filename), vmcore_path)
 
             files = os.listdir(crashdir)
             for filename in files:
@@ -2104,9 +2149,20 @@ class RetraceTask:
 
                 os.unlink(os.path.join(crashdir, filename))
 
-            if os.path.isfile(vmcore):
-                oldsize = os.path.getsize(vmcore)
+            if os.path.isfile(vmcore_path):
+                oldsize = os.path.getsize(vmcore_path)
                 log_info("Vmcore size: %s" % human_readable_size(oldsize))
+                vmcore = KernelVMcore(vmcore_path)
+                if vmcore.is_flattened_format():
+                    start = time.time()
+                    log_info("Executing makedumpfile to convert flattened format")
+                    vmcore.convert_flattened_format()
+                    dur = int(time.time() - start)
+                    newsize = os.path.getsize(vmcore_path)
+                    log_info("Converted size: %s" % human_readable_size(newsize))
+                    log_info("Makedumpfile took %d seconds and saved %s"
+                             % (dur, human_readable_size(oldsize - newsize)))
+                    oldsize = newsize
 
                 dump_level = get_vmcore_dump_level(self)
                 if dump_level is None:
@@ -2121,25 +2177,24 @@ class RetraceTask:
                     skip_makedumpfile = True
 
                 if not skip_makedumpfile:
-                    log_debug("Executing makedumpfile")
+                    log_info("Executing makedumpfile to strip extra pages")
                     start = time.time()
-                    self.strip_vmcore(vmcore, kernelver)
+                    self.strip_vmcore(vmcore_path, kernelver)
                     dur = int(time.time() - start)
+                    newsize = os.path.getsize(vmcore_path)
+                    log_info("Stripped size: %s" % human_readable_size(newsize))
+                    log_info("Makedumpfile took %d seconds and saved %s"
+                             % (dur, human_readable_size(oldsize - newsize)))
 
-                st = os.stat(vmcore)
+                st = os.stat(vmcore_path)
                 if (st.st_mode & stat.S_IRGRP) == 0:
                     try:
-                        os.chmod(vmcore, st.st_mode | stat.S_IRGRP)
+                        os.chmod(vmcore_path, st.st_mode | stat.S_IRGRP)
                     except Exception as ex:
                         log_warn("File '%s' is not group readable and chmod"
                                  " failed. The process will continue but if"
                                  " it fails this is the likely cause."
-                                 % vmcore)
-                if not skip_makedumpfile:
-                    log_info("Stripped size: %s" % human_readable_size(st.st_size))
-                    log_info("Makedumpfile took %d seconds and saved %s"
-                             % (dur, human_readable_size(oldsize - st.st_size)))
-
+                                 % vmcore_path)
         if self.get_type() in [TASK_RETRACE, TASK_RETRACE_INTERACTIVE]:
             coredump = os.path.join(crashdir, "coredump")
             files = os.listdir(crashdir)
