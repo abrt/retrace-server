@@ -93,8 +93,6 @@ REPODIR_NAME_PARSER = re.compile(r"^[^\-]+\-[^\-]+\-[^\-]+$")
 
 KO_DEBUG_PARSER = re.compile(r"^.*/([a-zA-Z0-9_\-]+)\.ko\.debug$")
 
-DUMP_LEVEL_PARSER = re.compile(r"^[ \t]*dump_level[ \t]*:[ \t]*([0-9]+).*$")
-
 WORKER_RUNNING_PARSER = re.compile(r"^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]"
                                    r"+.*retrace-server-worker ([0-9]+)( .*)?$")
 
@@ -700,37 +698,6 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
         rpm2cpio.stdout.close()
 
 
-def get_vmcore_dump_level(task, vmlinux=None):
-    vmcore_path = os.path.join(task.get_savedir(), "crash", "vmcore")
-    if not os.path.isfile(vmcore_path):
-        return None
-
-    dmesg_path = os.path.join(task.get_results_dir(), "dmesg")
-    if os.path.isfile(dmesg_path):
-        os.unlink(dmesg_path)
-
-    with open(os.devnull, "w") as null:
-        cmd = ["makedumpfile", "-D", "--dump-dmesg", vmcore_path, dmesg_path]
-        if vmlinux is not None:
-            cmd.append("-x")
-            cmd.append(vmlinux)
-
-        result = None
-        child = Popen(cmd, stdout=PIPE, stderr=null, encoding='utf-8')
-        line = child.stdout.readline()
-        while line:
-            match = DUMP_LEVEL_PARSER.match(line)
-            line = child.stdout.readline()
-            if match is None:
-                continue
-
-            result = int(match.group(1))
-            child.terminate()
-            break
-
-        child.wait()
-        return result
-
 def get_files_sizes(directory):
     result = []
 
@@ -1311,9 +1278,12 @@ class KernelVer(object):
         return self._arch is None
 
 class KernelVMcore:
+    DUMP_LEVEL_PARSER = re.compile(r"^[ \t]*dump_level[ \t]*:[ \t]*([0-9]+).*$")
+
     def __init__(self, vmcore_path):
         self._vmcore_path = vmcore_path
         self._is_flattened_format = None
+        self._dump_level = None
 
     def is_flattened_format(self):
         """Returns True if vmcore is in makedumpfile flattened format"""
@@ -1354,6 +1324,37 @@ class KernelVMcore:
 
         self._is_flattened_format = False
         return True
+
+    def get_dump_level(self, task):
+        if self._dump_level is not None:
+            return self._dump_level
+
+        if not os.path.isfile(self._vmcore_path):
+            return None
+
+        dmesg_path = os.path.join(task.get_results_dir(), "dmesg")
+        if os.path.isfile(dmesg_path):
+            os.unlink(dmesg_path)
+
+        with open(os.devnull, "w") as null:
+            cmd = ["makedumpfile", "-D", "--dump-dmesg", self._vmcore_path, dmesg_path]
+
+            result = None
+            child = Popen(cmd, stdout=PIPE, stderr=null, encoding='utf-8')
+            line = child.stdout.readline()
+            while line:
+                match = self.DUMP_LEVEL_PARSER.match(line)
+                line = child.stdout.readline()
+                if match is None:
+                    continue
+
+                result = int(match.group(1))
+                child.terminate()
+                break
+
+            child.wait()
+            self._dump_level = result
+            return result
 
 class RetraceTask:
     """Represents Retrace server's task."""
@@ -2164,7 +2165,7 @@ class RetraceTask:
                              % (dur, human_readable_size(oldsize - newsize)))
                     oldsize = newsize
 
-                dump_level = get_vmcore_dump_level(self)
+                dump_level = vmcore.get_dump_level(self)
                 if dump_level is None:
                     log_warn("Unable to determine vmcore dump level")
                 else:
