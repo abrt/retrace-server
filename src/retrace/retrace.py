@@ -1284,6 +1284,7 @@ class KernelVMcore:
         self._vmcore_path = vmcore_path
         self._is_flattened_format = None
         self._dump_level = None
+        self._has_extra_pages = None
 
     def is_flattened_format(self):
         """Returns True if vmcore is in makedumpfile flattened format"""
@@ -1355,6 +1356,28 @@ class KernelVMcore:
             child.wait()
             self._dump_level = result
             return result
+
+    def has_extra_pages(self, task):
+        """Returns True if vmcore has extra pages that can be stripped with makedumpfile"""
+        if self._has_extra_pages is not None:
+            return self._has_extra_pages
+
+        # Assume the vmcore has extra pages if the VmcoreDumpLevel is set
+        self._has_extra_pages = CONFIG["VmcoreDumpLevel"] > 0 and CONFIG["VmcoreDumpLevel"] < 32
+
+        # Now try to read the dump_level from the vmcore
+        dump_level = self.get_dump_level(task)
+        if dump_level is None:
+            log_warn("Unable to determine vmcore dump level")
+        else:
+            log_debug("Vmcore dump level is %d" % dump_level)
+
+        # If dump_level was readable above, then check to see if stripping is worthwhile
+        if (dump_level is not None and
+            (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
+            log_info("Stripping to %d would have no effect" % CONFIG["VmcoreDumpLevel"])
+            self._has_extra_pages = False
+        return self._has_extra_pages
 
 class RetraceTask:
     """Represents Retrace server's task."""
@@ -2165,19 +2188,7 @@ class RetraceTask:
                              % (dur, human_readable_size(oldsize - newsize)))
                     oldsize = newsize
 
-                dump_level = vmcore.get_dump_level(self)
-                if dump_level is None:
-                    log_warn("Unable to determine vmcore dump level")
-                else:
-                    log_debug("Vmcore dump level is %d" % dump_level)
-
-                skip_makedumpfile = CONFIG["VmcoreDumpLevel"] <= 0 or CONFIG["VmcoreDumpLevel"] >= 32
-                if (dump_level is not None and
-                        (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
-                    log_info("Stripping to %d would have no effect" % CONFIG["VmcoreDumpLevel"])
-                    skip_makedumpfile = True
-
-                if not skip_makedumpfile:
+                if vmcore.has_extra_pages(self):
                     log_info("Executing makedumpfile to strip extra pages")
                     start = time.time()
                     self.strip_vmcore(vmcore_path, kernelver)
@@ -2196,6 +2207,7 @@ class RetraceTask:
                                  " failed. The process will continue but if"
                                  " it fails this is the likely cause."
                                  % vmcore_path)
+
         if self.get_type() in [TASK_RETRACE, TASK_RETRACE_INTERACTIVE]:
             coredump = os.path.join(crashdir, "coredump")
             files = os.listdir(crashdir)
