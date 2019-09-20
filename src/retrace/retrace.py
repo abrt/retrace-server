@@ -1379,6 +1379,25 @@ class KernelVMcore:
             self._has_extra_pages = False
         return self._has_extra_pages
 
+    def strip_extra_pages(self, task, kernelver=None):
+        """Strip extra pages from vmcore with makedumpfile"""
+        try:
+            vmlinux = task.prepare_debuginfo(self._vmcore_path, chroot=None, kernelver=kernelver)
+        except Exception as ex:
+            log_warn("prepare_debuginfo failed: %s" % ex)
+            return
+
+        newvmcore = "%s.stripped" % self._vmcore_path
+        retcode = call(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
+                        "-x", vmlinux, "--message-level", "0", self._vmcore_path, newvmcore])
+        if retcode:
+            log_warn("makedumpfile exited with %d" % retcode)
+            if os.path.isfile(newvmcore):
+                os.unlink(newvmcore)
+        else:
+            os.rename(newvmcore, self._vmcore_path)
+
+
 class RetraceTask:
     """Represents Retrace server's task."""
 
@@ -1991,23 +2010,6 @@ class RetraceTask:
 
         return vmlinux
 
-    def strip_vmcore(self, vmcore, kernelver=None):
-        try:
-            vmlinux = self.prepare_debuginfo(vmcore, chroot=None, kernelver=kernelver)
-        except Exception as ex:
-            log_warn("prepare_debuginfo failed: %s" % ex)
-            return
-
-        newvmcore = "%s.stripped" % vmcore
-        retcode = call(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
-                        "-x", vmlinux, "--message-level", "0", vmcore, newvmcore])
-        if retcode:
-            log_warn("makedumpfile exited with %d" % retcode)
-            if os.path.isfile(newvmcore):
-                os.unlink(newvmcore)
-        else:
-            os.rename(newvmcore, vmcore)
-
     def download_remote(self, unpack=True, timeout=0, kernelver=None):
         """Downloads all remote resources and returns a list of errors."""
         md5sums = []
@@ -2191,7 +2193,7 @@ class RetraceTask:
                 if vmcore.has_extra_pages(self):
                     log_info("Executing makedumpfile to strip extra pages")
                     start = time.time()
-                    self.strip_vmcore(vmcore_path, kernelver)
+                    vmcore.strip_extra_pages(self, kernelver)
                     dur = int(time.time() - start)
                     newsize = os.path.getsize(vmcore_path)
                     log_info("Stripped size: %s" % human_readable_size(newsize))
