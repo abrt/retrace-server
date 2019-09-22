@@ -635,10 +635,11 @@ class RetraceWorker(object):
 
         task = self.task
 
-        vmcore = os.path.join(task.get_savedir(), "crash", "vmcore")
+        vmcore_path = os.path.join(task.get_savedir(), "crash", "vmcore")
+        vmcore = KernelVMcore(vmcore_path)
 
         try:
-            self.stats["coresize"] = os.path.getsize(vmcore)
+            self.stats["coresize"] = os.path.getsize(vmcore_path)
         except:
             pass
 
@@ -646,7 +647,7 @@ class RetraceWorker(object):
             kernelver = custom_kernelver
             kernelver_str = custom_kernelver.kernelver_str
         else:
-            kernelver = get_kernel_release(vmcore, task.get_crash_cmd().split())
+            kernelver = vmcore.get_kernel_release(task.get_crash_cmd().split())
             if not kernelver:
                 raise Exception("Unable to determine kernel version")
 
@@ -755,9 +756,9 @@ class RetraceWorker(object):
 
             self.hook_pre_retrace()
             crash_normal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                            task.get_crash_cmd() + " -s %s %s" % (vmcore, vmlinux) ]
+                            task.get_crash_cmd() + " -s %s %s" % (vmcore_path, vmlinux) ]
             crash_minimal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                            task.get_crash_cmd() + " -s --minimal %s %s" % (vmcore, vmlinux) ]
+                            task.get_crash_cmd() + " -s --minimal %s %s" % (vmcore_path, vmlinux) ]
 
         else:
             try:
@@ -771,8 +772,8 @@ class RetraceWorker(object):
             task.set_status(STATUS_BACKTRACE)
             log_info(STATUS[STATUS_BACKTRACE])
 
-            crash_normal = task.get_crash_cmd().split() + ["-s", vmcore, vmlinux]
-            crash_minimal = task.get_crash_cmd().split() + ["--minimal", "-s", vmcore, vmlinux]
+            crash_normal = task.get_crash_cmd().split() + ["-s", vmcore_path, vmlinux]
+            crash_minimal = task.get_crash_cmd().split() + ["--minimal", "-s", vmcore_path, vmlinux]
 
         # Generate the kernel log and run other crash commands
         kernellog, ret = task.run_crash_cmdline(crash_minimal, "log\nquit\n")
