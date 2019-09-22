@@ -749,7 +749,7 @@ class RetraceWorker(object):
             # no locks required, mock locks itself
             try:
                 self.hook_pre_prepare_debuginfo()
-                vmlinux = task.prepare_debuginfo(vmcore, cfgdir, kernelver=kernelver)
+                vmlinux = vmcore.prepare_debuginfo(task, cfgdir, kernelver=kernelver)
                 self.hook_post_prepare_debuginfo()
             except Exception as ex:
                 raise Exception("prepare_debuginfo failed: %s" % str(ex))
@@ -763,7 +763,7 @@ class RetraceWorker(object):
         else:
             try:
                 self.hook_pre_prepare_debuginfo()
-                vmlinux = task.prepare_debuginfo(vmcore, kernelver=kernelver)
+                vmlinux = vmcore.prepare_debuginfo(task, kernelver=kernelver)
                 self.hook_post_prepare_debuginfo()
             except Exception as ex:
                 raise Exception("prepare_debuginfo failed: %s" % str(ex))
