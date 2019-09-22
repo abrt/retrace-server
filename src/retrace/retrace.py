@@ -500,102 +500,6 @@ def is_package_known(package_nvr, arch, releaseid=None):
     return any([os.path.isfile(f) for f in candidates])
 
 
-#
-# In real-world testing, approximately 60% of the time the kernel
-# version of a vmcore can be identified with the crash tool.
-# In the other 40% of the time, we must use some other method.
-#
-# The below function contains a couple regex searches that work
-# across a wide variety of vmcore formats and kernel versions.
-# We do not attempt to identify the file type since this is often not
-# reliable, but we assume the version information exists in some form
-# in the first portion of the file.  Testing has indicated that we do
-# not need to scan the entire file but can rely on a small portion
-# at the start of the file, which helps preserve useful pages in the
-# OS page cache.
-#
-# The following regex's are used for the 40% scenario
-# 1. Look for 'OSRELEASE='.  For example:
-# OSRELEASE=2.6.18-406.el5
-# NOTE: We can get "OSRELEASE=%" so we disallow the '%' character after the '='
-OSRELEASE_VAR_PARSER = re.compile(b"OSRELEASE=([^%][^\x00\s]+)")
-# 2. Look for "Linux version" string.  Note that this was taken from
-# CAS 'fingerprint' database code.  For more info, see
-# https://bugzilla.redhat.com/show_bug.cgi?id=1535592#c9 and
-# https://github.com/battlemidget/core-analysis-system/blob/master/lib/cas/core.py#L96
-# For exmaple:
-# Linux version 3.10.0-693.11.1.el7.x86_64 (mockbuild@x86-041.build.eng.bos.redhat.com)
-# (gcc version 4.8.5 20150623 (Red Hat 4.8.5-16) (GCC) ) #1 SMP Fri Oct 27 05:39:05 EDT 2017
-LINUX_VERSION_PARSER = re.compile(b'Linux\sversion\s(\S+)\s+(.*20\d{1,2}|#1\s.*20\d{1,2})')
-# 3. Look for the actual kernel release. For example:
-# 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
-KERNEL_RELEASE_PARSER = re.compile(b'(\d+\.\d+\.\d+)-(\d+\.[^\x00\s]+)')
-def get_kernel_release(vmcore, crash_cmd=["crash"]):
-    # First use 'crash' to identify the kernel version.
-    # set SIGPIPE to default handler for bz 1540253
-    save = getsignal(SIGPIPE)
-    signal(SIGPIPE, SIG_DFL)
-    child = Popen(crash_cmd + ["--osrelease", vmcore], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
-    release = child.communicate()[0].strip()
-    ret = child.wait()
-    signal(SIGPIPE, save)
-
-    # If the crash tool fails, we must try some other method.
-    # Read the first small portion of the file and use a few different
-    # regex searches on the file.
-    if ret != 0 or \
-       not release or \
-       "\n" in release or \
-       release == "unknown":
-        try:
-            fd = open(vmcore)
-            fd.seek(0)
-            blksize = 64000000
-            b = os.read(fd.fileno(), blksize)
-        except OSError as e:
-            log_error("Failed to get kernel release - failed open/seek/read of file %s with errno(%d - '%s')"
-                      % (vmcore, e.errno, e.strerror()))
-            if fd:
-                fd.close()
-            return None
-        release = OSRELEASE_VAR_PARSER.search(b)
-        if release:
-            release = release.group(1)
-        if not release:
-            release = LINUX_VERSION_PARSER.search(b)
-            if release:
-                release = release.group(1)
-        if not release:
-            release = KERNEL_RELEASE_PARSER.search(b)
-            if release:
-                release = release.group(0)
-        if release:
-            release = release.decode('utf-8')
-        fd.close()
-
-    # Clean up the release before returning or calling KernelVer
-    if release is None or release == "unknown":
-        log_error("Failed to get kernel release from file %s" % vmcore)
-        return None
-    else:
-        release = release.rstrip('\0 \t\n')
-
-    # check whether architecture is present
-    try:
-        result = KernelVer(release)
-    except Exception as ex:
-        log_error("Failed to parse kernel release from file %s, release = %s: %s" % (vmcore, release, str(ex)))
-        return None
-
-    if result.arch is None:
-        result.arch = guess_arch(vmcore)
-        if not result.arch:
-            log_error("Unable to determine architecture from file %s, release = %s, arch result = %s"
-                      % (vmcore, release, result))
-            return None
-
-    return result
-
 def find_kernel_debuginfo(kernelver):
     vers = [kernelver]
 
@@ -1285,6 +1189,10 @@ class KernelVMcore:
         self._is_flattened_format = None
         self._dump_level = None
         self._has_extra_pages = None
+        self._release = None
+
+    def get_path(self):
+        return self._vmcore_path
 
     def is_flattened_format(self):
         """Returns True if vmcore is in makedumpfile flattened format"""
@@ -1382,7 +1290,7 @@ class KernelVMcore:
     def strip_extra_pages(self, task, kernelver=None):
         """Strip extra pages from vmcore with makedumpfile"""
         try:
-            vmlinux = task.prepare_debuginfo(self._vmcore_path, chroot=None, kernelver=kernelver)
+            vmlinux = task.prepare_debuginfo(self, chroot=None, kernelver=kernelver)
         except Exception as ex:
             log_warn("prepare_debuginfo failed: %s" % ex)
             return
@@ -1396,6 +1304,111 @@ class KernelVMcore:
                 os.unlink(newvmcore)
         else:
             os.rename(newvmcore, self._vmcore_path)
+
+    #
+    # In real-world testing, approximately 60% of the time the kernel
+    # version of a vmcore can be identified with the crash tool.
+    # In the other 40% of the time, we must use some other method.
+    #
+    # The below function contains a couple regex searches that work
+    # across a wide variety of vmcore formats and kernel versions.
+    # We do not attempt to identify the file type since this is often not
+    # reliable, but we assume the version information exists in some form
+    # in the first portion of the file.  Testing has indicated that we do
+    # not need to scan the entire file but can rely on a small portion
+    # at the start of the file, which helps preserve useful pages in the
+    # OS page cache.
+    #
+    # The following regex's are used for the 40% scenario
+    # 1. Look for 'OSRELEASE='.  For example:
+    # OSRELEASE=2.6.18-406.el5
+    # NOTE: We can get "OSRELEASE=%" so we disallow the '%' character
+    # after the '='
+    OSRELEASE_VAR_PARSER = re.compile(b"OSRELEASE=([^%][^\x00\s]+)")
+    #
+    # 2. Look for "Linux version" string.  Note that this was taken from
+    # CAS 'fingerprint' database code.  For more info, see
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1535592#c9 and
+    # https://github.com/battlemidget/core-analysis-system/blob/master/lib/cas/core.py#L96
+    # For exmaple:
+    # Linux version 3.10.0-693.11.1.el7.x86_64 (mockbuild@x86-041.build.eng.bos.redhat.com)
+    # (gcc version 4.8.5 20150623 (Red Hat 4.8.5-16) (GCC) ) #1 SMP Fri Oct 27 05:39:05 EDT 2017
+    LINUX_VERSION_PARSER = re.compile(b'Linux\sversion\s(\S+)\s+(.*20\d{1,2}|#1\s.*20\d{1,2})')
+    #
+    # 3. Look for the actual kernel release. For example:
+    # 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
+    KERNEL_RELEASE_PARSER = re.compile(b'(\d+\.\d+\.\d+)-(\d+\.[^\x00\s]+)')
+    #
+    def get_kernel_release(self, crash_cmd=["crash"]):
+        if self._release is not None:
+            return self._release
+
+        # First use 'crash' to identify the kernel version.
+        # set SIGPIPE to default handler for bz 1540253
+        save = getsignal(SIGPIPE)
+        signal(SIGPIPE, SIG_DFL)
+        child = Popen(crash_cmd + ["--osrelease", self._vmcore_path],
+                      stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+        release = child.communicate()[0].strip()
+        ret = child.wait()
+        signal(SIGPIPE, save)
+
+        # If the crash tool fails, we must try some other method.
+        # Read the first small portion of the file and use a few different
+        # regex searches on the file.
+        if ret != 0 or \
+           not release or \
+           "\n" in release or \
+           release == "unknown":
+            try:
+                with open(self._vmcore_path, "rb") as fd:
+                    fd.seek(0)
+                    b = fd.read(64000000)
+            except IOError as e:
+                log_error("Failed to get kernel release - failed "
+                          "open/seek/read of file %s with errno(%d - '%s')"
+                          % (self._vmcore_path, e.errno, e.strerror))
+                return None
+            release = self.OSRELEASE_VAR_PARSER.search(b)
+            if release:
+                release = release.group(1)
+            if not release:
+                release = self.LINUX_VERSION_PARSER.search(b)
+                if release:
+                    release = release.group(1)
+            if not release:
+                release = self.KERNEL_RELEASE_PARSER.search(b)
+                if release:
+                    release = release.group(0)
+            if release:
+                release = release.decode('utf-8')
+
+        # Clean up the release before returning or calling KernelVer
+        if release is None or release == "unknown":
+            log_error("Failed to get kernel release from file %s" %
+                      self._vmcore_path)
+            return None
+        else:
+            release = release.rstrip('\0 \t\n')
+
+        # check whether architecture is present
+        try:
+            result = KernelVer(release)
+        except Exception as ex:
+            log_error("Failed to parse kernel release from file %s, release ="
+                      " %s: %s" % (self._vmcore_path, release, str(ex)))
+            return None
+
+        if result.arch is None:
+            result.arch = guess_arch(self._vmcore_path)
+            if not result.arch:
+                log_error("Unable to determine architecture from file %s, "
+                          "release = %s, arch result = %s" %
+                          (self._vmcore_path, release, result))
+                return None
+
+        self._release = result
+        return result
 
 
 class RetraceTask:
@@ -1867,7 +1880,7 @@ class RetraceTask:
     def prepare_debuginfo(self, vmcore, chroot=None, kernelver=None):
         log_info("Calling prepare_debuginfo ")
         if kernelver is None:
-            kernelver = get_kernel_release(vmcore)
+            kernelver = vmcore.get_kernel_release()
 
         if kernelver is None:
             raise Exception("Unable to determine kernel version")
@@ -1973,9 +1986,9 @@ class RetraceTask:
         if chroot:
             with open(os.devnull, "w") as null:
                 crash_normal = ["/usr/bin/mock", "--configdir", chroot, "shell",
-                                "--", "crash -s %s %s" % (vmcore, vmlinux)]
+                                "--", "crash -s %s %s" % (vmcore.get_path(), vmlinux)]
         else:
-            crash_normal = crash_cmd + ["-s", vmcore, vmlinux]
+            crash_normal = crash_cmd + ["-s", vmcore.get_path(), vmlinux]
         stdout, returncode = self.run_crash_cmdline(crash_normal, "mod\nquit")
         if returncode == 1 and "el5" in kernelver.release:
             log_info("Unable to list modules but el5 detected, trying crash fixup for vmss files")
@@ -1983,7 +1996,7 @@ class RetraceTask:
             crash_cmd.append("phys_base=0x200000")
             log_info("trying crash_cmd = " + str(crash_cmd))
             # FIXME: mock
-            crash_normal = crash_cmd + ["-s", vmcore, vmlinux]
+            crash_normal = crash_cmd + ["-s", vmcore.get_path(), vmlinux]
             stdout, returncode = self.run_crash_cmdline(crash_normal, "mod\nquit")
 
         # If we fail to get the list of modules, is the vmcore even usable?

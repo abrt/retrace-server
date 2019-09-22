@@ -104,11 +104,13 @@ if __name__ == "__main__":
         sys.stderr.write("Action '%s' is not allowed for coredumps.\n" % args.action)
         exit(1)
     elif task.get_type() == TASK_VMCORE_INTERACTIVE:
-        vmcore = os.path.join(task.get_savedir(), "crash", "vmcore")
+        vmcore_path = os.path.join(task.get_savedir(), "crash", "vmcore")
+        vmcore = KernelVMcore(vmcore_path)
+
         if task.has_kernelver():
             kernelver = KernelVer(task.get_kernelver())
         else:
-            kernelver = get_kernel_release(vmcore, task.get_crash_cmd().split())
+            kernelver = vmcore.get_kernel_release(task.get_crash_cmd().split())
             if kernelver is None:
                 raise Exception("Unable to determine kernel version")
             task.set_kernelver(kernelver)
@@ -124,17 +126,17 @@ if __name__ == "__main__":
                 vmlinux = task.prepare_debuginfo(vmcore, kernelver=kernelver)
             if not task.has_mock():
                 if task.has_crashrc():
-                    cmdline = task.get_crash_cmd().split() + ["-i", task.get_crashrc_path(), vmcore, vmlinux]
+                    cmdline = task.get_crash_cmd().split() + ["-i", task.get_crashrc_path(), vmcore_path, vmlinux]
                 else:
-                    cmdline = task.get_crash_cmd().split() + [vmcore, vmlinux]
+                    cmdline = task.get_crash_cmd().split() + [vmcore_path, vmlinux]
             else:
                 cfgdir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
                 if task.has_crashrc():
                     cmdline = ["/usr/bin/mock", "--configdir", cfgdir,
-                               "shell", "crash -i %s %s %s" % (task.get_crashrc_path(), vmcore, vmlinux)]
+                               "shell", "crash -i %s %s %s" % (task.get_crashrc_path(), vmcore_path, vmlinux)]
                 else:
                     cmdline = ["/usr/bin/mock", "--configdir", cfgdir,
-                               "shell", "crash %s %s" % (vmcore, vmlinux)]
+                               "shell", "crash %s %s" % (vmcore_path, vmlinux)]
 
             print_cmdline(cmdline)
             os.execvp(cmdline[0], cmdline)
