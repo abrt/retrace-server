@@ -1290,7 +1290,7 @@ class KernelVMcore:
     def strip_extra_pages(self, task, kernelver=None):
         """Strip extra pages from vmcore with makedumpfile"""
         try:
-            vmlinux = task.prepare_debuginfo(self, chroot=None, kernelver=kernelver)
+            vmlinux = self.prepare_debuginfo(task, chroot=None, kernelver=kernelver)
         except Exception as ex:
             log_warn("prepare_debuginfo failed: %s" % ex)
             return
@@ -1409,6 +1409,159 @@ class KernelVMcore:
 
         self._release = result
         return result
+
+    def prepare_debuginfo(self, task, chroot=None, kernelver=None):
+        log_info("Calling prepare_debuginfo ")
+        if kernelver is None:
+            kernelver = self.get_kernel_release()
+
+        if kernelver is None:
+            raise Exception("Unable to determine kernel version")
+
+        # FIXME: get_kernel_release sets _release vs 'kernelver' here ?
+        task.set_kernelver(kernelver)
+        # Setting kernelver may reset crash_cmd
+        crash_cmd = task.get_crash_cmd().split()
+
+        debugdir_base = os.path.join(CONFIG["RepoDir"], "kernel", kernelver.arch)
+        if not os.path.isdir(debugdir_base):
+            os.makedirs(debugdir_base)
+
+        # First look in cache for vmlinux at the "typical" location, for example
+        # CONFIG["RepoDir"]/kernel/x86_64/usr/lib/debug/lib/modules/2.6.32-504.el6.x86_64
+        log_info("Version: '%s'; Release: '%s'; Arch: '%s'; _arch: '%s'; "
+                 "Flavour: '%s'; Realtime: %s"
+                 % (kernelver.version, kernelver.release, kernelver.arch,
+                    kernelver._arch, kernelver.flavour, kernelver.rt))
+        kernel_path = ""
+        if kernelver.version is not None:
+            kernel_path = kernel_path + str(kernelver.version)
+        if kernelver.release is not None:
+            kernel_path = kernel_path + "-" + str(kernelver.release)
+	    # Skip the 'arch' on RHEL5 and RHEL4 due to different kernel-debuginfo
+        # path to vmlinux
+        if kernelver._arch is not None and "EL" not in kernelver.release and\
+           "el5" not in kernelver.release:
+            kernel_path = kernel_path + "." + str(kernelver._arch)
+        if kernelver.flavour is not None:
+            # 'debug' flavours on rhel6 and above require a '.' before the 'debug'
+            if "EL" not in kernelver.release and "el5" not in kernelver.release:
+                kernel_path = kernel_path + "."
+            kernel_path = kernel_path + str(kernelver.flavour)
+
+        vmlinux_cache_path = debugdir_base + "/usr/lib/debug/lib/modules/" +\
+                             kernel_path + "/vmlinux"
+        if os.path.isfile(vmlinux_cache_path):
+            log_info("Found cached vmlinux at path: " + vmlinux_cache_path)
+            vmlinux = vmlinux_cache_path
+            task.set_vmlinux(vmlinux)
+        else:
+            log_info("Unable to find cached vmlinux at path: " + vmlinux_cache_path)
+            vmlinux = None
+
+        # For now, unconditionally search for kernel-debuginfo.  However,
+        # if the vmlinux file existed in the cache, don't raise an exception
+        # on the task since the vmcore may still be usable, and instead,
+        # return early.  A second optimization would be to avoid this
+        # completely if the modules files all exist in the cache.
+        log_info("Searching for kernel-debuginfo package for " + str(kernelver))
+        debuginfo = find_kernel_debuginfo(kernelver)
+        if not debuginfo:
+            if vmlinux is not None:
+                return vmlinux
+            else:
+                raise Exception("Unable to find debuginfo package and "
+                                "no cached vmlinux file")
+
+        # FIXME: Merge kernel_path with this logic
+        if "EL" in kernelver.release:
+            if kernelver.flavour is None:
+                pattern = "EL/vmlinux"
+            else:
+                pattern = "EL%s/vmlinux" % kernelver.flavour
+        else:
+            pattern = "/vmlinux"
+
+        # Now open the kernel-debuginfo and get a listing of the files we may need
+        vmlinux_path = None
+        debugfiles = {}
+        child = Popen(["rpm", "-qpl", debuginfo], stdout=PIPE, encoding='utf-8')
+        lines = child.communicate()[0].splitlines()
+        for line in lines:
+            if line.endswith(pattern):
+                vmlinux_path = line
+                continue
+
+            match = KO_DEBUG_PARSER.match(line)
+            if not match:
+                continue
+
+            # only pick the correct flavour for el4
+            if "EL" in kernelver.release:
+                if kernelver.flavour is None:
+                    pattern2 = "EL/"
+                else:
+                    pattern2 = "EL%s/" % kernelver.flavour
+
+                if not pattern2 in os.path.dirname(line):
+                    continue
+
+            # '-' in file name is transformed to '_' in module name
+            debugfiles[match.group(1).replace("-", "_")] = line
+
+        # Only look for the vmlinux file here if it's not already been found above
+        # Note the dependency from this code on the debuginfo file list
+        if vmlinux is None:
+            vmlinux_debuginfo = os.path.join(debugdir_base, vmlinux_path.lstrip("/"))
+            cache_files_from_debuginfo(debuginfo, debugdir_base, [vmlinux_path])
+            if os.path.isfile(vmlinux_debuginfo):
+                log_info("Found cached vmlinux at new debuginfo location: " + vmlinux_debuginfo)
+                vmlinux = vmlinux_debuginfo
+                task.set_vmlinux(vmlinux)
+            else:
+                raise Exception("Failed vmlinux caching from debuginfo at location: " + vmlinux_debuginfo)
+
+        # Obtain the list of modules this vmcore requires
+        if chroot:
+            with open(os.devnull, "w") as null:
+                crash_normal = ["/usr/bin/mock", "--configdir", chroot, "shell",
+                                "--", "crash -s %s %s" % (vmcore.get_path(), vmlinux)]
+        else:
+            crash_normal = crash_cmd + ["-s", self._vmcore_path, vmlinux]
+        stdout, returncode = task.run_crash_cmdline(crash_normal, "mod\nquit")
+        if returncode == 1 and "el5" in kernelver.release:
+            log_info("Unable to list modules but el5 detected, trying crash fixup for vmss files")
+            crash_cmd.append("--machdep")
+            crash_cmd.append("phys_base=0x200000")
+            log_info("trying crash_cmd = " + str(crash_cmd))
+            # FIXME: mock
+            crash_normal = crash_cmd + ["-s", self._vmcore_path, vmlinux]
+            stdout, returncode = task.run_crash_cmdline(crash_normal, "mod\nquit")
+
+        # If we fail to get the list of modules, is the vmcore even usable?
+        if returncode:
+            log_warn("Unable to list modules: crash exited with %d:\n%s" % (returncode, stdout))
+            return vmlinux
+
+        modules = []
+        for line in stdout.decode('utf-8').splitlines():
+            # skip header
+            if "NAME" in line:
+                continue
+
+            if " " in line:
+                modules.append(line.split()[1])
+
+        todo = []
+        for module in modules:
+            if module in debugfiles and \
+               not os.path.isfile(os.path.join(debugdir_base, debugfiles[module].lstrip("/"))):
+                todo.append(debugfiles[module])
+
+        cache_files_from_debuginfo(debuginfo, debugdir_base, todo)
+
+        self._release = kernelver
+        return vmlinux
 
 
 class RetraceTask:
@@ -1876,152 +2029,6 @@ class RetraceTask:
             returncode = child.returncode
 
         return cmd_output, returncode
-
-    def prepare_debuginfo(self, vmcore, chroot=None, kernelver=None):
-        log_info("Calling prepare_debuginfo ")
-        if kernelver is None:
-            kernelver = vmcore.get_kernel_release()
-
-        if kernelver is None:
-            raise Exception("Unable to determine kernel version")
-
-        self.set_kernelver(kernelver)
-        # Setting kernelver may reset crash_cmd
-        crash_cmd = self.get_crash_cmd().split()
-
-        debugdir_base = os.path.join(CONFIG["RepoDir"], "kernel", kernelver.arch)
-        if not os.path.isdir(debugdir_base):
-            os.makedirs(debugdir_base)
-
-        # First look in our cache for vmlinux at the "typical" location which is something like
-        # CONFIG["RepoDir"]/kernel/x86_64/usr/lib/debug/lib/modules/2.6.32-504.el6.x86_64
-        log_info("Version: '%s'; Release: '%s'; Arch: '%s'; _arch: '%s'; Flavour: '%s'; Realtime: %s"
-                 % (kernelver.version, kernelver.release, kernelver.arch,
-                    kernelver._arch, kernelver.flavour, kernelver.rt))
-        kernel_path = ""
-        if kernelver.version is not None:
-            kernel_path = kernel_path + str(kernelver.version)
-        if kernelver.release is not None:
-            kernel_path = kernel_path + "-" + str(kernelver.release)
-	# Skip the 'arch' on RHEL5 and RHEL4 due to different kernel-debuginfo path to vmlinux
-        if kernelver._arch is not None and "EL" not in kernelver.release and "el5" not in kernelver.release:
-            kernel_path = kernel_path + "." + str(kernelver._arch)
-        if kernelver.flavour is not None:
-            # 'debug' flavours on rhel6 and above require a '.' before the 'debug'
-            if "EL" not in kernelver.release and "el5" not in kernelver.release:
-                kernel_path = kernel_path + "."
-            kernel_path = kernel_path + str(kernelver.flavour)
-
-        vmlinux_cache_path = debugdir_base + "/usr/lib/debug/lib/modules/" + kernel_path + "/vmlinux"
-        if os.path.isfile(vmlinux_cache_path):
-            log_info("Found cached vmlinux at path: " + vmlinux_cache_path)
-            vmlinux = vmlinux_cache_path
-            self.set_vmlinux(vmlinux)
-        else:
-            log_info("Unable to find cached vmlinux at path: " + vmlinux_cache_path)
-            vmlinux = None
-
-        # For now, unconditionally search for kernel-debuginfo.  However, if the vmlinux
-        # file existed in the cache, don't raise an exception on the task since the vmcore
-        # may still be usable, and instead, return early.
-        # A second optimization would be to avoid this completely if the modules files
-        # all exist in the cache.
-        log_info("Searching for kernel-debuginfo package for " + str(kernelver))
-        debuginfo = find_kernel_debuginfo(kernelver)
-        if not debuginfo:
-            if vmlinux is not None:
-                return vmlinux
-            else:
-                raise Exception("Unable to find debuginfo package and no cached vmlinux file")
-
-        # FIXME: Merge kernel_path with this logic
-        if "EL" in kernelver.release:
-            if kernelver.flavour is None:
-                pattern = "EL/vmlinux"
-            else:
-                pattern = "EL%s/vmlinux" % kernelver.flavour
-        else:
-            pattern = "/vmlinux"
-
-        # Now open the kernel-debuginfo and get a listing of the files we may need
-        vmlinux_path = None
-        debugfiles = {}
-        child = Popen(["rpm", "-qpl", debuginfo], stdout=PIPE, encoding='utf-8')
-        lines = child.communicate()[0].splitlines()
-        for line in lines:
-            if line.endswith(pattern):
-                vmlinux_path = line
-                continue
-
-            match = KO_DEBUG_PARSER.match(line)
-            if not match:
-                continue
-
-            # only pick the correct flavour for el4
-            if "EL" in kernelver.release:
-                if kernelver.flavour is None:
-                    pattern2 = "EL/"
-                else:
-                    pattern2 = "EL%s/" % kernelver.flavour
-
-                if not pattern2 in os.path.dirname(line):
-                    continue
-
-            # '-' in file name is transformed to '_' in module name
-            debugfiles[match.group(1).replace("-", "_")] = line
-
-        # Only look for the vmlinux file here if it's not already been found above
-        # Note the dependency from this code on the debuginfo file list
-        if vmlinux is None:
-            vmlinux_debuginfo = os.path.join(debugdir_base, vmlinux_path.lstrip("/"))
-            cache_files_from_debuginfo(debuginfo, debugdir_base, [vmlinux_path])
-            if os.path.isfile(vmlinux_debuginfo):
-                log_info("Found cached vmlinux at new debuginfo location: " + vmlinux_debuginfo)
-                vmlinux = vmlinux_debuginfo
-                self.set_vmlinux(vmlinux)
-            else:
-                raise Exception("Failed vmlinux caching from debuginfo at location: " + vmlinux_debuginfo)
-
-        # Obtain the list of modules this vmcore requires
-        if chroot:
-            with open(os.devnull, "w") as null:
-                crash_normal = ["/usr/bin/mock", "--configdir", chroot, "shell",
-                                "--", "crash -s %s %s" % (vmcore.get_path(), vmlinux)]
-        else:
-            crash_normal = crash_cmd + ["-s", vmcore.get_path(), vmlinux]
-        stdout, returncode = self.run_crash_cmdline(crash_normal, "mod\nquit")
-        if returncode == 1 and "el5" in kernelver.release:
-            log_info("Unable to list modules but el5 detected, trying crash fixup for vmss files")
-            crash_cmd.append("--machdep")
-            crash_cmd.append("phys_base=0x200000")
-            log_info("trying crash_cmd = " + str(crash_cmd))
-            # FIXME: mock
-            crash_normal = crash_cmd + ["-s", vmcore.get_path(), vmlinux]
-            stdout, returncode = self.run_crash_cmdline(crash_normal, "mod\nquit")
-
-        # If we fail to get the list of modules, is the vmcore even usable?
-        if returncode:
-            log_warn("Unable to list modules: crash exited with %d:\n%s" % (returncode, stdout))
-            return vmlinux
-
-        modules = []
-        for line in stdout.decode('utf-8').splitlines():
-            # skip header
-            if "NAME" in line:
-                continue
-
-            if " " in line:
-                modules.append(line.split()[1])
-
-        todo = []
-        for module in modules:
-            if module in debugfiles and \
-               not os.path.isfile(os.path.join(debugdir_base, debugfiles[module].lstrip("/"))):
-                todo.append(debugfiles[module])
-
-        cache_files_from_debuginfo(debuginfo, debugdir_base, todo)
-
-        return vmlinux
 
     def download_remote(self, unpack=True, timeout=0, kernelver=None):
         """Downloads all remote resources and returns a list of errors."""
