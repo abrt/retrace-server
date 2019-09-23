@@ -634,14 +634,27 @@ class RetraceWorker(object):
         self.hook_start()
 
         task = self.task
-
         vmcore_path = os.path.join(task.get_savedir(), "crash", "vmcore")
-        vmcore = KernelVMcore(vmcore_path)
 
         try:
             self.stats["coresize"] = os.path.getsize(vmcore_path)
         except:
             pass
+
+        vmcore = KernelVMcore(vmcore_path)
+        oldsize = os.path.getsize(vmcore_path)
+        log_info("Vmcore size: %s" % human_readable_size(oldsize))
+        if vmcore.is_flattened_format():
+            start = time.time()
+            log_info("Executing makedumpfile to convert flattened format")
+            # NOTE: We do not need to know the kernelver or vmlinux path here
+            vmcore.convert_flattened_format()
+            dur = int(time.time() - start)
+            newsize = os.path.getsize(vmcore_path)
+            log_info("Converted size: %s" % human_readable_size(newsize))
+            log_info("Makedumpfile took %d seconds and saved %s"
+                     % (dur, human_readable_size(oldsize - newsize)))
+            oldsize = newsize
 
         if custom_kernelver is not None:
             kernelver = custom_kernelver
@@ -774,6 +787,28 @@ class RetraceWorker(object):
 
             crash_normal = task.get_crash_cmd().split() + ["-s", vmcore_path, vmlinux]
             crash_minimal = task.get_crash_cmd().split() + ["--minimal", "-s", vmcore_path, vmlinux]
+
+        if vmcore.has_extra_pages(task):
+            log_info("Executing makedumpfile to strip extra pages")
+            start = time.time()
+            # NOTE: We need to know the kernelver and vmlinux path here
+            vmcore.strip_extra_pages()
+            dur = int(time.time() - start)
+            newsize = os.path.getsize(vmcore_path)
+            log_info("Stripped size: %s" % human_readable_size(newsize))
+            log_info("Makedumpfile took %d seconds and saved %s"
+                     % (dur, human_readable_size(oldsize - newsize)))
+
+        if os.path.isfile(vmcore_path):
+            st = os.stat(vmcore_path)
+            if (st.st_mode & stat.S_IRGRP) == 0:
+                try:
+                    os.chmod(vmcore_path, st.st_mode | stat.S_IRGRP)
+                except Exception as ex:
+                    log_warn("File '%s' is not group readable and chmod"
+                             " failed. The process will continue but if"
+                             " it fails this is the likely cause."
+                             % vmcore_path)
 
         # Generate the kernel log and run other crash commands
         kernellog, ret = task.run_crash_cmdline(crash_minimal, "log\nquit\n")
