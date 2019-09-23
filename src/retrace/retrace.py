@@ -1190,6 +1190,7 @@ class KernelVMcore:
         self._dump_level = None
         self._has_extra_pages = None
         self._release = None
+        self._vmlinux = None
 
     def get_path(self):
         return self._vmcore_path
@@ -1287,17 +1288,15 @@ class KernelVMcore:
             self._has_extra_pages = False
         return self._has_extra_pages
 
-    def strip_extra_pages(self, task, kernelver=None):
+    def strip_extra_pages(self):
         """Strip extra pages from vmcore with makedumpfile"""
-        try:
-            vmlinux = self.prepare_debuginfo(task, chroot=None, kernelver=kernelver)
-        except Exception as ex:
-            log_warn("prepare_debuginfo failed: %s" % ex)
+        if self._vmlinux is None:
+            log_error("Cannot strip pages if vmlinux is not known for vmcore")
             return
 
         newvmcore = "%s.stripped" % self._vmcore_path
         retcode = call(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
-                        "-x", vmlinux, "--message-level", "0", self._vmcore_path, newvmcore])
+                        "-x", self._vmlinux, "--message-level", "0", self._vmcore_path, newvmcore])
         if retcode:
             log_warn("makedumpfile exited with %d" % retcode)
             if os.path.isfile(newvmcore):
@@ -1417,6 +1416,9 @@ class KernelVMcore:
 
         if kernelver is None:
             raise Exception("Unable to determine kernel version")
+
+        if self._vmlinux is not None:
+            return self._vmlinux
 
         # FIXME: get_kernel_release sets _release vs 'kernelver' here ?
         task.set_kernelver(kernelver)
@@ -1541,6 +1543,7 @@ class KernelVMcore:
         # If we fail to get the list of modules, is the vmcore even usable?
         if returncode:
             log_warn("Unable to list modules: crash exited with %d:\n%s" % (returncode, stdout))
+            self._vmlinux = vmlinux
             return vmlinux
 
         modules = []
@@ -1561,6 +1564,7 @@ class KernelVMcore:
         cache_files_from_debuginfo(debuginfo, debugdir_base, todo)
 
         self._release = kernelver
+        self._vmlinux = vmlinux
         return vmlinux
 
 
@@ -2194,41 +2198,6 @@ class RetraceTask:
                     continue
 
                 os.unlink(os.path.join(crashdir, filename))
-
-            if os.path.isfile(vmcore_path):
-                oldsize = os.path.getsize(vmcore_path)
-                log_info("Vmcore size: %s" % human_readable_size(oldsize))
-                vmcore = KernelVMcore(vmcore_path)
-                if vmcore.is_flattened_format():
-                    start = time.time()
-                    log_info("Executing makedumpfile to convert flattened format")
-                    vmcore.convert_flattened_format()
-                    dur = int(time.time() - start)
-                    newsize = os.path.getsize(vmcore_path)
-                    log_info("Converted size: %s" % human_readable_size(newsize))
-                    log_info("Makedumpfile took %d seconds and saved %s"
-                             % (dur, human_readable_size(oldsize - newsize)))
-                    oldsize = newsize
-
-                if vmcore.has_extra_pages(self):
-                    log_info("Executing makedumpfile to strip extra pages")
-                    start = time.time()
-                    vmcore.strip_extra_pages(self, kernelver)
-                    dur = int(time.time() - start)
-                    newsize = os.path.getsize(vmcore_path)
-                    log_info("Stripped size: %s" % human_readable_size(newsize))
-                    log_info("Makedumpfile took %d seconds and saved %s"
-                             % (dur, human_readable_size(oldsize - newsize)))
-
-                st = os.stat(vmcore_path)
-                if (st.st_mode & stat.S_IRGRP) == 0:
-                    try:
-                        os.chmod(vmcore_path, st.st_mode | stat.S_IRGRP)
-                    except Exception as ex:
-                        log_warn("File '%s' is not group readable and chmod"
-                                 " failed. The process will continue but if"
-                                 " it fails this is the likely cause."
-                                 % vmcore_path)
 
         if self.get_type() in [TASK_RETRACE, TASK_RETRACE_INTERACTIVE]:
             coredump = os.path.join(crashdir, "coredump")
