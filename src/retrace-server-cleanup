@@ -72,7 +72,7 @@ def check_config():
                          "did you accidentally reverse the values for "
                          "DeleteTaskAfter and DeleteFailedTaskAfter? "
                          "Not touching any tasks.\n")
-        exit(1)
+        sys.exit(1)
 
 if __name__ == "__main__":
     check_config()

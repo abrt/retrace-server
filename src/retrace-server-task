@@ -381,7 +381,7 @@ def get_backtrace(args):
             return 0
         else:
             print("Error: {0}".format(res.text))
-            exit(1)
+            sys.exit(1)
 
     with open("backtrace", "w") as fld:
         fld.write(res.text)
