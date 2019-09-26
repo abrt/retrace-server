@@ -20,19 +20,19 @@ if __name__ == "__main__":
     # do not use logging yet - we need the task
     if cmdline.kernelver and not cmdline.arch:
         sys.stderr.write("You also need to specify architecture when overriding kernel version\n")
-        exit(1)
+        sys.exit(1)
 
     try:
         task = RetraceTask(cmdline.task_id)
     except:
         sys.stderr.write("Task '%d' does not exist\n" % cmdline.task_id)
-        exit(1)
+        sys.exit(1)
 
     if task.has_status():
         if not cmdline.restart:
             sys.stderr.write("%s has already been executed for task %d\n" % (sys.argv[0], cmdline.task_id))
             sys.stdout.write("You can use --restart option if you really want to restart the task\n")
-            exit(1)
+            sys.exit(1)
 
         task.reset()
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
         # parent - kill
         if pid != 0:
-            exit(0)
+            sys.exit(0)
 
         try:
             os.setpgrp()
@@ -68,4 +68,4 @@ if __name__ == "__main__":
     try:
         worker.start(kernelver=kernelver, arch=cmdline.arch)
     except RetraceWorkerError as ex:
-        exit(ex.errorcode)
+        sys.exit(ex.errorcode)
