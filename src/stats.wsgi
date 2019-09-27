@@ -105,7 +105,7 @@ def application(environ, start_response):
     for key in versions.keys():
         query.execute("SELECT COUNT(*) FROM tasks WHERE version LIKE '%"+key+"'")
         row = query.fetchone()
-        retstr = str(versions[key]) + " " + str(key[-1])
+        retstr = str(versions[key]) + " " + str(key[2:])
 
         if i % 2:
             style = "odd"
