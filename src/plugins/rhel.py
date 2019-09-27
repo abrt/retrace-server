@@ -4,8 +4,8 @@ distribution = "rhel"
 abrtparser = re.compile(r"^Red Hat Enterprise Linux release ([0-9]+) \(([^\)]+)\)$")
 guessparser = re.compile(r"\.el([0-9]+)")
 displayrelease = "Red Hat Enterprise Linux release"
-gdb_package = "devtoolset-4-gdb"
-gdb_executable = "/opt/rh/devtoolset-4/root/usr/bin/gdb"
+gdb_package = "devtoolset-8-gdb"
+gdb_executable = "/opt/rh/devtoolset-8/root/usr/bin/gdb"
 versionlist = [
     "el1",
     "el2",
