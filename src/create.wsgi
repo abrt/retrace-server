@@ -200,7 +200,8 @@ def application(environ, start_response):
 
     if task.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
         vmcore = KernelVMcore(os.path.join(crashdir, "vmcore"))
-        vmcore.strip_extra_pages(task)
+        vmcore.prepare_debuginfo(task)
+        vmcore.strip_extra_pages()
 
     retcode = task.start()
     if retcode != 0:
