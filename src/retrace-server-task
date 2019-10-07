@@ -13,7 +13,7 @@ import argparse
 import tempfile
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from requests_kerberos import HTTPKerberosAuth, OPTIONAL
+from requests_gssapi import HTTPSPNEGOAuth, DISABLED
 
 
 TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
@@ -581,7 +581,7 @@ if __name__ == "__main__":
     # check kerberos
     if ticket_check():
         LOGGER.info("Kerberos ticket is valid.")
-        ARGS['kerberos'] = HTTPKerberosAuth(mutual_authentication=OPTIONAL)
+        ARGS['kerberos'] = HTTPSPNEGOAuth(mutual_authentication=DISABLED)
     else:
         ARGS['kerberos'] = None
 
