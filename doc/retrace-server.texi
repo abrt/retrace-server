@@ -359,7 +359,7 @@ header is set to @samp{text/plain}.
 @section Limiting traffic
 
 The maximum number of simultaneously running tasks is limited to 5 by
-the server. The limit is changeableby the @var{MaxParallelTasks} option
+the server. The limit is changeable by the @var{MaxParallelTasks} option
 in the server configuration file. If a new request comes when the server
 is fully occupied, the server returns the @code{503 Service Unavailable}
 HTTP error code.
@@ -371,7 +371,7 @@ mostly limited by the hard drive size and speed.
 @chapter Retrace worker
 
 Retrace worker is a program (usually residing in
-@command{/usr/bin/retrace-server-worker}) takes a task id as
+@command{/usr/bin/retrace-server-worker}) that takes a task id as
 a parameter and turns it into the task directory.
 
 Each task may contain a set of remote resources. These are specified
@@ -414,10 +414,10 @@ backtraces cannot be directly and reliably generated on systems whose
 software is updated:
 @itemize
 @item
-The exact binary which crashed needs to be available to GDB.
+The exact binary that crashed needs to be available to GDB.
 @item
-All libraries which are linked to the binary need to be available in the
-same exact versions from the time of the crash.
+All libraries that are linked to the binary need to be available in the
+exact same versions as at the time of the crash.
 @item
 The binary plugins loaded by the binary or libraries via @code{dlopen}
 need to be present in proper versions.
@@ -457,7 +457,7 @@ newest possible version which has its requirements satisfied.
 After finishing the task (by success or failure)
 @command{retrace-server-worker} cleans up the @command{mock} chroot
 and deletes the crash data uploaded by the user. The only exception
-is @code{TASK_DEBUG} task type, which is designed to keep crash
+is @code{TASK_DEBUG} task type, which is designed to keep the crash
 (including coredump) and chroot on the server for deeper
 Retrace server code debugging.
 
@@ -508,12 +508,11 @@ processed vmcores, one would end up with the whole debuginfo unpacked.)
 @node Task cleanup
 @chapter Task cleanup
 
-It is neccessary to watch and limit the resource usage of tasks for a
+It is necessary to watch and limit the resource usage of tasks for a
 retrace server to remain operational. This is performed by the
-@command{retrace-server-cleanup} tool. It is supposed that the server
-administrator sets @command{cron} to run the tool every hour (as
-@var{apache} user). The commented crontab entry is added when
-installing the RPM.
+@command{retrace-server-cleanup} tool. The server administrator is supposed
+to set @command{cron} to run the tool every hour (as @var{apache} user).
+The commented crontab entry is added when installing the RPM.
 
 Tasks that were created more than 120 hours (5 days) ago are
 deleted. The limit can be changed by the @var{DeleteTaskAfter} option in
@@ -572,8 +571,8 @@ The packages are downloaded to a local repository in
 @chapter Traffic and load estimation
 
 2500 bugs are reported from ABRT every month. Approximately 7.3%
-from that are Python exceptions, which don't need a retrace
-server. That means that 2315 bugs need a retrace server. That is 77
+of those are Python exceptions, which don't need a retrace
+server. This means that 2315 bugs need a retrace server. That is 77
 bugs per day, or 3.3 bugs every hour on average. Occasional spikes
 might be much higher (imagine a user that decided to report all his 8
 crashes from last month).
@@ -789,7 +788,7 @@ will enter the chroot, run the desired tool, load the core/vmcore
 and appropriate debuginfo automatically so that the debugger can
 start typing commands directly to the prompt. Using the @code{shell}
 command jumps to the chrooted shell. All commands are executed as
-non-privileged user by default, but this can be overriden by
+non-privileged user by default, but this can be overridden by
 the @code{--priv} option.
 
 @section Security
@@ -798,7 +797,7 @@ The user executing @file{retrace-server-interact} needs to be a member
 of @code{retrace} and @code{mock} groups. The only thing required to
 interactively debug is the task ID (not even task password!).
 There are no further security mechanisms, assuming the debugger
-has a root access to the host machine. Using
+has root access to the host machine. Using
 @file{retrace-server-interact} enables the debugger to jump into
 root shell within the chroot, which may be a possible security risk.
 
@@ -806,7 +805,7 @@ root shell within the chroot, which may be a possible security risk.
 
 @itemize
 @item
-The interactive task needs to be explicitely removed, as
+The interactive task needs to be explicitly removed, as
 the automatic cleanup skips it.
 @item
 When retracing vmcores natively (e.g. x86_64 vmcore on x86_64 host),
@@ -855,7 +854,7 @@ Retrace Server is able to query task data from an FTP server. It will
 unpack @var{.tar.gz}, @var{.tgz}, @var{.tar.bz2}, @var{.tar.xz},
 @var{.tarz}, @var{.tar}, @var{.gz}, @var{.bz2}, @var{.xz}, @var{.Z}
 and @var{.zip} archives. More formats may be added in the future.
-So far only vmcores are supported and the task is always created as
+So far, only vmcores are supported and the task is always created as
 @var{TASK_VMCORE_INTERACTIVE}, so make sure @var{AllowInteractive} is
 enabled in the configuration file.
 The local task is created by clicking @code{Start Task} link in
@@ -931,7 +930,7 @@ by task manager. See the Task Manager chapter for more information.
 Default 0.
 @item
 @command{MaxParallelTasks} integer; how many tasks may be running
-at one time. All new tasks are denied while the number of running
+at a time. All new tasks are denied while the number of running
 tasks is not less than the limit. Default 5.
 @item
 @command{MaxPackedSize} integer; maximum size of the uploaded archive

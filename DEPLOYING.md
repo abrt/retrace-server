@@ -97,7 +97,7 @@
 
 # Deploying testing Retrace Server
 When deploying retrace server only for testing purposes, you don't want to
-have all pacakges from all repositories. You only need some packages, so you
+have all packages from all repositories. You only need some packages, so you
 can retrace one or two coredumps. In this section a simple tutorial is written
 how to deploy such a server. Each point corresponds with point from section
 [Deploying Retrace Server](DEPLOYING.md#deploying-retrace-server).
@@ -188,7 +188,7 @@ how to deploy such a server. Each point corresponds with point from section
     Create tarball of the coredump `tar -cf coredump.tar coredump` and put it
     into /var or /var/spool. Then put path as `file:///var/(spool/)coredump.tar`
 
-* Task fails on running mock (last command starts with /usr/bin/mock init --resul...)
+* Task fails on running mock (last command starts with /usr/bin/mock init --resultdir...)
 
     There is a lot of possibilites, but most often it is one of two:
 
