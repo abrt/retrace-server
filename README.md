@@ -36,7 +36,7 @@ Retrace server consists of three parts:
 * [HTTP API](#http-api) handles communication with client
 * [Analyzer](#analysis) takes coredump and returns backtrace
 * [Repository synchronization](#repository-synchronization) downloads and
-stores all versions of pacakges
+stores all versions of packages
 
 ### HTTP API
 The HTTP API is one of two ways how to communicate with Retrace Server (another
@@ -49,7 +49,7 @@ In the following text the API is described.
 
 **Creating task**
 
-A client might create a new task by sending a HTTP request to the
+A client might create a new task by sending an HTTP request to the
 https://server/create URL providing an archive as the request content.
 The archive must contain crash data files. The crash data files are a subset
 of the local /var/spool/abrt/ccpp-time-pid/ directory contents, so the client
@@ -104,15 +104,15 @@ The server returns a text representation of the log.
 
 ### Analysis
 
-The server prepares a new chroot enviroment by using mock. That means, that
+The server prepares a new chroot environment by using mock. This means that
 a new folder is created, most likely with path like `/var/lib/mock/\<id\>/root/'.
 Content of this directory looks very similiar to the `\` directory. All important
 programs are installed into appropriate destination - so if we would found
 gdb in `/usr/bin/gdb`, it would be installed into `/var/lib/mock/\<id\>/root/usr/lib/gdb`.
 
 After the directory is prepared, the coredump is moved there and
-root is changed (using the chroot system function). In this chrooted enviroment
-gdb is run on the coredump. In this enviroment the gdb sees the corresponding
+root is changed (using the chroot system function). In this chrooted environment
+gdb is run on the coredump. In this environment the gdb sees the corresponding
 crashy binary, all debuginfos and all the proper versions of libraries on
 right places.
 
@@ -190,6 +190,6 @@ following elements:
 
 **2. GPG keys**
 
-Files containig GPG keys to verify downloaded package's signature. Dropped in
+Files containing GPG keys to verify downloaded package's signature. Dropped in
 /usr/share/retrace-server/gpg.
 
