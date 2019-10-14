@@ -209,7 +209,7 @@ class RetraceWorker(object):
             log_error("An unhandled exception occured: %s" % ex)
 
         if not child or child.returncode != 0:
-            log_error("%s exitted with %d\n=== OUTPUT ===\n%s" % (" ".join(cmd), child.returncode, output))
+            log_error("%s exited with %d\n=== OUTPUT ===\n%s" % (" ".join(cmd), child.returncode, output))
             self._fail(errorcode)
 
         return output
@@ -755,7 +755,7 @@ class RetraceWorker(object):
                            encoding='utf-8')
             stdout = child.communicate()[0]
             if child.wait():
-                raise Exception("mock exitted with %d:\n%s" % (child.returncode, stdout))
+                raise Exception("mock exited with %d:\n%s" % (child.returncode, stdout))
 
             self.hook_post_prepare_mock()
 
