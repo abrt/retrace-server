@@ -159,7 +159,7 @@ if __name__ == "__main__":
                                       stdout=PIPE, stderr=STDOUT)
                         stdout = child.communicate()[0]
                         if child.wait():
-                            log += "Error: tar exitted with %d: %s\n" % (child.returncode, stdout)
+                            log += "Error: tar exited with %d: %s\n" % (child.returncode, stdout)
                             try:
                                 os.unlink(targetfile)
                             except:

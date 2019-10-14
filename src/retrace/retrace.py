@@ -1064,7 +1064,7 @@ def check_run(cmd):
     child = Popen(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
     stdout = child.communicate()[0]
     if child.wait():
-        raise Exception("%s exitted with %d: %s" % (cmd[0], child.returncode, stdout))
+        raise Exception("%s exited with %d: %s" % (cmd[0], child.returncode, stdout))
 
 def move_dir_contents(source, dest):
     for filename in os.listdir(source):
@@ -2028,7 +2028,7 @@ class RetraceTask:
             log_warn("  %s" % err)
 
         if child.wait():
-            log_warn("crash '%s' exitted with %d" % (crash_cmdline.replace('\r', '; ').replace('\n', '; '),
+            log_warn("crash '%s' exited with %d" % (crash_cmdline.replace('\r', '; ').replace('\n', '; '),
                      child.returncode))
             returncode = child.returncode
 
@@ -2117,7 +2117,7 @@ class RetraceTask:
                 child = Popen(["wget", "-nv", "-P", crashdir, url], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
                 stdout = child.communicate()[0]
                 if child.wait():
-                    errors.append((url, "wget exitted with %d: %s" % (child.returncode, stdout)))
+                    errors.append((url, "wget exited with %d: %s" % (child.returncode, stdout)))
                     continue
 
                 filename = url.rsplit("/", 1)[1]
