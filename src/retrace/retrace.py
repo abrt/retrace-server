@@ -1527,7 +1527,7 @@ class KernelVMcore:
         if chroot:
             with open(os.devnull, "w") as null:
                 crash_normal = ["/usr/bin/mock", "--configdir", chroot, "shell",
-                                "--", "crash -s %s %s" % (vmcore.get_path(), vmlinux)]
+                                "--", "crash -s %s %s" % (self._vmcore_path, vmlinux)]
         else:
             crash_normal = crash_cmd + ["-s", self._vmcore_path, vmlinux]
         stdout, returncode = task.run_crash_cmdline(crash_normal, "mod\nquit")
