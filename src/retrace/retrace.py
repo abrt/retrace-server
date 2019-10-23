@@ -15,13 +15,12 @@ import sys
 import time
 import hashlib
 import magic
-import six
 from signal import getsignal, signal, SIG_DFL, SIGPIPE
 from subprocess import PIPE, STDOUT, call, Popen, TimeoutExpired
 
 from dnf.subject import Subject
 from hawkey import FORM_NEVRA
-from six.moves import range, urllib
+import urllib
 from .config import Config, TAR_BIN, XZ_BIN, GZIP_BIN, DU_BIN, DF_BIN
 
 GETTEXT_DOMAIN = "retrace-server"
@@ -1956,7 +1955,7 @@ class RetraceTask:
         return [email for email in set(n.strip() for n in result.split("\n")) if email]
 
     def set_notify(self, values):
-        if not isinstance(values, list) or not all([isinstance(v, six.string_types) for v in values]):
+        if not isinstance(values, list) or not all([isinstance(v, str) for v in values]):
             raise Exception("values must be a list of strings")
 
         self.set_atomic(RetraceTask.NOTIFY_FILE,

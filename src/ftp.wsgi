@@ -2,7 +2,7 @@
 
 import fnmatch
 import re
-from six.moves import urllib
+import urllib
 from webob import Request
 
 from retrace.retrace import (ftp_list_dir,

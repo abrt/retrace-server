@@ -10,12 +10,7 @@
 #Note:all modules share one instance, therefore only one load is needed.
 import os
 
-if sys.version_info.major == 2:
-#Python 2
-    import ConfigParser as configparser # pylint: disable=import-error
-else:
-#Python 3+
-    import configparser
+import configparser
 
 DF_BIN = "@DF_BIN@"
 DU_BIN = "@DU_BIN@"
