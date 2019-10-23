@@ -4,7 +4,7 @@ import datetime
 import fnmatch
 import re
 import time
-from six.moves import urllib
+import urllib
 from webob import Request
 
 from retrace.retrace import (FTP_SUPPORTED_EXTENSIONS, STATUS, STATUS_DOWNLOADING, STATUS_FAIL,

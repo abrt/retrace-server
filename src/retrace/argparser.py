@@ -17,12 +17,7 @@ import argparse
 import logging
 import sys
 
-if sys.version_info.major == 2:
-#Python 2
-    from StringIO import StringIO
-else:
-#Python 3+
-    from io import StringIO
+from io import StringIO
 
 class ArgumentParser(argparse.ArgumentParser):
     def __init__(self, description=None, prog=sys.argv[0], usage=None,

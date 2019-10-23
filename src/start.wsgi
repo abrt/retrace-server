@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from six.moves import urllib
+import urllib
 from webob import Request
 
 from retrace.retrace import (URL_PARSER,

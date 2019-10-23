@@ -4,7 +4,7 @@ import sys
 import os
 from subprocess import Popen, PIPE
 import argparse
-from six.moves import urllib
+import urllib
 
 
 argparser = argparse.ArgumentParser(description="Retrace Server plugin checker")
