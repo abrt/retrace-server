@@ -123,8 +123,8 @@ if __name__ == "__main__":
             if task.has_vmlinux():
                 vmlinux = task.get_vmlinux()
             else:
-                if self.has_status() and \
-                   self.get_status() not in [STATUS_SUCCESS, STATUS_FAIL]:
+                if task.has_status() and \
+                   task.get_status() not in [STATUS_SUCCESS, STATUS_FAIL]:
                     sys.stderr.write("Task '%s' still in progress or hung (status = %d), "
                                      "please wait for task to complete.\n" %
                                      (task.get_taskid(), task.get_status()))
