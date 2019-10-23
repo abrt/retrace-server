@@ -103,7 +103,7 @@ def application(environ, start_response):
             if CONFIG["UseFTPTasks"]:
                 ftp = ftp_init()
                 files = ftp_list_dir(CONFIG["FTPDir"], ftp)
-                if not filename in files:
+                if filename not in files:
                     ftp_close(ftp)
                     return response(start_response, "404 Not Found", _("There is no such task"))
 
@@ -330,7 +330,7 @@ def application(environ, start_response):
             if CONFIG["UseFTPTasks"]:
                 ftp = ftp_init()
                 files = ftp_list_dir(CONFIG["FTPDir"], ftp)
-                if not filename in files:
+                if filename not in files:
                     ftp_close(ftp)
                     return response(start_response, "404 Not Found", _("There is no such task"))
 

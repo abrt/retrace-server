@@ -31,7 +31,7 @@ def application(environ, start_response):
         return response(start_response, "404 Not Found",
                         _("There is no such task"))
 
-    if not "X-Task-Password" in request.headers or \
+    if "X-Task-Password" not in request.headers or \
        not task.verify_password(request.headers["X-Task-Password"]):
         return response(start_response, "403 Forbidden",
                         _("Invalid password"))

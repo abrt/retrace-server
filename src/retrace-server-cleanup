@@ -118,7 +118,7 @@ if __name__ == "__main__":
             running_ids.append(taskid)
 
         for taskid in get_active_tasks():
-            if not taskid in running_ids:
+            if taskid not in running_ids:
                 log.write("Cleaning up orphaned task %d\n" % taskid)
                 try:
                     task = RetraceTask(taskid)

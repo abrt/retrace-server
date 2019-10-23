@@ -48,7 +48,7 @@ def application(environ, start_response):
         return response(start_response, "405 Method Not Allowed",
                         _("You must use POST method"))
 
-    if not request.content_type in HANDLE_ARCHIVE.keys():
+    if request.content_type not in HANDLE_ARCHIVE.keys():
         return response(start_response, "415 Unsupported Media Type",
                         _("Specified archive format is not supported"))
 
@@ -213,7 +213,7 @@ def application(environ, start_response):
         task.set_type(TASK_RETRACE)
 
     for required_file in REQUIRED_FILES[task.get_type()]:
-        if not required_file in files:
+        if required_file not in files:
             task.remove()
             return response(start_response, "403 Forbidden",
                             _("Required file '%s' is missing") % required_file)
