@@ -456,7 +456,7 @@ class RetraceWorker(object):
         release, distribution, version = self.read_release_file(crashdir, crash_package)
 
         releaseid = "%s-%s-%s" % (distribution, version, arch)
-        if not releaseid in get_supported_releases():
+        if releaseid not in get_supported_releases():
             log_error("Release '%s' is not supported" % releaseid)
             self._fail()
 

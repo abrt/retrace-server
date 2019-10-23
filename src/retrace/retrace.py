@@ -686,13 +686,13 @@ def unpack_vmcore(path):
         diff = set(newfiles) - files
         vmcore_candidate = 0
         while vmcore_candidate < len(newfiles) and \
-              not newfiles[vmcore_candidate] in diff:
+              newfiles[vmcore_candidate] not in diff:
             vmcore_candidate += 1
 
         if len(diff) > 1:
             archive = rename_with_suffix(newfiles[vmcore_candidate], archivebase)
             for filename in newfiles:
-                if not filename in diff or \
+                if filename not in diff or \
                    filename == newfiles[vmcore_candidate]:
                     continue
 
@@ -762,7 +762,7 @@ def get_task_est_time(taskdir):
 def unpack(archive, mime, targetdir=None):
     cmd = list(HANDLE_ARCHIVE[mime]["unpack"])
     cmd.append(archive)
-    if not targetdir is None:
+    if targetdir is not None:
         cmd.append("--directory")
         cmd.append(targetdir)
 
@@ -1504,7 +1504,7 @@ class KernelVMcore:
                 else:
                     pattern2 = "EL%s/" % kernelver.flavour
 
-                if not pattern2 in os.path.dirname(line):
+                if pattern2 not in os.path.dirname(line):
                     continue
 
             # '-' in file name is transformed to '_' in module name
@@ -1842,7 +1842,7 @@ class RetraceTask:
 
     def set_type(self, newtype):
         """Atomically writes given type into TYPE_FILE."""
-        if not newtype in TASK_TYPES:
+        if newtype not in TASK_TYPES:
             newtype = TASK_RETRACE
 
         self.set_atomic(RetraceTask.TYPE_FILE, str(newtype))
@@ -2505,7 +2505,7 @@ class RetraceTask:
                                stdout=null, stderr=null)
 
         for f in os.listdir(self._savedir):
-            if not f in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
+            if f not in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
                          RetraceTask.BACKTRACE_FILE, RetraceTask.DOWNLOADED_FILE,
                          RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
                          RetraceTask.MANAGED_FILE, RetraceTask.NOTES_FILE,

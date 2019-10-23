@@ -15,7 +15,7 @@ def application(environ, start_response):
     _ = parse_http_gettext("%s" % request.accept_language,
                            "%s" % request.accept_charset)
 
-    if not "X-Package-NVR" in request.headers:
+    if "X-Package-NVR" not in request.headers:
         return response(start_response, "403 Forbidden",
                         _("Required header 'X-Package-NVR' not found"))
 
@@ -23,7 +23,7 @@ def application(environ, start_response):
         return response(start_response, "403 Forbidden",
                         _("Package NVR contains illegal characters"))
 
-    if not "X-Package-Arch" in request.headers:
+    if "X-Package-Arch" not in request.headers:
         return response(start_response, "403 Forbidden",
                         _("Required header 'X-Package-Arch' not found"))
 
@@ -31,7 +31,7 @@ def application(environ, start_response):
         return response(start_response, "403 Forbidden",
                         _("Architecture contains illegal characters"))
 
-    if not "X-OS-Release" in request.headers:
+    if "X-OS-Release" not in request.headers:
         request.headers["X-OS-Release"] = None
     elif not INPUT_RELEASEID_PARSER.match(request.headers["X-OS-Release"]):
         return response(start_response, "403 Forbidden",
