@@ -131,8 +131,8 @@ TASKPASS_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 
 
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \
-STATUS_STATS, STATUS_FINISHING, STATUS_SUCCESS, STATUS_FAIL, \
-STATUS_DOWNLOADING, STATUS_POSTPROCESS, STATUS_CALCULATING_MD5SUM = range(11)
+    STATUS_STATS, STATUS_FINISHING, STATUS_SUCCESS, STATUS_FAIL, \
+    STATUS_DOWNLOADING, STATUS_POSTPROCESS, STATUS_CALCULATING_MD5SUM = range(11)
 
 STATUS = [
     "Analyzing crash data",
@@ -578,8 +578,11 @@ def find_kernel_debuginfo(kernelver):
 
         for ver in vers:
             pkgname = ver.package_name(debug=True)
-            url = CONFIG["KernelDebuginfoURL"].replace("$VERSION", ver.version).replace("$RELEASE", ver.release)\
-                  .replace("$ARCH", ver._arch).replace("$BASENAME", basename)
+            url = CONFIG["KernelDebuginfoURL"] \
+                .replace("$VERSION", ver.version) \
+                .replace("$RELEASE", ver.release) \
+                .replace("$ARCH", ver._arch) \
+                .replace("$BASENAME", basename)
             if not url.endswith("/"):
                 url += "/"
             url += pkgname
@@ -703,8 +706,7 @@ def unpack_vmcore(path):
         newfiles = [f for (f, s) in files_sizes]
         diff = set(newfiles) - files
         vmcore_candidate = 0
-        while vmcore_candidate < len(newfiles) and \
-              newfiles[vmcore_candidate] not in diff:
+        while vmcore_candidate < len(newfiles) and newfiles[vmcore_candidate] not in diff:
             vmcore_candidate += 1
 
         if len(diff) > 1:
@@ -1322,7 +1324,7 @@ class KernelVMcore:
 
         # If dump_level was readable above, then check to see if stripping is worthwhile
         if (dump_level is not None and
-            (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
+           (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
             log_info("Stripping to %d would have no effect" % CONFIG["VmcoreDumpLevel"])
             self._has_extra_pages = False
         return self._has_extra_pages
@@ -1491,8 +1493,7 @@ class KernelVMcore:
                 kernel_path = kernel_path + "."
             kernel_path = kernel_path + str(kernelver.flavour)
 
-        vmlinux_cache_path = debugdir_base + "/usr/lib/debug/lib/modules/" +\
-                             kernel_path + "/vmlinux"
+        vmlinux_cache_path = debugdir_base + "/usr/lib/debug/lib/modules/" + kernel_path + "/vmlinux"
         if os.path.isfile(vmlinux_cache_path):
             log_info("Found cached vmlinux at path: " + vmlinux_cache_path)
             vmlinux = vmlinux_cache_path
@@ -2347,8 +2348,8 @@ class RetraceTask:
             raise Exception("name may not contain the '/' character")
 
         if not overwrite and self.has_results(name):
-            raise Exception("The record already exists. Use overwrite=True " \
-                             "to force overwrite existing records.")
+            raise Exception("The record already exists. Use overwrite=True "
+                            "to force overwrite existing records.")
 
         results_dir = self.get_results_dir()
         if not os.path.isdir(results_dir):

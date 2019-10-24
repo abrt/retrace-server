@@ -179,8 +179,7 @@ def application(environ, start_response):
         if os.path.islink(filepath):
             task.remove()
             return response(start_response, "403 Forbidden",
-                            _("Symlinks are not allowed to be in" \
-                              " the archive"))
+                            _("Symlinks are not allowed to be in the archive"))
 
         if f in ALLOWED_FILES:
             maxsize = ALLOWED_FILES[f]
@@ -206,8 +205,7 @@ def application(environ, start_response):
            and not CONFIG["AllowInteractive"]:
             task.remove()
             return response(start_response, "409 Conflict",
-                            _("Interactive tasks were disabled by " \
-                              "server administrator"))
+                            _("Interactive tasks were disabled by server administrator"))
         task.set_type(tasktype)
     else:
         task.set_type(TASK_RETRACE)
