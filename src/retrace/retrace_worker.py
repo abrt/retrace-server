@@ -543,13 +543,6 @@ class RetraceWorker(object):
 
             self.clean_task()
 
-            # ignore error: workdir = savedir => workdir is not empty
-            if CONFIG["UseWorkDir"]:
-                try:
-                    os.rmdir(workdir)
-                except:
-                    pass
-
         # save crash statistics
         task.set_status(STATUS_STATS)
         log_info(STATUS[STATUS_STATS])

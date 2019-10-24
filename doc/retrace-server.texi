@@ -970,13 +970,6 @@ which hardcodes the default. Default @file{/var/cache/retrace-server}.
 @command{SaveDir} string; the directory where task directories are
 created. Default @file{/var/spool/retrace-server}.
 @item
-@command{UseWorkDir} boolean; whether to use non-default mock
-directory. Historical, does not work at the moment. May be
-revived in the future.
-@item
-@command{WorkDir} string; custom mock working directory.
-Historical, does not work at the moment. May be revived in the future.
-@item
 @command{DropDir} string; directory, where old tasks are archived
 before deleting. No effect if archiving is disabled. Default
 @file{/srv/retrace/archive}.

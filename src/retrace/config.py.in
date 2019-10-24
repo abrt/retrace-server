@@ -49,8 +49,6 @@ class Config(object):
             "LogDir": "/var/log/retrace-server",
             "RepoDir": "/var/cache/retrace-server",
             "SaveDir": "/var/spool/retrace-server",
-            "WorkDir": "/tmp/retrace-server",
-            "UseWorkDir": False,
             "RequireHTTPS": True,
             "AllowAPIDelete": False,
             "AllowExternalDir": False,
