@@ -1,13 +1,13 @@
-#Singleton class for saving path to the configuration file
+# Singleton class for saving path to the configuration file
 
-#Heavily inspired by
-#   http://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html
-#All modules that need reading from configuration file must create instance of
-#   Config. When different path than default is needed, before first
-#   reading from any GLOBAL item, a load(/path/to/the/config/file)
-#   must be called. When this function was not called, is automatically called
-#   before first reading from GLOBAL with default path.
-#Note:all modules share one instance, therefore only one load is needed.
+# Heavily inspired by
+#    http://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html
+# All modules that need reading from configuration file must create instance of
+#    Config. When different path than default is needed, before first
+#    reading from any GLOBAL item, a load(/path/to/the/config/file)
+#    must be called. When this function was not called, is automatically called
+#    before first reading from GLOBAL with default path.
+# Note:all modules share one instance, therefore only one load is needed.
 import os
 
 import configparser
@@ -18,6 +18,7 @@ GZIP_BIN = "@GZIP_BIN@"
 TAR_BIN = "@TAR_BIN@"
 XZ_BIN = "@XZ_BIN@"
 LSOF_BIN = "@LSOF_BIN@"
+
 
 class Config(object):
     class __config:
@@ -48,8 +49,8 @@ class Config(object):
             "AllowExternalDir": False,
             "AllowInteractive": False,
             "AllowTaskManager": False,
-            "AllowVMCoreTask" : False,
-            "AllowUsrCoreTask" : False,
+            "AllowVMCoreTask": False,
+            "AllowUsrCoreTask": False,
             "TaskManagerAuthDelete": False,
             "TaskManagerDeleteUsers": [],
             "UseFTPTasks": False,
@@ -91,7 +92,7 @@ class Config(object):
 
         def load(self, filepath="/etc/retrace-server.conf"):
             self.conf_file_read = True
-            #if environment variable set, use rather that
+            # if environment variable set, use rather that
             env_config_path = os.environ.get('RETRACE_SERVER_CONFIG_PATH')
             if env_config_path:
                 filepath = env_config_path

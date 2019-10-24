@@ -30,7 +30,7 @@ ALLOWED_FILES = {
     "coredump": 0,
     "executable": 512,
     "package": 128,
-    "packages": (1 << 20), # 1MB
+    "packages": (1 << 20),  # 1MB
     "os_release": 128,
     "os_release_in_rootdir": 128,
     "rootdir": 256,
@@ -70,15 +70,15 @@ SUFFIX_MAP = {
 BUGZILLA_STATUS = ["NEW", "ASSIGNED", "ON_DEV", "POST", "MODIFIED", "ON_QA", "VERIFIED",
                    "RELEASE_PENDING", "CLOSED"]
 
-#characters, numbers, dash (utf-8, iso-8859-2 etc.)
+# characters, numbers, dash (utf-8, iso-8859-2 etc.)
 INPUT_CHARSET_PARSER = re.compile(r"^([a-zA-Z0-9\-]+)(,.*)?$")
-#en_GB, sk-SK, cs, fr etc.
+# en_GB, sk-SK, cs, fr etc.
 INPUT_LANG_PARSER = re.compile(r"^([a-z]{2}([_\-][A-Z]{2})?)(,.*)?$")
-#characters allowed by Fedora Naming Guidelines
+# characters allowed by Fedora Naming Guidelines
 INPUT_PACKAGE_PARSER = re.compile(r"^([1-9][0-9]*:)?[a-zA-Z0-9\-\.\_\+\~]+$")
-#architecture (i386, x86_64, armv7hl, mips4kec)
+# architecture (i386, x86_64, armv7hl, mips4kec)
 INPUT_ARCH_PARSER = re.compile(r"^[a-zA-Z0-9_]+$")
-#name-version-arch (fedora-16-x86_64, rhel-6.2-i386, opensuse-12.1-x86_64)
+# name-version-arch (fedora-16-x86_64, rhel-6.2-i386, opensuse-12.1-x86_64)
 INPUT_RELEASEID_PARSER = re.compile(r"^[a-zA-Z0-9]+\-[0-9a-zA-Z\.]+\-[a-zA-Z0-9_]+$")
 
 CORE_ARCH_PARSER = re.compile(r"core file,? .*(x86-64|80386|ARM|aarch64|IBM S/390|64-bit PowerPC)")
@@ -173,6 +173,7 @@ ARCH_MAP = {
 PYTHON_LABLE_START = "----------PYTHON-START--------"
 PYTHON_LABLE_END = "----------PYTHON--END---------"
 
+
 class RetraceError(Exception):
     pass
 
@@ -193,14 +194,18 @@ logger = logging.getLogger(__name__)
 def log_info(msg):
     logger.info("%23s %s" % (now(), msg))
 
+
 def log_debug(msg):
     logger.debug("%22s %s" % (now(), msg))
+
 
 def log_warn(msg):
     logger.warn("%20s %s" % (now(), msg))
 
+
 def log_error(msg):
     logger.error("%22s %s" % (now(), msg))
+
 
 def lock(lockfile):
     try:
@@ -214,6 +219,7 @@ def lock(lockfile):
     os.close(fd)
     return True
 
+
 def unlock(lockfile):
     try:
         if os.path.getsize(lockfile) == 0:
@@ -223,12 +229,14 @@ def unlock(lockfile):
 
     return True
 
+
 def get_canon_arch(arch):
     for canon_arch, derived_archs in ARCH_MAP.items():
         if arch in derived_archs:
             return canon_arch
 
     return arch
+
 
 def free_space(path):
     child = Popen([DF_BIN, "-B", "1", path], stdout=PIPE, encoding='utf-8')
@@ -240,6 +248,7 @@ def free_space(path):
 
     return None
 
+
 def dir_size(path):
     child = Popen([DU_BIN, "-sb", path], stdout=PIPE, encoding='utf-8')
     lines = child.communicate()[0].split("\n")
@@ -249,6 +258,7 @@ def dir_size(path):
             return int(match.group(1))
 
     return 0
+
 
 def unpacked_size(archive, mime):
     command, parser = HANDLE_ARCHIVE[mime]["size"]
@@ -260,6 +270,7 @@ def unpacked_size(archive, mime):
             return int(match.group(1))
 
     return None
+
 
 def guess_arch(coredump_path):
     child = Popen(["file", coredump_path], stdout=PIPE, encoding='utf-8')
@@ -324,6 +335,7 @@ def get_supported_releases():
 
     return result
 
+
 def parse_http_gettext(lang, charset):
     result = lambda x: x
     lang_match = INPUT_LANG_PARSER.match(lang)
@@ -338,8 +350,9 @@ def parse_http_gettext(lang, charset):
 
     return result
 
+
 def run_gdb(savedir, plugin):
-    #exception is caught on the higher level
+    # exception is caught on the higher level
     exec_file = open(os.path.join(savedir, "crash", "executable"), "r")
     executable = exec_file.read(ALLOWED_FILES["executable"])
     exec_file.close()
@@ -444,11 +457,13 @@ def splitFilename(filename):
 
     return nevra.name, nevra.version, nevra.release, nevra.epoch, nevra.arch
 
+
 def remove_epoch(nvr):
     pos = nvr.find(":")
     if pos > 0:
         return nvr[pos + 1:]
     return nvr
+
 
 def is_package_known(package_nvr, arch, releaseid=None):
     if CONFIG["UseFafPackages"]:
@@ -578,6 +593,7 @@ def find_kernel_debuginfo(kernelver):
 
     return None
 
+
 def cache_files_from_debuginfo(debuginfo, basedir, files):
     # important! if empty list is specified, the whole debuginfo would be unpacked
     if not files:
@@ -612,6 +628,7 @@ def get_files_sizes(directory):
 
     return sorted(result, key=lambda f_s: f_s[1], reverse=True)
 
+
 def get_archive_type(path):
     ms = magic.open(magic.MAGIC_NONE)
     ms.load()
@@ -644,6 +661,7 @@ def get_archive_type(path):
     log_debug("unknown file type, unpacking finished")
     return ARCHIVE_UNKNOWN
 
+
 def rename_with_suffix(frompath, topath):
     suffix = SUFFIX_MAP[get_archive_type(frompath)]
     if not topath.endswith(suffix):
@@ -652,6 +670,7 @@ def rename_with_suffix(frompath, topath):
     os.rename(frompath, topath)
 
     return topath
+
 
 def unpack_vmcore(path):
     parentdir = os.path.dirname(path)
@@ -758,6 +777,7 @@ def unpack_coredump(path):
 def get_task_est_time(taskdir):
     return 180
 
+
 def unpack(archive, mime, targetdir=None):
     cmd = list(HANDLE_ARCHIVE[mime]["unpack"])
     cmd.append(archive)
@@ -768,16 +788,19 @@ def unpack(archive, mime, targetdir=None):
     retcode = call(cmd)
     return retcode
 
+
 def response(start_response, status, body="", extra_headers=[]):
     body = body.encode()
     start_response(status, [("Content-Type", "text/plain"), ("Content-Length", "%d" % len(body))] + extra_headers)
     return [body]
+
 
 def run_ps():
     child = Popen(["ps", "-eo", "pid,ppid,etime,cmd"], stdout=PIPE, encoding='utf-8')
     lines = child.communicate()[0].split("\n")
 
     return lines
+
 
 def get_running_tasks(ps_output=None):
     if not ps_output:
@@ -791,6 +814,7 @@ def get_running_tasks(ps_output=None):
             result.append((int(match.group(1)), int(match.group(3)), match.group(2)))
 
     return result
+
 
 def get_active_tasks():
     tasks = []
@@ -811,6 +835,7 @@ def get_active_tasks():
             tasks.append(task.get_taskid())
 
     return tasks
+
 
 def get_md5_tasks():
     tasks = []
@@ -849,6 +874,7 @@ def get_md5_tasks():
 
     return tasks
 
+
 def parse_rpm_name(name):
     result = {
         "epoch": 0,
@@ -864,6 +890,7 @@ def parse_rpm_name(name):
      result["arch"]) = splitFilename(name + ".mockarch.rpm")
 
     return result
+
 
 def init_crashstats_db():
     # create the database group-writable and world-readable
@@ -905,6 +932,7 @@ def init_crashstats_db():
 
     return con
 
+
 def save_crashstats(stats, con=None):
     close = False
     if con is None:
@@ -927,6 +955,7 @@ def save_crashstats(stats, con=None):
 
     return query.lastrowid
 
+
 def save_crashstats_success(statsid, pre, post, rootsize, con=None):
     close = False
     if con is None:
@@ -943,6 +972,7 @@ def save_crashstats_success(statsid, pre, post, rootsize, con=None):
     con.commit()
     if close:
         con.close()
+
 
 def save_crashstats_packages(statsid, packages, con=None):
     close = False
@@ -975,6 +1005,7 @@ def save_crashstats_packages(statsid, packages, con=None):
     if close:
         con.close()
 
+
 def save_crashstats_build_ids(statsid, buildids, con=None):
     close = False
     if con is None:
@@ -993,6 +1024,7 @@ def save_crashstats_build_ids(statsid, buildids, con=None):
     if close:
         con.close()
 
+
 def save_crashstats_reportfull(ip, con=None):
     close = False
     if con is None:
@@ -1009,6 +1041,7 @@ def save_crashstats_reportfull(ip, con=None):
     con.commit()
     if close:
         con.close()
+
 
 def send_email(frm, to, subject, body):
     if isinstance(to, list):
@@ -1027,6 +1060,7 @@ def send_email(frm, to, subject, body):
     smtp.sendmail(frm, to, msg)
     smtp.close()
 
+
 def ftp_init():
     if CONFIG["FTPSSL"]:
         ftp = ftplib.FTP_SSL(CONFIG["FTPHost"])
@@ -1039,11 +1073,13 @@ def ftp_init():
 
     return ftp
 
+
 def ftp_close(ftp):
     try:
         ftp.quit()
     except:
         ftp.close()
+
 
 def ftp_list_dir(ftpdir="/", ftp=None):
     close = False
@@ -1058,11 +1094,13 @@ def ftp_list_dir(ftpdir="/", ftp=None):
 
     return result
 
+
 def check_run(cmd):
     child = Popen(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
     stdout = child.communicate()[0]
     if child.wait():
         raise Exception("%s exited with %d: %s" % (cmd[0], child.returncode, stdout))
+
 
 def move_dir_contents(source, dest):
     for filename in os.listdir(source):
@@ -1086,6 +1124,7 @@ def move_dir_contents(source, dest):
 
     shutil.rmtree(source)
 
+
 def human_readable_size(bytes):
     size = float(bytes)
     unit = 0
@@ -1094,6 +1133,7 @@ def human_readable_size(bytes):
         size /= 1024.0
 
     return "%.2f %s" % (size, UNITS[unit])
+
 
 class KernelVer(object):
     FLAVOUR = ["debug", "highbank", "hugemem",
@@ -1178,6 +1218,7 @@ class KernelVer(object):
 
     def needs_arch(self):
         return self._arch is None
+
 
 class KernelVMcore:
     DUMP_LEVEL_PARSER = re.compile(r"^[ \t]*dump_level[ \t]*:[ \t]*([0-9]+).*$")
@@ -1336,6 +1377,7 @@ class KernelVMcore:
     # 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
     KERNEL_RELEASE_PARSER = re.compile(b'(\d+\.\d+\.\d+)-(\d+\.[^\x00\s]+)')
     #
+
     def get_kernel_release(self, crash_cmd=["crash"]):
         if self._release is not None:
             return self._release
@@ -1438,7 +1480,7 @@ class KernelVMcore:
             kernel_path = kernel_path + str(kernelver.version)
         if kernelver.release is not None:
             kernel_path = kernel_path + "-" + str(kernelver.release)
-	    # Skip the 'arch' on RHEL5 and RHEL4 due to different kernel-debuginfo
+        # Skip the 'arch' on RHEL5 and RHEL4 due to different kernel-debuginfo
         # path to vmlinux
         if kernelver._arch is not None and "EL" not in kernelver.release and\
            "el5" not in kernelver.release:
@@ -2295,7 +2337,7 @@ class RetraceTask:
 
         results_path = os.path.join(self.get_results_dir(), name)
         with open(results_path, mode) as results_file:
-            result = results_file.read(1 << 24) # 16MB
+            result = results_file.read(1 << 24)  # 16MB
 
         return result
 
@@ -2564,6 +2606,7 @@ class RetraceTask:
         # TODO: let it be configurable
         from .retrace_worker import RetraceWorker
         return RetraceWorker(self)
+
 
 ### create ConfigClass instance on import ###
 CONFIG = Config()

@@ -19,6 +19,7 @@ import sys
 
 from io import StringIO
 
+
 class ArgumentParser(argparse.ArgumentParser):
     def __init__(self, description=None, prog=sys.argv[0], usage=None,
                  add_help=True, argument_default=None, prefix_chars="-"):

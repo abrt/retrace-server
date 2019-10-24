@@ -42,6 +42,7 @@ sys.path.insert(0, "/usr/share/retrace-server/")
 
 CONFIG = Config()
 
+
 class RetraceWorker(object):
     def __init__(self, task):
         self.plugins = Plugins()
@@ -291,7 +292,6 @@ class RetraceWorker(object):
             log_error("Unable to parse package name: %s" % crash_package)
             self._fail()
         return (crash_package, pkgdata)
-
 
     def read_release_file(self, crashdir, crash_package):
         # read release, distribution and version from release file
