@@ -2542,8 +2542,8 @@ class RetraceTask:
             if os.path.isfile(os.path.join(self._savedir, "default.cfg")) and \
                os.path.isfile(os.path.join(self._savedir, "site-defaults.cfg")) and \
                os.path.isfile(os.path.join(self._savedir, "logging.ini")):
-                retcode = call(["/usr/bin/mock", "--configdir", self._savedir, "--scrub=all"],
-                               stdout=null, stderr=null)
+                call(["/usr/bin/mock", "--configdir", self._savedir, "--scrub=all"],
+                     stdout=null, stderr=null)
 
         for f in os.listdir(self._savedir):
             if f not in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
