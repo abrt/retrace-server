@@ -1,20 +1,21 @@
-#Singleton class for providing plugins
+# Singleton class for providing plugins
 
-#heavily inspired by
-#  http://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html
-#Each module that needs working with plugins, needs reference on Plugins
-#   instance. To obtain all existing plugins, calling method all() should be
-#   sufficient enough. List of imported modules is returned.
-#If different path to plugins then default is needed, there are 2 options:
-#   1) Calling method load() with parameter before any calling of method all()
-#   2) Setting environment variable "RETRACE_SERVER_PLUGIN_DIR"
-#   Note: No.2 has bigger priority the No.1
-#Note: Loading, if not forced by calling load(), is done in first calling of
-#   all(). Another calls of all() return the same list. To change this list
-#   method load() must be called explicitly.
+# heavily inspired by
+#   http://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html
+# Each module that needs working with plugins, needs reference on Plugins
+#    instance. To obtain all existing plugins, calling method all() should be
+#    sufficient enough. List of imported modules is returned.
+# If different path to plugins then default is needed, there are 2 options:
+#    1) Calling method load() with parameter before any calling of method all()
+#    2) Setting environment variable "RETRACE_SERVER_PLUGIN_DIR"
+#    Note: No.2 has bigger priority the No.1
+# Note: Loading, if not forced by calling load(), is done in first calling of
+#    all(). Another calls of all() return the same list. To change this list
+#    method load() must be called explicitly.
 
 import os
 import sys
+
 
 class Plugins(object):
     class __plugins:
@@ -25,7 +26,7 @@ class Plugins(object):
         def load(self, plugin_dir="/usr/share/retrace-server/plugins"):
             self.PLUGINS = []
             self.plugins_read = True
-            #if environment variable set, use rather that
+            # if environment variable set, use rather that
             env_plugin_dir = os.environ.get('RETRACE_SERVER_PLUGIN_DIR')
             if env_plugin_dir:
                 plugin_dir = env_plugin_dir
@@ -53,6 +54,7 @@ class Plugins(object):
             return self.PLUGINS
 
     instance = None
+
     def __new__(cls,):
         if not Plugins.instance:
             Plugins.instance = Plugins.__plugins()

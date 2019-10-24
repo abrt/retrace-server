@@ -27,7 +27,8 @@ from retrace.retrace import (ALLOWED_FILES,
 from retrace.config import Config
 
 CONFIG = Config()
-BUFSIZE = 1 << 20 # 1 MB
+BUFSIZE = 1 << 20  # 1 MB
+
 
 def application(environ, start_response):
     request = Request(environ)

@@ -9,6 +9,7 @@ from retrace.config import Config
 
 CONFIG = Config()
 
+
 def application(environ, start_response):
     request = Request(environ)
 

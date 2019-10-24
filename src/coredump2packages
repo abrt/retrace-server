@@ -77,7 +77,7 @@ def binary_packages_from_debuginfo_package(debuginfo_package, binobj_path):
     package.
     """
     package_list = []
-    if binobj_path == '-': # [exe] without binary name
+    if binobj_path == '-':  # [exe] without binary name
         log.write("   Dnf search for [exe] without binary name, "
                   "packages with NVR {0}:{1}-{2}.{3}...\n".format(debuginfo_package.epoch,
                                                                   debuginfo_package.version,
@@ -203,13 +203,14 @@ def process_unstrip_output():
                     package_list.append(entry_package)
     return package_list, missing_buildid_list, coredump_package_list
 
+
 package_list, missing_buildid_list, coredump_package_list = process_unstrip_output()
 
-#
 # The package list might contain multiple packages with the same name,
 # but different version. This happens because some binary had the same
 # build id over multiple package releases.
-#
+
+
 def find_duplicates(package_list):
     for p1 in range(0, len(package_list) - 1):
         package1 = package_list[p1]
@@ -218,6 +219,7 @@ def find_duplicates(package_list):
             if package1.name == package2.name and package1.arch == package2.arch:
                 return package1, package2
     return None, None
+
 
 def count_removals(package_list, base_package_name, epoch, ver, rel, arch):
     count = 0
@@ -228,6 +230,7 @@ def count_removals(package_list, base_package_name, epoch, ver, rel, arch):
             continue
         count += 1
     return count
+
 
 log.write("Checking for duplicates...\n")
 while True:

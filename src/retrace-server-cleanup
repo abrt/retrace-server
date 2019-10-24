@@ -16,6 +16,7 @@ from retrace.config import Config, LSOF_BIN
 
 CONFIG = Config()
 
+
 def get_process_tree(pid, ps_output):
     result = [pid]
 
@@ -28,6 +29,7 @@ def get_process_tree(pid, ps_output):
             result.extend(get_process_tree(pid, ps_output))
 
     return result
+
 
 def kill_process_and_childs(process_id, ps_output=None):
     result = True
@@ -42,6 +44,7 @@ def kill_process_and_childs(process_id, ps_output=None):
             result = False
 
     return result
+
 
 def check_open_crash_file(task):
     """
@@ -61,6 +64,7 @@ def check_open_crash_file(task):
         return True
 
     return False
+
 
 def check_config():
     if CONFIG["DeleteTaskAfter"] > 0 and CONFIG["ArchiveTaskAfter"] > 0:
@@ -84,6 +88,7 @@ def check_config():
                          "DeleteTaskAfter and DeleteFailedTaskAfter? "
                          "Not touching any tasks.\n")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     check_config()
