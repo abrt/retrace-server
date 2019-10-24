@@ -2525,7 +2525,7 @@ class RetraceTask:
         except ValueError:
             raise Exception("set_finished_time requires unix timestamp as parameter")
 
-        self.set(RetraceTask.FINISHED_FILE, "%d" % value)
+        self.set(RetraceTask.FINISHED_FILE, "%d" % data)
 
     def get_default_started_time(self):
         """Get ctime of the task directory"""
