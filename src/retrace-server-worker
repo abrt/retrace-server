@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     try:
         task = RetraceTask(cmdline.task_id)
-    except:
+    except Exception:
         sys.stderr.write("Task '%d' does not exist\n" % cmdline.task_id)
         sys.exit(1)
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     if not cmdline.foreground:
         try:
             pid = os.fork()
-        except:
+        except OSError:
             log_error("Unable to fork")
             worker._fail()
 

@@ -224,7 +224,7 @@ def unlock(lockfile):
     try:
         if os.path.getsize(lockfile) == 0:
             os.unlink(lockfile)
-    except:
+    except OSError:
         return False
 
     return True
@@ -345,7 +345,7 @@ def parse_http_gettext(lang, charset):
             result = gettext.translation(GETTEXT_DOMAIN,
                                          languages=[lang_match.group(1)],
                                          codeset=charset_match.group(1)).gettext
-        except:
+        except OSError:
             pass
 
     return result
@@ -825,7 +825,7 @@ def get_active_tasks():
 
         try:
             task = RetraceTask(int(filename))
-        except:
+        except Exception:
             continue
 
         if CONFIG["AllowTaskManager"] and task.get_managed():
@@ -846,7 +846,7 @@ def get_md5_tasks():
 
         try:
             task = RetraceTask(int(filename))
-        except:
+        except Exception:
             continue
 
         if not task.has_status():
@@ -1077,7 +1077,7 @@ def ftp_init():
 def ftp_close(ftp):
     try:
         ftp.quit()
-    except:
+    except ftplib.all_errors:
         ftp.close()
 
 
@@ -1775,13 +1775,13 @@ class RetraceTask:
         gr = grp.getgrnam(CONFIG["AuthGroup"])
         try:
             os.chown(self._get_file_path(key), -1, gr.gr_gid)
-        except:
+        except OSError:
             pass
 
     def chmod(self, key):
         try:
-            os.chmod(self._get_file_path(key), stat.S_IRUSR|stat.S_IWUSR|stat.S_IRGRP|stat.S_IROTH)
-        except:
+            os.chmod(self._get_file_path(key), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+        except OSError:
             pass
 
     def set(self, key, value, mode="w"):
@@ -2051,12 +2051,12 @@ class RetraceTask:
             log_warn("crash command: '%s' triggered OSError " %
                      crash_cmdline.replace('\r', '; ').replace('\n', '; '))
             log_warn("  %s" % err)
-        except TimeoutExpired as err:
+        except TimeoutExpired:
             child.kill()
             raise Exception("WARNING: crash command: '%s' exceeded " + str(t) +
                             " second timeout - damaged vmcore?" %
                             crash_cmdline.replace('\r', '; ').replace('\n', '; '))
-        except:
+        except Exception:
             log_warn("crash command: '%s' triggered Unknown exception %s" %
                      crash_cmdline.replace('\r', '; ').replace('\n', '; '))
             log_warn("  %s" % sys.exc_info()[0])
@@ -2135,7 +2135,7 @@ class RetraceTask:
                         os.link(url, targetfile)
                         copy = False
                         log_debug("Succeeded")
-                    except:
+                    except OSError:
                         log_debug("Failed")
 
                 if copy:
@@ -2189,7 +2189,7 @@ class RetraceTask:
                 if (st.st_mode & stat.S_IRGRP) == 0 or (st.st_mode & stat.S_IXGRP) == 0:
                     try:
                         os.chmod(crashdir, st.st_mode | stat.S_IRGRP | stat.S_IXGRP)
-                    except Exception as ex:
+                    except Exception:
                         log_warn("Crashdir '%s' is not group readable and chmod"
                                  " failed. The process will continue but if"
                                  " it fails this is the likely cause."
@@ -2291,7 +2291,7 @@ class RetraceTask:
                 if (st.st_mode & stat.S_IRGRP) == 0:
                     try:
                         os.chmod(coredump, st.st_mode | stat.S_IRGRP)
-                    except Exception as ex:
+                    except Exception:
                         log_warn("File '%s' is not group readable and chmod"
                                  " failed. The process will continue but if"
                                  " it fails this is the likely cause."
@@ -2440,8 +2440,8 @@ class RetraceTask:
         self.set(RetraceTask.CRASH_CMD_FILE, data)
         try:
             os.chmod(self._get_file_path(RetraceTask.CRASH_CMD_FILE),
-                     stat.S_IRUSR|stat.S_IWUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IROTH)
-        except:
+                     stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
+        except OSError:
             pass
 
     def has_started_time(self):
@@ -2563,7 +2563,7 @@ class RetraceTask:
                         shutil.rmtree(path)
                     else:
                         os.remove(path)
-                except:
+                except OSError:
                     # clean as much as possible
                     # ToDo advanced handling
                     pass

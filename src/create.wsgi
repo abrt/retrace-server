@@ -72,7 +72,7 @@ def application(environ, start_response):
     if not os.path.isdir(workdir):
         try:
             os.makedirs(workdir)
-        except:
+        except OSError:
             return response(start_response, "500 Internal Server Error",
                             _("Unable to create working directory"))
 
@@ -90,7 +90,7 @@ def application(environ, start_response):
         # do not make the task world-readable
         os.umask(0o027)
         task = RetraceTask()
-    except:
+    except Exception:
         return response(start_response, "500 Internal Server Error",
                         _("Unable to create new task"))
 
@@ -134,7 +134,7 @@ def application(environ, start_response):
             archive.write(buf)
             buf = body_file.read(BUFSIZE)
         archive.close()
-    except:
+    except Exception:
         task.remove()
         return response(start_response, "500 Internal Server Error",
                         _("Unable to save archive"))
@@ -164,7 +164,7 @@ def application(environ, start_response):
 
         if unpack_retcode != 0:
             raise Exception
-    except:
+    except Exception:
         task.remove()
         return response(start_response, "500 Internal Server Error",
                         _("Unable to unpack archive"))
@@ -191,13 +191,12 @@ def application(environ, start_response):
         else:
             task.remove()
             return response(start_response, "403 Forbidden",
-                            _("File '%s' is not allowed to be in" \
-                              " the archive") % f)
+                            _("File '%s' is not allowed to be in the archive") % f)
 
     if "X-Task-Type" in request.headers:
         try:
             tasktype = int(request.headers["X-Task-Type"])
-        except:
+        except TypeError:
             tasktype = TASK_RETRACE
 
         if tasktype not in TASK_TYPES:
