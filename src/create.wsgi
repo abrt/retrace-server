@@ -43,10 +43,7 @@ def application(environ, start_response):
                         _("X-CoreFileDirectory header has been disabled "
                           "by server administrator"))
 
-    if CONFIG["UseWorkDir"]:
-        workdir = CONFIG["WorkDir"]
-    else:
-        workdir = CONFIG["SaveDir"]
+    workdir = CONFIG["SaveDir"]
 
     if not os.path.isdir(workdir):
         try:
