@@ -363,7 +363,7 @@ class RetraceWorker(object):
             packages = ["bash", "cpio", "glibc-debuginfo"]
             child = Popen(["/usr/bin/faf-c2p", "--hardlink-dir", CONFIG["FafLinkDir"],
                            os.path.join(crashdir, "coredump")], stdout=PIPE, stderr=PIPE,
-                           encoding='utf-8')
+                          encoding='utf-8')
             stdout, stderr = child.communicate()
             fafrepo = stdout.strip()
             if stderr:
@@ -409,8 +409,7 @@ class RetraceWorker(object):
 
                         # hack - libdb-debuginfo and db4-debuginfo are conflicting
                         if distribution == "fedora" and \
-                           (stripped.startswith("db4-debuginfo") or \
-                            stripped.startswith("libdb-debuginfo")):
+                           (stripped.startswith("db4-debuginfo") or stripped.startswith("libdb-debuginfo")):
                             if libdb:
                                 continue
                             else:
@@ -780,7 +779,7 @@ class RetraceWorker(object):
                 os.umask(old_umask)
 
             child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "init"], stdout=PIPE, stderr=STDOUT,
-                           encoding='utf-8')
+                          encoding='utf-8')
             stdout = child.communicate()[0]
             if child.wait():
                 raise Exception("mock exited with %d:\n%s" % (child.returncode, stdout))
@@ -797,9 +796,9 @@ class RetraceWorker(object):
 
             self.hook_pre_retrace()
             crash_normal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                            task.get_crash_cmd() + " -s %s %s" % (vmcore_path, vmlinux) ]
+                            task.get_crash_cmd() + " -s %s %s" % (vmcore_path, vmlinux)]
             crash_minimal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                            task.get_crash_cmd() + " -s --minimal %s %s" % (vmcore_path, vmlinux) ]
+                             task.get_crash_cmd() + " -s --minimal %s %s" % (vmcore_path, vmlinux)]
 
         else:
             try:
