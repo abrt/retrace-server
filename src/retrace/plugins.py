@@ -43,7 +43,7 @@ class Plugins(object):
                     pluginname = filename.replace(".py", "")
                     try:
                         this = __import__(pluginname)
-                    except:
+                    except Exception:
                         continue
                     if "distribution" in this.__dict__ and "repos" in this.__dict__:
                         self.PLUGINS.append(this)

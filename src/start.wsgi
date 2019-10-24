@@ -29,7 +29,7 @@ def application(environ, start_response):
 
     try:
         task = RetraceTask(int(match.group(1)))
-    except:
+    except Exception:
         return response(start_response, "404 Not Found",
                         _("There is no such task"))
 

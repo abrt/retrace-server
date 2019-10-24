@@ -440,7 +440,7 @@ class RetraceWorker(object):
 
         try:
             self.stats["coresize"] = os.path.getsize(corepath)
-        except:
+        except OSError:
             pass
 
         arch = self.read_architecture(custom_arch, corepath)
@@ -616,7 +616,7 @@ class RetraceWorker(object):
         try:
             s1 = os.stat(v1)
             s2 = os.stat(v2)
-        except:
+        except OSError:
             log_warn("Attempt to dedup %s and %s but 'stat' failed on one of the paths" % (v1, v2))
             return 0
 
@@ -638,19 +638,19 @@ class RetraceWorker(object):
         v2_link = v2 + "-link"
         try:
             os.link(v1, v2_link)
-        except:
+        except OSError:
             log_warn("Failed to dedup %s and %s - failed to create hard link from %s to %s" % (v1, v2, v2_link, v1))
             return 0
         try:
             os.unlink(v2)
-        except:
-            log_warn("Failed to dedup %s and %s - unlink of %s failed" % (v1, v2, v2));
+        except OSError:
+            log_warn("Failed to dedup %s and %s - unlink of %s failed" % (v1, v2, v2))
             os.unlink(v2_link)
             return 0
         try:
             os.rename(v2_link, v2)
-        except:
-            log_error("ERROR: Failed to dedup %s and %s - rename hardlink %s to %s failed" % (v1, v2, v2_link, v2));
+        except OSError:
+            log_error("ERROR: Failed to dedup %s and %s - rename hardlink %s to %s failed" % (v1, v2, v2_link, v2))
             return 0
 
         log_warn("Successful dedup - created hardlink from %s to %s saving %d MB"
@@ -666,7 +666,7 @@ class RetraceWorker(object):
 
         try:
             self.stats["coresize"] = os.path.getsize(vmcore_path)
-        except:
+        except OSError:
             pass
 
         vmcore = KernelVMcore(vmcore_path)
@@ -832,7 +832,7 @@ class RetraceWorker(object):
             if (st.st_mode & stat.S_IRGRP) == 0:
                 try:
                     os.chmod(vmcore_path, st.st_mode | stat.S_IRGRP)
-                except Exception as ex:
+                except Exception:
                     log_warn("File '%s' is not group readable and chmod"
                              " failed. The process will continue but if"
                              " it fails this is the likely cause."

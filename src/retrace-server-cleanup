@@ -108,7 +108,7 @@ if __name__ == "__main__":
                     task = RetraceTask(taskid)
                     if task.get_managed():
                         continue
-                except:
+                except Exception:
                     log.write("RetraceTask with taskid %d does not exist\n" % taskid)
 
             # ToDo: 5 = mm:ss, >5 = hh:mm:ss
@@ -127,7 +127,7 @@ if __name__ == "__main__":
                 log.write("Cleaning up orphaned task %d\n" % taskid)
                 try:
                     task = RetraceTask(taskid)
-                except:
+                except Exception:
                     log.write("Unable to create RetraceTask object for task %d\n" % taskid)
                     continue
 
@@ -160,7 +160,7 @@ if __name__ == "__main__":
             for filename in files:
                 try:
                     task = RetraceTask(filename)
-                except:
+                except Exception:
                     continue
 
                 if task.get_age() >= CONFIG["ArchiveTaskAfter"]:
@@ -178,7 +178,7 @@ if __name__ == "__main__":
                             log += "Error: tar exited with %d: %s\n" % (child.returncode, stdout)
                             try:
                                 os.unlink(targetfile)
-                            except:
+                            except OSError:
                                 pass
 
                             continue
@@ -196,7 +196,7 @@ if __name__ == "__main__":
             for filename in files:
                 try:
                     task = RetraceTask(filename)
-                except:
+                except Exception:
                     continue
 
                 if task.get_age() >= CONFIG["DeleteTaskAfter"]:
@@ -218,7 +218,7 @@ if __name__ == "__main__":
             for filename in files:
                 try:
                     task = RetraceTask(filename)
-                except:
+                except Exception:
                     continue
 
                 if task.get_age() >= CONFIG["DeleteFailedTaskAfter"] and task.get_status() == STATUS_FAIL:
