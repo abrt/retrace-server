@@ -697,7 +697,7 @@ class RetraceWorker(object):
         kernelver_str = kernelver.kernelver_str
 
         self.stats["package"] = "kernel"
-        self.stats["version"] = "%s-%s" % (kernelver.version, kernelver.release)
+        self.stats["version"] = kernelver_str
         self.stats["arch"] = kernelver.arch
 
         log_info(STATUS[STATUS_INIT])
