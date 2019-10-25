@@ -1,120 +1,152 @@
-# Italian translations for retrace-server package.
-# Copyright (C) 2011 THE retrace-server'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the retrace-server package.
-# Michal Toman <mtoman@redhat.com>, 2011.
-#
+# Davide Giunchi <davide@giunchi.net>, 2017. #zanata
+# Luca Ciavatta <luca.ciavatta@gmail.com>, 2017. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: retrace-server 1.0.0\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2011-05-17 09:53+0200\n"
-"Last-Translator: Michal Toman <mtoman@redhat.com>\n"
+"POT-Creation-Date: 2016-07-01 08:48+0200\n"
+"PO-Revision-Date: 2017-04-14 04:51+0000\n"
+"Last-Translator: Davide Giunchi <davide@giunchi.net>\n"
 "Language-Team: Italian\n"
+"Language: it\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ASCII\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"X-Generator: Zanata 4.6.2\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
 msgid "You must use HTTPS"
-msgstr ""
+msgstr "È necessario utilizzare HTTPS"
 
 #: ../src/backtrace.wsgi:16 ../src/log.wsgi:16 ../src/status.wsgi:16
 msgid "Invalid URL"
-msgstr ""
+msgstr "URL non valido"
 
 #: ../src/backtrace.wsgi:22 ../src/log.wsgi:21 ../src/status.wsgi:22
+#, fuzzy
 msgid "There is no such task"
-msgstr ""
+msgstr "Non è presente tale compito"
 
 #: ../src/backtrace.wsgi:27 ../src/log.wsgi:26 ../src/status.wsgi:27
 msgid "Invalid password"
-msgstr ""
+msgstr "Passoword non valida"
 
 #: ../src/backtrace.wsgi:31
+#, fuzzy
 msgid "There is no backtrace for the specified task"
-msgstr ""
+msgstr "Non è presente alcun backtrace per il compito specificato."
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:70
+#: ../src/create.wsgi:19 ../src/create.wsgi:78
 msgid "Retrace server is fully loaded at the moment"
-msgstr ""
+msgstr "Il server Retrace è completamente attivo al momento"
 
 #: ../src/create.wsgi:23
 msgid "You must use POST method"
-msgstr ""
+msgstr "È necessario utilizzare il metodo POST"
 
 #: ../src/create.wsgi:27
 msgid "Specified archive format is not supported"
-msgstr ""
+msgstr "Il formato di archiviazione specificato non è supportato"
 
 #: ../src/create.wsgi:31
 msgid "You need to set Content-Length header properly"
-msgstr ""
+msgstr "E' necessario impostare correttamente l'intestazione Content-Length"
 
 #: ../src/create.wsgi:35
 msgid "Specified archive is too large"
-msgstr ""
+msgstr "L'archivio specificato è troppo grande"
 
-#: ../src/create.wsgi:47
-msgid "Unable to create working directory"
+#: ../src/create.wsgi:40
+msgid "X-CoreFileDirectory header has been disabled by server administrator"
 msgstr ""
+"L'intestazione X-CoreFileDirectory è stata disabilitata dall'amministratore "
+"del server"
 
 #: ../src/create.wsgi:53
+msgid "Unable to create working directory"
+msgstr "Impossibile creare la directory di lavoro"
+
+#: ../src/create.wsgi:59
 msgid "Unable to obtain disk free space"
-msgstr ""
+msgstr "Impossibile ottenere spazio libero su disco"
 
-#: ../src/create.wsgi:57 ../src/create.wsgi:99
+#: ../src/create.wsgi:63 ../src/create.wsgi:134
+#, fuzzy
 msgid "There is not enough storage space on the server"
-msgstr ""
+msgstr "Spazio insufficiente nello storage sul server"
 
-#: ../src/create.wsgi:63
+#: ../src/create.wsgi:71
 msgid "Unable to create new task"
-msgstr ""
+msgstr "Impossibile creare un nuovo compito"
 
 #: ../src/create.wsgi:83
-msgid "Unable to save archive"
-msgstr ""
+msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+msgstr "La cartella specificata in 'X-CoreFileDirectory' non esiste"
 
 #: ../src/create.wsgi:89
+#, c-format
+msgid ""
+"There are %d files in the '%s' directory. Only a single archive is supported"
+" at the moment"
+msgstr ""
+"Ci sono %d file nella '%s' cartella. Al momento è supportato un singolo "
+"archivio"
+
+#: ../src/create.wsgi:98
+#, c-format
+msgid "You header specifies '%s' type, but the file type does not match"
+msgstr ""
+"L'intestazione specifica il tipo '%s', ma il tipo di file non combacia"
+
+#: ../src/create.wsgi:116
+msgid "Unable to save archive"
+msgstr "Impossibile salvare l'archivio"
+
+#: ../src/create.wsgi:124
 msgid "Unable to obtain unpacked size"
-msgstr ""
+msgstr "Impossibile ottenere la dimensione scompattata"
 
-#: ../src/create.wsgi:94
+#: ../src/create.wsgi:129
 msgid "Specified archive's content is too large"
-msgstr ""
+msgstr "Il contenuto dell'archivio specificato è troppo grande"
 
-#: ../src/create.wsgi:111
+#: ../src/create.wsgi:146
 msgid "Unable to unpack archive"
-msgstr ""
+msgstr "Impossibile scompattare l'archivio"
 
-#: ../src/create.wsgi:123
+#: ../src/create.wsgi:158
 msgid "Symlinks are not allowed to be in the archive"
-msgstr ""
+msgstr "Nell'archivio non sono permessi link simbolici"
 
-#: ../src/create.wsgi:131
+#: ../src/create.wsgi:166
 #, c-format
 msgid "The '%s' file is larger than expected"
-msgstr ""
+msgstr "Il file '%s' è più grande di quanto previsto"
 
-#: ../src/create.wsgi:135
+#: ../src/create.wsgi:170
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr ""
+msgstr "Nell'archivio non è permesso il file '%s'"
 
-#: ../src/create.wsgi:147
+#: ../src/create.wsgi:186
+msgid "Interactive tasks were disabled by server administrator"
+msgstr ""
+"I lavori interattivi sono stati disabilitati dall'amministratore del server"
+
+#: ../src/create.wsgi:196
 #, c-format
 msgid "Required file '%s' is missing"
-msgstr ""
+msgstr "Il file '%s' richiesto è mancante"
 
 #: ../src/index.wsgi:12
 msgid "Retrace Server"
-msgstr ""
+msgstr "Server Retrace"
 
 #: ../src/index.wsgi:13
 msgid "Welcome to Retrace Server"
-msgstr ""
+msgstr "Benvenuti al server Retrace"
 
 #: ../src/index.wsgi:15
 msgid ""
@@ -122,29 +154,37 @@ msgid ""
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s wiki:"
 msgstr ""
+"Il server Retrace è un servizio che fonisce la possibilità di analizzare i "
+"coredump e generare  backtrace attraverso la rete. Potete trovare altre "
+"informazioni nel wiki del retrace server:"
 
 #: ../src/index.wsgi:21
 msgid ""
-"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
-"will be denied."
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests"
+" will be denied."
 msgstr ""
+"Solo le connessioni HTTPS sicure sono ora permesse dal server. Le richieste "
+"HTTP saranno negate"
 
 #: ../src/index.wsgi:23
 msgid ""
-"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
-"of security reasons."
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because"
+" of security reasons."
 msgstr ""
+"Sia le connssioni HTTP che HTTPS sono permesse. L'utilizzo di HTTPS è "
+"rigorosamente raccomandato per motivi di sicurezza"
 
 #: ../src/index.wsgi:24
 #, c-format
 msgid "The following releases are supported: %s"
-msgstr ""
+msgstr "Le seguenti release sono supportate: %s"
 
 #: ../src/index.wsgi:26
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
 msgstr ""
+"Al momento il server è caricato per %d%% (eseguendo %d di %d attività)"
 
 #: ../src/index.wsgi:27
 #, c-format
@@ -157,6 +197,14 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
+"Il tuo coredump è mantenuto solo nel server mentre l'attività di retrace è "
+"in esecuzione. Una volta che il job sarà terminato, il server manterrà il "
+"log di retrace ed il backtrace. Tutti gli altri dati (inclusi il coredump) "
+"saranno cancellati. Il log di retrace è accessibile solo attraverso un task "
+"ID univoco ed una passsword, quindi a nessuno (ad eccezione dell'autore) è "
+"permessa la visualizzazione. Tutte le informazioni di crash (incluso il "
+"backtrace) saranno cancellate dopo %d ore di inattività. Non è possibile che"
+" dati privati siano mantenuti nel server più a lungo."
 
 #: ../src/index.wsgi:33
 msgid ""
@@ -166,83 +214,91 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
+"Il proprio coredump è utilizzato solo per scopi di retrace. L'amministratore"
+" del server non sta cercando di ottenere i vostri dati privati dai coredump "
+"e backtrace. L'utilizzo di un canale di comunicazione sicuro (HTTPS) è "
+"fortemente raccomandato. Gli amministratori del server non sono responsabili"
+" per problemi legati all'uso di canali insicuri (come HTTP)"
 
 #: ../src/log.wsgi:30
 msgid "There is no log for the specified task"
-msgstr ""
-
-#: ../src/stats.wsgi:10
-msgid "Architecture"
-msgstr ""
-
-#: ../src/stats.wsgi:11
-msgid "Architectures"
-msgstr ""
+msgstr "Non ci sono log per l'attività specificata"
 
 #: ../src/stats.wsgi:12
-msgid "Build-id"
-msgstr ""
+msgid "Architecture"
+msgstr "Architettura"
 
 #: ../src/stats.wsgi:13
-msgid "Count"
-msgstr ""
+msgid "Architectures"
+msgstr "Architetture"
 
 #: ../src/stats.wsgi:14
-msgid "Denied jobs"
-msgstr ""
+msgid "Build-id"
+msgstr "Build-id"
 
 #: ../src/stats.wsgi:15
-msgid "Failed"
-msgstr ""
+msgid "Count"
+msgstr "Conteggio"
 
 #: ../src/stats.wsgi:16
-msgid "First retrace"
-msgstr ""
+#, fuzzy
+msgid "Denied jobs"
+msgstr "Lavori negati"
 
 #: ../src/stats.wsgi:17
-msgid "Global statistics"
-msgstr ""
+msgid "Failed"
+msgstr "Non riuscito"
 
 #: ../src/stats.wsgi:18
-msgid "Missing build-ids"
-msgstr ""
+msgid "First retrace"
+msgstr "Primo retrace"
 
 #: ../src/stats.wsgi:19
-msgid "Name"
-msgstr ""
+msgid "Global statistics"
+msgstr "Statistiche globali"
 
 #: ../src/stats.wsgi:20
-msgid "Release"
-msgstr ""
+msgid "Missing build-ids"
+msgstr "build-id mancanti"
 
 #: ../src/stats.wsgi:21
-msgid "Releases"
-msgstr ""
+msgid "Name"
+msgstr "Nome"
 
 #: ../src/stats.wsgi:22
-msgid "Required packages"
-msgstr ""
+#, fuzzy
+msgid "Release"
+msgstr "Rilascio"
 
 #: ../src/stats.wsgi:23
-msgid "Retraced packages"
-msgstr ""
+msgid "Releases"
+msgstr "Rilasci"
 
 #: ../src/stats.wsgi:24
-msgid "Retrace Server statistics"
-msgstr ""
+msgid "Required packages"
+msgstr "Pacchetti richiesti"
 
 #: ../src/stats.wsgi:25
-msgid "Shared object name"
-msgstr ""
+#, fuzzy
+msgid "Retraced packages"
+msgstr "Pacchetti retraced"
 
 #: ../src/stats.wsgi:26
-msgid "Successful"
-msgstr ""
+msgid "Retrace Server statistics"
+msgstr "Statistiche del server di retrace"
 
 #: ../src/stats.wsgi:27
-msgid "Total"
-msgstr ""
+msgid "Shared object name"
+msgstr "Nome dell'oggetto condiviso"
 
 #: ../src/stats.wsgi:28
+msgid "Successful"
+msgstr "Riuscito"
+
+#: ../src/stats.wsgi:29
+msgid "Total"
+msgstr "Totale"
+
+#: ../src/stats.wsgi:30
 msgid "Versions"
-msgstr ""
+msgstr "Versioni"

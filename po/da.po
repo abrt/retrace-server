@@ -1,120 +1,146 @@
-# Danish translations for retrace-server package.
-# Copyright (C) 2011 THE retrace-server'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the retrace-server package.
-# Michal Toman <mtoman@redhat.com>, 2011.
-#
+# scootergrisen <scootergrisen@gmail.com>, 2017. #zanata
+# scootergrisen <scootergrisen@gmail.com>, 2018. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: retrace-server 1.0.0\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2011-05-17 09:53+0200\n"
-"Last-Translator: Michal Toman <mtoman@redhat.com>\n"
+"POT-Creation-Date: 2016-07-01 08:48+0200\n"
+"PO-Revision-Date: 2018-09-20 09:50+0000\n"
+"Last-Translator: scootergrisen <scootergrisen@gmail.com>\n"
 "Language-Team: Danish\n"
+"Language: da\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ASCII\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"X-Generator: Zanata 4.6.2\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
 msgid "You must use HTTPS"
-msgstr ""
+msgstr "Du skal bruge HTTPS"
 
 #: ../src/backtrace.wsgi:16 ../src/log.wsgi:16 ../src/status.wsgi:16
 msgid "Invalid URL"
-msgstr ""
+msgstr "Ugyldig URL"
 
 #: ../src/backtrace.wsgi:22 ../src/log.wsgi:21 ../src/status.wsgi:22
 msgid "There is no such task"
-msgstr ""
+msgstr "Opgaven findes ikke"
 
 #: ../src/backtrace.wsgi:27 ../src/log.wsgi:26 ../src/status.wsgi:27
 msgid "Invalid password"
-msgstr ""
+msgstr "Ugyldig adgangskode"
 
 #: ../src/backtrace.wsgi:31
 msgid "There is no backtrace for the specified task"
-msgstr ""
+msgstr "Der er ingen backtrace til den angivne opgave"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:70
+#: ../src/create.wsgi:19 ../src/create.wsgi:78
 msgid "Retrace server is fully loaded at the moment"
-msgstr ""
+msgstr "Retrace-server er fuldt optaget på nuværende tidspunkt"
 
 #: ../src/create.wsgi:23
 msgid "You must use POST method"
-msgstr ""
+msgstr "Du skal bruge POST-metode"
 
 #: ../src/create.wsgi:27
 msgid "Specified archive format is not supported"
-msgstr ""
+msgstr "Angivne arkivformat understøttes ikke"
 
 #: ../src/create.wsgi:31
 msgid "You need to set Content-Length header properly"
-msgstr ""
+msgstr "Du skal sætte Content-Length-header ordentligt"
 
 #: ../src/create.wsgi:35
 msgid "Specified archive is too large"
-msgstr ""
+msgstr "Angivne arkiv er for stort"
 
-#: ../src/create.wsgi:47
-msgid "Unable to create working directory"
+#: ../src/create.wsgi:40
+msgid "X-CoreFileDirectory header has been disabled by server administrator"
 msgstr ""
+"X-CoreFileDirectory-header er blevet deaktiveret af serveradministrator"
 
 #: ../src/create.wsgi:53
+msgid "Unable to create working directory"
+msgstr "Kan ikke oprette arbejdsmappe"
+
+#: ../src/create.wsgi:59
 msgid "Unable to obtain disk free space"
-msgstr ""
+msgstr "Kan ikke hente diskens ledige plads"
 
-#: ../src/create.wsgi:57 ../src/create.wsgi:99
+#: ../src/create.wsgi:63 ../src/create.wsgi:134
 msgid "There is not enough storage space on the server"
-msgstr ""
+msgstr "Der er ikke nok lagerplads på serveren"
 
-#: ../src/create.wsgi:63
+#: ../src/create.wsgi:71
 msgid "Unable to create new task"
-msgstr ""
+msgstr "Kan ikke oprette ny opgave"
 
 #: ../src/create.wsgi:83
-msgid "Unable to save archive"
-msgstr ""
+msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+msgstr "Mappen angivet i 'X-CoreFileDirectory' findes ikke"
 
 #: ../src/create.wsgi:89
+#, c-format
+msgid ""
+"There are %d files in the '%s' directory. Only a single archive is supported"
+" at the moment"
+msgstr ""
+"Der er %d filer i mappen '%s'. Kun et enkelt arkiv understøttes på nuværende"
+" tidspunkt"
+
+#: ../src/create.wsgi:98
+#, c-format
+msgid "You header specifies '%s' type, but the file type does not match"
+msgstr "Din header angiver '%s'-type, men filtypen passer ikke"
+
+#: ../src/create.wsgi:116
+msgid "Unable to save archive"
+msgstr "Kan ikke gemme arkiv"
+
+#: ../src/create.wsgi:124
 msgid "Unable to obtain unpacked size"
-msgstr ""
+msgstr "Kan ikke hente udpakket størrelse"
 
-#: ../src/create.wsgi:94
+#: ../src/create.wsgi:129
 msgid "Specified archive's content is too large"
-msgstr ""
+msgstr "Angivne arkivers indhold er for stort"
 
-#: ../src/create.wsgi:111
+#: ../src/create.wsgi:146
 msgid "Unable to unpack archive"
-msgstr ""
+msgstr "Kan ikke udpakke arkiv"
 
-#: ../src/create.wsgi:123
+#: ../src/create.wsgi:158
 msgid "Symlinks are not allowed to be in the archive"
-msgstr ""
+msgstr "Symlinks er ikke tilladt i arkivet"
 
-#: ../src/create.wsgi:131
+#: ../src/create.wsgi:166
 #, c-format
 msgid "The '%s' file is larger than expected"
-msgstr ""
+msgstr "Filen '%s' er større end ventet"
 
-#: ../src/create.wsgi:135
+#: ../src/create.wsgi:170
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr ""
+msgstr "Filen '%s' må ikke være i arkivet"
 
-#: ../src/create.wsgi:147
+#: ../src/create.wsgi:186
+msgid "Interactive tasks were disabled by server administrator"
+msgstr "Interaktive opgaver er deaktiveret af serveradministrator"
+
+#: ../src/create.wsgi:196
 #, c-format
 msgid "Required file '%s' is missing"
-msgstr ""
+msgstr "Krævet fil '%s' mangler"
 
 #: ../src/index.wsgi:12
 msgid "Retrace Server"
-msgstr ""
+msgstr "Retrace-server"
 
 #: ../src/index.wsgi:13
 msgid "Welcome to Retrace Server"
-msgstr ""
+msgstr "Velkommen til retrace-server"
 
 #: ../src/index.wsgi:15
 msgid ""
@@ -122,29 +148,36 @@ msgid ""
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s wiki:"
 msgstr ""
+"Retrace-server er en tjeneste som giver mulighed for at analysere kernedump "
+"og generere backtrace over netværk. Du kan finde yderligere information på "
+"retrace-server&apos;s wiki:"
 
 #: ../src/index.wsgi:21
 msgid ""
-"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
-"will be denied."
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests"
+" will be denied."
 msgstr ""
+"Kun den sikre HTTPS-forbindelse er nu tilladt af serveren. HTTP-"
+"forespørgsler vil blive nægtet."
 
 #: ../src/index.wsgi:23
 msgid ""
-"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
-"of security reasons."
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because"
+" of security reasons."
 msgstr ""
+"Både HTTP og HTTPS er tilladt. Brug af HTTPS anbefales på det kraftigste af "
+"sikkerhedsårsager."
 
 #: ../src/index.wsgi:24
 #, c-format
 msgid "The following releases are supported: %s"
-msgstr ""
+msgstr "Følgende udgivelser understøttes: %s"
 
 #: ../src/index.wsgi:26
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
-msgstr ""
+msgstr "Når serveren indlæses for %d%% (kører %d ud af %d jobs)."
 
 #: ../src/index.wsgi:27
 #, c-format
@@ -157,6 +190,13 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
+"Din kernedump opbevares kun på serveren mens retrace-jobbet kører. Når "
+"jobbet er færdigt opbevarer serveren retrace-log og backtrace. Alle andre "
+"data (inklusiv kernedump) bliver slettet. Retrace-loggen og backtrace er kun"
+" tilgængelige via en unik ID og adgangskode, så ingen (undtagen forfatteren)"
+" har tilladelse til at se det. Al nedbrudsinformationen (inklusiv backtrace)"
+" slettes efter %d timers inaktivitet. Ingen data som muligvis er private "
+"opbevares på serveren længere end det."
 
 #: ../src/index.wsgi:33
 msgid ""
@@ -166,83 +206,88 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
+"Din kernedump bruges kun til retrace-formål. Serveradministratorer prøver "
+"ikke at få dine private data fra kernedumps eller backtraces. Brug af en "
+"sikker kommunikationskanal (HTTPS) anbefales på det kraftigste. "
+"Serveradministratorer er ikke ansvarlige for problemer relateret til "
+"anvendelsen af en usikker kanal (såsom HTTP)."
 
 #: ../src/log.wsgi:30
 msgid "There is no log for the specified task"
-msgstr ""
-
-#: ../src/stats.wsgi:10
-msgid "Architecture"
-msgstr ""
-
-#: ../src/stats.wsgi:11
-msgid "Architectures"
-msgstr ""
+msgstr "Der er ingen log for den angive opgave"
 
 #: ../src/stats.wsgi:12
-msgid "Build-id"
-msgstr ""
+msgid "Architecture"
+msgstr "Arkitektur"
 
 #: ../src/stats.wsgi:13
-msgid "Count"
-msgstr ""
+msgid "Architectures"
+msgstr "Arkitekturer"
 
 #: ../src/stats.wsgi:14
-msgid "Denied jobs"
-msgstr ""
+msgid "Build-id"
+msgstr "Bygge-id"
 
 #: ../src/stats.wsgi:15
-msgid "Failed"
-msgstr ""
+msgid "Count"
+msgstr "Antal"
 
 #: ../src/stats.wsgi:16
-msgid "First retrace"
-msgstr ""
+msgid "Denied jobs"
+msgstr "Nægtet jobs"
 
 #: ../src/stats.wsgi:17
-msgid "Global statistics"
-msgstr ""
+msgid "Failed"
+msgstr "Mislykkedes"
 
 #: ../src/stats.wsgi:18
-msgid "Missing build-ids"
-msgstr ""
+msgid "First retrace"
+msgstr "Første retrace"
 
 #: ../src/stats.wsgi:19
-msgid "Name"
-msgstr ""
+msgid "Global statistics"
+msgstr "Global statistik"
 
 #: ../src/stats.wsgi:20
-msgid "Release"
-msgstr ""
+msgid "Missing build-ids"
+msgstr "Manglende bygge-id'er"
 
 #: ../src/stats.wsgi:21
-msgid "Releases"
-msgstr ""
+msgid "Name"
+msgstr "Navn"
 
 #: ../src/stats.wsgi:22
-msgid "Required packages"
-msgstr ""
+msgid "Release"
+msgstr "Udgivelse"
 
 #: ../src/stats.wsgi:23
-msgid "Retraced packages"
-msgstr ""
+msgid "Releases"
+msgstr "Udgivelser"
 
 #: ../src/stats.wsgi:24
-msgid "Retrace Server statistics"
-msgstr ""
+msgid "Required packages"
+msgstr "Krævet pakker"
 
 #: ../src/stats.wsgi:25
-msgid "Shared object name"
-msgstr ""
+msgid "Retraced packages"
+msgstr "Retraced pakker"
 
 #: ../src/stats.wsgi:26
-msgid "Successful"
-msgstr ""
+msgid "Retrace Server statistics"
+msgstr "Retrace-server statistik"
 
 #: ../src/stats.wsgi:27
-msgid "Total"
-msgstr ""
+msgid "Shared object name"
+msgstr "Delt objektnavn"
 
 #: ../src/stats.wsgi:28
+msgid "Successful"
+msgstr "Succes"
+
+#: ../src/stats.wsgi:29
+msgid "Total"
+msgstr "Samlet"
+
+#: ../src/stats.wsgi:30
 msgid "Versions"
-msgstr ""
+msgstr "Versioner"
