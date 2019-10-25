@@ -1,120 +1,144 @@
-# Swedish translations for retrace-server package.
-# Copyright (C) 2011 THE retrace-server'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the retrace-server package.
-# Michal Toman <mtoman@redhat.com>, 2011.
-#
+# Göran Uddeborg <goeran@uddeborg.se>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: retrace-server 1.0.0\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2011-05-17 09:53+0200\n"
-"Last-Translator: Michal Toman <mtoman@redhat.com>\n"
+"POT-Creation-Date: 2016-07-01 08:48+0200\n"
+"PO-Revision-Date: 2016-10-10 03:37+0000\n"
+"Last-Translator: Göran Uddeborg <goeran@uddeborg.se>\n"
 "Language-Team: Swedish\n"
+"Language: sv\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ASCII\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"X-Generator: Zanata 4.6.2\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
 msgid "You must use HTTPS"
-msgstr ""
+msgstr "Du måste använda HTTPS"
 
 #: ../src/backtrace.wsgi:16 ../src/log.wsgi:16 ../src/status.wsgi:16
 msgid "Invalid URL"
-msgstr ""
+msgstr "Felaktig URL"
 
 #: ../src/backtrace.wsgi:22 ../src/log.wsgi:21 ../src/status.wsgi:22
 msgid "There is no such task"
-msgstr ""
+msgstr "Det finns ingen sådan uppgift"
 
 #: ../src/backtrace.wsgi:27 ../src/log.wsgi:26 ../src/status.wsgi:27
 msgid "Invalid password"
-msgstr ""
+msgstr "Felaktigt lösenord"
 
 #: ../src/backtrace.wsgi:31
 msgid "There is no backtrace for the specified task"
-msgstr ""
+msgstr "Det finns inget stackspår för den angivna uppgiften"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:70
+#: ../src/create.wsgi:19 ../src/create.wsgi:78
 msgid "Retrace server is fully loaded at the moment"
-msgstr ""
+msgstr "Spårningsservern är fullt belastad för tillfället"
 
 #: ../src/create.wsgi:23
 msgid "You must use POST method"
-msgstr ""
+msgstr "Du måste använda metoden POST"
 
 #: ../src/create.wsgi:27
 msgid "Specified archive format is not supported"
-msgstr ""
+msgstr "Det angivna arkivformatet stödjs inte"
 
 #: ../src/create.wsgi:31
 msgid "You need to set Content-Length header properly"
-msgstr ""
+msgstr "Du behöver sätta huvudet Content-Length ordentligt"
 
 #: ../src/create.wsgi:35
 msgid "Specified archive is too large"
-msgstr ""
+msgstr "Det angivna arkivet är för stort"
 
-#: ../src/create.wsgi:47
-msgid "Unable to create working directory"
-msgstr ""
+#: ../src/create.wsgi:40
+msgid "X-CoreFileDirectory header has been disabled by server administrator"
+msgstr "Huvudet X-CoreFileDirectory har avaktiverats av serveradministratören"
 
 #: ../src/create.wsgi:53
+msgid "Unable to create working directory"
+msgstr "Kan inte skapa en arbetskatalog"
+
+#: ../src/create.wsgi:59
 msgid "Unable to obtain disk free space"
-msgstr ""
+msgstr "Kan inte få tag i ledigt diskutrymme"
 
-#: ../src/create.wsgi:57 ../src/create.wsgi:99
+#: ../src/create.wsgi:63 ../src/create.wsgi:134
 msgid "There is not enough storage space on the server"
-msgstr ""
+msgstr "Det finns inte tillräckligt med lagringsutrymme på servern"
 
-#: ../src/create.wsgi:63
+#: ../src/create.wsgi:71
 msgid "Unable to create new task"
-msgstr ""
+msgstr "Kan inte skapa en ny uppgift"
 
 #: ../src/create.wsgi:83
-msgid "Unable to save archive"
-msgstr ""
+msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+msgstr "Katalogen som anges i ”X-CoreFileDirectory” finns inte"
 
 #: ../src/create.wsgi:89
+#, c-format
+msgid ""
+"There are %d files in the '%s' directory. Only a single archive is supported"
+" at the moment"
+msgstr ""
+"Det finns %d filer i katalogen ”%s”.  Endast ett ensamt arkiv stödjs för "
+"närvarande"
+
+#: ../src/create.wsgi:98
+#, c-format
+msgid "You header specifies '%s' type, but the file type does not match"
+msgstr "Ditt huvud anger typen ”%s”, men filtypen stämmer inte med det"
+
+#: ../src/create.wsgi:116
+msgid "Unable to save archive"
+msgstr "Kan inte spara arkivet"
+
+#: ../src/create.wsgi:124
 msgid "Unable to obtain unpacked size"
-msgstr ""
+msgstr "Kan inte ta fram den opackade storleken"
 
-#: ../src/create.wsgi:94
+#: ../src/create.wsgi:129
 msgid "Specified archive's content is too large"
-msgstr ""
+msgstr "Det angivna arkivets innehåll är för stort"
 
-#: ../src/create.wsgi:111
+#: ../src/create.wsgi:146
 msgid "Unable to unpack archive"
-msgstr ""
+msgstr "Kan inte packa upp arkivet"
 
-#: ../src/create.wsgi:123
+#: ../src/create.wsgi:158
 msgid "Symlinks are not allowed to be in the archive"
-msgstr ""
+msgstr "Symlänkar får inte finnas i arkivet"
 
-#: ../src/create.wsgi:131
+#: ../src/create.wsgi:166
 #, c-format
 msgid "The '%s' file is larger than expected"
-msgstr ""
+msgstr "Filen ”%s” är större än förväntat"
 
-#: ../src/create.wsgi:135
+#: ../src/create.wsgi:170
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr ""
+msgstr "Filen ”%s” får inte finnas i arkivet"
 
-#: ../src/create.wsgi:147
+#: ../src/create.wsgi:186
+msgid "Interactive tasks were disabled by server administrator"
+msgstr "Interaktiva uppgifter har avaktiverats av serveradministratören"
+
+#: ../src/create.wsgi:196
 #, c-format
 msgid "Required file '%s' is missing"
-msgstr ""
+msgstr "Den nödvändiga filen ”%s” saknas"
 
 #: ../src/index.wsgi:12
 msgid "Retrace Server"
-msgstr ""
+msgstr "Spårningsserver"
 
 #: ../src/index.wsgi:13
 msgid "Welcome to Retrace Server"
-msgstr ""
+msgstr "Välkommen till Spårningsservern"
 
 #: ../src/index.wsgi:15
 msgid ""
@@ -122,29 +146,36 @@ msgid ""
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s wiki:"
 msgstr ""
+"Spårningsservern är en tjänst som ger möjligheten att analysera en "
+"minnesdump och generera ett stackspår över nätverket.  Du kan hitta mer "
+"information på Spårningsserverns wiki:"
 
 #: ../src/index.wsgi:21
 msgid ""
-"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
-"will be denied."
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests"
+" will be denied."
 msgstr ""
+"Endast en säker HTTPS-anslutning tillåts nu av servern.  HTTP-begäranden "
+"kommer att avvisas."
 
 #: ../src/index.wsgi:23
 msgid ""
-"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
-"of security reasons."
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because"
+" of security reasons."
 msgstr ""
+"Både HTTP och HTTPS är tillåtna.  Att använda HTTPS rekommenderas starkt av "
+"säkerhetsskäl."
 
 #: ../src/index.wsgi:24
 #, c-format
 msgid "The following releases are supported: %s"
-msgstr ""
+msgstr "Följande utgåvor stödjs: %s"
 
 #: ../src/index.wsgi:26
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
-msgstr ""
+msgstr "För närvarande är servern lastad till %d %% (kör %d av %d jobb)."
 
 #: ../src/index.wsgi:27
 #, c-format
@@ -157,6 +188,13 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
+"Din minnesdump sparas bara på servern medan spårjobbet kör.  När jobbet är "
+"klart behåller servern spårningsloggen och stackspåret.  All annan data "
+"(inklusive minnesdumpen) raderas.  Spårningsloggen och stackspåret är endast"
+" tillgängliga via unika uppgifts-ID och lösenord, alltså får ingen (utom "
+"författaren) se det.  All kraschinformation (inklusive stackspåret) raderas "
+"efter %d timmars inaktivitet.  Ingen eventuell personlig information sparas "
+"på servern längre."
 
 #: ../src/index.wsgi:33
 msgid ""
@@ -166,83 +204,88 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
+"Din minnesdump används bara för spårningssyften.  Serveradministratörerna "
+"försöker inte få tag i din privata information från minnesdumpar eller "
+"stackspår.  Att använda en säker kommunikationskanal (HTTPS) rekommenderas "
+"starkt.  Serveradministratörer är inte ansvariga för problem kopplade till "
+"användningen av en osäker kanal (såsom HTTP)."
 
 #: ../src/log.wsgi:30
 msgid "There is no log for the specified task"
-msgstr ""
-
-#: ../src/stats.wsgi:10
-msgid "Architecture"
-msgstr ""
-
-#: ../src/stats.wsgi:11
-msgid "Architectures"
-msgstr ""
+msgstr "Det finns ingen logg för den angivna uppgiften"
 
 #: ../src/stats.wsgi:12
-msgid "Build-id"
-msgstr ""
+msgid "Architecture"
+msgstr "Arkitektur"
 
 #: ../src/stats.wsgi:13
-msgid "Count"
-msgstr ""
+msgid "Architectures"
+msgstr "Arkitekturer"
 
 #: ../src/stats.wsgi:14
-msgid "Denied jobs"
-msgstr ""
+msgid "Build-id"
+msgstr "Bygg-id"
 
 #: ../src/stats.wsgi:15
-msgid "Failed"
-msgstr ""
+msgid "Count"
+msgstr "Antal"
 
 #: ../src/stats.wsgi:16
-msgid "First retrace"
-msgstr ""
+msgid "Denied jobs"
+msgstr "Nekade jobb"
 
 #: ../src/stats.wsgi:17
-msgid "Global statistics"
-msgstr ""
+msgid "Failed"
+msgstr "Misslyckade"
 
 #: ../src/stats.wsgi:18
-msgid "Missing build-ids"
-msgstr ""
+msgid "First retrace"
+msgstr "Första spårning"
 
 #: ../src/stats.wsgi:19
-msgid "Name"
-msgstr ""
+msgid "Global statistics"
+msgstr "Global statistik"
 
 #: ../src/stats.wsgi:20
-msgid "Release"
-msgstr ""
+msgid "Missing build-ids"
+msgstr "Saknade bygg-id:n"
 
 #: ../src/stats.wsgi:21
-msgid "Releases"
-msgstr ""
+msgid "Name"
+msgstr "Namn"
 
 #: ../src/stats.wsgi:22
-msgid "Required packages"
-msgstr ""
+msgid "Release"
+msgstr "Utgåva"
 
 #: ../src/stats.wsgi:23
-msgid "Retraced packages"
-msgstr ""
+msgid "Releases"
+msgstr "Utgåvor"
 
 #: ../src/stats.wsgi:24
-msgid "Retrace Server statistics"
-msgstr ""
+msgid "Required packages"
+msgstr "Nödvändiga paket"
 
 #: ../src/stats.wsgi:25
-msgid "Shared object name"
-msgstr ""
+msgid "Retraced packages"
+msgstr "Spårade paket"
 
 #: ../src/stats.wsgi:26
-msgid "Successful"
-msgstr ""
+msgid "Retrace Server statistics"
+msgstr "Spårserverstatistik"
 
 #: ../src/stats.wsgi:27
-msgid "Total"
-msgstr ""
+msgid "Shared object name"
+msgstr "Delade objekt-namn"
 
 #: ../src/stats.wsgi:28
+msgid "Successful"
+msgstr "Lyckade"
+
+#: ../src/stats.wsgi:29
+msgid "Total"
+msgstr "Totalt"
+
+#: ../src/stats.wsgi:30
 msgid "Versions"
-msgstr ""
+msgstr "Versioner"

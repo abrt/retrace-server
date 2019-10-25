@@ -1,150 +1,172 @@
-# Chinese translations for retrace-server package
-# Traditional Chinese translation for retrace-server.
-# Copyright (C) 2011 THE retrace-server'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the retrace-server package.
-# Michal Toman <mtoman@redhat.com>, 2011.
-#
+# Cheng-Chia Tseng <pswo10680@gmail.com>, 2017. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: retrace-server 1.0.0\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2011-05-17 09:53+0200\n"
-"Last-Translator: Michal Toman <mtoman@redhat.com>\n"
-"Language-Team: Chinese (traditional)\n"
+"POT-Creation-Date: 2016-07-01 08:48+0200\n"
+"PO-Revision-Date: 2017-09-06 03:04+0000\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"Language-Team: Chinese (Taiwan)\n"
+"Language: zh_TW\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=BIG5\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Zanata 4.6.2\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
 msgid "You must use HTTPS"
-msgstr ""
+msgstr "您必須使用 HTTPS"
 
 #: ../src/backtrace.wsgi:16 ../src/log.wsgi:16 ../src/status.wsgi:16
 msgid "Invalid URL"
-msgstr ""
+msgstr "URL 無效"
 
 #: ../src/backtrace.wsgi:22 ../src/log.wsgi:21 ../src/status.wsgi:22
 msgid "There is no such task"
-msgstr ""
+msgstr "沒有這種作業"
 
 #: ../src/backtrace.wsgi:27 ../src/log.wsgi:26 ../src/status.wsgi:27
 msgid "Invalid password"
-msgstr ""
+msgstr "密碼無效"
 
 #: ../src/backtrace.wsgi:31
 msgid "There is no backtrace for the specified task"
-msgstr ""
+msgstr "指定的作業沒有回資訊溯"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:70
+#: ../src/create.wsgi:19 ../src/create.wsgi:78
 msgid "Retrace server is fully loaded at the moment"
-msgstr ""
+msgstr "追溯伺服器此刻達完全負載"
 
 #: ../src/create.wsgi:23
 msgid "You must use POST method"
-msgstr ""
+msgstr "您必須使用 POST 方法"
 
 #: ../src/create.wsgi:27
 msgid "Specified archive format is not supported"
-msgstr ""
+msgstr "不支援指定的封存格式"
 
 #: ../src/create.wsgi:31
 msgid "You need to set Content-Length header properly"
-msgstr ""
+msgstr "您需要正確設定 Content-Length 標頭檔"
 
 #: ../src/create.wsgi:35
 msgid "Specified archive is too large"
-msgstr ""
+msgstr "指定的封存檔過大"
 
-#: ../src/create.wsgi:47
-msgid "Unable to create working directory"
-msgstr ""
+#: ../src/create.wsgi:40
+msgid "X-CoreFileDirectory header has been disabled by server administrator"
+msgstr "X-CoreFileDirectory 標頭已經由伺服器管理員停用"
 
 #: ../src/create.wsgi:53
+msgid "Unable to create working directory"
+msgstr "無法建立工作目錄"
+
+#: ../src/create.wsgi:59
 msgid "Unable to obtain disk free space"
-msgstr ""
+msgstr "無法取得磁碟可用空間"
 
-#: ../src/create.wsgi:57 ../src/create.wsgi:99
+#: ../src/create.wsgi:63 ../src/create.wsgi:134
 msgid "There is not enough storage space on the server"
-msgstr ""
+msgstr "伺服器上已無足夠存放空間"
 
-#: ../src/create.wsgi:63
+#: ../src/create.wsgi:71
 msgid "Unable to create new task"
-msgstr ""
+msgstr "無法建立新作業"
 
 #: ../src/create.wsgi:83
-msgid "Unable to save archive"
-msgstr ""
+msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+msgstr "「X-CoreFileDirectory」中指定的目錄不存在"
 
 #: ../src/create.wsgi:89
+#, c-format
+msgid ""
+"There are %d files in the '%s' directory. Only a single archive is supported"
+" at the moment"
+msgstr "有 %d 份檔案在「%s」目錄中。此刻只支援一份封存檔"
+
+#: ../src/create.wsgi:98
+#, c-format
+msgid "You header specifies '%s' type, but the file type does not match"
+msgstr "您的標頭指定的是「%s」類型，但是檔案類型不相符"
+
+#: ../src/create.wsgi:116
+msgid "Unable to save archive"
+msgstr "無法儲存封存檔"
+
+#: ../src/create.wsgi:124
 msgid "Unable to obtain unpacked size"
-msgstr ""
+msgstr "無法取得未解開的大小"
 
-#: ../src/create.wsgi:94
+#: ../src/create.wsgi:129
 msgid "Specified archive's content is too large"
-msgstr ""
+msgstr "指定的封存檔內容過大"
 
-#: ../src/create.wsgi:111
+#: ../src/create.wsgi:146
 msgid "Unable to unpack archive"
-msgstr ""
+msgstr "無法解開封存檔"
 
-#: ../src/create.wsgi:123
+#: ../src/create.wsgi:158
 msgid "Symlinks are not allowed to be in the archive"
-msgstr ""
+msgstr "封存檔中不允許有符號連結"
 
-#: ../src/create.wsgi:131
+#: ../src/create.wsgi:166
 #, c-format
 msgid "The '%s' file is larger than expected"
-msgstr ""
+msgstr "「%s」檔大於預期"
 
-#: ../src/create.wsgi:135
+#: ../src/create.wsgi:170
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr ""
+msgstr "封存檔中不允許有「%s」檔案"
 
-#: ../src/create.wsgi:147
+#: ../src/create.wsgi:186
+msgid "Interactive tasks were disabled by server administrator"
+msgstr "互動式作業已由伺服器管理員停用"
+
+#: ../src/create.wsgi:196
 #, c-format
 msgid "Required file '%s' is missing"
-msgstr ""
+msgstr "遺失必要的「%s」檔"
 
 #: ../src/index.wsgi:12
 msgid "Retrace Server"
-msgstr ""
+msgstr "追溯伺服器"
 
 #: ../src/index.wsgi:13
 msgid "Welcome to Retrace Server"
-msgstr ""
+msgstr "歡迎使用追溯伺服器"
 
 #: ../src/index.wsgi:15
 msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s wiki:"
-msgstr ""
+msgstr "追溯伺服器是個提供核心傾印分析並透過網路生成回溯資料的可能性。您可以在追溯伺服器的 wiki 上找到更深入的資訊："
 
 #: ../src/index.wsgi:21
 msgid ""
-"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
-"will be denied."
-msgstr ""
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests"
+" will be denied."
+msgstr "現在伺服器僅允許安全 HTTPS 連線。HTTP 連線請求會被拒絕。"
 
 #: ../src/index.wsgi:23
 msgid ""
-"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
-"of security reasons."
-msgstr ""
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because"
+" of security reasons."
+msgstr "HTTP 和 HTTPS 都允許。基於安全問題，嚴格建議使用 HTTPS。"
 
 #: ../src/index.wsgi:24
 #, c-format
 msgid "The following releases are supported: %s"
-msgstr ""
+msgstr "有支援下列發行版本：%s"
 
 #: ../src/index.wsgi:26
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
-msgstr ""
+msgstr "此時此刻伺服器負載為 %d%%（正在執 %d / %d 作業）。"
 
 #: ../src/index.wsgi:27
 #, c-format
@@ -157,6 +179,9 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
+"您的核心傾印僅在追溯作業執行期間作保留。一旦完成作業，伺服器只留下追溯紀錄與回溯資料。所有其他資料（包括核心傾印）皆會刪除。追溯紀錄與回溯資料僅可透過獨特的作業"
+" ID 與密碼才能存取，因此沒人（除作者外）允許檢視這些資料。所有的崩潰資訊（包括回溯資料）會在無動作 %d "
+"小時後自動刪除。伺服器上便不再留存可能的隱私資料。"
 
 #: ../src/index.wsgi:33
 msgid ""
@@ -166,83 +191,85 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
+"您的核心傾印僅用於追溯用途。伺服器管理員不會從核心傾印或回溯資料中試圖取用您的私人資料。嚴格建議使用安全的溝通管道 "
+"(HTTPS)。伺服器管理員對於使用不安全溝通管道（例如 HTTP）所衍生出的任何問題一概不負責。"
 
 #: ../src/log.wsgi:30
 msgid "There is no log for the specified task"
-msgstr ""
-
-#: ../src/stats.wsgi:10
-msgid "Architecture"
-msgstr ""
-
-#: ../src/stats.wsgi:11
-msgid "Architectures"
-msgstr ""
+msgstr "沒有指定作業的紀錄"
 
 #: ../src/stats.wsgi:12
-msgid "Build-id"
-msgstr ""
+msgid "Architecture"
+msgstr "架構"
 
 #: ../src/stats.wsgi:13
-msgid "Count"
-msgstr ""
+msgid "Architectures"
+msgstr "架構"
 
 #: ../src/stats.wsgi:14
-msgid "Denied jobs"
-msgstr ""
+msgid "Build-id"
+msgstr "Build-id"
 
 #: ../src/stats.wsgi:15
-msgid "Failed"
-msgstr ""
+msgid "Count"
+msgstr "計數"
 
 #: ../src/stats.wsgi:16
-msgid "First retrace"
-msgstr ""
+msgid "Denied jobs"
+msgstr "拒絕的工作"
 
 #: ../src/stats.wsgi:17
-msgid "Global statistics"
-msgstr ""
+msgid "Failed"
+msgstr "失敗"
 
 #: ../src/stats.wsgi:18
-msgid "Missing build-ids"
-msgstr ""
+msgid "First retrace"
+msgstr "第一次追溯"
 
 #: ../src/stats.wsgi:19
-msgid "Name"
-msgstr ""
+msgid "Global statistics"
+msgstr "全域統計數據"
 
 #: ../src/stats.wsgi:20
-msgid "Release"
-msgstr ""
+msgid "Missing build-ids"
+msgstr "遺失 build-id"
 
 #: ../src/stats.wsgi:21
-msgid "Releases"
-msgstr ""
+msgid "Name"
+msgstr "名稱"
 
 #: ../src/stats.wsgi:22
-msgid "Required packages"
-msgstr ""
+msgid "Release"
+msgstr "發行版"
 
 #: ../src/stats.wsgi:23
-msgid "Retraced packages"
-msgstr ""
+msgid "Releases"
+msgstr "發行版"
 
 #: ../src/stats.wsgi:24
-msgid "Retrace Server statistics"
-msgstr ""
+msgid "Required packages"
+msgstr "需要的軟體包"
 
 #: ../src/stats.wsgi:25
-msgid "Shared object name"
-msgstr ""
+msgid "Retraced packages"
+msgstr "追溯的軟體包"
 
 #: ../src/stats.wsgi:26
-msgid "Successful"
-msgstr ""
+msgid "Retrace Server statistics"
+msgstr "追溯伺服器統計數據"
 
 #: ../src/stats.wsgi:27
-msgid "Total"
-msgstr ""
+msgid "Shared object name"
+msgstr "共享的物件名稱"
 
 #: ../src/stats.wsgi:28
+msgid "Successful"
+msgstr "成功"
+
+#: ../src/stats.wsgi:29
+msgid "Total"
+msgstr "總計"
+
+#: ../src/stats.wsgi:30
 msgid "Versions"
-msgstr ""
+msgstr "版本"

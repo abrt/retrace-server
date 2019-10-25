@@ -1,120 +1,143 @@
-# Czech translations for retrace-server package.
-# Copyright (C) 2011 THE retrace-server'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the retrace-server package.
-# Michal Toman <mtoman@redhat.com>, 2011.
-#
+# Jakub Filak <jfilak@redhat.com>, 2016. #zanata
+# Zdenek <chmelarz@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: retrace-server 1.0.0\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2011-05-17 09:53+0200\n"
-"Last-Translator: Michal Toman <mtoman@redhat.com>\n"
+"POT-Creation-Date: 2016-07-01 08:48+0200\n"
+"PO-Revision-Date: 2016-09-03 09:24+0000\n"
+"Last-Translator: Zdenek <chmelarz@gmail.com>\n"
 "Language-Team: Czech\n"
+"Language: cs\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ASCII\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2\n"
+"X-Generator: Zanata 4.6.2\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
 msgid "You must use HTTPS"
-msgstr ""
+msgstr "Musíte použí HTTPS"
 
 #: ../src/backtrace.wsgi:16 ../src/log.wsgi:16 ../src/status.wsgi:16
 msgid "Invalid URL"
-msgstr ""
+msgstr "Neplatná URL"
 
 #: ../src/backtrace.wsgi:22 ../src/log.wsgi:21 ../src/status.wsgi:22
 msgid "There is no such task"
-msgstr ""
+msgstr "Žádná taková úolha neexistuje"
 
 #: ../src/backtrace.wsgi:27 ../src/log.wsgi:26 ../src/status.wsgi:27
 msgid "Invalid password"
-msgstr ""
+msgstr "Neplatné heslo"
 
 #: ../src/backtrace.wsgi:31
 msgid "There is no backtrace for the specified task"
-msgstr ""
+msgstr "backtrace pro zadaný úkol neexistuje"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:70
+#: ../src/create.wsgi:19 ../src/create.wsgi:78
 msgid "Retrace server is fully loaded at the moment"
-msgstr ""
+msgstr "Retrace server je momentálně plně vytížen"
 
 #: ../src/create.wsgi:23
 msgid "You must use POST method"
-msgstr ""
+msgstr "Musíte použít POST metodu"
 
 #: ../src/create.wsgi:27
 msgid "Specified archive format is not supported"
-msgstr ""
+msgstr "Formát zvoleného archívu není podporován"
 
 #: ../src/create.wsgi:31
 msgid "You need to set Content-Length header properly"
-msgstr ""
+msgstr "Musíte správně vyplnit Content-Length hlavičku"
 
 #: ../src/create.wsgi:35
 msgid "Specified archive is too large"
-msgstr ""
+msgstr "Zvolený archív je příliš velký"
 
-#: ../src/create.wsgi:47
-msgid "Unable to create working directory"
-msgstr ""
+#: ../src/create.wsgi:40
+msgid "X-CoreFileDirectory header has been disabled by server administrator"
+msgstr "X-CoreFileDirectory hlavička byla zakázana administrátorem serveru"
 
 #: ../src/create.wsgi:53
+msgid "Unable to create working directory"
+msgstr "Není možné vytvořit pracovní adresář"
+
+#: ../src/create.wsgi:59
 msgid "Unable to obtain disk free space"
-msgstr ""
+msgstr "Není možné zjistit velikost volného místa na disku"
 
-#: ../src/create.wsgi:57 ../src/create.wsgi:99
+#: ../src/create.wsgi:63 ../src/create.wsgi:134
 msgid "There is not enough storage space on the server"
-msgstr ""
+msgstr "Na serveru není dostatek volného uložného prostoru"
 
-#: ../src/create.wsgi:63
+#: ../src/create.wsgi:71
 msgid "Unable to create new task"
-msgstr ""
+msgstr "Není možné vytvořit novou úlohu"
 
 #: ../src/create.wsgi:83
-msgid "Unable to save archive"
-msgstr ""
+msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+msgstr "Adresář specifikovaný v  'X-CoreFileDirectory'  neexistuje"
 
 #: ../src/create.wsgi:89
+#, c-format
+msgid ""
+"There are %d files in the '%s' directory. Only a single archive is supported"
+" at the moment"
+msgstr "%d souborů v adresáři '%s' . Aktuálně podporován pouze jediný archív"
+
+#: ../src/create.wsgi:98
+#, c-format
+msgid "You header specifies '%s' type, but the file type does not match"
+msgstr "Vaše hlavička určuje typ '%s', ale typ souboru neodpovídá"
+
+#: ../src/create.wsgi:116
+msgid "Unable to save archive"
+msgstr "Není možné uložit archív"
+
+#: ../src/create.wsgi:124
 msgid "Unable to obtain unpacked size"
-msgstr ""
+msgstr "Není možné získat velikost po rozbalení"
 
-#: ../src/create.wsgi:94
+#: ../src/create.wsgi:129
 msgid "Specified archive's content is too large"
-msgstr ""
+msgstr "Obsah zvoleného archívu je příliš velký"
 
-#: ../src/create.wsgi:111
+#: ../src/create.wsgi:146
 msgid "Unable to unpack archive"
-msgstr ""
+msgstr "Není možné rozbalit archív"
 
-#: ../src/create.wsgi:123
+#: ../src/create.wsgi:158
 msgid "Symlinks are not allowed to be in the archive"
-msgstr ""
+msgstr "Symbolické odkazy nejsou v archívu povoleny"
 
-#: ../src/create.wsgi:131
+#: ../src/create.wsgi:166
 #, c-format
 msgid "The '%s' file is larger than expected"
-msgstr ""
+msgstr "Soubor '%s' je větší než bylo očekáváno"
 
-#: ../src/create.wsgi:135
+#: ../src/create.wsgi:170
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr ""
+msgstr "Soubor '%s' se nesmí být součástí archívu"
 
-#: ../src/create.wsgi:147
+#: ../src/create.wsgi:186
+msgid "Interactive tasks were disabled by server administrator"
+msgstr "Interaktivní úlohy jsou administrátorem serveru zakázány"
+
+#: ../src/create.wsgi:196
 #, c-format
 msgid "Required file '%s' is missing"
-msgstr ""
+msgstr "Chybí vyžadovaný soubor '%s'"
 
 #: ../src/index.wsgi:12
 msgid "Retrace Server"
-msgstr ""
+msgstr "Retrace Server"
 
 #: ../src/index.wsgi:13
 msgid "Welcome to Retrace Server"
-msgstr ""
+msgstr "Vítejte na Retrace Serveru"
 
 #: ../src/index.wsgi:15
 msgid ""
@@ -122,29 +145,36 @@ msgid ""
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s wiki:"
 msgstr ""
+"Retrace server je servis poskytující možnost analýzy obrazu paměti a "
+"generace výpisu volání po síti. Další informace lze nalézt na Wiki Retrace "
+"serveru:"
 
 #: ../src/index.wsgi:21
 msgid ""
-"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
-"will be denied."
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests"
+" will be denied."
 msgstr ""
+"Server nyní povoluje pouze zabezpečené připojení HTTPS. Požadavek HTTP bude "
+"zamítnut."
 
 #: ../src/index.wsgi:23
 msgid ""
-"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
-"of security reasons."
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because"
+" of security reasons."
 msgstr ""
+"Oba protokoly HTTP a HTTPS jsou povoleny. Z bezpečnostních důvodů je přísně "
+"doporučeno použití HTTPS."
 
 #: ../src/index.wsgi:24
 #, c-format
 msgid "The following releases are supported: %s"
-msgstr ""
+msgstr "Následující vydání jsou podporována: %s"
 
 #: ../src/index.wsgi:26
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
-msgstr ""
+msgstr "V tomto okamžiku je server vytížen na %d%% (%d z %d běžících úloh)"
 
 #: ../src/index.wsgi:27
 #, c-format
@@ -157,6 +187,13 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
+"Váš obraz paměti je pouze ponechán na serveru po dobu běhu retrace úlohy. "
+"Jakmile je tato úloha dokončena, server si ponechá retrace záznamy a výpis "
+"volání. Všechna další data (včetně obrazu paměti) jsou vymazána. Retrace "
+"záznamy a výpis volání jsou dostupná jen za použití unikátního ID úlohy a "
+"hesla, čímž nikdo (kromě autora) je nemůže vidět. Všechny informace o pádu "
+"(včetně obrazu paměti) jsou po %d hodinách neaktivity smazány. Není tak "
+"možné, aby byla soukromá data uložena na serveru déle."
 
 #: ../src/index.wsgi:33
 msgid ""
@@ -166,83 +203,88 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
+"Vaš obraz paměti je použit pouze pro účely retrace. Administrátoři serveru "
+"se nesnaží dostat vaše soukromá data z obraz paměti a výpisu volání. Je "
+"přísně doporučeno použít zabezpečenou komunikaci (HTTPS). Administrátoři "
+"serveru nejsou zodpovědni za problémy spojené s použitím nezabezpečeného "
+"kanálu (jako je HTTP)."
 
 #: ../src/log.wsgi:30
 msgid "There is no log for the specified task"
-msgstr ""
-
-#: ../src/stats.wsgi:10
-msgid "Architecture"
-msgstr ""
-
-#: ../src/stats.wsgi:11
-msgid "Architectures"
-msgstr ""
+msgstr "Pro zadaný úkol neexistuje žádný protokol"
 
 #: ../src/stats.wsgi:12
-msgid "Build-id"
-msgstr ""
+msgid "Architecture"
+msgstr "Architektura"
 
 #: ../src/stats.wsgi:13
-msgid "Count"
-msgstr ""
+msgid "Architectures"
+msgstr "Architektury"
 
 #: ../src/stats.wsgi:14
-msgid "Denied jobs"
-msgstr ""
+msgid "Build-id"
+msgstr "ID Sestavení"
 
 #: ../src/stats.wsgi:15
-msgid "Failed"
-msgstr ""
+msgid "Count"
+msgstr "Počet"
 
 #: ../src/stats.wsgi:16
-msgid "First retrace"
-msgstr ""
+msgid "Denied jobs"
+msgstr "Nepovolené úlohy"
 
 #: ../src/stats.wsgi:17
-msgid "Global statistics"
-msgstr ""
+msgid "Failed"
+msgstr "Neúspěšný"
 
 #: ../src/stats.wsgi:18
-msgid "Missing build-ids"
-msgstr ""
+msgid "First retrace"
+msgstr "První retrace"
 
 #: ../src/stats.wsgi:19
-msgid "Name"
-msgstr ""
+msgid "Global statistics"
+msgstr "Globální statistiky"
 
 #: ../src/stats.wsgi:20
-msgid "Release"
-msgstr ""
+msgid "Missing build-ids"
+msgstr "Chybějící ID sestavení"
 
 #: ../src/stats.wsgi:21
-msgid "Releases"
-msgstr ""
+msgid "Name"
+msgstr "Jméno"
 
 #: ../src/stats.wsgi:22
-msgid "Required packages"
-msgstr ""
+msgid "Release"
+msgstr "Vydání"
 
 #: ../src/stats.wsgi:23
-msgid "Retraced packages"
-msgstr ""
+msgid "Releases"
+msgstr "Vydání"
 
 #: ../src/stats.wsgi:24
-msgid "Retrace Server statistics"
-msgstr ""
+msgid "Required packages"
+msgstr "Požadované balíčky"
 
 #: ../src/stats.wsgi:25
-msgid "Shared object name"
-msgstr ""
+msgid "Retraced packages"
+msgstr "Vystopované balíčky"
 
 #: ../src/stats.wsgi:26
-msgid "Successful"
-msgstr ""
+msgid "Retrace Server statistics"
+msgstr "Statistiky retrace serveru"
 
 #: ../src/stats.wsgi:27
-msgid "Total"
-msgstr ""
+msgid "Shared object name"
+msgstr "Jméno sdíleného objektu"
 
 #: ../src/stats.wsgi:28
+msgid "Successful"
+msgstr "Úspěšný"
+
+#: ../src/stats.wsgi:29
+msgid "Total"
+msgstr "Celkový"
+
+#: ../src/stats.wsgi:30
 msgid "Versions"
-msgstr ""
+msgstr "Verze"
