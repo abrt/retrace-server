@@ -700,9 +700,6 @@ class RetraceWorker(object):
         self.stats["version"] = "%s-%s" % (kernelver.version, kernelver.release)
         self.stats["arch"] = kernelver.arch
 
-        kernelcache = os.path.join(CONFIG["RepoDir"], "kernel")
-        kerneltmp = os.path.join(kernelcache, "%s.tmp" % kernelver)
-
         log_info(STATUS[STATUS_INIT])
         task.set_status(STATUS_INIT)
         vmlinux = ""
