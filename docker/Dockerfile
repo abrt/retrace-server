@@ -1,4 +1,4 @@
-FROM fedora:28
+FROM fedora:30
 MAINTAINER mmarusak@redhat.com
 
 ENV NAME="Retrace Server" \
