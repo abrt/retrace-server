@@ -167,6 +167,78 @@ fi
 %license COPYING
 
 %changelog
+* Tue Oct 29 2019 Michal Fabik <mfabik@redhat.com> 1.20.0-1
+- Bump Fedora Release in Dockerfile
+- retrace_worker: Use kernelver_str var
+- retrace_worker: Remove unused variables
+- retrace: Remove unused variable
+- retrace: Use converted integer value
+- retrace: Remove unsused variable
+- pylint: Fix wrong indentations
+- pylint W0702: Fix-up bare exceptions
+- pylint: Fix spacing issues
+- Remove Python2/Python3 compatibility code
+- pylint E713: Test for membership should be ‘not in’
+- retrace: Refactor asterisk imports of retrace
+- Translation updates
+- Add new translation languages - tr
+- Add transtalations from Fedora Zanata
+- Remove workdir functionality
+- retrace-server-interact: Fix undefined self var
+- retrace: Fix undefined vmcore variable
+- Fix typos
+- Fix typos and minor grammar issues
+- Switch to requests-gssapi
+- create: Fix strip_extra_pages() invocation
+- plugins: Add el8 to versionlist
+- plugins: Add plugin for CentOS
+- plugins: Update fedora versionlist
+- plugins: Update devtoolset version
+- stats: Display whole release version
+- Use sys.exit instead of exit for retrace-server commands
+- Move makedumpfile logic from download_remote into start_vmcore
+- Move prepare_debuginfo to KernelVMcore
+- Remove call to prepare_debuginfo from retrace-server-interact
+- Move get_kernel_release to KernelVMcore
+- Move strip_vmcore to KernelVMcore.strip_extra_pages
+- Add KernelVMcore.has_extra_pages method
+- Move get_vmcore_dump_level to KernelVMcore.get_dump_level
+- Handle 'flattened' vmcore format by converting with makedumpfile
+- Pass 'results' directory to hook script rather than task_dir.
+- Rename 'misc' methods and subdirectory to 'results'.
+- delete: Fix typo in function name
+- Clean up handling of mock with x86 vmcores in x86_64 environments
+- Remove bt_filter from retrace-server
+- Remove excess post-retrace crash commands
+- Make retrace-server-cleanup more resilient to non-existent tasks
+- retrace: Allow tilde in package names
+- spec: Use macros instead of environment variables
+- Fix module extraction from kernel-debuginfo
+- Move ProcessCommunicateTimeout inside run_crash_cmdline
+- Move run_crash_cmdline from RetraceWorker to RetraceTask
+- Fix backtrace of bt_filter on Python3
+- Remove 'utf-8' encoding for run_crash_cmd and change related functions.
+- Refactor crash commands run after prepare_debuginfo into run_crash_cmdline helper
+- worker: Add string formatting for provided arguments
+- worker: Remove unused function
+- worker: Use log_error function to log errors
+- Fix runaway crash processes due to either corrupted vmcore memory or files.
+- Fix backtrace when updating bugzillano from web UI due to use of basestring
+- Fix message and code path when we fail to decode the release of vmcore
+- spec: Fix test condition for Fedora
+- spec: Fix %if conditions
+- spec: Add python3-createrepo_c dependency
+- retrace_worker: Ignore EEXISTS when symlinking log
+- retrace: Replace execfile with exec(open())
+- Drop YUM support
+- Drop __future__.print_function import
+- Drop __future__.division import
+- Fix ftp.wsgi for Python3 due to sorted() method change, speed manager load
+- Fix get_kernel_release() on Python3
+- cleanup: Add check for opened crash files
+- Add forgotten encoding
+- reposync: Inform why creating of repository failed
+
 * Mon Aug 27 2018 Martin Kutlak <mkutlak@redhat.com> 1.19.0-1
 - docker: Allow building local changes
 - docker: Introduce docker
