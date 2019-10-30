@@ -563,7 +563,7 @@ class RetraceWorker(object):
 
         task.set_backtrace(backtrace)
         if exploitable is not None:
-            task.add_results("exploitable", exploitable)
+            task.add_results("exploitable", exploitable, mode="w")
 
         self.hook_post_retrace()
 
