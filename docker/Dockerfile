@@ -19,7 +19,7 @@ LABEL summary="$SUMMARY" \
       maintainer="ABRT devel team <abrt-devel-list@redhat.com>"
 
 RUN dnf -y update && \
-    dnf -y install --setopt=tsflags=nodocs retrace-server uwsgi && \
+    dnf -y install --setopt=tsflags=nodocs retrace-server uwsgi mod_ssl && \
     dnf clean all
 
 # Copy main run script
