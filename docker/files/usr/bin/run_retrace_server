@@ -11,4 +11,5 @@ if [ x"$USER_ID" != x"0" -a x"$USER_ID" != x"997" ];then
 fi
 
 /usr/sbin/uwsgi --ini /etc/uwsgi.ini --logto /var/log/retrace-server/uwsgi_logs &
-apachectl -DFOREGROUND
+
+/usr/sbin/httpd -DFOREGROUND
