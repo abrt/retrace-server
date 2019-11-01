@@ -9,7 +9,6 @@ import shutil
 import stat
 from subprocess import Popen, PIPE, STDOUT
 
-import distro
 from .retrace import (ALLOWED_FILES, INPUT_PACKAGE_PARSER, REPO_PREFIX, REQUIRED_FILES,
                       STATUS, STATUS_ANALYZE, STATUS_BACKTRACE, STATUS_CLEANUP,
                       STATUS_FAIL, STATUS_INIT, STATUS_STATS, STATUS_SUCCESS,
@@ -473,20 +472,14 @@ class RetraceWorker(object):
         # create mock config file
         try:
             repopath = os.path.join(CONFIG["RepoDir"], releaseid)
-            linux_dist = distro.linux_distribution(full_distribution_name=False)
             with open(os.path.join(task.get_savedir(), RetraceTask.MOCK_DEFAULT_CFG), "w") as mockcfg:
                 mockcfg.write("config_opts['root'] = '%d'\n" % task.get_taskid())
                 mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
-                mockcfg.write("config_opts['chroot_setup_cmd'] = '")
-                if linux_dist[0] == "fedora":
-                    mockcfg.write("--setopt=strict=0")
-                else:
-                    mockcfg.write("--skip-broken")
+                mockcfg.write("config_opts['chroot_setup_cmd'] = '--skip-broken")
                 mockcfg.write(" install %s abrt-addon-ccpp shadow-utils %s rpm'\n" % (" ".join(packages),
                                                                                       self.plugin.gdb_package))
-                mockcfg.write("config_opts['releasever'] = '%s'\n" % linux_dist[1])
-                if linux_dist[0] == "fedora":
-                    mockcfg.write("config_opts['package_manager'] = 'dnf'\n")
+                mockcfg.write("config_opts['releasever'] = '%s'\n" % version)
+                mockcfg.write("config_opts['package_manager'] = 'dnf'\n")
                 mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
                 mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
                 mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
@@ -725,15 +718,13 @@ class RetraceWorker(object):
 
             try:
                 cfgfile = os.path.join(cfgdir, RetraceTask.MOCK_DEFAULT_CFG)
-                linux_dist = distro.linux_distribution(full_distribution_name=False)
                 with open(cfgfile, "w") as mockcfg:
                     mockcfg.write("config_opts['root'] = '%d-kernel'\n" % task.get_taskid())
                     mockcfg.write("config_opts['target_arch'] = '%s'\n" % kernelver.arch)
                     mockcfg.write("config_opts['chroot_setup_cmd'] = 'install bash coreutils cpio "
                                   "crash findutils rpm shadow-utils'\n")
-                    mockcfg.write("config_opts['releasever'] = '%s'\n" % linux_dist[1])
-                    if linux_dist[0] == "fedora":
-                        mockcfg.write("config_opts['package_manager'] = 'dnf'\n")
+                    mockcfg.write("config_opts['releasever'] = '%s'\n" % kernelver_str)
+                    mockcfg.write("config_opts['package_manager'] = 'dnf'\n")
                     mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
                     mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
                     mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
