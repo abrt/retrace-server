@@ -40,7 +40,6 @@ Requires: python3-webob
 Requires: python3-magic
 Requires: python3-requests
 Requires: python3-requests-gssapi
-Requires: python3-distro
 Requires: python3-bugzilla
 Requires: python3-six
 Requires: python3-dnf
