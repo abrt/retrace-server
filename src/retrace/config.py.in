@@ -67,6 +67,7 @@ class Config(object):
             "DBFile": "stats.db",
             "KernelChrootRepo": "http://dl.fedoraproject.org/pub/fedora/linux/releases/16/Everything/$ARCH/os/",
             "UseFafPackages": False,
+            "RetraceEnvironment": "mock",
             "FafLinkDir": "/var/spool/faf/retrace-tmp",
             "AuthGroup": "retrace",
             "EmailNotify": False,
