@@ -170,8 +170,8 @@ ARCH_MAP = {
     "aarch64": {"aarch64"},
 }
 
-PYTHON_LABLE_START = "----------PYTHON-START--------"
-PYTHON_LABLE_END = "----------PYTHON--END---------"
+PYTHON_LABEL_START = "----------PYTHON-START--------"
+PYTHON_LABEL_END = "----------PYTHON--END---------"
 
 
 class RetraceError(Exception):
@@ -393,7 +393,7 @@ def run_gdb(savedir, plugin):
                           "-ex 'print (char*)__abort_msg' "
                           "-ex 'print (char*)__glib_assert_msg' "
                           "-ex 'info registers' "
-                          "-ex 'disassemble' " % (executable, PYTHON_LABLE_START, PYTHON_LABLE_END))
+                          "-ex 'disassemble' " % (executable, PYTHON_LABEL_START, PYTHON_LABEL_END))
             if add_exploitable:
                 gdbfile.write("-ex 'echo %s' "
                               "-ex 'abrt-exploitable'" % EXPLOITABLE_SEPARATOR)
@@ -426,7 +426,7 @@ def run_gdb(savedir, plugin):
     if not backtrace:
         raise Exception("An unusable backtrace has been generated")
 
-    python_labels = PYTHON_LABLE_START+'\n'+PYTHON_LABLE_END+'\n'
+    python_labels = PYTHON_LABEL_START+'\n'+PYTHON_LABEL_END+'\n'
     if python_labels in backtrace:
         backtrace = backtrace.replace(python_labels, "")
 
