@@ -124,8 +124,7 @@ FTP_SUPPORTED_EXTENSIONS = [".tar.gz", ".tgz", ".tarz", ".tar.bz2", ".tar.xz",
                             ".tar", ".gz", ".bz2", ".xz", ".Z", ".zip"]
 
 REPO_PREFIX = "retrace-"
-EXPLOITABLE_PLUGIN_PATH = "/usr/libexec/abrt-gdb-exploitable"
-EXPLOITABLE_SEPARATOR = "== EXPLOITABLE ==\n"
+EXPLOITABLE_SEPARATOR = "== EXPLOITABLE =="
 
 TASKPASS_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -371,16 +370,10 @@ def run_gdb(savedir, plugin):
         if chmod != 0:
             raise Exception("Unable to chmod the executable")
 
-        child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
-                       "--", "ls '%s'" % EXPLOITABLE_PLUGIN_PATH],
-                      stdout=PIPE, stderr=null, encoding='utf-8')
-        add_exploitable = child.communicate()[0].strip() == EXPLOITABLE_PLUGIN_PATH
-
         batfile = os.path.join(savedir, "gdb.sh")
         with open(batfile, "w") as gdbfile:
             gdbfile.write("%s -batch " % plugin.gdb_executable)
-            if add_exploitable:
-                gdbfile.write("-ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' ")
+            gdbfile.write("-ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' ")
             gdbfile.write("-ex 'file %s' "
                           "-ex 'core-file /var/spool/abrt/crash/coredump' "
                           "-ex 'echo %s\n' "
@@ -393,10 +386,10 @@ def run_gdb(savedir, plugin):
                           "-ex 'print (char*)__abort_msg' "
                           "-ex 'print (char*)__glib_assert_msg' "
                           "-ex 'info registers' "
-                          "-ex 'disassemble' " % (executable, PYTHON_LABEL_START, PYTHON_LABEL_END))
-            if add_exploitable:
-                gdbfile.write("-ex 'echo %s' "
-                              "-ex 'abrt-exploitable'" % EXPLOITABLE_SEPARATOR)
+                          "-ex 'disassemble' "
+                          "-ex 'echo %s' "
+                          "-ex 'abrt-exploitable'"
+                          % (executable, PYTHON_LABEL_START, PYTHON_LABEL_END, EXPLOITABLE_SEPARATOR))
 
         copyin = call(["/usr/bin/mock", "--configdir", savedir, "--copyin",
                        batfile, "/var/spool/abrt/gdb.sh"],
