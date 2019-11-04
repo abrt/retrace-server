@@ -7,7 +7,7 @@ import grp
 import logging
 import shutil
 import stat
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import PIPE, STDOUT, call, Popen
 
 from retrace.hooks.hooks import RetraceHook
 from .retrace import (ALLOWED_FILES, INPUT_PACKAGE_PARSER, REPO_PREFIX, REQUIRED_FILES,
@@ -872,6 +872,16 @@ class RetraceWorker(object):
         # If crash sys command exited with non-zero status,
         # we likely have a semi-useful vmcore
         crash_sys, ret = task.run_crash_cmdline(crash_normal, "sys\nquit\n")
+
+        if container_id:
+            with open(os.devnull, "w") as null:
+                err = call(["/usr/bin/podman", "stop", container_id], stdout=null, stderr=null)
+                if err:
+                    log_warn(err)
+                err = call(["/usr/bin/podman", "rm", container_id], stdout=null, stderr=null)
+                if err:
+                    log_warn(err)
+
         if ret == 0 and crash_sys:
             task.add_results("sys", crash_sys)
         else:

@@ -346,7 +346,7 @@ def parse_http_gettext(lang, charset):
     return result
 
 
-def run_gdb(savedir, plugin):
+def run_gdb(savedir, plugin, repopath):
     # exception is caught on the higher level
     exec_file = open(os.path.join(savedir, "crash", "executable"), "r")
     executable = exec_file.read(ALLOWED_FILES["executable"])
@@ -373,7 +373,7 @@ def run_gdb(savedir, plugin):
 
         batfile = os.path.join(savedir, "gdb.sh")
         with open(batfile, "w") as gdbfile:
-            gdbfile.write("%s -batch " % plugin.gdb_executable)
+            gdbfile.write("#!/usr/bin/sh\n\n%s -batch " % plugin.gdb_executable)
             gdbfile.write("-ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' ")
             gdbfile.write("-ex 'file %s' "
                           "-ex 'core-file /var/spool/abrt/crash/coredump' "
@@ -409,6 +409,22 @@ def run_gdb(savedir, plugin):
                            "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh'",
                            # redirect GDB's stderr, ignore mock's stderr
                            "2>&1"], stdout=PIPE, stderr=null, encoding='utf-8')
+
+        elif CONFIG["RetraceEnvironment"] == "podman":
+            build_image = call(["/usr/bin/podman",
+                                "build",
+                                "--file",
+                                os.path.join(savedir, RetraceTask.DOCKERFILE),
+                                "--volume=%s:%s:ro" % (repopath, repopath),
+                                "--tag",
+                                "retrace-image"],
+                               stdout=null, stderr=null)
+            if build_image:
+                raise Exception("Unable to build podman container")
+            child = Popen(["/usr/bin/podman", "run", "-it", "--volume=%s:%s:ro" % (repopath, repopath),
+                           "retrace-image"], stdout=PIPE, stderr=null, encoding='utf-8')
+        else:
+            raise Exception("RetraceEnvironment set to invalid value")
 
     backtrace = child.communicate()[0].strip()
     if child.wait():
