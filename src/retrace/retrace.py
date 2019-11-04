@@ -1630,6 +1630,7 @@ class RetraceTask:
     MOCK_DEFAULT_CFG = "default.cfg"
     MOCK_SITE_DEFAULTS_CFG = "site-defaults.cfg"
     MOCK_LOGGING_INI = "logging.ini"
+    DOCKERFILE = "Dockerfile"
 
     def __init__(self, taskid=None):
         """Creates a new task if taskid is None,
