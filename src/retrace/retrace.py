@@ -356,19 +356,20 @@ def run_gdb(savedir, plugin):
         raise Exception("Executable contains forbidden characters")
 
     with open(os.devnull, "w") as null:
-        child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
-                       "--", "ls '%s'" % executable],
-                      stdout=PIPE, stderr=null, encoding='utf-8')
-        output = child.communicate()[0]
-        if output.strip() != executable:
-            raise Exception("The appropriate package set could not be installed")
+        if CONFIG["RetraceEnvironment"] == "mock":
+            child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
+                           "--", "ls '%s'" % executable],
+                          stdout=PIPE, stderr=null, encoding='utf-8')
+            output = child.communicate()[0]
+            if output.strip() != executable:
+                raise Exception("The appropriate package set could not be installed")
 
-        chmod = call(["/usr/bin/mock", "shell", "--configdir", savedir,
-                      "--", "/bin/chmod a+r '%s'" % executable],
-                     stdout=null, stderr=null)
+            chmod = call(["/usr/bin/mock", "shell", "--configdir", savedir,
+                          "--", "/bin/chmod a+r '%s'" % executable],
+                         stdout=null, stderr=null)
 
-        if chmod != 0:
-            raise Exception("Unable to chmod the executable")
+            if chmod != 0:
+                raise Exception("Unable to chmod the executable")
 
         batfile = os.path.join(savedir, "gdb.sh")
         with open(batfile, "w") as gdbfile:
@@ -391,22 +392,23 @@ def run_gdb(savedir, plugin):
                           "-ex 'abrt-exploitable'"
                           % (executable, PYTHON_LABEL_START, PYTHON_LABEL_END, EXPLOITABLE_SEPARATOR))
 
-        copyin = call(["/usr/bin/mock", "--configdir", savedir, "--copyin",
-                       batfile, "/var/spool/abrt/gdb.sh"],
-                      stdout=null, stderr=null)
-        if copyin:
-            raise Exception("Unable to copy GDB launcher into chroot")
+        if CONFIG["RetraceEnvironment"] == "mock":
+            copyin = call(["/usr/bin/mock", "--configdir", savedir, "--copyin",
+                           batfile, "/var/spool/abrt/gdb.sh"],
+                          stdout=null, stderr=null)
+            if copyin:
+                raise Exception("Unable to copy GDB launcher into chroot")
 
-        chmod = call(["/usr/bin/mock", "--configdir", savedir, "shell",
-                      "--", "/bin/chmod a+rx /var/spool/abrt/gdb.sh"],
-                     stdout=null, stderr=null)
-        if chmod:
-            raise Exception("Unable to chmod GDB launcher")
+            chmod = call(["/usr/bin/mock", "--configdir", savedir, "shell",
+                          "--", "/bin/chmod a+rx /var/spool/abrt/gdb.sh"],
+                         stdout=null, stderr=null)
+            if chmod:
+                raise Exception("Unable to chmod GDB launcher")
 
-        child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
-                       "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh'",
-                       # redirect GDB's stderr, ignore mock's stderr
-                       "2>&1"], stdout=PIPE, stderr=null, encoding='utf-8')
+            child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
+                           "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh'",
+                           # redirect GDB's stderr, ignore mock's stderr
+                           "2>&1"], stdout=PIPE, stderr=null, encoding='utf-8')
 
     backtrace = child.communicate()[0].strip()
     if child.wait():
