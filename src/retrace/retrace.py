@@ -373,24 +373,25 @@ def run_gdb(savedir, plugin, repopath):
 
         batfile = os.path.join(savedir, "gdb.sh")
         with open(batfile, "w") as gdbfile:
-            gdbfile.write("#!/usr/bin/sh\n\n%s -batch " % plugin.gdb_executable)
-            gdbfile.write("-ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' ")
-            gdbfile.write("-ex 'file %s' "
-                          "-ex 'core-file /var/spool/abrt/crash/coredump' "
-                          "-ex 'echo %s\n' "
-                          "-ex 'py-bt' "
-                          "-ex 'py-list' "
-                          "-ex 'py-locals' "
-                          "-ex 'echo %s\n' "
-                          "-ex 'thread apply all -ascending backtrace full 2048' "
-                          "-ex 'info sharedlib' "
-                          "-ex 'print (char*)__abort_msg' "
-                          "-ex 'print (char*)__glib_assert_msg' "
-                          "-ex 'info registers' "
-                          "-ex 'disassemble' "
-                          "-ex 'echo %s' "
-                          "-ex 'abrt-exploitable'"
-                          % (executable, PYTHON_LABEL_START, PYTHON_LABEL_END, EXPLOITABLE_SEPARATOR))
+            gdbfile.write("#!/usr/bin/sh\n\n%s -batch "
+                          "-ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' \\\n"
+                          "                    -ex 'file %s' \\\n"
+                          "                    -ex 'core-file /var/spool/abrt/crash/coredump' \\\n"
+                          "                    -ex 'echo %s\\n' \\\n"
+                          "                    -ex 'py-bt' \\\n"
+                          "                    -ex 'py-list' \\\n"
+                          "                    -ex 'py-locals' \\\n"
+                          "                    -ex 'echo %s\\n' \\\n"
+                          "                    -ex 'thread apply all -ascending backtrace full 2048' \\\n"
+                          "                    -ex 'info sharedlib' \\\n"
+                          "                    -ex 'print (char*)__abort_msg' \\\n"
+                          "                    -ex 'print (char*)__glib_assert_msg' \\\n"
+                          "                    -ex 'info registers' \\\n"
+                          "                    -ex 'disassemble' \\\n"
+                          "                    -ex 'echo %s\\n' \\\n"
+                          "                    -ex 'abrt-exploitable'"
+                          % (plugin.gdb_executable, executable, PYTHON_LABEL_START,
+                             PYTHON_LABEL_END, EXPLOITABLE_SEPARATOR))
 
         if CONFIG["RetraceEnvironment"] == "mock":
             copyin = call(["/usr/bin/mock", "--configdir", savedir, "--copyin",
