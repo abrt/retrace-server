@@ -405,7 +405,6 @@ class RetraceWorker(object):
         self.hook.run("pre_prepare_environment")
 
         repopath = os.path.join(CONFIG["RepoDir"], releaseid)
-        linux_dist = distro.linux_distribution(full_distribution_name=False)
 
         if CONFIG["RetraceEnvironment"] == "mock":
         # create mock config file
@@ -487,8 +486,45 @@ class RetraceWorker(object):
         task.set_status(STATUS_BACKTRACE)
         log_info(STATUS[STATUS_BACKTRACE])
 
+        if CONFIG["RetraceEnvironment"] == "podman":
+            import re
+            repoid = re.sub('/', '_', CONFIG["RepoDir"][1:])
+            try:
+                with open(os.path.join(task.get_savedir(),
+                          RetraceTask.DOCKERFILE), "w") as dockerfile:
+                    dockerfile.write('FROM %s:%s\n\n' % (distribution, version))
+                    dockerfile.write('RUN mkdir -p /var/spool/abrt/crash\n')
+                    if CONFIG["UseFafPackages"]:
+                        dockerfile.write('RUN mkdir -p /var/spool/abrt/faf-packages')
+                    dockerfile.write('\n')
+                    dockerfile.write('RUN dnf install --assumeyes dnf-plugins-core\n')
+                    dockerfile.write('RUN dnf config-manager --add-repo=file://%s\n' % repopath)
+                    dockerfile.write('RUN dnf ')
+                    dockerfile.write('--releasever=%s ' % version)
+                    dockerfile.write('--repo=%s* ' % repoid)
+                    dockerfile.write('--assumeyes ')
+                    dockerfile.write('--skip-broken ')
+                    dockerfile.write('install abrt-addon-ccpp %s rpm ' \
+                                     'shadow-utils %s && dnf clean all\n\n'
+                                     % (self.plugin.gdb_package, " ".join(packages)))
+                    dockerfile.write('COPY gdb.sh /var/spool/abrt/\n')
+                    dockerfile.write('RUN chmod +x /var/spool/abrt/gdb.sh\n')
+                    dockerfile.write('COPY %s /var/spool/abrt/crash/\n\n'
+                                     % RetraceTask.COREDUMP_FILE)
+                    if CONFIG["UseFafPackages"]:
+                        dockerfile.write('CMD ["/usr/bin/bash"]')
+                    else:
+                        dockerfile.write('RUN useradd -m retrace\n')
+                        dockerfile.write('RUN chown retrace /var/spool/abrt/gdb.sh\n')
+                        dockerfile.write('RUN chown retrace /var/spool/abrt/%s\n'
+                                         % RetraceTask.COREDUMP_FILE)
+                        dockerfile.write('USER retrace\n\n')
+                        dockerfile.write('ENTRYPOINT ["/var/spool/abrt/gdb.sh"]')
+            except Exception as ex:
+                log_error("Unable to create Dockerfile: %s" % ex)
+                self._fail()
         try:
-            backtrace, exploitable = run_gdb(task.get_savedir(), self.plugin)
+            backtrace, exploitable = run_gdb(task.get_savedir(), self.plugin, repopath, self.fafrepo)
         except Exception as ex:
             log_error(str(ex))
             self._fail()
@@ -727,6 +763,70 @@ class RetraceWorker(object):
                                 task.get_crash_cmd() + " -s %s %s" % (vmcore_path, vmlinux)]
                 crash_minimal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                                  task.get_crash_cmd() + " -s --minimal %s %s" % (vmcore_path, vmlinux)]
+
+            elif CONFIG["RetraceEnvironment"] == "podman":
+
+                savedir = task.get_savedir()
+                crashdir = os.path.join(savedir, "crash")
+                release, distribution, version = self.read_release_file(crashdir, None)
+                try:
+                    with open(os.path.join(savedir, RetraceTask.DOCKERFILE), "w") as dockerfile:
+                        dockerfile.write('FROM %s:%s\n\n' % (distribution, version))
+                        dockerfile.write('RUN mkdir -p /var/spool/abrt/crash\n\n')
+                        dockerfile.write('RUN dnf ' \
+                                         '--releasever=%s ' \
+                                         '--assumeyes ' \
+                                         '--skip-broken ' \
+                                         'install bash coreutils cpio crash findutils rpm ' \
+                                         'shadow-utils && dnf clean all\n' % kernelver_str)
+                        dockerfile.write('RUN dnf ' \
+                                         '--assumeyes ' \
+                                         '--enablerepo=*debuginfo* ' \
+                                         'install kernel-debuginfo\n\n')
+                        dockerfile.write('COPY %s /var/spool/abrt/crash/\n\n'
+                                         % RetraceTask.VMCORE_FILE)
+                        dockerfile.write('RUN useradd -m retrace\n')
+                        dockerfile.write('RUN chown retrace /var/spool/abrt/%s\n'
+                                         % RetraceTask.VMCORE_FILE)
+                        dockerfile.write('USER retrace\n\n')
+                        dockerfile.write('CMD ["/usr/bin/bash"]')
+                except Exception as ex:
+                    log_error("Unable to create Dockerfile: %s" % ex)
+                    self._fail()
+
+                with open(os.devnull, "w") as null:
+                    build_image = call(["/usr/bin/podman",
+                                        "build",
+                                        "--file",
+                                        os.path.join(savedir, RetraceTask.DOCKERFILE),
+                                        "--tag",
+                                        "retrace-image"],
+                                       stdout=null, stderr=null)
+                    if build_image:
+                        raise Exception("Unable to build podman container")
+
+                vmlinux = vmcore.prepare_debuginfo(task, kernelver=kernelver)
+                child = Popen(["/usr/bin/podman",
+                               "run",
+                               "--detach",
+                               "-it",
+                               "retrace-image"],
+                              stdout=PIPE, stderr=PIPE, encoding='utf-8')
+                (container_id, err) = child.communicate()
+                container_id = container_id.rstrip()
+                if err:
+                    log_error(str(err))
+                    raise Exception("Unable to run podman container")
+
+                crash_normal = ["/usr/bin/podman", "exec", container_id,
+                                task.get_crash_cmd()
+                                + " -s /var/spool/abrt/crash/vmcore %s" % vmlinux]
+                crash_minimal = ["/usr/bin/podman", "exec", container_id,
+                                 task.get_crash_cmd()
+                                 + " -s --minimal /var/spool/abrt/crash/vmcore %s" % vmlinux]
+
+            else:
+                raise Exception("RetraceEnvironment set to invalid value")
 
         else:
             try:
