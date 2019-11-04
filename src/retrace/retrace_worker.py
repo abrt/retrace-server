@@ -469,8 +469,9 @@ class RetraceWorker(object):
         log_info(STATUS[STATUS_INIT])
 
         if CONFIG["RetraceEnvironment"] == "mock":
-            self._retrace_run(25, ["/usr/bin/mock", "init", "--resultdir", task.get_savedir() + "/log", "--configdir",
-                              task.get_savedir()])
+            self._retrace_run(25, ["/usr/bin/mock", "init", "--resultdir",
+                                   task.get_savedir() + "/log", "--configdir",
+                                   task.get_savedir()])
 
             self.hook.run("post_prepare_environment")
             self.hook.run("pre_retrace")
@@ -491,7 +492,7 @@ class RetraceWorker(object):
             repoid = re.sub('/', '_', CONFIG["RepoDir"][1:])
             try:
                 with open(os.path.join(task.get_savedir(),
-                          RetraceTask.DOCKERFILE), "w") as dockerfile:
+                                       RetraceTask.DOCKERFILE), "w") as dockerfile:
                     dockerfile.write('FROM %s:%s\n\n' % (distribution, version))
                     dockerfile.write('RUN mkdir -p /var/spool/abrt/crash\n')
                     if CONFIG["UseFafPackages"]:
