@@ -142,6 +142,7 @@ then
      echo %{retrace_crontab_entry3}; echo %{retrace_crontab_entry4}; \
      echo %{retrace_crontab_entry5}; echo %{retrace_crontab_entry6};) | crontab -u retrace - 2> /dev/null
 fi
+exit 0
 
 %preun
 if [ "$1" = 0 ]
@@ -152,6 +153,7 @@ then
 #comment entries in retrace's crontab
     (crontab -u retrace -l 2> /dev/null | sed "s,^\([^#].*\)$,#\1,g") | crontab -u retrace - 2> /dev/null
 fi
+exit 0
 
 %files -f %{name}.lang
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}-httpd.conf
