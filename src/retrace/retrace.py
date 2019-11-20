@@ -1331,8 +1331,8 @@ class KernelVMcore:
             log_debug("Vmcore dump level is %d" % dump_level)
 
         # If dump_level was readable above, then check to see if stripping is worthwhile
-        if (dump_level is not None and
-           (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
+        if (dump_level is not None
+                and (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
             log_info("Stripping to %d would have no effect" % CONFIG["VmcoreDumpLevel"])
             self._has_extra_pages = False
         return self._has_extra_pages
@@ -2078,7 +2078,7 @@ class RetraceTask:
 
         if child.wait():
             log_warn("crash '%s' exited with %d" % (crash_cmdline.replace('\r', '; ').replace('\n', '; '),
-                     child.returncode))
+                                                    child.returncode))
             returncode = child.returncode
 
         return cmd_output, returncode
