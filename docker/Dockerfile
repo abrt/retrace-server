@@ -30,7 +30,7 @@ RUN rm -rf /run/httpd && mkdir /run/httpd && chmod -R a+rwx /run/httpd && \
     sed -i -e"s/Listen\s*80/Listen 8181/i" /etc/httpd/conf/httpd.conf && \
     sed -i -e"s/ErrorLog\s*\"logs\/error_log\"/ErrorLog \"\/var\/log\/retrace-server\/httpd_error_log\"/i" /etc/httpd/conf/httpd.conf && \
     sed -i -e"s/CustomLog\s*\"logs\/access_log\"/CustomLog \"\/var\/log\/retrace-server\/httpd_access_log\"/i" /etc/httpd/conf/httpd.conf && \
-    sed -i -e"s/RequireHTTPS\s*=\s*1/RequireHTTPS = 0/i" /etc/retrace-server.conf && \
+    sed -i -e"s/RequireHTTPS\s*=\s*1/RequireHTTPS = 0/i" /etc/retrace-server/retrace-server.conf && \
     echo "cron =  0 -5 -1 -1 -1 /usr/bin/retrace-server-reposync fedora 28 x86_64" >> /etc/uwsgi.ini && \
     chmod g=u /etc/passwd && \
     mkdir -p /run/uwsgi && \

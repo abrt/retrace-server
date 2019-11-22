@@ -905,7 +905,7 @@ for setting up the base mock environment.
 @chapter Configuration
 
 The following options can be specified in the configuration file
-@file{/etc/retrace-server.conf}:
+@file{/etc/retrace-server/retrace-server.conf}:
 
 @itemize
 @item

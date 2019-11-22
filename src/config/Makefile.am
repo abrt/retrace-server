@@ -1,5 +1,5 @@
 retraceconf_DATA = retrace-server.conf
-retraceconfdir = ${sysconfdir}
+retraceconfdir = ${sysconfdir}/retrace-server
 
 httpdconf_DATA = retrace-server-httpd.conf
 httpdconfdir = ${sysconfdir}/httpd/conf.d

@@ -35,8 +35,8 @@ RUN rpm -Uvh noarch/retrace-server-* && \
     /usr/libexec/fix-permissions /retrace-server && \
     /usr/libexec/fix-permissions /var/log/retrace-server && \
     /usr/libexec/fix-permissions /var/spool/retrace-server && \
-    sed -i -e"s/AllowTaskManager\s*=\s*0/AllowTaskManager = 1/i" /etc/retrace-server.conf && \
-    sed -i -e"s/RequireGPGCheck\s*=\s*1/RequireGPGCheck = 0/i" /etc/retrace-server.conf && \
+    sed -i -e"s/AllowTaskManager\s*=\s*0/AllowTaskManager = 1/i" /etc/retrace-server/retrace-server.conf && \
+    sed -i -e"s/RequireGPGCheck\s*=\s*1/RequireGPGCheck = 0/i" /etc/retrace-server/retrace-server.conf && \
     mkdir /var/tmp/local_repo && \
     dnf --releasever=$fedoraversion --enablerepo=\*debuginfo\* -y --installroot=/var/tmp/local_repo/ \
     download --resolve --destdir /var/tmp/local_repo/ abrt-addon-ccpp shadow-utils \
