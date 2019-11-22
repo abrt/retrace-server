@@ -1,3 +1,5 @@
+SUBDIRS = hooks
+
 retracelib_PYTHON = \
     __init__.py \
     argparser.py \

@@ -25,7 +25,6 @@ class Config(object):
         def __init__(self):
             self.conf_file_read = False
 
-        HOOK_SCRIPTS = {}
         ARCH_HOSTS = {}
 
         GLOBAL = {
@@ -121,15 +120,6 @@ class Config(object):
                     host = host.strip()
                     if host:
                         self.ARCH_HOSTS[arch] = host
-
-            if "hookscripts" in parser.sections():
-                for hook, script in parser.items("hookscripts"):
-                    script = script.strip()
-                    if script:
-                        self.HOOK_SCRIPTS[hook] = script
-
-        def get_hook_scripts(self):
-            return self.HOOK_SCRIPTS
 
         def get_arch_hosts(self):
             return self.ARCH_HOSTS
