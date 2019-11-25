@@ -93,15 +93,15 @@ class RetraceHook:
                 script = shlex.quote(f"{script} {hook_cmdline}")
 
             script = shlex.split(script)
-            child = run(script, shell=True, timeout=timeout, cwd=hook_path,
-                        stdout=PIPE, stderr=PIPE, encoding='utf-8')
 
             try:
+                child = run(script, shell=True, timeout=timeout, cwd=hook_path,
+                            stdout=PIPE, stderr=PIPE, encoding='utf-8')
                 child.check_returncode()
             except TimeoutExpired:
-                log_error(f"Hook script '{exc.name}' timed out ({timeout}s).")
+                log_error(f"Hook script '{exc.name}' timed out in {timeout} seconds.")
             except CalledProcessError:
-                log_error(f"Hook script failed with exit status {child.returncode}.")
+                log_error(f"Hook script '{exc.name}' failed with exit status {child.returncode}.")
 
             if child.stdout:
                 log_info(child.stdout)
