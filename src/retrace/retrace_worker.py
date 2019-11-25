@@ -53,6 +53,10 @@ class RetraceWorker(object):
         if self.logging_handler is None:
             self.logging_handler = logging.FileHandler(
                 self.task._get_file_path(RetraceTask.LOG_FILE))
+
+        formatter = logging.Formatter(fmt="[%(asctime)s] [%(levelname)-.1s] %(message)s",
+                                      datefmt="%Y-%m-%d %H:%M:%S")
+        self.logging_handler.setFormatter(formatter)
         logger.addHandler(self.logging_handler)
 
     def end_logging(self):

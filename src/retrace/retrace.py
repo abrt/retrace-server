@@ -184,27 +184,23 @@ class RetraceWorkerError(RetraceError):
         self.errorcode = errorcode
 
 
-def now():
-    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-
 logger = logging.getLogger(__name__)
 
 
 def log_info(msg):
-    logger.info("%23s %s" % (now(), msg))
+    logger.info(msg)
 
 
 def log_debug(msg):
-    logger.debug("%22s %s" % (now(), msg))
+    logger.debug(msg)
 
 
 def log_warn(msg):
-    logger.warn("%20s %s" % (now(), msg))
+    logger.warn(msg)
 
 
 def log_error(msg):
-    logger.error("%22s %s" % (now(), msg))
+    logger.error(msg)
 
 
 def lock(lockfile):
