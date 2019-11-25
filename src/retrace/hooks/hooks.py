@@ -93,7 +93,8 @@ class RetraceHook:
                 script = shlex.quote(f"{script} {hook_cmdline}")
 
             script = shlex.split(script)
-            child = run(script, shell=True, timeout=timeout, stdout=PIPE, stderr=PIPE, encoding='utf-8')
+            child = run(script, shell=True, timeout=timeout, cwd=hook_path,
+                        stdout=PIPE, stderr=PIPE, encoding='utf-8')
 
             try:
                 child.check_returncode()
