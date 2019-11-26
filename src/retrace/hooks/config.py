@@ -5,8 +5,9 @@ import configparser
 MAIN_CONFIG_PATH = "/etc/retrace-server/"
 MAIN_HOOK_CONFIG_FILE = "retrace-server-hooks.conf"
 MAIN_HOOK_CONFIGS_PATH = "/etc/retrace-server/hooks"
-HOOK_PATH = "/usr/share/retrace-server/hooks/"
+HOOK_PATH = "/usr/libexec/retrace-server/hooks/"
 HOOK_TIMEOUT = 300
+
 
 def get_config_files(directory):
     return [fname for fname in [os.path.abspath(os.path.join(directory, filename.name))
