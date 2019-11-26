@@ -1,7 +1,10 @@
 #!/usr/bin/python3
 
+import itertools
+import multiprocessing as mp
 import os
 import shlex
+
 from subprocess import PIPE, CalledProcessError, run, TimeoutExpired
 
 from retrace.retrace import log_info, log_error, log_debug
@@ -40,7 +43,7 @@ def get_executables(path):
     with os.scandir(path) as dirls:
         for entry in sorted(dirls, key=_getname):
             if entry.is_file() and os.access(entry.path, os.X_OK):
-                script_list.append(entry)
+                script_list.append(entry.path)
 
     return script_list
 
@@ -78,32 +81,39 @@ class RetraceHook:
 
         return int(timeout)
 
+    def _process_script(self, hook, hook_path, timeout, exc_path):
+        exc = os.path.basename(exc_path)
+        script = exc_path
+
+        log_debug(f"Running '{hook}' hook - script '{exc}'")
+        hook_cmdline = self._get_cmdline(hook, exc)
+
+        if hook_cmdline:
+            script = shlex.quote(f"{script} {hook_cmdline}")
+
+        script = shlex.split(script)
+
+        try:
+            child = run(script, shell=True, timeout=timeout, cwd=hook_path,
+                        stdout=PIPE, stderr=PIPE, encoding='utf-8')
+            child.check_returncode()
+        except TimeoutExpired:
+            log_error(f"Hook script '{exc}' timed out in {timeout} seconds.")
+        except CalledProcessError:
+            log_error(f"Hook script '{exc}' failed with exit status {child.returncode}.")
+
+        if child.stdout:
+            log_info(child.stdout)
+        if child.stderr:
+            log_error(child.stderr)
+
     def run(self, hook):
         """Called by the default hook implementations"""
         hook_path = os.path.join(self._get_hookdir(), hook)
         executables = get_executables(hook_path)
         timeout = self._get_timeout(hook)
 
-        for exc in executables:
-            log_debug(f"Running '{hook}' hook - script '{exc.name}'")
-            script = exc.path
-            hook_cmdline = self._get_cmdline(hook, exc.name)
+        params = itertools.product([hook], [hook_path], [timeout], executables)
 
-            if hook_cmdline:
-                script = shlex.quote(f"{script} {hook_cmdline}")
-
-            script = shlex.split(script)
-
-            try:
-                child = run(script, shell=True, timeout=timeout, cwd=hook_path,
-                            stdout=PIPE, stderr=PIPE, encoding='utf-8')
-                child.check_returncode()
-            except TimeoutExpired:
-                log_error(f"Hook script '{exc.name}' timed out in {timeout} seconds.")
-            except CalledProcessError:
-                log_error(f"Hook script '{exc.name}' failed with exit status {child.returncode}.")
-
-            if child.stdout:
-                log_info(child.stdout)
-            if child.stderr:
-                log_error(child.stderr)
+        with mp.Pool() as hook_pool:
+            hook_pool.starmap(self._process_script, params)
