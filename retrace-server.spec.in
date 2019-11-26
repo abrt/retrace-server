@@ -164,6 +164,13 @@ fi
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}-httpd.conf
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}-hooks.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/debuginfo.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/fail.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/mock.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/retrace.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/start.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/success.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/task.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}/kernel
@@ -171,7 +178,7 @@ fi
 %dir %attr(0750,retrace,retrace) %{_localstatedir}/log/%{name}
 %dir %attr(0770,retrace,retrace) %{_localstatedir}/spool/%{name}
 %dir %{_sysconfdir}/%{name}
-%{_sysconfdir}/%{name}/hooks/
+%dir %{_sysconfdir}/%{name}/hooks/
 %{_bindir}/%{name}-worker
 %{_bindir}/%{name}-interact
 %{_bindir}/%{name}-cleanup
