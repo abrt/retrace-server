@@ -97,15 +97,23 @@ class RetraceHook:
             child = run(script, shell=True, timeout=timeout, cwd=hook_path,
                         stdout=PIPE, stderr=PIPE, encoding='utf-8')
             child.check_returncode()
-        except TimeoutExpired:
-            log_error(f"Hook script '{exc}' timed out in {timeout} seconds.")
-        except CalledProcessError:
-            log_error(f"Hook script '{exc}' failed with exit status {child.returncode}.")
-
-        if child.stdout:
-            log_info(child.stdout)
-        if child.stderr:
-            log_error(child.stderr)
+        except TimeoutExpired as ex:
+            if ex.stdout:
+                log_info(ex.stdout)
+            if ex.stderr:
+                log_error(ex.stderr)
+            log_error(f"Hook script '{exc}' timed out in {ex.timeout} seconds.")
+        except CalledProcessError as ex:
+            if ex.stdout:
+                log_info(ex.stdout)
+            if ex.stderr:
+                log_error(ex.stderr)
+            log_error(f"Hook script '{exc}' failed with exit status {ex.returncode}.")
+        else:
+            if child.stdout:
+                log_info(child.stdout)
+            if child.stderr:
+                log_error(child.stderr)
 
     def run(self, hook):
         """Called by the default hook implementations"""
