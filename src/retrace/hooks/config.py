@@ -1,10 +1,13 @@
 #!/bin/python3
 import os
 import configparser
+from pathlib import Path
 
 MAIN_CONFIG_PATH = "/etc/retrace-server/"
 MAIN_HOOK_CONFIG_FILE = "retrace-server-hooks.conf"
 MAIN_HOOK_CONFIGS_PATH = "/etc/retrace-server/hooks"
+USER_CONFIG_PATH = Path.home() / ".config/retrace-server/"
+USER_HOOK_CONFIGS_PATH = Path.home() / ".config/retrace-server/hooks"
 HOOK_PATH = "/usr/libexec/retrace-server/hooks/"
 HOOK_TIMEOUT = 300
 
@@ -28,9 +31,19 @@ def load_config_files(config_files):
 
 
 def load_hook_config():
-    main_hook_config_file = [os.path.join(MAIN_CONFIG_PATH, MAIN_HOOK_CONFIG_FILE)]
-    hook_configs = get_config_files(MAIN_HOOK_CONFIGS_PATH)
-    cfgs = load_config_files(hook_configs + main_hook_config_file)
+    hook_configs = []
+    hook_configs += get_config_files(MAIN_HOOK_CONFIGS_PATH)
+
+    main_hook_config_file = Path(MAIN_CONFIG_PATH, MAIN_HOOK_CONFIG_FILE)
+    hook_configs.append(str(main_hook_config_file))
+
+    if USER_HOOK_CONFIGS_PATH.exists():
+        hook_configs += get_config_files(USER_HOOK_CONFIGS_PATH)
+
+    if USER_CONFIG_PATH.exists():
+        hook_configs.append(str(USER_CONFIG_PATH))
+
+    cfgs = load_config_files(hook_configs)
 
     return cfgs
 
