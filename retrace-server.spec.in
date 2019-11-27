@@ -142,15 +142,6 @@ then
      echo %{retrace_crontab_entry5}; echo %{retrace_crontab_entry6};) | crontab -u retrace - 2> /dev/null
 fi
 
-if [ "$1" = 2 ]
-then
-    if [ -f "%{_sysconfdir}/%{name}.conf" ]
-    then
-        mv "%{_sysconfdir}/%{name}/%{name}.conf" "%{_sysconfdir}/%{name}/%{name}.conf.rpmnew"
-        cp -a "%{_sysconfdir}/%{name}.conf" "%{_sysconfdir}/%{name}/%{name}.conf"
-    fi
-fi
-
 %preun
 if [ "$1" = 0 ]
 then
