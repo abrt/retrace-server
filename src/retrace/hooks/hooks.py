@@ -73,20 +73,24 @@ class RetraceHook:
 
         return hooks_path
 
-    def _get_timeout(self, hook):
+    def _get_timeout(self, hook, exc=None):
         timeout = hooks_config.get("main.timeout", HOOK_TIMEOUT)
 
         if f"{hook}.timeout" in hooks_config:
             timeout = hooks_config.get(f"{hook}.timeout", timeout)
 
+        if exc and f"{hook}.{exc}.timeout" in hooks_config:
+            timeout = hooks_config.get(f"{hook}.{exc}.timeout", timeout)
+
         return int(timeout)
 
-    def _process_script(self, hook, hook_path, timeout, exc_path):
+    def _process_script(self, hook, hook_path, exc_path):
         exc = os.path.basename(exc_path)
         script = exc_path
 
         log_debug(f"Running '{hook}' hook - script '{exc}'")
         hook_cmdline = self._get_cmdline(hook, exc)
+        hook_timeout = self._get_timeout(hook, exc)
 
         if hook_cmdline:
             script = shlex.quote(f"{script} {hook_cmdline}")
@@ -94,7 +98,7 @@ class RetraceHook:
         script = shlex.split(script)
 
         try:
-            child = run(script, shell=True, timeout=timeout, cwd=hook_path,
+            child = run(script, shell=True, timeout=hook_timeout, cwd=hook_path,
                         stdout=PIPE, stderr=PIPE, encoding='utf-8')
             child.check_returncode()
         except TimeoutExpired as ex:
@@ -119,9 +123,8 @@ class RetraceHook:
         """Called by the default hook implementations"""
         hook_path = os.path.join(self._get_hookdir(), hook)
         executables = get_executables(hook_path)
-        timeout = self._get_timeout(hook)
 
-        params = itertools.product([hook], [hook_path], [timeout], executables)
+        params = itertools.product([hook], [hook_path], executables)
 
         with mp.Pool() as hook_pool:
             hook_pool.starmap(self._process_script, params)
