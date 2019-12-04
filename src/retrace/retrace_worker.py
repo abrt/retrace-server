@@ -44,7 +44,7 @@ sys.path.insert(0, "/usr/share/retrace-server/")
 CONFIG = Config()
 
 
-class RetraceWorker(object):
+class RetraceWorker():
     def __init__(self, task):
         self.plugins = Plugins()
         self.task = task
@@ -896,9 +896,8 @@ class RetraceWorker(object):
                 # If log < 1024 bytes, probably it is not useful so fail task
                 raise Exception("Failing task due to crash exiting with non-zero status and "
                                 "small kernellog size = %d bytes" % len(kernellog))
-            else:
-                # If log is 1024 bytes or above, try 'crash --minimal'
-                task.set_crash_cmd("crash --minimal")
+            # If log is 1024 bytes or above, try 'crash --minimal'
+            task.set_crash_cmd("crash --minimal")
 
         crashrc_lines = []
 
@@ -908,7 +907,7 @@ class RetraceWorker(object):
         results_dir = task.get_results_dir()
         crashrc_lines.append("cd %s" % results_dir)
 
-        if len(crashrc_lines) > 0:
+        if crashrc_lines:
             task.set_crashrc("%s\n" % "\n".join(crashrc_lines))
 
         self.hook.run("post_retrace")

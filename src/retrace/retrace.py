@@ -14,13 +14,13 @@ import stat
 import sys
 import time
 import hashlib
-import magic
+import urllib
 from signal import getsignal, signal, SIG_DFL, SIGPIPE
 from subprocess import PIPE, STDOUT, call, Popen, TimeoutExpired
+import magic
 
 from dnf.subject import Subject
 from hawkey import FORM_NEVRA
-import urllib
 from .config import Config, TAR_BIN, XZ_BIN, GZIP_BIN, DU_BIN, DF_BIN
 
 GETTEXT_DOMAIN = "retrace-server"
@@ -206,10 +206,9 @@ def lock(lockfile):
     try:
         fd = os.open(lockfile, os.O_CREAT | os.O_EXCL, 0o600)
     except OSError as ex:
-        if ex[0] == errno.EEXIST:
+        if ex.errno == errno.EEXIST:
             return False
-        else:
-            raise ex
+        raise ex
 
     os.close(fd)
     return True
@@ -274,18 +273,18 @@ def guess_arch(coredump_path):
     if match:
         if match.group(1) == "80386":
             return "i386"
-        elif match.group(1) == "x86-64":
+        if match.group(1) == "x86-64":
             return "x86_64"
-        elif match.group(1) == "ARM":
+        if match.group(1) == "ARM":
             # hack - There is no reliable way to determine which ARM
             # version the coredump is. At the moment we only support
             # armv7hl / armhfp - let's approximate arm = armhfp
             return "armhfp"
-        elif match.group(1) == "aarch64":
+        if match.group(1) == "aarch64":
             return "aarch64"
-        elif match.group(1) == "IBM S/390":
+        if match.group(1) == "IBM S/390":
             return "s390x"
-        elif match.group(1) == "64-bit PowerPC":
+        if match.group(1) == "64-bit PowerPC":
             if "LSB" in output:
                 return "ppc64le"
 
@@ -412,19 +411,19 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None):
                            "2>&1"], stdout=PIPE, stderr=null, encoding='utf-8')
 
         elif CONFIG["RetraceEnvironment"] == "podman":
+            podman_build_call = ["/usr/bin/podman", "build", "--file",
+                                 os.path.join(savedir, RetraceTask.DOCKERFILE),
+                                 "--volume=%s:%s:ro" % (repopath, repopath)]
             if CONFIG["UseFafPackages"]:
                 log_debug("Using FAF repository '%s'" % fafrepo)
-                build_image = call(["/usr/bin/podman",
-                                    "build",
-                                    "--file",
-                                    os.path.join(savedir, RetraceTask.DOCKERFILE),
-                                    "--volume=%s:%s:ro" % (repopath, repopath),
-                                    "--volume=%s:/var/spool/abrt/faf-packages" % fafrepo,
-                                    "--tag",
-                                    "retrace-image"],
-                                   stdout=null, stderr=null)
-                if build_image:
-                    raise Exception("Unable to build podman container")
+                podman_build_call.append("--volume=%s:/var/spool/abrt/faf-packages" % fafrepo)
+            podman_build_call.extend(["--tag", "retrace-image"])
+
+            build_image = call(podman_build_call, stdout=null, stderr=null)
+            if build_image:
+                raise Exception("Unable to build podman container")
+
+            if CONFIG["UseFafPackages"]:
                 child = Popen(["/usr/bin/podman",
                                "run",
                                "-it",
@@ -444,16 +443,6 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None):
                 child = Popen(["/usr/bin/podman", "exec", container_id,
                                "/var/spool/abrt/gdb.sh"], stdout=PIPE, stderr=PIPE, encoding='utf-8')
             else:
-                build_image = call(["/usr/bin/podman",
-                                    "build",
-                                    "--file",
-                                    os.path.join(savedir, RetraceTask.DOCKERFILE),
-                                    "--volume=%s:%s:ro" % (repopath, repopath),
-                                    "--tag",
-                                    "retrace-image"],
-                                   stdout=null, stderr=null)
-                if build_image:
-                    raise Exception("Unable to build podman container")
                 child = Popen(["/usr/bin/podman", "run", "-it", "--volume=%s:%s:ro" % (repopath, repopath),
                                "retrace-image"], stdout=PIPE, stderr=PIPE, encoding='utf-8')
         else:
@@ -522,6 +511,7 @@ def is_package_known(package_nvr, arch, releaseid=None):
     if CONFIG["UseFafPackages"]:
         from pyfaf.storage import getDatabase
         from pyfaf.queries import get_package_by_nevra
+
         db = getDatabase()
         (n, v, r, e, _a) = splitFilename(package_nvr+".mockarch.rpm")
         for derived_archs in ARCH_MAP.values():
@@ -546,21 +536,21 @@ def is_package_known(package_nvr, arch, releaseid=None):
 
     candidates = []
     package_nvr = remove_epoch(package_nvr)
-    for releaseid in releases:
+    for release in releases:
         for derived_archs in ARCH_MAP.values():
             if arch not in derived_archs:
                 continue
 
             for a in derived_archs:
-                candidates.append(os.path.join(CONFIG["RepoDir"], releaseid, "Packages",
+                candidates.append(os.path.join(CONFIG["RepoDir"], release, "Packages",
                                                "%s.%s.rpm" % (package_nvr, a)))
-                candidates.append(os.path.join(CONFIG["RepoDir"], releaseid,
+                candidates.append(os.path.join(CONFIG["RepoDir"], release,
                                                "%s.%s.rpm" % (package_nvr, a)))
             break
         else:
-            candidates.append(os.path.join(CONFIG["RepoDir"], releaseid, "Packages",
+            candidates.append(os.path.join(CONFIG["RepoDir"], release, "Packages",
                                            "%s.%s.rpm" % (package_nvr, arch)))
-            candidates.append(os.path.join(CONFIG["RepoDir"], releaseid,
+            candidates.append(os.path.join(CONFIG["RepoDir"], release,
                                            "%s.%s.rpm" % (package_nvr, arch)))
 
     return any([os.path.isfile(f) for f in candidates])
@@ -591,8 +581,7 @@ def find_kernel_debuginfo(kernelver):
                 if p.has_lob("package"):
                     log_debug("LOB location {0}".format(p.get_lob_path("package")))
                     return p.get_lob_path("package")
-                else:
-                    log_debug("LOB not found {0}".format(p.get_lob_path("package")))
+                log_debug("LOB not found {0}".format(p.get_lob_path("package")))
 
     # search for the debuginfo RPM
     ver = None
@@ -694,23 +683,23 @@ def get_archive_type(path):
     if "bzip2 compressed data" in filetype:
         log_debug("bzip2 detected")
         return ARCHIVE_BZ2
-    elif "gzip compressed data" in filetype or \
+    if "gzip compressed data" in filetype or \
          "compress'd data" in filetype:
         log_debug("gzip detected")
         return ARCHIVE_GZ
-    elif "xz compressed data" in filetype:
+    if "xz compressed data" in filetype:
         log_debug("xz detected")
         return ARCHIVE_XZ
-    elif "7-zip archive data" in filetype:
+    if "7-zip archive data" in filetype:
         log_debug("7-zip detected")
         return ARCHIVE_7Z
-    elif "zip archive data" in filetype:
+    if "zip archive data" in filetype:
         log_debug("zip detected")
         return ARCHIVE_ZIP
-    elif "tar archive" in filetype:
+    if "tar archive" in filetype:
         log_debug("tar detected")
         return ARCHIVE_TAR
-    elif "lzop compressed data" in filetype:
+    if "lzop compressed data" in filetype:
         log_debug("lzop detected")
         return ARCHIVE_LZOP
 
@@ -909,7 +898,7 @@ def get_md5_tasks():
         else:
             status = task.get_status()
 
-        if status != STATUS_SUCCESS and status != STATUS_FAIL:
+        if status not in (STATUS_SUCCESS, STATUS_FAIL):
             continue
 
         if not task.has_finished_time():
@@ -1118,7 +1107,7 @@ def send_email(frm, to, subject, body):
 
 def ftp_init():
     if CONFIG["FTPSSL"]:
-        ftp = ftplib.FTP_SSL(CONFIG["FTPHost"])
+        ftp = ftplib.FTP_TLS(CONFIG["FTPHost"])
         ftp.prot_p()
     else:
         ftp = ftplib.FTP(CONFIG["FTPHost"])
@@ -1180,8 +1169,8 @@ def move_dir_contents(source, dest):
     shutil.rmtree(source)
 
 
-def human_readable_size(bytes):
-    size = float(bytes)
+def human_readable_size(bytesize):
+    size = float(bytesize)
     unit = 0
     while size > 1024.0 and unit < len(UNITS) - 1:
         unit += 1
@@ -1190,7 +1179,7 @@ def human_readable_size(bytes):
     return "%.2f %s" % (size, UNITS[unit])
 
 
-class KernelVer(object):
+class KernelVer():
     FLAVOUR = ["debug", "highbank", "hugemem",
                "kirkwood", "largesmp", "PAE", "omap",
                "smp", "tegra", "xen", "xenU"]
@@ -1306,8 +1295,8 @@ class KernelVMcore:
         return self._is_flattened_format
 
     def convert_flattened_format(self):
-        """Convert a vmcore in makedumpfile flattened format to normal dumpfile format"""
-        """Returns True if conversion has been done and was successful"""
+        """Convert a vmcore in makedumpfile flattened format to normal dumpfile format
+        Returns True if conversion has been done and was successful"""
         if not self._is_flattened_format:
             log_error("Cannot convert a non-flattened vmcore")
             return False
@@ -1482,8 +1471,7 @@ class KernelVMcore:
             log_error("Failed to get kernel release from file %s" %
                       self._vmcore_path)
             return None
-        else:
-            release = release.rstrip('\0 \t\n')
+        release = release.rstrip('\0 \t\n')
 
         # check whether architecture is present
         try:
@@ -1565,9 +1553,8 @@ class KernelVMcore:
         if not debuginfo:
             if vmlinux is not None:
                 return vmlinux
-            else:
-                raise Exception("Unable to find debuginfo package and "
-                                "no cached vmlinux file")
+            raise Exception("Unable to find debuginfo package and "
+                            "no cached vmlinux file")
 
         # FIXME: Merge kernel_path with this logic
         if "EL" in kernelver.release:
@@ -1713,7 +1700,7 @@ class RetraceTask:
                     os.mkdir(taskdir)
                 except OSError as ex:
                     # dir exists, try another taskid
-                    if ex[0] == errno.EEXIST:
+                    if ex.errno == errno.EEXIST:
                         continue
                     # error - re-raise original exception
                     else:
@@ -1857,7 +1844,7 @@ class RetraceTask:
             try:
                 shutil.copyfile(filename, tmpfilename)
             except IOError as ex:
-                if ex[0] != errno.ENOENT:
+                if ex.errno != errno.ENOENT:
                     raise
 
         with open(tmpfilename, mode) as f:
@@ -1905,8 +1892,7 @@ class RetraceTask:
                     return True
 
             return False
-        else:
-            return self.has_status() and self.get_status() not in [STATUS_SUCCESS, STATUS_FAIL]
+        return self.has_status() and self.get_status() not in [STATUS_SUCCESS, STATUS_FAIL]
 
     def get_age(self):
         """Returns the age of the task in hours."""
@@ -2258,7 +2244,7 @@ class RetraceTask:
                     move_dir_contents(fullpath, crashdir)
 
             files = os.listdir(crashdir)
-            if len(files) < 1:
+            if not files:
                 errors.append(([], "No files found in the tarball"))
             elif len(files) == 1:
                 if files[0] != "vmcore":
@@ -2270,7 +2256,7 @@ class RetraceTask:
                         vmcores.append(filename)
 
                 # pick the largest file
-                if len(vmcores) < 1:
+                if not vmcores:
                     absfiles = [os.path.join(crashdir, f) for f in files]
                     files_sizes = [(os.path.getsize(f), f) for f in absfiles]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
@@ -2302,7 +2288,7 @@ class RetraceTask:
                     move_dir_contents(fullpath, crashdir)
 
             files = os.listdir(crashdir)
-            if len(files) < 1:
+            if not files:
                 errors.append(([], "No files found in the tarball"))
             elif len(files) == 1:
                 if files[0] != "coredump":
@@ -2314,7 +2300,7 @@ class RetraceTask:
                         coredumps.append(filename)
 
                 # pick the largest file
-                if len(coredumps) < 1:
+                if not coredumps:
                     absfiles = [os.path.join(crashdir, f) for f in files]
                     files_sizes = [(os.path.getsize(f), f) for f in absfiles]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
