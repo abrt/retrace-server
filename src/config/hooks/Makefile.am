@@ -1,6 +1,6 @@
 retracehooks_DATA = debuginfo.conf \
                     fail.conf \
-                    mock.conf \
+                    environment.conf \
                     retrace.conf \
                     start.conf \
                     success.conf \
