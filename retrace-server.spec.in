@@ -158,7 +158,7 @@ fi
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}-hooks.conf
 %config(noreplace) %{_sysconfdir}/%{name}/hooks/debuginfo.conf
 %config(noreplace) %{_sysconfdir}/%{name}/hooks/fail.conf
-%config(noreplace) %{_sysconfdir}/%{name}/hooks/mock.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/environment.conf
 %config(noreplace) %{_sysconfdir}/%{name}/hooks/retrace.conf
 %config(noreplace) %{_sysconfdir}/%{name}/hooks/start.conf
 %config(noreplace) %{_sysconfdir}/%{name}/hooks/success.conf
