@@ -402,7 +402,7 @@ class RetraceWorker(object):
         packages, missing, self.fafrepo = self.read_packages(crashdir, releaseid, crash_package, distribution)
 
         self.hook.run("post_prepare_debuginfo")
-        self.hook.run("pre_prepare_mock")
+        self.hook.run("pre_prepare_environment")
 
         # create mock config file
         try:
@@ -469,7 +469,7 @@ class RetraceWorker(object):
         self._retrace_run(25, ["/usr/bin/mock", "init", "--resultdir", task.get_savedir() + "/log", "--configdir",
                           task.get_savedir()])
 
-        self.hook.run("post_prepare_mock")
+        self.hook.run("post_prepare_environment")
         self.hook.run("pre_retrace")
 
         if CONFIG["UseFafPackages"]:
@@ -633,7 +633,7 @@ class RetraceWorker(object):
         vmlinux = ""
 
         if task.get_mock():
-            self.hook.run("post_prepare_mock")
+            self.hook.run("post_prepare_environment")
 
             # we don't save config into task.get_savedir() because it is only
             # readable by user/group retrace/CONFIG["AuthGroup"].
@@ -707,7 +707,7 @@ class RetraceWorker(object):
             if child.wait():
                 raise Exception("mock exited with %d:\n%s" % (child.returncode, stdout))
 
-            self.hook.run("post_prepare_mock")
+            self.hook.run("post_prepare_environment")
 
             # no locks required, mock locks itself
             try:

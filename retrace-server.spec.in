@@ -93,8 +93,8 @@ mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/pre_start
 mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/start
 mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/pre_prepare_debuginfo
 mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/post_prepare_debuginfo
-mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/pre_prepare_mock
-mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/post_prepare_mock
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/pre_prepare_environment
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/post_prepare_environment
 mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/pre_retrace
 mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/post_retrace
 mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/success

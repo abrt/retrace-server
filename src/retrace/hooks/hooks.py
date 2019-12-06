@@ -16,8 +16,8 @@ from .config import HOOK_PATH, HOOK_TIMEOUT, hooks_config
     start -- When task type is determined and the main task starts
     pre_prepare_debuginfo -- Before the preparation of debuginfo packages
     post_prepare_debuginfo -- After the preparation of debuginfo packages
-    pre_prepare_mock -- Before the preparation of mock environment
-    post_prepare_mock -- After the preparation of mock environment
+    pre_prepare_environment -- Before the preparation of retrace environment
+    post_prepare_environment -- After the preparation of retrace environment
     pre_retrace -- Before starting of the retracing itself
     post_retrace -- After retracing is done
     success -- After retracing success
