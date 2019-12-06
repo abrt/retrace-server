@@ -9,6 +9,7 @@ import shutil
 import stat
 from subprocess import Popen, PIPE, STDOUT
 
+from retrace.hooks.hooks import RetraceHook
 from .retrace import (ALLOWED_FILES, INPUT_PACKAGE_PARSER, REPO_PREFIX, REQUIRED_FILES,
                       STATUS, STATUS_ANALYZE, STATUS_BACKTRACE, STATUS_CLEANUP,
                       STATUS_FAIL, STATUS_INIT, STATUS_STATS, STATUS_SUCCESS,
@@ -37,6 +38,7 @@ from .retrace import (ALLOWED_FILES, INPUT_PACKAGE_PARSER, REPO_PREFIX, REQUIRED
                       send_email)
 from .config import Config
 from .plugins import Plugins
+
 sys.path.insert(0, "/usr/share/retrace-server/")
 
 CONFIG = Config()
@@ -48,6 +50,7 @@ class RetraceWorker(object):
         self.task = task
         self.logging_handler = None
         self.fafrepo = None
+        self.hook = RetraceHook(task)
 
     def begin_logging(self):
         if self.logging_handler is None:
@@ -63,78 +66,6 @@ class RetraceWorker(object):
         if self.logging_handler is not None:
             logger.removeHandler(self.logging_handler)
 
-    def hook_universal(self, hook):
-        """Called by the default hook implementations"""
-        HOOK_SCRIPTS = CONFIG.get_hook_scripts()
-        if hook in HOOK_SCRIPTS:
-            results_dir = self.task.get_results_dir()
-            script = HOOK_SCRIPTS[hook].format(
-                hook_name=hook, task_id=self.task.get_taskid(),
-                task_results_dir=results_dir)
-            log_info("Running hook {0} '{1}'".format(hook, script))
-            child = Popen(script, shell=True, stdout=PIPE, stderr=PIPE, encoding='utf-8')
-            (out, err) = child.communicate()
-            if out:
-                log_info(out)
-            if err:
-                log_error(err)
-            child.wait()
-
-    def hook_pre_start(self):
-        """When self.start() is called"""
-        self.hook_universal("pre_start")
-
-    def hook_start(self):
-        """When task type is determined and the main task starts"""
-        self.hook_universal("start")
-
-    def hook_pre_prepare_debuginfo(self):
-        """Before the preparation of debuginfo packages"""
-        self.hook_universal("pre_prepare_debuginfo")
-
-    def hook_post_prepare_debuginfo(self):
-        """After the preparation of debuginfo packages"""
-        self.hook_universal("post_prepare_debuginfo")
-
-    def hook_pre_prepare_mock(self):
-        """Before the preparation of mock environment"""
-        self.hook_universal("pre_prepare_mock")
-
-    def hook_post_prepare_mock(self):
-        """After the preparation of mock environment"""
-        self.hook_universal("post_prepare_mock")
-
-    def hook_pre_retrace(self):
-        """Before starting of the retracing itself"""
-        self.hook_universal("pre_retrace")
-
-    def hook_post_retrace(self):
-        """After retracing is done"""
-        self.hook_universal("post_retrace")
-
-    def hook_success(self):
-        """After retracing success"""
-        self.hook_universal("success")
-
-    def hook_fail(self, errorcode):
-        """After retracing fails"""
-        self.hook_universal("fail")
-
-    def hook_pre_remove_task(self):
-        """Before removing task"""
-        self.hook_universal("pre_remove_task")
-
-    def hook_post_remove_task(self):
-        """After removing task"""
-        self.hook_universal("post_remove_task")
-
-    def hook_pre_clean_task(self):
-        """Before cleaning task"""
-        self.hook_universal("pre_clean_task")
-
-    def hook_post_clean_task(self):
-        """After cleaning task"""
-        self.hook_universal("post_clean_task")
 
     def notify_email(self):
         task = self.task
@@ -234,7 +165,7 @@ class RetraceWorker(object):
         if not task.get_type() in [TASK_DEBUG, TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
             self.clean_task()
 
-        self.hook_fail(errorcode)
+        self.hook.run("fail")
 
         raise RetraceWorkerError(errorcode=errorcode)
 
@@ -434,7 +365,7 @@ class RetraceWorker(object):
         return (packages, missing, fafrepo)
 
     def start_retrace(self, custom_arch=None):
-        self.hook_start()
+        self.hook.run("start")
 
         task = self.task
         crashdir = os.path.join(task.get_savedir(), "crash")
@@ -466,12 +397,12 @@ class RetraceWorker(object):
             log_error("Package '%s.%s' was not recognized.\nIs it a part of "
                       "official %s repositories?" % (crash_package, arch, release))
             self._fail()
-        self.hook_pre_prepare_debuginfo()
+        self.hook.run("pre_prepare_debuginfo")
 
         packages, missing, self.fafrepo = self.read_packages(crashdir, releaseid, crash_package, distribution)
 
-        self.hook_post_prepare_debuginfo()
-        self.hook_pre_prepare_mock()
+        self.hook.run("post_prepare_debuginfo")
+        self.hook.run("pre_prepare_environment")
 
         # create mock config file
         try:
@@ -538,8 +469,8 @@ class RetraceWorker(object):
         self._retrace_run(25, ["/usr/bin/mock", "init", "--resultdir", task.get_savedir() + "/log", "--configdir",
                           task.get_savedir()])
 
-        self.hook_post_prepare_mock()
-        self.hook_pre_retrace()
+        self.hook.run("post_prepare_environment")
+        self.hook.run("pre_retrace")
 
         if CONFIG["UseFafPackages"]:
             self._retrace_run(26, ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell", "--",
@@ -562,7 +493,7 @@ class RetraceWorker(object):
         if exploitable is not None:
             task.add_results("exploitable", exploitable, mode="w")
 
-        self.hook_post_retrace()
+        self.hook.run("post_retrace")
 
         # does not work at the moment
         rootsize = 0
@@ -599,7 +530,7 @@ class RetraceWorker(object):
         log_info(STATUS[STATUS_SUCCESS])
         task.set_status(STATUS_SUCCESS)
 
-        self.hook_success()
+        self.hook.run("success")
 
         return True
 
@@ -655,7 +586,7 @@ class RetraceWorker(object):
         return s1.st_size
 
     def start_vmcore(self, custom_kernelver=None):
-        self.hook_start()
+        self.hook.run("start")
 
         task = self.task
         vmcore_path = os.path.join(task.get_savedir(), "crash", "vmcore")
@@ -702,7 +633,7 @@ class RetraceWorker(object):
         vmlinux = ""
 
         if task.get_mock():
-            self.hook_post_prepare_mock()
+            self.hook.run("post_prepare_environment")
 
             # we don't save config into task.get_savedir() because it is only
             # readable by user/group retrace/CONFIG["AuthGroup"].
@@ -776,17 +707,17 @@ class RetraceWorker(object):
             if child.wait():
                 raise Exception("mock exited with %d:\n%s" % (child.returncode, stdout))
 
-            self.hook_post_prepare_mock()
+            self.hook.run("post_prepare_environment")
 
             # no locks required, mock locks itself
             try:
-                self.hook_pre_prepare_debuginfo()
+                self.hook.run("pre_prepare_debuginfo")
                 vmlinux = vmcore.prepare_debuginfo(task, cfgdir, kernelver=kernelver)
-                self.hook_post_prepare_debuginfo()
+                self.hook.run("post_prepare_debuginfo")
             except Exception as ex:
                 raise Exception("prepare_debuginfo failed: %s" % str(ex))
 
-            self.hook_pre_retrace()
+            self.hook.run("pre_retrace")
             crash_normal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
                             task.get_crash_cmd() + " -s %s %s" % (vmcore_path, vmlinux)]
             crash_minimal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
@@ -794,13 +725,13 @@ class RetraceWorker(object):
 
         else:
             try:
-                self.hook_pre_prepare_debuginfo()
+                self.hook.run("pre_prepare_debuginfo")
                 vmlinux = vmcore.prepare_debuginfo(task, kernelver=kernelver)
-                self.hook_post_prepare_debuginfo()
+                self.hook.run("post_prepare_debuginfo")
             except Exception as ex:
                 raise Exception("prepare_debuginfo failed: %s" % str(ex))
 
-            self.hook_pre_retrace()
+            self.hook.run("pre_retrace")
             task.set_status(STATUS_BACKTRACE)
             log_info(STATUS[STATUS_BACKTRACE])
 
@@ -860,7 +791,7 @@ class RetraceWorker(object):
         if len(crashrc_lines) > 0:
             task.set_crashrc("%s\n" % "\n".join(crashrc_lines))
 
-        self.hook_post_retrace()
+        self.hook.run("post_retrace")
 
         task.set_finished_time(int(time.time()))
         self.stats["duration"] = int(time.time()) - self.stats["starttime"]
@@ -887,10 +818,10 @@ class RetraceWorker(object):
 
         task.set_status(STATUS_SUCCESS)
         self.notify_email()
-        self.hook_success()
+        self.hook.run("success")
 
     def start(self, kernelver=None, arch=None):
-        self.hook_pre_start()
+        self.hook.run("pre_start")
         self.stats = {
             "taskid": self.task.get_taskid(),
             "package": None,
@@ -945,15 +876,15 @@ class RetraceWorker(object):
             self._fail()
 
     def clean_task(self):
-        self.hook_pre_clean_task()
+        self.hook.run("pre_clean_task")
         if CONFIG["UseFafPackages"] and self.fafrepo:
             shutil.rmtree(self.fafrepo)
         ret = self.task.clean()
-        self.hook_post_clean_task()
+        self.hook.run("post_clean_task")
         return ret
 
     def remove_task(self):
-        self.hook_pre_remove_task()
+        self.hook.run("pre_remove_task")
         ret = self.task.remove()
-        self.hook_post_remove_task()
+        self.hook.run("post_remove_task")
         return ret

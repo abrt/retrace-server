@@ -25,7 +25,6 @@ class Config(object):
         def __init__(self):
             self.conf_file_read = False
 
-        HOOK_SCRIPTS = {}
         ARCH_HOSTS = {}
 
         GLOBAL = {
@@ -90,7 +89,7 @@ class Config(object):
                 self.load()
             return self.GLOBAL[key]
 
-        def load(self, filepath="/etc/retrace-server.conf"):
+        def load(self, filepath="/etc/retrace-server/retrace-server.conf"):
             self.conf_file_read = True
             # if environment variable set, use rather that
             env_config_path = os.environ.get('RETRACE_SERVER_CONFIG_PATH')
@@ -121,15 +120,6 @@ class Config(object):
                     host = host.strip()
                     if host:
                         self.ARCH_HOSTS[arch] = host
-
-            if "hookscripts" in parser.sections():
-                for hook, script in parser.items("hookscripts"):
-                    script = script.strip()
-                    if script:
-                        self.HOOK_SCRIPTS[hook] = script
-
-        def get_hook_scripts(self):
-            return self.HOOK_SCRIPTS
 
         def get_arch_hosts(self):
             return self.ARCH_HOSTS

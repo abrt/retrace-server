@@ -88,7 +88,7 @@
         There also exist a Web UI for assigning retrace task. It can be found
         under `\manager`, but firstly must be enabled in configuration file.
 
-            open /etc/retrace-server.conf
+            open /etc/retrace-server/retrace-server.conf
 
             set `AllowTaskManager = 1`
 
@@ -194,5 +194,5 @@ how to deploy such a server. Each point corresponds with point from section
 
       * You have not enough space in `/usr/lib/mock`
 
-      * A gpg check failed. Set `RequireGPGCheck = 0` in `/etc/retrace-server.conf`
+      * A gpg check failed. Set `RequireGPGCheck = 0` in `/etc/retrace-server/retrace-server.conf`
         and restart httpd.

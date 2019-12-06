@@ -85,7 +85,24 @@ mkdir -p %{buildroot}%{_localstatedir}/cache/%{name}/kernel
 mkdir -p %{buildroot}%{_localstatedir}/cache/%{name}/download
 mkdir -p %{buildroot}%{_localstatedir}/log/%{name}
 mkdir -p %{buildroot}%{_localstatedir}/spool/%{name}
+mkdir -p %{buildroot}%{_sysconfdir}/%{name}
 mkdir -p %{buildroot}%{_datadir}/%{name}
+mkdir -p %{buildroot}%{_libexecdir}/%{name}
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/pre_start
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/start
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/pre_prepare_debuginfo
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/post_prepare_debuginfo
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/pre_prepare_environment
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/post_prepare_environment
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/pre_retrace
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/post_retrace
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/success
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/fail
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/pre_remove_task
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/post_remove_task
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/pre_clean_task
+mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/post_clean_task
 
 %if 0%{?fedora} >= 29
 %py_byte_compile %{__python3} %{buildroot}%{_datadir}/%{name}/plugins
@@ -137,13 +154,23 @@ fi
 
 %files -f %{name}.lang
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}-httpd.conf
-%config(noreplace) %{_sysconfdir}/%{name}.conf
+%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
+%config(noreplace) %{_sysconfdir}/%{name}/%{name}-hooks.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/debuginfo.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/fail.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/mock.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/retrace.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/start.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/success.conf
+%config(noreplace) %{_sysconfdir}/%{name}/hooks/task.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}/kernel
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}/download
 %dir %attr(0750,retrace,retrace) %{_localstatedir}/log/%{name}
 %dir %attr(0770,retrace,retrace) %{_localstatedir}/spool/%{name}
+%dir %{_sysconfdir}/%{name}
+%dir %attr(0775,root,retrace) %{_libexecdir}/%{name}
 %{_bindir}/%{name}-worker
 %{_bindir}/%{name}-interact
 %{_bindir}/%{name}-cleanup
@@ -156,6 +183,7 @@ fi
 %{_bindir}/coredump2packages
 %{python3_sitelib}/retrace/
 %{_datadir}/%{name}/
+%attr(0775,root,retrace) %{_libexecdir}/%{name}/hooks/
 %doc %{_mandir}/man1/%{name}-cleanup.1*
 %doc %{_mandir}/man1/%{name}-interact.1*
 %doc %{_mandir}/man1/%{name}-reposync.1*
