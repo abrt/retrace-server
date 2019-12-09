@@ -70,6 +70,22 @@
 
             # setenforce 0
 
+   6. Set `subuid` and `subgid` for user `retrace` (optional)
+        If you want to use podman as your retrace environment, the user `retrace`
+        needs to have `subuid` and `subgid` set in `/etc/subuid` and `/etc/subgid`
+        respectively. See `man 5 /etc/subuid` and the `SUB_UID_...` section in `man useradd`.
+
+   7. Set up your system to use cgroups v1 (optional)
+        You might need to do this if you want to use podman. For example:
+
+            # grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0"
+
+        followed by a reboot.
+
+   8. Make sure the `retrace` user's home directory is set to `/var/lib/retrace`
+        when updating from an older version of retrace-server.
+
+
 4. Test your server
 
     There are two ways how to test if your server is running:
@@ -171,6 +187,19 @@ how to deploy such a server. Each point corresponds with point from section
    5. Disable SELinux
 
         There is no change when deploying real and testing retrace server.
+
+   6. Set `subuid` and `subgid` for user `retrace` (optional)
+
+        There is no change when deploying real and testing retrace server.
+
+   7. Set up your system to use cgroups v1 (optional)
+
+        There is no change when deploying real and testing retrace server.
+
+   8. Make sure the `retrace` user's home directory is set to `/var/lib/retrace`
+
+        There is no change when deploying real and testing retrace server.
+
 
 4. Test your server
 
