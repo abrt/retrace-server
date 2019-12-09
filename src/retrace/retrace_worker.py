@@ -524,6 +524,10 @@ class RetraceWorker(object):
             except Exception as ex:
                 log_error("Unable to create Dockerfile: %s" % ex)
                 self._fail()
+
+            self.hook.run("post_prepare_environment")
+            self.hook.run("pre_retrace")
+
         try:
             backtrace, exploitable = run_gdb(task.get_savedir(), self.plugin, repopath, self.fafrepo)
         except Exception as ex:
