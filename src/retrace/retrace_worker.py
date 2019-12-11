@@ -7,7 +7,7 @@ import grp
 import logging
 import shutil
 import stat
-from subprocess import PIPE, STDOUT, call, Popen
+from subprocess import PIPE, STDOUT, DEVNULL, call, Popen
 
 from retrace.hooks.hooks import RetraceHook
 from .retrace import (ALLOWED_FILES, INPUT_PACKAGE_PARSER, REPO_PREFIX, REQUIRED_FILES,
@@ -799,16 +799,15 @@ class RetraceWorker():
                     log_error("Unable to create Dockerfile: %s" % ex)
                     self._fail()
 
-                with open(os.devnull, "w") as null:
-                    build_image = call(["/usr/bin/podman",
-                                        "build",
-                                        "--file",
-                                        os.path.join(savedir, RetraceTask.DOCKERFILE),
-                                        "--tag",
-                                        "retrace-image"],
-                                       stdout=null, stderr=null)
-                    if build_image:
-                        raise Exception("Unable to build podman container")
+                build_image = call(["/usr/bin/podman",
+                                    "build",
+                                    "--file",
+                                    os.path.join(savedir, RetraceTask.DOCKERFILE),
+                                    "--tag",
+                                    "retrace-image"],
+                                   stdout=DEVNULL, stderr=DEVNULL)
+                if build_image:
+                    raise Exception("Unable to build podman container")
 
                 vmlinux = vmcore.prepare_debuginfo(task, kernelver=kernelver)
                 child = Popen(["/usr/bin/podman",
@@ -879,13 +878,12 @@ class RetraceWorker():
         crash_sys, ret = task.run_crash_cmdline(crash_normal, "sys\nquit\n")
 
         if container_id:
-            with open(os.devnull, "w") as null:
-                err = call(["/usr/bin/podman", "stop", container_id], stdout=null, stderr=null)
-                if err:
-                    log_warn(err)
-                err = call(["/usr/bin/podman", "rm", container_id], stdout=null, stderr=null)
-                if err:
-                    log_warn(err)
+            err = call(["/usr/bin/podman", "stop", container_id], stdout=DEVNULL, stderr=DEVNULL)
+            if err:
+                log_warn(err)
+            err = call(["/usr/bin/podman", "rm", container_id], stdout=DEVNULL, stderr=DEVNULL)
+            if err:
+                log_warn(err)
 
         if ret == 0 and crash_sys:
             task.add_results("sys", crash_sys)
