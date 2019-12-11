@@ -880,10 +880,10 @@ class RetraceWorker():
         if container_id:
             err = call(["/usr/bin/podman", "stop", container_id], stdout=DEVNULL, stderr=DEVNULL)
             if err:
-                log_warn(err)
+                log_warn("Couldn't stop container %s" % container_id)
             err = call(["/usr/bin/podman", "rm", container_id], stdout=DEVNULL, stderr=DEVNULL)
             if err:
-                log_warn(err)
+                log_warn("Couldn't remove container %s" % container_id)
 
         if ret == 0 and crash_sys:
             task.add_results("sys", crash_sys)
