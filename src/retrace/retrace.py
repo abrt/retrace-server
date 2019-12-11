@@ -16,7 +16,7 @@ import time
 import hashlib
 import urllib
 from signal import getsignal, signal, SIG_DFL, SIGPIPE
-from subprocess import PIPE, STDOUT, call, Popen, TimeoutExpired
+from subprocess import PIPE, STDOUT, DEVNULL, call, Popen, TimeoutExpired
 import magic
 
 from dnf.subject import Subject
@@ -354,114 +354,115 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None):
     if '"' in executable or "'" in executable:
         raise Exception("Executable contains forbidden characters")
 
-    with open(os.devnull, "w") as null:
-        if CONFIG["RetraceEnvironment"] == "mock":
-            child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
-                           "--", "ls '%s'" % executable],
-                          stdout=PIPE, stderr=null, encoding='utf-8')
-            output = child.communicate()[0]
-            if output.strip() != executable:
-                raise Exception("The appropriate package set could not be installed")
+    if CONFIG["RetraceEnvironment"] == "mock":
+        child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
+                       "--", "ls '%s'" % executable],
+                      stdout=PIPE, stderr=DEVNULL, encoding='utf-8')
+        output = child.communicate()[0]
+        if output.strip() != executable:
+            raise Exception("The appropriate package set could not be installed")
 
-            chmod = call(["/usr/bin/mock", "shell", "--configdir", savedir,
-                          "--", "/bin/chmod a+r '%s'" % executable],
-                         stdout=null, stderr=null)
+        chmod = call(["/usr/bin/mock", "shell", "--configdir", savedir,
+                      "--", "/bin/chmod a+r '%s'" % executable],
+                     stdout=DEVNULL, stderr=DEVNULL)
 
-            if chmod != 0:
-                raise Exception("Unable to chmod the executable")
+        if chmod != 0:
+            raise Exception("Unable to chmod the executable")
 
-        batfile = os.path.join(savedir, "gdb.sh")
-        with open(batfile, "w") as gdbfile:
-            gdbfile.write("#!/usr/bin/sh\n\n%s -batch "
-                          "-ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' \\\n"
-                          "                    -ex 'file %s' \\\n"
-                          "                    -ex 'core-file /var/spool/abrt/crash/coredump' \\\n"
-                          "                    -ex 'echo %s\\n' \\\n"
-                          "                    -ex 'py-bt' \\\n"
-                          "                    -ex 'py-list' \\\n"
-                          "                    -ex 'py-locals' \\\n"
-                          "                    -ex 'echo %s\\n' \\\n"
-                          "                    -ex 'thread apply all -ascending backtrace full 2048' \\\n"
-                          "                    -ex 'info sharedlib' \\\n"
-                          "                    -ex 'print (char*)__abort_msg' \\\n"
-                          "                    -ex 'print (char*)__glib_assert_msg' \\\n"
-                          "                    -ex 'info registers' \\\n"
-                          "                    -ex 'disassemble' \\\n"
-                          "                    -ex 'echo %s\\n' \\\n"
-                          "                    -ex 'abrt-exploitable'"
-                          % (plugin.gdb_executable, executable, PYTHON_LABEL_START,
-                             PYTHON_LABEL_END, EXPLOITABLE_SEPARATOR))
+    batfile = os.path.join(savedir, "gdb.sh")
+    with open(batfile, "w") as gdbfile:
+        gdbfile.write("#!/usr/bin/sh\n\n%s -batch "
+                      "-ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' \\\n"
+                      "                    -ex 'file %s' \\\n"
+                      "                    -ex 'core-file /var/spool/abrt/crash/coredump' \\\n"
+                      "                    -ex 'echo %s\\n' \\\n"
+                      "                    -ex 'py-bt' \\\n"
+                      "                    -ex 'py-list' \\\n"
+                      "                    -ex 'py-locals' \\\n"
+                      "                    -ex 'echo %s\\n' \\\n"
+                      "                    -ex 'thread apply all -ascending backtrace full 2048' \\\n"
+                      "                    -ex 'info sharedlib' \\\n"
+                      "                    -ex 'print (char*)__abort_msg' \\\n"
+                      "                    -ex 'print (char*)__glib_assert_msg' \\\n"
+                      "                    -ex 'info registers' \\\n"
+                      "                    -ex 'disassemble' \\\n"
+                      "                    -ex 'echo %s\\n' \\\n"
+                      "                    -ex 'abrt-exploitable'"
+                      % (plugin.gdb_executable, executable, PYTHON_LABEL_START,
+                         PYTHON_LABEL_END, EXPLOITABLE_SEPARATOR))
 
-        if CONFIG["RetraceEnvironment"] == "mock":
-            copyin = call(["/usr/bin/mock", "--configdir", savedir, "--copyin",
-                           batfile, "/var/spool/abrt/gdb.sh"],
-                          stdout=null, stderr=null)
-            if copyin:
-                raise Exception("Unable to copy GDB launcher into chroot")
+    if CONFIG["RetraceEnvironment"] == "mock":
+        copyin = call(["/usr/bin/mock", "--configdir", savedir, "--copyin",
+                       batfile, "/var/spool/abrt/gdb.sh"],
+                      stdout=DEVNULL, stderr=DEVNULL)
+        if copyin:
+            raise Exception("Unable to copy GDB launcher into chroot")
 
-            chmod = call(["/usr/bin/mock", "--configdir", savedir, "shell",
-                          "--", "/bin/chmod a+rx /var/spool/abrt/gdb.sh"],
-                         stdout=null, stderr=null)
-            if chmod:
-                raise Exception("Unable to chmod GDB launcher")
+        chmod = call(["/usr/bin/mock", "--configdir", savedir, "shell",
+                      "--", "/bin/chmod a+rx /var/spool/abrt/gdb.sh"],
+                     stdout=DEVNULL, stderr=DEVNULL)
+        if chmod:
+            raise Exception("Unable to chmod GDB launcher")
 
-            child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
-                           "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh'",
-                           # redirect GDB's stderr, ignore mock's stderr
-                           "2>&1"], stdout=PIPE, stderr=null, encoding='utf-8')
+        child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
+                       "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh'",
+                       # redirect GDB's stderr, ignore mock's stderr
+                       "2>&1"], stdout=PIPE, stderr=DEVNULL, encoding='utf-8')
 
-        elif CONFIG["RetraceEnvironment"] == "podman":
-            podman_build_call = ["/usr/bin/podman", "build", "--file",
-                                 os.path.join(savedir, RetraceTask.DOCKERFILE),
-                                 "--volume=%s:%s:ro" % (repopath, repopath)]
-            if CONFIG["UseFafPackages"]:
-                log_debug("Using FAF repository '%s'" % fafrepo)
-                podman_build_call.append("--volume=%s:/var/spool/abrt/faf-packages" % fafrepo)
-            podman_build_call.extend(["--tag", "retrace-image"])
+    elif CONFIG["RetraceEnvironment"] == "podman":
+        podman_build_call = ["/usr/bin/podman", "build", "--file",
+                             os.path.join(savedir, RetraceTask.DOCKERFILE),
+                             "--volume=%s:%s:ro" % (repopath, repopath)]
+        if CONFIG["UseFafPackages"]:
+            log_debug("Using FAF repository '%s'" % fafrepo)
+            podman_build_call.append("--volume=%s:/var/spool/abrt/faf-packages" % fafrepo)
+        podman_build_call.extend(["--tag", "retrace-image"])
 
-            build_image = call(podman_build_call, stdout=null, stderr=null)
-            if build_image:
-                raise Exception("Unable to build podman container")
+        build_image = call(podman_build_call, stdout=DEVNULL, stderr=DEVNULL)
+        if build_image:
+            raise Exception("Unable to build podman container")
 
-            if CONFIG["UseFafPackages"]:
-                child = Popen(["/usr/bin/podman",
-                               "run",
-                               "-it",
-                               "--detach",
-                               "--volume=%s:%s:ro" % (repopath, repopath),
-                               "--volume=%s:/var/spool/abrt/faf-packages" % fafrepo,
-                               "retrace-image"],
-                              stdout=PIPE, stderr=PIPE, encoding='utf-8')
-                container_id = child.communicate()[0]
-                container_id = container_id.rstrip()
+        if CONFIG["UseFafPackages"]:
+            child = Popen(["/usr/bin/podman",
+                           "run",
+                           "-it",
+                           "--detach",
+                           "--volume=%s:%s:ro" % (repopath, repopath),
+                           "--volume=%s:/var/spool/abrt/faf-packages" % fafrepo,
+                           "retrace-image"],
+                          stdout=PIPE, stderr=PIPE, encoding='utf-8')
+            container_id = child.communicate()[0]
+            container_id = container_id.rstrip()
 
-                log_debug("Retrace container id: %s" % container_id)
+            log_debug("Retrace container id: %s" % container_id)
 
-                child = Popen("/usr/bin/podman exec -it %s bash -c 'for PKG in /var/spool/abrt/faf-packages/*; do rpm2cpio $PKG | cpio -muid --quiet; done'" % container_id, shell=True, stdout=null, stderr=null, encoding='utf-8')
-                if child.wait():
-                    raise Exception("Unpacking of packages failed")
-                child = Popen(["/usr/bin/podman", "exec", container_id,
-                               "/var/spool/abrt/gdb.sh"], stdout=PIPE, stderr=PIPE, encoding='utf-8')
-            else:
-                child = Popen(["/usr/bin/podman", "run", "-it", "--volume=%s:%s:ro" % (repopath, repopath),
-                               "retrace-image"], stdout=PIPE, stderr=PIPE, encoding='utf-8')
+            child = Popen("/usr/bin/podman exec -it %s bash -c "
+                          "'for PKG in /var/spool/abrt/faf-packages/*; "
+                          "do rpm2cpio $PKG | cpio -muid --quiet; done'"
+                          % container_id, shell=True, stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8')
+            if child.wait():
+                raise Exception("Unpacking of packages failed")
+            child = Popen(["/usr/bin/podman", "exec", container_id,
+                           "/var/spool/abrt/gdb.sh"], stdout=PIPE, stderr=PIPE, encoding='utf-8')
         else:
-            raise Exception("RetraceEnvironment set to invalid value")
+            child = Popen(["/usr/bin/podman", "run", "-it", "--volume=%s:%s:ro" % (repopath, repopath),
+                           "retrace-image"], stdout=PIPE, stderr=PIPE, encoding='utf-8')
+    else:
+        raise Exception("RetraceEnvironment set to invalid value")
 
     backtrace = child.communicate()[0].strip()
     if child.wait():
         raise Exception("Running GDB failed")
 
     if container_id:
-        with open(os.devnull, "w") as null:
-            log_debug("Stopping container %s" % container_id)
-            err = call(["/usr/bin/podman", "stop", container_id], stdout=null, stderr=null)
-            if err:
-                log_warn("Couldn't stop container %s" % container_id)
-            log_debug("Removing container %s" % container_id)
-            err = call(["/usr/bin/podman", "rm", container_id], stdout=null, stderr=null)
-            if err:
-                log_warn("Couldn't remove container %s" % container_id)
+        log_debug("Stopping container %s" % container_id)
+        err = call(["/usr/bin/podman", "stop", container_id], stdout=DEVNULL, stderr=DEVNULL)
+        if err:
+            log_warn("Couldn't stop container %s" % container_id)
+        log_debug("Removing container %s" % container_id)
+        err = call(["/usr/bin/podman", "rm", container_id], stdout=DEVNULL, stderr=DEVNULL)
+        if err:
+            log_warn("Couldn't remove container %s" % container_id)
 
     exploitable = None
     if EXPLOITABLE_SEPARATOR in backtrace:
@@ -630,8 +631,7 @@ def find_kernel_debuginfo(kernelver):
             url += pkgname
 
             log_debug("Trying debuginfo URL: %s" % url)
-            with open(os.devnull, "w") as null:
-                retcode = call(["wget", "-nv", "-P", downloaddir, url], stdout=null, stderr=null)
+            retcode = call(["wget", "-nv", "-P", downloaddir, url], stdout=DEVNULL, stderr=DEVNULL)
 
             if retcode == 0:
                 return os.path.join(downloaddir, pkgname)
@@ -652,13 +652,12 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
         if files[i][0] == "/":
             files[i] = ".%s" % files[i]
 
-    with open(os.devnull, "w") as null:
-        rpm2cpio = Popen(["rpm2cpio", debuginfo], stdout=PIPE, stderr=null, encoding='utf-8')
-        cpio = Popen(["cpio", "-id"] + files, stdin=rpm2cpio.stdout, stdout=null, stderr=null, cwd=basedir,
-                     encoding='utf-8')
-        rpm2cpio.wait()
-        cpio.wait()
-        rpm2cpio.stdout.close()
+    rpm2cpio = Popen(["rpm2cpio", debuginfo], stdout=PIPE, stderr=DEVNULL, encoding='utf-8')
+    cpio = Popen(["cpio", "-id"] + files, stdin=rpm2cpio.stdout, stdout=DEVNULL, stderr=DEVNULL, cwd=basedir,
+                 encoding='utf-8')
+    rpm2cpio.wait()
+    cpio.wait()
+    rpm2cpio.stdout.close()
 
 
 def get_files_sizes(directory):
@@ -1329,25 +1328,24 @@ class KernelVMcore:
         if os.path.isfile(dmesg_path):
             os.unlink(dmesg_path)
 
-        with open(os.devnull, "w") as null:
-            cmd = ["makedumpfile", "-D", "--dump-dmesg", self._vmcore_path, dmesg_path]
+        cmd = ["makedumpfile", "-D", "--dump-dmesg", self._vmcore_path, dmesg_path]
 
-            result = None
-            child = Popen(cmd, stdout=PIPE, stderr=null, encoding='utf-8')
+        result = None
+        child = Popen(cmd, stdout=PIPE, stderr=DEVNULL, encoding='utf-8')
+        line = child.stdout.readline()
+        while line:
+            match = self.DUMP_LEVEL_PARSER.match(line)
             line = child.stdout.readline()
-            while line:
-                match = self.DUMP_LEVEL_PARSER.match(line)
-                line = child.stdout.readline()
-                if match is None:
-                    continue
+            if match is None:
+                continue
 
-                result = int(match.group(1))
-                child.terminate()
-                break
+            result = int(match.group(1))
+            child.terminate()
+            break
 
-            child.wait()
-            self._dump_level = result
-            return result
+        child.wait()
+        self._dump_level = result
+        return result
 
     def has_extra_pages(self, task):
         """Returns True if vmcore has extra pages that can be stripped with makedumpfile"""
@@ -2578,12 +2576,11 @@ class RetraceTask:
     def clean(self):
         """Removes all files and directories others than
         results and logs from the task directory."""
-        with open(os.devnull, "w") as null:
-            if os.path.isfile(os.path.join(self._savedir, "default.cfg")) and \
-               os.path.isfile(os.path.join(self._savedir, "site-defaults.cfg")) and \
-               os.path.isfile(os.path.join(self._savedir, "logging.ini")):
-                call(["/usr/bin/mock", "--configdir", self._savedir, "--scrub=all"],
-                     stdout=null, stderr=null)
+        if os.path.isfile(os.path.join(self._savedir, "default.cfg")) and \
+           os.path.isfile(os.path.join(self._savedir, "site-defaults.cfg")) and \
+           os.path.isfile(os.path.join(self._savedir, "logging.ini")):
+            call(["/usr/bin/mock", "--configdir", self._savedir, "--scrub=all"],
+                 stdout=DEVNULL, stderr=DEVNULL)
 
         for f in os.listdir(self._savedir):
             if f not in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
