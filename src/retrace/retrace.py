@@ -345,7 +345,7 @@ def parse_http_gettext(lang, charset):
     return result
 
 
-def run_gdb(savedir, plugin, repopath, fafrepo=None):
+def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
     # exception is caught on the higher level
     exec_file = open(os.path.join(savedir, "crash", "executable"), "r")
     executable = exec_file.read(ALLOWED_FILES["executable"])
@@ -422,19 +422,14 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None):
         if build_image:
             raise Exception("Unable to build podman container")
 
-        if CONFIG["UseFafPackages"]:
-            child = Popen(["/usr/bin/podman",
-                           "run",
-                           "-it",
-                           "--detach",
-                           "--volume=%s:%s:ro" % (repopath, repopath),
-                           "--volume=%s:/var/spool/abrt/faf-packages" % fafrepo,
-                           "retrace-image"],
-                          stdout=PIPE, stderr=PIPE, encoding='utf-8')
-            container_id = child.communicate()[0]
-            container_id = container_id.rstrip()
+        container_id = str(taskid)
 
-            log_debug("Retrace container id: %s" % container_id)
+        if CONFIG["UseFafPackages"]:
+            run(["/usr/bin/podman", "run", "-it", "--detach",
+                 "--volume=%s:%s:ro" % (repopath, repopath),
+                 "--volume=%s:/var/spool/abrt/faf-packages" % fafrepo,
+                 "retrace-image"],
+                stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8')
 
             child = Popen("/usr/bin/podman exec -it %s bash -c "
                           "'for PKG in /var/spool/abrt/faf-packages/*; "
@@ -445,8 +440,8 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None):
             child = Popen(["/usr/bin/podman", "exec", container_id,
                            "/var/spool/abrt/gdb.sh"], stdout=PIPE, stderr=PIPE, encoding='utf-8')
         else:
-            child = Popen(["/usr/bin/podman", "run", "-it", "--volume=%s:%s:ro" % (repopath, repopath),
-                           "retrace-image"], stdout=PIPE, stderr=PIPE, encoding='utf-8')
+            child = run(["/usr/bin/podman", "run", "-it", "--volume=%s:%s:ro" % (repopath, repopath),
+                         "--name=%s" % container_id, "retrace-image"], stdout=PIPE, encoding='utf-8')
     else:
         raise Exception("RetraceEnvironment set to invalid value")
 
@@ -454,12 +449,11 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None):
     if child.wait():
         raise Exception("Running GDB failed")
 
-    if container_id:
-        log_debug("Stopping container %s" % container_id)
-        err = call(["/usr/bin/podman", "stop", container_id], stdout=DEVNULL, stderr=DEVNULL)
-        if err:
-            log_warn("Couldn't stop container %s" % container_id)
-        log_debug("Removing container %s" % container_id)
+    if CONFIG["RetraceEnvironment"] == "podman":
+        if CONFIG["UseFafPackages"]:
+            err = call(["/usr/bin/podman", "stop", container_id], stdout=DEVNULL, stderr=DEVNULL)
+            if err:
+                log_warn("Couldn't stop container %s" % container_id)
         err = call(["/usr/bin/podman", "rm", container_id], stdout=DEVNULL, stderr=DEVNULL)
         if err:
             log_warn("Couldn't remove container %s" % container_id)
