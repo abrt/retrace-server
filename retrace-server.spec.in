@@ -88,6 +88,7 @@ mkdir -p %{buildroot}%{_localstatedir}/log/%{name}
 mkdir -p %{buildroot}%{_localstatedir}/spool/%{name}
 mkdir -p %{buildroot}%{_sysconfdir}/%{name}
 mkdir -p %{buildroot}%{_datadir}/%{name}
+mkdir -p %{buildroot}%{_sharedstatedir}/retrace
 mkdir -p %{buildroot}%{_libexecdir}/%{name}
 mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks
 mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/pre_start
@@ -117,7 +118,7 @@ rm -f %{buildroot}%{_infodir}/dir
 #retrace uid/gid reserved in setup, rhbz #706012
 %define retrace_gid_uid 174
 getent group retrace > /dev/null || groupadd -f -g %{retrace_gid_uid} --system retrace
-getent passwd retrace > /dev/null || useradd --system -g retrace -u %{retrace_gid_uid} -d %{_datadir}/%{name} -s /sbin/nologin retrace
+getent passwd retrace > /dev/null || useradd --system -g retrace -u %{retrace_gid_uid} -d %{_sharedstatedir}/retrace -s /sbin/nologin retrace
 exit 0
 
 %post
@@ -186,6 +187,7 @@ exit 0
 %{_bindir}/coredump2packages
 %{python3_sitelib}/retrace/
 %{_datadir}/%{name}/
+%dir %attr(0755,retrace,retrace) %{_sharedstatedir}/retrace/
 %attr(0775,root,retrace) %{_libexecdir}/%{name}/hooks/
 %doc %{_mandir}/man1/%{name}-cleanup.1*
 %doc %{_mandir}/man1/%{name}-interact.1*
