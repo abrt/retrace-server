@@ -529,7 +529,7 @@ class RetraceWorker():
             self.hook.run("pre_retrace")
 
         try:
-            backtrace, exploitable = run_gdb(task.get_savedir(), self.plugin, repopath, self.fafrepo)
+            backtrace, exploitable = run_gdb(task.get_savedir(), self.plugin, repopath, self.fafrepo, task.get_taskid())
         except Exception as ex:
             log_error(str(ex))
             self._fail()
@@ -810,16 +810,15 @@ class RetraceWorker():
                     raise Exception("Unable to build podman container")
 
                 vmlinux = vmcore.prepare_debuginfo(task, kernelver=kernelver)
-                child = Popen(["/usr/bin/podman",
-                               "run",
-                               "--detach",
-                               "-it",
-                               "retrace-image"],
-                              stdout=PIPE, stderr=PIPE, encoding='utf-8')
-                (container_id, err) = child.communicate()
-                container_id = container_id.rstrip()
-                if err:
-                    log_error(str(err))
+                child = run(["/usr/bin/podman",
+                             "run",
+                             "--detach",
+                             "-it",
+                             "retrace-image"],
+                            stdout=PIPE, encoding='utf-8')
+                container_id = str(task.get_taskid())
+                if child.err:
+                    log_error(child.err)
                     raise Exception("Unable to run podman container")
 
                 crash_normal = ["/usr/bin/podman", "exec", container_id,
