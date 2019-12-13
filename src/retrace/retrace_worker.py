@@ -7,7 +7,7 @@ import grp
 import logging
 import shutil
 import stat
-from subprocess import PIPE, STDOUT, DEVNULL, call, Popen
+from subprocess import PIPE, DEVNULL, STDOUT, run
 
 from retrace.hooks.hooks import RetraceHook
 from .retrace import (ALLOWED_FILES, INPUT_PACKAGE_PARSER, REPO_PREFIX, REQUIRED_FILES,
@@ -172,8 +172,8 @@ class RetraceWorker():
     def _retrace_run(self, errorcode, cmd):
         "Runs cmd using subprocess.Popen and kills script with errorcode on failure"
         try:
-            child = Popen(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
-            output = child.communicate()[0]
+            child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+            output = child.stdout
         except Exception as ex:
             child = None
             log_error("An unhandled exception occured: %s" % ex)
@@ -295,13 +295,11 @@ class RetraceWorker():
                 packages = f.read.split()
         elif CONFIG["UseFafPackages"]:
             packages = ["bash", "cpio", "glibc-debuginfo"]
-            child = Popen(["/usr/bin/faf-c2p", "--hardlink-dir", CONFIG["FafLinkDir"],
-                           os.path.join(crashdir, "coredump")], stdout=PIPE, stderr=PIPE,
-                          encoding='utf-8')
-            stdout, stderr = child.communicate()
-            fafrepo = stdout.strip()
-            if stderr:
-                log_warn(stderr)
+            child = run(["/usr/bin/faf-c2p", "--hardlink-dir", CONFIG["FafLinkDir"],
+                         os.path.join(crashdir, "coredump")], stdout=PIPE, stderr=PIPE, encoding='utf-8')
+            fafrepo = child.stdout.strip()
+            if child.stderr:
+                log_warn(child.stderr)
 
             # hack - use latest glibc - for some reason gives better results
             for filename in os.listdir(fafrepo):
@@ -318,14 +316,13 @@ class RetraceWorker():
                     dnfcfg.write("baseurl=file://%s/%s/\n" % (CONFIG["RepoDir"], releaseid))
                     dnfcfg.write("failovermethod=priority\n")
 
-                child = Popen(["coredump2packages", os.path.join(crashdir, "coredump"),
-                               "--repos=%s" % repoid, "--config=%s" % dnfcfgpath,
-                               "--log=%s" % os.path.join(self.task.get_savedir(), "c2p_log")],
-                              stdout=PIPE, stderr=PIPE, encoding='utf-8')
+                child = run(["coredump2packages", os.path.join(crashdir, "coredump"),
+                             "--repos=%s" % repoid, "--config=%s" % dnfcfgpath,
+                             "--log=%s" % os.path.join(self.task.get_savedir(), "c2p_log")],
+                            stdout=PIPE, stderr=PIPE, encoding='utf-8')
                 section = 0
                 crash_package_or_component = None
-                stdout, stderr = child.communicate()
-                lines = stdout.split("\n")
+                lines = child.stdout.split("\n")
                 libdb = False
                 for line in lines:
                     if line == "":
@@ -356,8 +353,8 @@ class RetraceWorker():
                             soname = None
                         missing.append((soname, buildid))
 
-                if stderr:
-                    log_warn(stderr)
+                if child.stderr:
+                    log_warn(child.stderr)
 
             except Exception as ex:
                 log_error("Unable to obtain packages from 'coredump' file: %s" % ex)
@@ -747,11 +744,11 @@ class RetraceWorker():
                 finally:
                     os.umask(old_umask)
 
-                child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "init"], stdout=PIPE, stderr=STDOUT,
-                              encoding='utf-8')
-                stdout = child.communicate()[0]
-                if child.wait():
-                    raise Exception("mock exited with %d:\n%s" % (child.returncode, stdout))
+                child = run(["/usr/bin/mock", "--configdir", cfgdir, "init"],
+                            stdout=PIPE, stderr=PIPE, encoding='utf-8')
+                stderr = child.stderr
+                if child.returncode:
+                    raise Exception("mock exited with %d:\n%s" % (child.returncode, stderr))
 
                 self.hook.run("post_prepare_environment")
 
@@ -799,26 +796,21 @@ class RetraceWorker():
                     log_error("Unable to create Dockerfile: %s" % ex)
                     self._fail()
 
-                build_image = call(["/usr/bin/podman",
-                                    "build",
-                                    "--file",
-                                    os.path.join(savedir, RetraceTask.DOCKERFILE),
-                                    "--tag",
-                                    "retrace-image"],
-                                   stdout=DEVNULL, stderr=DEVNULL)
-                if build_image:
+                if run(["/usr/bin/podman",
+                        "build",
+                        "--file",
+                        os.path.join(savedir, RetraceTask.DOCKERFILE),
+                        "--tag",
+                        "retrace-image"],
+                        stdout=DEVNULL, stderr=DEVNULL).returncode:
                     raise Exception("Unable to build podman container")
 
                 vmlinux = vmcore.prepare_debuginfo(task, kernelver=kernelver)
-                child = run(["/usr/bin/podman",
-                             "run",
-                             "--detach",
-                             "-it",
-                             "retrace-image"],
-                            stdout=PIPE, encoding='utf-8')
+                child = run(["/usr/bin/podman", "run", "--detach", "-it", "retrace-image"],
+                            stdout=PIPE, stderr=PIPE, encoding='utf-8')
                 container_id = str(task.get_taskid())
-                if child.err:
-                    log_error(child.err)
+                if child.stderr:
+                    log_error(child.stderr)
                     raise Exception("Unable to run podman container")
 
                 crash_normal = ["/usr/bin/podman", "exec", container_id,
@@ -877,11 +869,9 @@ class RetraceWorker():
         crash_sys, ret = task.run_crash_cmdline(crash_normal, "sys\nquit\n")
 
         if container_id:
-            err = call(["/usr/bin/podman", "stop", container_id], stdout=DEVNULL, stderr=DEVNULL)
-            if err:
+            if run(["/usr/bin/podman", "stop", container_id], stdout=DEVNULL, stderr=DEVNULL).returncode:
                 log_warn("Couldn't stop container %s" % container_id)
-            err = call(["/usr/bin/podman", "rm", container_id], stdout=DEVNULL, stderr=DEVNULL)
-            if err:
+            if run(["/usr/bin/podman", "rm", container_id], stdout=DEVNULL, stderr=DEVNULL).returncode:
                 log_warn("Couldn't remove container %s" % container_id)
 
         if ret == 0 and crash_sys:

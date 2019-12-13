@@ -16,7 +16,7 @@ import time
 import hashlib
 import urllib
 from signal import getsignal, signal, SIG_DFL, SIGPIPE
-from subprocess import PIPE, STDOUT, DEVNULL, call, Popen, TimeoutExpired
+from subprocess import PIPE, STDOUT, DEVNULL, TimeoutExpired, run
 import magic
 
 from dnf.subject import Subject
@@ -233,8 +233,7 @@ def get_canon_arch(arch):
 
 
 def free_space(path):
-    child = Popen([DF_BIN, "-B", "1", path], stdout=PIPE, encoding='utf-8')
-    lines = child.communicate()[0].split("\n")
+    lines = run([DF_BIN, "-B", "1", path], stdout=PIPE, encoding='utf-8').stdout.split("\n")
     for line in lines:
         match = DF_OUTPUT_PARSER.match(line)
         if match:
@@ -244,8 +243,7 @@ def free_space(path):
 
 
 def dir_size(path):
-    child = Popen([DU_BIN, "-sb", path], stdout=PIPE, encoding='utf-8')
-    lines = child.communicate()[0].split("\n")
+    lines = run([DU_BIN, "-sb", path], stdout=PIPE, encoding='utf-8').stdout.split("\n")
     for line in lines:
         match = DU_OUTPUT_PARSER.match(line)
         if match:
@@ -256,8 +254,7 @@ def dir_size(path):
 
 def unpacked_size(archive, mime):
     command, parser = HANDLE_ARCHIVE[mime]["size"]
-    child = Popen(command + [archive], stdout=PIPE, encoding='utf-8')
-    lines = child.communicate()[0].split("\n")
+    lines = run(command + [archive], stdout=PIPE, encoding='utf-8').stdout.split("\n")
     for line in lines:
         match = parser.match(line)
         if match:
@@ -267,8 +264,7 @@ def unpacked_size(archive, mime):
 
 
 def guess_arch(coredump_path):
-    child = Popen(["file", coredump_path], stdout=PIPE, encoding='utf-8')
-    output = child.communicate()[0]
+    output = run(["file", coredump_path], stdout=PIPE, encoding='utf-8').stdout
     match = CORE_ARCH_PARSER.search(output)
     if match:
         if match.group(1) == "80386":
@@ -291,9 +287,8 @@ def guess_arch(coredump_path):
             return "ppc64"
 
     result = None
-    child = Popen(["strings", coredump_path], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
-    line = child.stdout.readline()
-    while line:
+    lines = run(["strings", coredump_path], stdout=PIPE, stderr=STDOUT, encoding='utf-8').stdout.splitlines()
+    for line in lines:
         for canon_arch, derived_archs in ARCH_MAP.items():
             if any(arch in line for arch in derived_archs):
                 result = canon_arch
@@ -301,11 +296,6 @@ def guess_arch(coredump_path):
 
         if result is not None:
             break
-
-        line = child.stdout.readline()
-
-    child.kill()
-    child.stdout.close()
 
     # "ppc64le" matches both ppc64 and ppc64le
     # if file magic says little endian, fix it
@@ -355,18 +345,13 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
         raise Exception("Executable contains forbidden characters")
 
     if CONFIG["RetraceEnvironment"] == "mock":
-        child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
-                       "--", "ls '%s'" % executable],
-                      stdout=PIPE, stderr=DEVNULL, encoding='utf-8')
-        output = child.communicate()[0]
+        output = run(["/usr/bin/mock", "shell", "--configdir", savedir,
+                      "--", "ls '%s'" % executable], stdout=PIPE, stderr=DEVNULL, encoding='utf-8').stdout
         if output.strip() != executable:
             raise Exception("The appropriate package set could not be installed")
 
-        chmod = call(["/usr/bin/mock", "shell", "--configdir", savedir,
-                      "--", "/bin/chmod a+r '%s'" % executable],
-                     stdout=DEVNULL, stderr=DEVNULL)
-
-        if chmod != 0:
+        if run(["/usr/bin/mock", "shell", "--configdir", savedir,
+                "--", "/bin/chmod a+r '%s'" % executable]).returncode:
             raise Exception("Unable to chmod the executable")
 
     batfile = os.path.join(savedir, "gdb.sh")
@@ -392,22 +377,18 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
                          PYTHON_LABEL_END, EXPLOITABLE_SEPARATOR))
 
     if CONFIG["RetraceEnvironment"] == "mock":
-        copyin = call(["/usr/bin/mock", "--configdir", savedir, "--copyin",
-                       batfile, "/var/spool/abrt/gdb.sh"],
-                      stdout=DEVNULL, stderr=DEVNULL)
-        if copyin:
+        if run(["/usr/bin/mock", "--configdir", savedir, "--copyin",
+                batfile, "/var/spool/abrt/gdb.sh"], stdout=DEVNULL, stderr=DEVNULL).returncode:
             raise Exception("Unable to copy GDB launcher into chroot")
 
-        chmod = call(["/usr/bin/mock", "--configdir", savedir, "shell",
-                      "--", "/bin/chmod a+rx /var/spool/abrt/gdb.sh"],
-                     stdout=DEVNULL, stderr=DEVNULL)
-        if chmod:
+        if run(["/usr/bin/mock", "--configdir", savedir, "shell",
+            "--", "/bin/chmod a+rx /var/spool/abrt/gdb.sh"], stdout=DEVNULL, stderr=DEVNULL).returncode:
             raise Exception("Unable to chmod GDB launcher")
 
-        child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
-                       "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh'",
-                       # redirect GDB's stderr, ignore mock's stderr
-                       "2>&1"], stdout=PIPE, stderr=DEVNULL, encoding='utf-8')
+        child = run(["/usr/bin/mock", "shell", "--configdir", savedir,
+                     "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh'",
+                     # redirect GDB's stderr, ignore mock's stderr
+                     "2>&1"], stdout=PIPE, stderr=DEVNULL, encoding='utf-8')
 
     elif CONFIG["RetraceEnvironment"] == "podman":
         podman_build_call = ["/usr/bin/podman", "build", "--file",
@@ -418,8 +399,7 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
             podman_build_call.append("--volume=%s:/var/spool/abrt/faf-packages" % fafrepo)
         podman_build_call.extend(["--tag", "retrace-image"])
 
-        build_image = call(podman_build_call, stdout=DEVNULL, stderr=DEVNULL)
-        if build_image:
+        if run(podman_build_call, stdout=DEVNULL, stderr=DEVNULL).returncode:
             raise Exception("Unable to build podman container")
 
         container_id = str(taskid)
@@ -431,31 +411,28 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
                  "retrace-image"],
                 stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8')
 
-            child = Popen("/usr/bin/podman exec -it %s bash -c "
-                          "'for PKG in /var/spool/abrt/faf-packages/*; "
-                          "do rpm2cpio $PKG | cpio -muid --quiet; done'"
-                          % container_id, shell=True, stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8')
-            if child.wait():
+            if run("/usr/bin/podman exec -it %s bash -c "
+                   "'for PKG in /var/spool/abrt/faf-packages/*; "
+                   "do rpm2cpio $PKG | cpio -muid --quiet; done'"
+                   % container_id, shell=True, stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8').returncode:
                 raise Exception("Unpacking of packages failed")
-            child = Popen(["/usr/bin/podman", "exec", container_id,
-                           "/var/spool/abrt/gdb.sh"], stdout=PIPE, stderr=PIPE, encoding='utf-8')
+            child = run(["/usr/bin/podman", "exec", container_id,
+                         "/var/spool/abrt/gdb.sh"], stdout=PIPE, encoding='utf-8')
         else:
             child = run(["/usr/bin/podman", "run", "-it", "--volume=%s:%s:ro" % (repopath, repopath),
                          "--name=%s" % container_id, "retrace-image"], stdout=PIPE, encoding='utf-8')
     else:
         raise Exception("RetraceEnvironment set to invalid value")
 
-    backtrace = child.communicate()[0].strip()
-    if child.wait():
+    backtrace = child.stdout.strip()
+    if child.returncode:
         raise Exception("Running GDB failed")
 
     if CONFIG["RetraceEnvironment"] == "podman":
         if CONFIG["UseFafPackages"]:
-            err = call(["/usr/bin/podman", "stop", container_id], stdout=DEVNULL, stderr=DEVNULL)
-            if err:
+            if run(["/usr/bin/podman", "stop", container_id]).returncode:
                 log_warn("Couldn't stop container %s" % container_id)
-        err = call(["/usr/bin/podman", "rm", container_id], stdout=DEVNULL, stderr=DEVNULL)
-        if err:
+        if run(["/usr/bin/podman", "rm", container_id]).returncode:
             log_warn("Couldn't remove container %s" % container_id)
 
     exploitable = None
@@ -625,9 +602,7 @@ def find_kernel_debuginfo(kernelver):
             url += pkgname
 
             log_debug("Trying debuginfo URL: %s" % url)
-            retcode = call(["wget", "-nv", "-P", downloaddir, url], stdout=DEVNULL, stderr=DEVNULL)
-
-            if retcode == 0:
+            if not run(["wget", "-nv", "-P", downloaddir, url], stdout=DEVNULL, stderr=DEVNULL).returncode:
                 return os.path.join(downloaddir, pkgname)
 
     return None
@@ -646,12 +621,8 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
         if files[i][0] == "/":
             files[i] = ".%s" % files[i]
 
-    rpm2cpio = Popen(["rpm2cpio", debuginfo], stdout=PIPE, stderr=DEVNULL, encoding='utf-8')
-    cpio = Popen(["cpio", "-id"] + files, stdin=rpm2cpio.stdout, stdout=DEVNULL, stderr=DEVNULL, cwd=basedir,
-                 encoding='utf-8')
-    rpm2cpio.wait()
-    cpio.wait()
-    rpm2cpio.stdout.close()
+    rpm2cpio = run(["rpm2cpio", debuginfo], stdout=PIPE, stderr=DEVNULL)
+    cpio = run(["cpio", "-id"] + files, input=rpm2cpio.stdout, cwd=basedir, stdout=DEVNULL, stderr=DEVNULL)
 
 
 def get_files_sizes(directory):
@@ -822,8 +793,7 @@ def unpack(archive, mime, targetdir=None):
         cmd.append("--directory")
         cmd.append(targetdir)
 
-    retcode = call(cmd)
-    return retcode
+    return run(cmd).returncode
 
 
 def response(start_response, status, body="", extra_headers=[]):
@@ -833,8 +803,8 @@ def response(start_response, status, body="", extra_headers=[]):
 
 
 def run_ps():
-    child = Popen(["ps", "-eo", "pid,ppid,etime,cmd"], stdout=PIPE, encoding='utf-8')
-    lines = child.communicate()[0].split("\n")
+    lines = run(["ps", "-eo", "pid,ppid,etime,cmd"],
+                stdout=PIPE, encoding='utf-8').stdout.split("\n")
 
     return lines
 
@@ -1133,9 +1103,9 @@ def ftp_list_dir(ftpdir="/", ftp=None):
 
 
 def check_run(cmd):
-    child = Popen(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
-    stdout = child.communicate()[0]
-    if child.wait():
+    child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+    stdout = child.stdout
+    if child.returncode:
         raise Exception("%s exited with %d: %s" % (cmd[0], child.returncode, stdout))
 
 
@@ -1296,7 +1266,7 @@ class KernelVMcore:
         newvmcore = "%s.normal" % self._vmcore_path
         try:
             with open(self._vmcore_path) as fd:
-                retcode = call(["makedumpfile", "-R", newvmcore], stdin=fd)
+                retcode = run(["makedumpfile", "-R", newvmcore], stdin=fd).returncode
                 if retcode:
                     log_warn("makedumpfile -R exited with %d" % retcode)
                     if os.path.isfile(newvmcore):
@@ -1325,19 +1295,15 @@ class KernelVMcore:
         cmd = ["makedumpfile", "-D", "--dump-dmesg", self._vmcore_path, dmesg_path]
 
         result = None
-        child = Popen(cmd, stdout=PIPE, stderr=DEVNULL, encoding='utf-8')
-        line = child.stdout.readline()
-        while line:
+        lines = run(cmd, stdout=PIPE, stderr=DEVNULL, encoding='utf-8').stdout.splitlines()
+        for line in lines:
             match = self.DUMP_LEVEL_PARSER.match(line)
-            line = child.stdout.readline()
             if match is None:
                 continue
 
             result = int(match.group(1))
-            child.terminate()
             break
 
-        child.wait()
         self._dump_level = result
         return result
 
@@ -1370,8 +1336,8 @@ class KernelVMcore:
             return
 
         newvmcore = "%s.stripped" % self._vmcore_path
-        retcode = call(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
-                        "-x", self._vmlinux, "--message-level", "0", self._vmcore_path, newvmcore])
+        retcode = run(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
+                       "-x", self._vmlinux, "--message-level", "0", self._vmcore_path, newvmcore]).returncode
         if retcode:
             log_warn("makedumpfile exited with %d" % retcode)
             if os.path.isfile(newvmcore):
@@ -1422,10 +1388,9 @@ class KernelVMcore:
         # set SIGPIPE to default handler for bz 1540253
         save = getsignal(SIGPIPE)
         signal(SIGPIPE, SIG_DFL)
-        child = Popen(crash_cmd + ["--osrelease", self._vmcore_path],
-                      stdout=PIPE, stderr=STDOUT, encoding='utf-8')
-        release = child.communicate()[0].strip()
-        ret = child.wait()
+        child = run(crash_cmd + ["--osrelease", self._vmcore_path], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+        release = child.stdout.strip()
+        ret = child.returncode
         signal(SIGPIPE, save)
 
         # If the crash tool fails, we must try some other method.
@@ -1560,8 +1525,8 @@ class KernelVMcore:
         # Now open the kernel-debuginfo and get a listing of the files we may need
         vmlinux_path = None
         debugfiles = {}
-        child = Popen(["rpm", "-qpl", debuginfo], stdout=PIPE, encoding='utf-8')
-        lines = child.communicate()[0].splitlines()
+        lines = run(["rpm", "-qpl", debuginfo],
+                    stdout=PIPE, stderr=DEVNULL, encoding='utf-8').stdout.splitlines()
         for line in lines:
             if line.endswith(pattern):
                 vmlinux_path = line
@@ -1748,7 +1713,7 @@ class RetraceTask:
             cmdline.append("--arch")
             cmdline.append(arch)
 
-        return call(cmdline)
+        return run(cmdline).returncode
 
     def _start_remote(self, host, debug=False, kernelver=None, arch=None):
         starturl = "%s/%d/start" % (host, self._taskid)
@@ -2074,17 +2039,17 @@ class RetraceTask:
         cmd_output = None
         returncode = 0
         try:
-            child = Popen(crash_start, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             t = 3600
             if CONFIG["ProcessCommunicateTimeout"]:
                 t = CONFIG["ProcessCommunicateTimeout"]
-            cmd_output = child.communicate(crash_cmdline.encode(), timeout=t)[0]
+            child = run(crash_start, stdin=PIPE, stdout=PIPE, stderr=STDOUT,
+                        input=crash_cmdline.encode(), timeout=t)
+            cmd_output = child.stdout
         except OSError as err:
             log_warn("crash command: '%s' triggered OSError " %
                      crash_cmdline.replace('\r', '; ').replace('\n', '; '))
             log_warn("  %s" % err)
         except TimeoutExpired:
-            child.kill()
             raise Exception("WARNING: crash command: '%s' exceeded " + str(t) +
                             " second timeout - damaged vmcore?" %
                             crash_cmdline.replace('\r', '; ').replace('\n', '; '))
@@ -2099,7 +2064,7 @@ class RetraceTask:
                      crash_cmdline.replace('\r', '; ').replace('\n', '; '))
             log_warn("  %s" % err)
 
-        if child.wait():
+        if child.returncode:
             log_warn("crash '%s' exited with %d" % (crash_cmdline.replace('\r', '; ').replace('\n', '; '),
                                                     child.returncode))
             returncode = child.returncode
@@ -2186,9 +2151,9 @@ class RetraceTask:
                     errors.append((url, "malformed URL"))
                     continue
 
-                child = Popen(["wget", "-nv", "-P", crashdir, url], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
-                stdout = child.communicate()[0]
-                if child.wait():
+                child = run(["wget", "-nv", "-P", crashdir, url], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+                stdout = child.stdout
+                if child.returncode:
                     errors.append((url, "wget exited with %d: %s" % (child.returncode, stdout)))
                     continue
 
@@ -2573,8 +2538,7 @@ class RetraceTask:
         if os.path.isfile(os.path.join(self._savedir, "default.cfg")) and \
            os.path.isfile(os.path.join(self._savedir, "site-defaults.cfg")) and \
            os.path.isfile(os.path.join(self._savedir, "logging.ini")):
-            call(["/usr/bin/mock", "--configdir", self._savedir, "--scrub=all"],
-                 stdout=DEVNULL, stderr=DEVNULL)
+            run(["/usr/bin/mock", "--configdir", self._savedir, "--scrub=all"])
 
         for f in os.listdir(self._savedir):
             if f not in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
