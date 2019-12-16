@@ -3,7 +3,7 @@ retrace-server-task(1)
 
 NAME
 ----
-retrace-server-task - Create tasks, get and set fields on existing tasks
+retrace-server-task - Create a task, get and set fields on an existing task
 
 SYNOPSIS
 --------
@@ -24,7 +24,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 This tool is able to communicate with Retrace server: create a new task,
-get and set values in existing tasks. If kerberos ticket is available, all
+get and set values of an existing task. If kerberos ticket is available, all
 communication uses it. To stop using the ticket you must destroy it (kdestroy).
 
 OPERATIONS
@@ -50,7 +50,9 @@ get::
 
 batch::
    Very similar to 'create' (has the same parameters) but also waits until
-   task is finished. If tasks finishes successfully backtrace is downloaded
+   task is finished. If the task finishes successfully thebacktrace is 
+   downloaded
+
 
 COMMON OPTIONS
 -------------
