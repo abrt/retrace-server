@@ -11,6 +11,7 @@ import tempfile
 import rpm
 import dnf
 
+from functools import cmp_to_key
 from subprocess import Popen, PIPE, call
 
 from retrace.retrace import (get_canon_arch,
@@ -173,7 +174,7 @@ def clean_rawhide_repo(release):
     for package in packages:
         pkgcnt = len(packages[package])
         if pkgcnt > CONFIG["KeepRawhideLatest"]:
-            vers = sorted(packages[package].keys(), cmp=vercmp)
+            vers = sorted(packages[package].keys(), key=cmp_to_key(vercmp))
             i = 0
             for ver in vers:
                 for filename in packages[package][ver]:
