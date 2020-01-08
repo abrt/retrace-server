@@ -796,27 +796,28 @@ class RetraceWorker():
                     log_error("Unable to create Dockerfile: %s" % ex)
                     self._fail()
 
+                img_cont_id = str(task.get_taskid())
+
                 if run(["/usr/bin/podman",
                         "build",
                         "--file",
                         os.path.join(savedir, RetraceTask.DOCKERFILE),
                         "--tag",
-                        "retrace-image"],
+                        "retrace-image:%s" % img_cont_id],
                         stdout=DEVNULL, stderr=DEVNULL).returncode:
                     raise Exception("Unable to build podman container")
 
                 vmlinux = vmcore.prepare_debuginfo(task, kernelver=kernelver)
-                child = run(["/usr/bin/podman", "run", "--detach", "-it", "retrace-image"],
+                child = run(["/usr/bin/podman", "run", "--detach", "-it", "retrace-image:%s" % img_cont_id],
                             stdout=PIPE, stderr=PIPE, encoding='utf-8')
-                container_id = str(task.get_taskid())
                 if child.stderr:
                     log_error(child.stderr)
                     raise Exception("Unable to run podman container")
 
-                crash_normal = ["/usr/bin/podman", "exec", container_id,
+                crash_normal = ["/usr/bin/podman", "exec", img_cont_id,
                                 task.get_crash_cmd()
                                 + " -s /var/spool/abrt/crash/vmcore %s" % vmlinux]
-                crash_minimal = ["/usr/bin/podman", "exec", container_id,
+                crash_minimal = ["/usr/bin/podman", "exec", img_cont_id,
                                  task.get_crash_cmd()
                                  + " -s --minimal /var/spool/abrt/crash/vmcore %s" % vmlinux]
 
@@ -868,11 +869,11 @@ class RetraceWorker():
         # we likely have a semi-useful vmcore
         crash_sys, ret = task.run_crash_cmdline(crash_normal, "sys\nquit\n")
 
-        if container_id:
-            if run(["/usr/bin/podman", "stop", container_id], stdout=DEVNULL, stderr=DEVNULL).returncode:
-                log_warn("Couldn't stop container %s" % container_id)
-            if run(["/usr/bin/podman", "rm", container_id], stdout=DEVNULL, stderr=DEVNULL).returncode:
-                log_warn("Couldn't remove container %s" % container_id)
+        if img_cont_id:
+            if run(["/usr/bin/podman", "stop", img_cont_id], stdout=DEVNULL, stderr=DEVNULL).returncode:
+                log_warn("Couldn't stop container %s" % img_cont_id)
+            if run(["/usr/bin/podman", "rm", img_cont_id], stdout=DEVNULL, stderr=DEVNULL).returncode:
+                log_warn("Couldn't remove container %s" % img_cont_id)
 
         if ret == 0 and crash_sys:
             task.add_results("sys", crash_sys)

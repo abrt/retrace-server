@@ -397,30 +397,33 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
         if CONFIG["UseFafPackages"]:
             log_debug("Using FAF repository '%s'" % fafrepo)
             podman_build_call.append("--volume=%s:/var/spool/abrt/faf-packages" % fafrepo)
-        podman_build_call.extend(["--tag", "retrace-image"])
+
+        img_cont_id = str(taskid)
+
+        podman_build_call.extend(["--tag", "retrace-image:%s" % img_cont_id])
 
         if run(podman_build_call, stdout=DEVNULL, stderr=DEVNULL).returncode:
             raise Exception("Unable to build podman container")
 
-        container_id = str(taskid)
 
         if CONFIG["UseFafPackages"]:
             run(["/usr/bin/podman", "run", "-it", "--detach",
                  "--volume=%s:%s:ro" % (repopath, repopath),
                  "--volume=%s:/var/spool/abrt/faf-packages" % fafrepo,
-                 "retrace-image"],
+                 "retrace-image:%s" % img_cont_id],
                 stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8')
 
             if run("/usr/bin/podman exec -it %s bash -c "
                    "'for PKG in /var/spool/abrt/faf-packages/*; "
                    "do rpm2cpio $PKG | cpio -muid --quiet; done'"
-                   % container_id, shell=True, stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8').returncode:
+                   % img_cont_id, shell=True, stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8').returncode:
                 raise Exception("Unpacking of packages failed")
-            child = run(["/usr/bin/podman", "exec", container_id,
+            child = run(["/usr/bin/podman", "exec", img_cont_id,
                          "/var/spool/abrt/gdb.sh"], stdout=PIPE, encoding='utf-8')
         else:
             child = run(["/usr/bin/podman", "run", "-it", "--volume=%s:%s:ro" % (repopath, repopath),
-                         "--name=%s" % container_id, "retrace-image"], stdout=PIPE, encoding='utf-8')
+                         "--name=%s" % img_cont_id, "retrace-image:%s" % img_cont_id],
+                        stdout=PIPE, encoding='utf-8')
     else:
         raise Exception("RetraceEnvironment set to invalid value")
 
@@ -430,10 +433,10 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
 
     if CONFIG["RetraceEnvironment"] == "podman":
         if CONFIG["UseFafPackages"]:
-            if run(["/usr/bin/podman", "stop", container_id]).returncode:
-                log_warn("Couldn't stop container %s" % container_id)
-        if run(["/usr/bin/podman", "rm", container_id]).returncode:
-            log_warn("Couldn't remove container %s" % container_id)
+            if run(["/usr/bin/podman", "stop", img_cont_id]).returncode:
+                log_warn("Couldn't stop container %s" % img_cont_id)
+        if run(["/usr/bin/podman", "rm", img_cont_id]).returncode:
+            log_warn("Couldn't remove container %s" % img_cont_id)
 
     exploitable = None
     if EXPLOITABLE_SEPARATOR in backtrace:
