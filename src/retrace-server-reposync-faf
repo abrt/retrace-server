@@ -12,14 +12,14 @@ faf_names = {'rhel': "Red Hat Enterprise Linux",
              'centos': 'CentOS'}
 
 
-def get_pkglist(db, outputdir, opsys, release, arch):
+def get_pkglist(db, opsys, release, arch):
     if opsys in faf_names.keys():
         opsys = faf_names[opsys]
     q = get_packages_by_osrelease(db, opsys, release, arch)
     for pkg in q:
         if pkg.has_lob("package"):
             print("Adding package: %s-%s-%s" % (pkg.name, pkg.build.version, pkg.build.release))
-            yield os.path.relpath(pkg.get_lob_path("package"), outputdir)
+            yield os.path.abspath(pkg.get_lob_path("package"))
 
 
 def generate_repo(db, outputdir, opsys, release, arch):
@@ -48,7 +48,7 @@ def generate_repo(db, outputdir, opsys, release, arch):
     oth_db = cr.OtherSqlite(oth_db_path)
 
     # Prepare list of packages to process
-    pkg_list = list(get_pkglist(db, outputdir, opsys, release, arch))
+    pkg_list = list(get_pkglist(db, opsys, release, arch))
 
     pkg_list_len = len(pkg_list)
     pri_xml.set_num_of_pkgs(pkg_list_len)
@@ -58,7 +58,7 @@ def generate_repo(db, outputdir, opsys, release, arch):
     # Process all packages
     for filename in pkg_list:
         pkg = cr.package_from_rpm(filename)
-        pkg.location_href = filename
+        pkg.location_href = os.path.relpath(filename, outputdir)
         pri_xml.add_pkg(pkg)
         fil_xml.add_pkg(pkg)
         oth_xml.add_pkg(pkg)
