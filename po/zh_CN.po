@@ -1,5 +1,5 @@
 # Qi Fan <fun224@gmail.com>, 2016. #zanata
-# Jerry Lee <lchopn@gmail.com>, 2017. #zanata
+# Charles Lee <lchopn@gmail.com>, 2017. #zanata
 # Zamir SUN <sztsian@gmail.com>, 2017. #zanata
 msgid ""
 msgstr ""
@@ -80,6 +80,13 @@ msgstr "不能创建新任务"
 #: ../src/create.wsgi:83
 msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
 msgstr "'X-CoreFileDirectory' 所指定的目录不存在"
+
+#: ../src/create.wsgi:89
+#, c-format
+msgid ""
+"There are %d files in the '%s' directory. Only a single archive is supported"
+" at the moment"
+msgstr "'%s'  目录内有 %d 个文件。当前只支持单一归档"
 
 #: ../src/create.wsgi:98
 #, c-format
