@@ -410,6 +410,8 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
             run(["/usr/bin/podman", "run", "-it", "--detach",
                  "--volume=%s:%s:ro" % (repopath, repopath),
                  "--volume=%s:/var/spool/abrt/faf-packages" % fafrepo,
+                 "--rm",
+                 "--name=%s" % img_cont_id,
                  "retrace-image:%s" % img_cont_id],
                 stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8')
 
@@ -422,7 +424,7 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
                          "/var/spool/abrt/gdb.sh"], stdout=PIPE, encoding='utf-8')
         else:
             child = run(["/usr/bin/podman", "run", "-it", "--volume=%s:%s:ro" % (repopath, repopath),
-                         "--name=%s" % img_cont_id, "retrace-image:%s" % img_cont_id],
+                         "--name=%s" % img_cont_id, "--rm", "retrace-image:%s" % img_cont_id],
                         stdout=PIPE, encoding='utf-8')
     else:
         raise Exception("RetraceEnvironment set to invalid value")
@@ -430,13 +432,6 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
     backtrace = child.stdout.strip()
     if child.returncode:
         raise Exception("Running GDB failed")
-
-    if CONFIG["RetraceEnvironment"] == "podman":
-        if CONFIG["UseFafPackages"]:
-            if run(["/usr/bin/podman", "stop", img_cont_id]).returncode:
-                log_warn("Couldn't stop container %s" % img_cont_id)
-        if run(["/usr/bin/podman", "rm", img_cont_id]).returncode:
-            log_warn("Couldn't remove container %s" % img_cont_id)
 
     exploitable = None
     if EXPLOITABLE_SEPARATOR in backtrace:
@@ -2542,6 +2537,12 @@ class RetraceTask:
            os.path.isfile(os.path.join(self._savedir, "site-defaults.cfg")) and \
            os.path.isfile(os.path.join(self._savedir, "logging.ini")):
             run(["/usr/bin/mock", "--configdir", self._savedir, "--scrub=all"])
+
+        if CONFIG["RetraceEnvironment"] == "podman":
+            img_cont_id = str(self._taskid)
+            if CONFIG["UseFafPackages"]:
+                run(["/usr/bin/podman", "stop", img_cont_id])
+            run(["/usr/bin/podman", "rmi", "retrace-image:%s" % img_cont_id])
 
         for f in os.listdir(self._savedir):
             if f not in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,

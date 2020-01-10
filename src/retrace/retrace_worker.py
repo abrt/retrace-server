@@ -808,7 +808,8 @@ class RetraceWorker():
                     raise Exception("Unable to build podman container")
 
                 vmlinux = vmcore.prepare_debuginfo(task, kernelver=kernelver)
-                child = run(["/usr/bin/podman", "run", "--detach", "-it", "retrace-image:%s" % img_cont_id],
+                child = run(["/usr/bin/podman", "run", "--detach", "-it", "--rm",
+                             "retrace-image:%s" % img_cont_id],
                             stdout=PIPE, stderr=PIPE, encoding='utf-8')
                 if child.stderr:
                     log_error(child.stderr)
@@ -868,12 +869,6 @@ class RetraceWorker():
         # If crash sys command exited with non-zero status,
         # we likely have a semi-useful vmcore
         crash_sys, ret = task.run_crash_cmdline(crash_normal, "sys\nquit\n")
-
-        if img_cont_id:
-            if run(["/usr/bin/podman", "stop", img_cont_id], stdout=DEVNULL, stderr=DEVNULL).returncode:
-                log_warn("Couldn't stop container %s" % img_cont_id)
-            if run(["/usr/bin/podman", "rm", img_cont_id], stdout=DEVNULL, stderr=DEVNULL).returncode:
-                log_warn("Couldn't remove container %s" % img_cont_id)
 
         if ret == 0 and crash_sys:
             task.add_results("sys", crash_sys)
