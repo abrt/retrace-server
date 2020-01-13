@@ -350,8 +350,9 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
         if output.strip() != executable:
             raise Exception("The appropriate package set could not be installed")
 
-        if run(["/usr/bin/mock", "shell", "--configdir", savedir,
-                "--", "/bin/chmod a+r '%s'" % executable]).returncode:
+        child = run(["/usr/bin/mock", "shell", "--configdir", savedir,
+                     "--", "/bin/chmod a+r '%s'" % executable])
+        if child.returncode:
             raise Exception("Unable to chmod the executable")
 
     batfile = os.path.join(savedir, "gdb.sh")
@@ -377,12 +378,14 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
                          PYTHON_LABEL_END, EXPLOITABLE_SEPARATOR))
 
     if CONFIG["RetraceEnvironment"] == "mock":
-        if run(["/usr/bin/mock", "--configdir", savedir, "--copyin",
-                batfile, "/var/spool/abrt/gdb.sh"], stdout=DEVNULL, stderr=DEVNULL).returncode:
+        child = run(["/usr/bin/mock", "--configdir", savedir, "--copyin",
+                     batfile, "/var/spool/abrt/gdb.sh"], stdout=DEVNULL, stderr=DEVNULL)
+        if child.returncode:
             raise Exception("Unable to copy GDB launcher into chroot")
 
-        if run(["/usr/bin/mock", "--configdir", savedir, "shell",
-            "--", "/bin/chmod a+rx /var/spool/abrt/gdb.sh"], stdout=DEVNULL, stderr=DEVNULL).returncode:
+        child = run(["/usr/bin/mock", "--configdir", savedir, "shell",
+                     "--", "/bin/chmod a+rx /var/spool/abrt/gdb.sh"], stdout=DEVNULL, stderr=DEVNULL)
+        if child.returncode:
             raise Exception("Unable to chmod GDB launcher")
 
         child = run(["/usr/bin/mock", "shell", "--configdir", savedir,
@@ -402,7 +405,8 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
 
         podman_build_call.extend(["--tag", "retrace-image:%s" % img_cont_id])
 
-        if run(podman_build_call, stdout=DEVNULL, stderr=DEVNULL).returncode:
+        child = run(podman_build_call, stdout=DEVNULL, stderr=DEVNULL)
+        if child.returncode:
             raise Exception("Unable to build podman container")
 
 
@@ -415,10 +419,11 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
                  "retrace-image:%s" % img_cont_id],
                 stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8')
 
-            if run("/usr/bin/podman exec -it %s bash -c "
-                   "'for PKG in /var/spool/abrt/faf-packages/*; "
-                   "do rpm2cpio $PKG | cpio -muid --quiet; done'"
-                   % img_cont_id, shell=True, stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8').returncode:
+            child = run("/usr/bin/podman exec -it %s bash -c "
+                        "'for PKG in /var/spool/abrt/faf-packages/*; "
+                        "do rpm2cpio $PKG | cpio -muid --quiet; done'"
+                        % img_cont_id, shell=True, stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8')
+            if child.returncode:
                 raise Exception("Unpacking of packages failed")
             child = run(["/usr/bin/podman", "exec", img_cont_id,
                          "/var/spool/abrt/gdb.sh"], stdout=PIPE, encoding='utf-8')
@@ -429,9 +434,10 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
     else:
         raise Exception("RetraceEnvironment set to invalid value")
 
-    backtrace = child.stdout.strip()
     if child.returncode:
         raise Exception("Running GDB failed")
+
+    backtrace = child.stdout.strip()
 
     exploitable = None
     if EXPLOITABLE_SEPARATOR in backtrace:
@@ -600,7 +606,8 @@ def find_kernel_debuginfo(kernelver):
             url += pkgname
 
             log_debug("Trying debuginfo URL: %s" % url)
-            if not run(["wget", "-nv", "-P", downloaddir, url], stdout=DEVNULL, stderr=DEVNULL).returncode:
+            child = run(["wget", "-nv", "-P", downloaddir, url], stdout=DEVNULL, stderr=DEVNULL)
+            if not child.returncode:
                 return os.path.join(downloaddir, pkgname)
 
     return None
@@ -791,7 +798,8 @@ def unpack(archive, mime, targetdir=None):
         cmd.append("--directory")
         cmd.append(targetdir)
 
-    return run(cmd).returncode
+    child = run(cmd)
+    return child.returncode
 
 
 def response(start_response, status, body="", extra_headers=[]):
@@ -1264,9 +1272,9 @@ class KernelVMcore:
         newvmcore = "%s.normal" % self._vmcore_path
         try:
             with open(self._vmcore_path) as fd:
-                retcode = run(["makedumpfile", "-R", newvmcore], stdin=fd).returncode
-                if retcode:
-                    log_warn("makedumpfile -R exited with %d" % retcode)
+                child = run(["makedumpfile", "-R", newvmcore], stdin=fd)
+                if child.returncode:
+                    log_warn("makedumpfile -R exited with %d" % child.returncode)
                     if os.path.isfile(newvmcore):
                         os.unlink(newvmcore)
                 else:
@@ -1334,10 +1342,10 @@ class KernelVMcore:
             return
 
         newvmcore = "%s.stripped" % self._vmcore_path
-        retcode = run(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
-                       "-x", self._vmlinux, "--message-level", "0", self._vmcore_path, newvmcore]).returncode
-        if retcode:
-            log_warn("makedumpfile exited with %d" % retcode)
+        child = run(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
+                     "-x", self._vmlinux, "--message-level", "0", self._vmcore_path, newvmcore])
+        if child.returncode:
+            log_warn("makedumpfile exited with %d" % child.returncode)
             if os.path.isfile(newvmcore):
                 os.unlink(newvmcore)
         else:
@@ -1711,7 +1719,8 @@ class RetraceTask:
             cmdline.append("--arch")
             cmdline.append(arch)
 
-        return run(cmdline).returncode
+        child = run(cmdline)
+        return child.returncode
 
     def _start_remote(self, host, debug=False, kernelver=None, arch=None):
         starturl = "%s/%d/start" % (host, self._taskid)
