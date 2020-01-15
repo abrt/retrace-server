@@ -1,18 +1,20 @@
 # Serdar Sağlam <teknomobil@msn.com>, 2019. #zanata
+# Oğuz Ersen <oguzersen@protonmail.com>, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2019-05-11 09:55+0000\n"
-"Last-Translator: Serdar Sağlam <teknomobil@msn.com>\n"
-"Language-Team: Turkish\n"
+"PO-Revision-Date: 2020-01-15 20:15+0000\n"
+"Last-Translator: Oğuz Ersen <oguzersen@protonmail.com>\n"
+"Language-Team: Turkish <https://translate.stg.fedoraproject.org/projects/"
+"abrt/retrace-server/tr/>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n>1)\n"
-"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=2; plural=(n>1);\n"
+"X-Generator: Weblate 3.10.1\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
@@ -49,7 +51,7 @@ msgstr "Belirtilen arşiv biçimi desteklenmiyor"
 
 #: ../src/create.wsgi:31
 msgid "You need to set Content-Length header properly"
-msgstr "İçerik Uzunluğu üst bilgisini uygun şekilde ayarlamanız gerekir."
+msgstr "Content-Length başlığını uygun şekilde ayarlamanız gerekmektedir"
 
 #: ../src/create.wsgi:35
 msgid "Specified archive is too large"
@@ -89,7 +91,7 @@ msgstr "Arşiv açılmıyor"
 
 #: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
-msgstr "Sembolik bağlantıların arşivde bulunmasına izin verilmemektedir."
+msgstr "Sembolik bağlantıların arşivde bulunmasına izin verilmemektedir"
 
 #: ../src/create.wsgi:131
 #, c-format
@@ -171,7 +173,7 @@ msgstr ""
 
 #: ../src/stats.wsgi:10
 msgid "Architecture"
-msgstr ""
+msgstr "Mimari"
 
 #: ../src/stats.wsgi:11
 msgid "Architectures"
@@ -207,7 +209,7 @@ msgstr ""
 
 #: ../src/stats.wsgi:19
 msgid "Name"
-msgstr ""
+msgstr "İsim"
 
 #: ../src/stats.wsgi:20
 msgid "Release"
