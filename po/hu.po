@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-01 08:48+0200\n"
+"POT-Creation-Date: 2012-01-02 11:31+0100\n"
 "PO-Revision-Date: 2017-07-08 08:06+0000\n"
 "Last-Translator: Meskó Balázs <meskobalazs@gmail.com>\n"
 "Language-Team: Hungarian\n"
@@ -35,7 +35,7 @@ msgstr "Helytelen jelszó"
 msgid "There is no backtrace for the specified task"
 msgstr "Nincs nyomkövetési információ a meghatározott feladatra"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:78
+#: ../src/create.wsgi:19 ../src/create.wsgi:70
 msgid "Retrace server is fully loaded at the moment"
 msgstr "Nyomkövető szerver jelenleg teljesen telített"
 
@@ -55,80 +55,53 @@ msgstr "Helyesen kell beállítania a Content-Length fejlécet"
 msgid "Specified archive is too large"
 msgstr "A megadott archívum túl nagy"
 
-#: ../src/create.wsgi:40
-msgid "X-CoreFileDirectory header has been disabled by server administrator"
-msgstr ""
-"Az X-CoreFileDirectory fejlécet a kiszolgáló adminisztrátora kikapcsolta"
-
-#: ../src/create.wsgi:53
+#: ../src/create.wsgi:47
 msgid "Unable to create working directory"
 msgstr "Munkakönyvtár létrehozása sikertelen"
 
-#: ../src/create.wsgi:59
+#: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
 msgstr "Szabad tárhely lekérése sikertelen"
 
-#: ../src/create.wsgi:63 ../src/create.wsgi:134
+#: ../src/create.wsgi:57 ../src/create.wsgi:99
 msgid "There is not enough storage space on the server"
 msgstr "Nincs elég tárhely a kiszolgálón"
 
-#: ../src/create.wsgi:71
+#: ../src/create.wsgi:63
 msgid "Unable to create new task"
 msgstr "Új feladat létrehozása sikertelen"
 
 #: ../src/create.wsgi:83
-msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr "Az „X-CoreFileDirectory” fejlécben megadott könyvtár nem létezik"
-
-#: ../src/create.wsgi:89
-#, c-format
-msgid ""
-"There are %d files in the '%s' directory. Only a single archive is supported"
-" at the moment"
-msgstr ""
-"%d fájl van a(z) „%s” könyvtárban. Pillanatnyilag csak egyetlen archívum "
-"támogatott."
-
-#: ../src/create.wsgi:98
-#, c-format
-msgid "You header specifies '%s' type, but the file type does not match"
-msgstr "A fejléc „%s” típust ad meg, de a fájltípus nem egyezik"
-
-#: ../src/create.wsgi:116
 msgid "Unable to save archive"
 msgstr "Az archívum mentése sikertelen"
 
-#: ../src/create.wsgi:124
+#: ../src/create.wsgi:89
 msgid "Unable to obtain unpacked size"
 msgstr "A kibontott méret lekérése sikertelen"
 
-#: ../src/create.wsgi:129
+#: ../src/create.wsgi:94
 msgid "Specified archive's content is too large"
 msgstr "A megadott archívum tartalma túl nagy"
 
-#: ../src/create.wsgi:146
+#: ../src/create.wsgi:111
 msgid "Unable to unpack archive"
 msgstr "Az archívum kibontása sikertelen"
 
-#: ../src/create.wsgi:158
+#: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
 msgstr "Szimbolikus linkek nem lehetnek az archívumban"
 
-#: ../src/create.wsgi:166
+#: ../src/create.wsgi:131
 #, c-format
 msgid "The '%s' file is larger than expected"
 msgstr "A(z) „%s” fájl nagyobb a vártnál"
 
-#: ../src/create.wsgi:170
+#: ../src/create.wsgi:135
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
 msgstr "A(z) „%s” fájl nem lehet az archívumban"
 
-#: ../src/create.wsgi:186
-msgid "Interactive tasks were disabled by server administrator"
-msgstr "Az interaktív műveleteket kikapcsolta a kiszolgáló adminisztrátora"
-
-#: ../src/create.wsgi:196
+#: ../src/create.wsgi:147
 #, c-format
 msgid "Required file '%s' is missing"
 msgstr "A szükséges „%s” fájl hiányzik"
@@ -153,16 +126,16 @@ msgstr ""
 
 #: ../src/index.wsgi:21
 msgid ""
-"Only the secure HTTPS connection is now allowed by the server. HTTP requests"
-" will be denied."
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
+"will be denied."
 msgstr ""
-"Már csak a biztonságos HTTPS kapcsolat engedélyezett a kiszolgálóval. A HTTP"
-" kérések megtagadásra kerülnek."
+"Már csak a biztonságos HTTPS kapcsolat engedélyezett a kiszolgálóval. A HTTP "
+"kérések megtagadásra kerülnek."
 
 #: ../src/index.wsgi:23
 msgid ""
-"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because"
-" of security reasons."
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
+"of security reasons."
 msgstr ""
 "Mind a HTTP és a HTTPS engedélyezett. Biztonsági okokból azonban szigorúan "
 "csak a HTTPS-t javasoljuk."
@@ -218,78 +191,98 @@ msgstr ""
 msgid "There is no log for the specified task"
 msgstr "Nincs napló a megadott feladathoz"
 
-#: ../src/stats.wsgi:12
+#: ../src/stats.wsgi:10
 msgid "Architecture"
 msgstr "Architektúra"
 
-#: ../src/stats.wsgi:13
+#: ../src/stats.wsgi:11
 msgid "Architectures"
 msgstr "Architektúrák"
 
-#: ../src/stats.wsgi:14
+#: ../src/stats.wsgi:12
 msgid "Build-id"
 msgstr "Építésazonosító"
 
-#: ../src/stats.wsgi:15
+#: ../src/stats.wsgi:13
 msgid "Count"
 msgstr "Számláló"
 
-#: ../src/stats.wsgi:16
+#: ../src/stats.wsgi:14
 msgid "Denied jobs"
 msgstr "Megtagadott feladatok"
 
-#: ../src/stats.wsgi:17
+#: ../src/stats.wsgi:15
 msgid "Failed"
 msgstr "Sikertelen"
 
-#: ../src/stats.wsgi:18
+#: ../src/stats.wsgi:16
 msgid "First retrace"
 msgstr "Első elemzés"
 
-#: ../src/stats.wsgi:19
+#: ../src/stats.wsgi:17
 msgid "Global statistics"
 msgstr "Összesített statisztika"
 
-#: ../src/stats.wsgi:20
+#: ../src/stats.wsgi:18
 msgid "Missing build-ids"
 msgstr "Hiányzó építésazonosító"
 
-#: ../src/stats.wsgi:21
+#: ../src/stats.wsgi:19
 msgid "Name"
 msgstr "Név"
 
-#: ../src/stats.wsgi:22
+#: ../src/stats.wsgi:20
 msgid "Release"
 msgstr "Kiadás"
 
-#: ../src/stats.wsgi:23
+#: ../src/stats.wsgi:21
 msgid "Releases"
 msgstr "Kiadások"
 
-#: ../src/stats.wsgi:24
+#: ../src/stats.wsgi:22
 msgid "Required packages"
 msgstr "Szükséges csomagok"
 
-#: ../src/stats.wsgi:25
+#: ../src/stats.wsgi:23
 msgid "Retraced packages"
 msgstr "Elemzett csomagok"
 
-#: ../src/stats.wsgi:26
+#: ../src/stats.wsgi:24
 msgid "Retrace Server statistics"
 msgstr "Nyomkövetési kiszolgáló statisztikája"
 
-#: ../src/stats.wsgi:27
+#: ../src/stats.wsgi:25
 msgid "Shared object name"
 msgstr "Megosztott elem név"
 
-#: ../src/stats.wsgi:28
+#: ../src/stats.wsgi:26
 msgid "Successful"
 msgstr "Sikeres"
 
-#: ../src/stats.wsgi:29
+#: ../src/stats.wsgi:27
 msgid "Total"
 msgstr "Összesítve"
 
-#: ../src/stats.wsgi:30
+#: ../src/stats.wsgi:28
 msgid "Versions"
 msgstr "Verziók"
+
+#~ msgid "X-CoreFileDirectory header has been disabled by server administrator"
+#~ msgstr ""
+#~ "Az X-CoreFileDirectory fejlécet a kiszolgáló adminisztrátora kikapcsolta"
+
+#~ msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+#~ msgstr "Az „X-CoreFileDirectory” fejlécben megadott könyvtár nem létezik"
+
+#~ msgid ""
+#~ "There are %d files in the '%s' directory. Only a single archive is "
+#~ "supported at the moment"
+#~ msgstr ""
+#~ "%d fájl van a(z) „%s” könyvtárban. Pillanatnyilag csak egyetlen archívum "
+#~ "támogatott."
+
+#~ msgid "You header specifies '%s' type, but the file type does not match"
+#~ msgstr "A fejléc „%s” típust ad meg, de a fájltípus nem egyezik"
+
+#~ msgid "Interactive tasks were disabled by server administrator"
+#~ msgstr "Az interaktív műveleteket kikapcsolta a kiszolgáló adminisztrátora"

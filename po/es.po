@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-01 08:48+0200\n"
+"POT-Creation-Date: 2012-01-02 11:31+0100\n"
 "PO-Revision-Date: 2016-07-03 06:39+0000\n"
 "Last-Translator: Máximo Castañeda Riloba <mcrcctm@gmail.com>\n"
 "Language-Team: Spanish\n"
@@ -35,7 +35,7 @@ msgstr "Contraseña inválida"
 msgid "There is no backtrace for the specified task"
 msgstr "No hay traza para esa tarea"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:78
+#: ../src/create.wsgi:19 ../src/create.wsgi:70
 msgid "Retrace server is fully loaded at the moment"
 msgstr "El servidor está completamente ocupado en este momento"
 
@@ -55,83 +55,53 @@ msgstr "La petición debe incluir el encabezamiento Content-Length"
 msgid "Specified archive is too large"
 msgstr "El archivo es demasiado grande"
 
-#: ../src/create.wsgi:40
-msgid "X-CoreFileDirectory header has been disabled by server administrator"
-msgstr ""
-"El administrador del servidor ha desactivado el encabezamiento "
-"X-CoreFileDirectory"
-
-#: ../src/create.wsgi:53
+#: ../src/create.wsgi:47
 msgid "Unable to create working directory"
 msgstr "No se pudo crear el directorio de trabajo"
 
-#: ../src/create.wsgi:59
+#: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
 msgstr "No se pudo determinar la cantidad de espacio libre del disco"
 
-#: ../src/create.wsgi:63 ../src/create.wsgi:134
+#: ../src/create.wsgi:57 ../src/create.wsgi:99
 msgid "There is not enough storage space on the server"
 msgstr "No hay suficiente espacio de almacenamiento en el servidor"
 
-#: ../src/create.wsgi:71
+#: ../src/create.wsgi:63
 msgid "Unable to create new task"
 msgstr "No se puedo crear una tarea nueva"
 
 #: ../src/create.wsgi:83
-msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr "El directorio indicado en 'X-CoreFileDirectory' no existe"
-
-#: ../src/create.wsgi:89
-#, c-format
-msgid ""
-"There are %d files in the '%s' directory. Only a single archive is supported"
-" at the moment"
-msgstr ""
-"Hay %d archivos en el directorio '%s'. Por ahora sólo se permite un único "
-"archivo"
-
-#: ../src/create.wsgi:98
-#, c-format
-msgid "You header specifies '%s' type, but the file type does not match"
-msgstr ""
-"El encabezamiento indica un tipo '%s', que no coincide con el tipo de "
-"archivo"
-
-#: ../src/create.wsgi:116
 msgid "Unable to save archive"
 msgstr "No se pudo guardar el archivo"
 
-#: ../src/create.wsgi:124
+#: ../src/create.wsgi:89
 msgid "Unable to obtain unpacked size"
 msgstr "No se pudo determinar el tamaño descomprimido"
 
-#: ../src/create.wsgi:129
+#: ../src/create.wsgi:94
 msgid "Specified archive's content is too large"
 msgstr "El contenido del archivo es demasiado grande"
 
-#: ../src/create.wsgi:146
+#: ../src/create.wsgi:111
 msgid "Unable to unpack archive"
 msgstr "No se pudo descomprimir el archivo"
 
-#: ../src/create.wsgi:158
+#: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
 msgstr "No se permiten los enlaces simbólicos en el archivo"
 
-#: ../src/create.wsgi:166
+#: ../src/create.wsgi:131
 #, c-format
 msgid "The '%s' file is larger than expected"
 msgstr "El archivo '%s' es mayor de lo esperado"
 
-#: ../src/create.wsgi:170
+#: ../src/create.wsgi:135
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
 msgstr "No se permite el archivo '%s' en el archivo comprimido"
 
-#: ../src/create.wsgi:186
-msgid "Interactive tasks were disabled by server administrator"
-msgstr "El administrador del servidor ha desactivado las tareas interactivas"
-
-#: ../src/create.wsgi:196
+#: ../src/create.wsgi:147
 #, c-format
 msgid "Required file '%s' is missing"
 msgstr "Falta el archivo obligatorio '%s'"
@@ -156,16 +126,16 @@ msgstr ""
 
 #: ../src/index.wsgi:21
 msgid ""
-"Only the secure HTTPS connection is now allowed by the server. HTTP requests"
-" will be denied."
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
+"will be denied."
 msgstr ""
 "Ahora sólo se permiten las conexiones HTTPS. Se denegarán las peticiones "
 "HTTP."
 
 #: ../src/index.wsgi:23
 msgid ""
-"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because"
-" of security reasons."
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
+"of security reasons."
 msgstr ""
 "Se permiten tanto HTTP como HTTPS. Se recomienda usar sólo HTTPS, por "
 "razones de seguridad."
@@ -194,13 +164,13 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
-"Su volcado sólo permanece en el servidor mientras se ejecuta la obtención de"
-" las trazas. Una vez terminada esa tarea, se guardan las trazas y el "
-"registro del traceado; el resto de datos (incluido el volcado del proceso) "
-"se borran. Para acceder tanto a las trazas como al registro se necesitan el "
+"Su volcado sólo permanece en el servidor mientras se ejecuta la obtención de "
+"las trazas. Una vez terminada esa tarea, se guardan las trazas y el registro "
+"del traceado; el resto de datos (incluido el volcado del proceso) se borran. "
+"Para acceder tanto a las trazas como al registro se necesitan el "
 "identificador de tarea y una clave, de forma que sólo se permite al autor "
-"verlas. Toda la información (incluidas las trazas) se borra tras %d horas de"
-" inactividad. No se guardan en el servidor datos que puedan ser privados "
+"verlas. Toda la información (incluidas las trazas) se borra tras %d horas de "
+"inactividad. No se guardan en el servidor datos que puedan ser privados "
 "durante más tiempo."
 
 #: ../src/index.wsgi:33
@@ -221,78 +191,102 @@ msgstr ""
 msgid "There is no log for the specified task"
 msgstr "No hay registro para la tarea indicada"
 
-#: ../src/stats.wsgi:12
+#: ../src/stats.wsgi:10
 msgid "Architecture"
 msgstr "Arquitectura"
 
-#: ../src/stats.wsgi:13
+#: ../src/stats.wsgi:11
 msgid "Architectures"
 msgstr "Arquitecturas"
 
-#: ../src/stats.wsgi:14
+#: ../src/stats.wsgi:12
 msgid "Build-id"
 msgstr "Identificador de compilación"
 
-#: ../src/stats.wsgi:15
+#: ../src/stats.wsgi:13
 msgid "Count"
 msgstr "Recuento"
 
-#: ../src/stats.wsgi:16
+#: ../src/stats.wsgi:14
 msgid "Denied jobs"
 msgstr "Tareas denegadas"
 
-#: ../src/stats.wsgi:17
+#: ../src/stats.wsgi:15
 msgid "Failed"
 msgstr "Fallidas"
 
-#: ../src/stats.wsgi:18
+#: ../src/stats.wsgi:16
 msgid "First retrace"
 msgstr "Primera traza"
 
-#: ../src/stats.wsgi:19
+#: ../src/stats.wsgi:17
 msgid "Global statistics"
 msgstr "Estadísticas generales"
 
-#: ../src/stats.wsgi:20
+#: ../src/stats.wsgi:18
 msgid "Missing build-ids"
 msgstr "Identificadores de compilación faltantes"
 
-#: ../src/stats.wsgi:21
+#: ../src/stats.wsgi:19
 msgid "Name"
 msgstr "Nombre"
 
-#: ../src/stats.wsgi:22
+#: ../src/stats.wsgi:20
 msgid "Release"
 msgstr "Lanzamiento"
 
-#: ../src/stats.wsgi:23
+#: ../src/stats.wsgi:21
 msgid "Releases"
 msgstr "Lanzamientos"
 
-#: ../src/stats.wsgi:24
+#: ../src/stats.wsgi:22
 msgid "Required packages"
 msgstr "Paquetes necesarios"
 
-#: ../src/stats.wsgi:25
+#: ../src/stats.wsgi:23
 msgid "Retraced packages"
 msgstr "Paquetes traceados"
 
-#: ../src/stats.wsgi:26
+#: ../src/stats.wsgi:24
 msgid "Retrace Server statistics"
 msgstr "Estadísticas del servidor"
 
-#: ../src/stats.wsgi:27
+#: ../src/stats.wsgi:25
 msgid "Shared object name"
 msgstr "Nombre de objeto compartido"
 
-#: ../src/stats.wsgi:28
+#: ../src/stats.wsgi:26
 msgid "Successful"
 msgstr "Con éxito"
 
-#: ../src/stats.wsgi:29
+#: ../src/stats.wsgi:27
 msgid "Total"
 msgstr "Total"
 
-#: ../src/stats.wsgi:30
+#: ../src/stats.wsgi:28
 msgid "Versions"
 msgstr "Versiones"
+
+#~ msgid "X-CoreFileDirectory header has been disabled by server administrator"
+#~ msgstr ""
+#~ "El administrador del servidor ha desactivado el encabezamiento X-"
+#~ "CoreFileDirectory"
+
+#~ msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+#~ msgstr "El directorio indicado en 'X-CoreFileDirectory' no existe"
+
+#~ msgid ""
+#~ "There are %d files in the '%s' directory. Only a single archive is "
+#~ "supported at the moment"
+#~ msgstr ""
+#~ "Hay %d archivos en el directorio '%s'. Por ahora sólo se permite un único "
+#~ "archivo"
+
+#~ msgid "You header specifies '%s' type, but the file type does not match"
+#~ msgstr ""
+#~ "El encabezamiento indica un tipo '%s', que no coincide con el tipo de "
+#~ "archivo"
+
+#~ msgid "Interactive tasks were disabled by server administrator"
+#~ msgstr ""
+#~ "El administrador del servidor ha desactivado las tareas interactivas"

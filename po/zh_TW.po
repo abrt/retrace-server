@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-01 08:48+0200\n"
+"POT-Creation-Date: 2012-01-02 11:31+0100\n"
 "PO-Revision-Date: 2017-09-06 03:04+0000\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Chinese (Taiwan)\n"
@@ -35,7 +35,7 @@ msgstr "密碼無效"
 msgid "There is no backtrace for the specified task"
 msgstr "指定的作業沒有回資訊溯"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:78
+#: ../src/create.wsgi:19 ../src/create.wsgi:70
 msgid "Retrace server is fully loaded at the moment"
 msgstr "追溯伺服器此刻達完全負載"
 
@@ -55,77 +55,53 @@ msgstr "您需要正確設定 Content-Length 標頭檔"
 msgid "Specified archive is too large"
 msgstr "指定的封存檔過大"
 
-#: ../src/create.wsgi:40
-msgid "X-CoreFileDirectory header has been disabled by server administrator"
-msgstr "X-CoreFileDirectory 標頭已經由伺服器管理員停用"
-
-#: ../src/create.wsgi:53
+#: ../src/create.wsgi:47
 msgid "Unable to create working directory"
 msgstr "無法建立工作目錄"
 
-#: ../src/create.wsgi:59
+#: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
 msgstr "無法取得磁碟可用空間"
 
-#: ../src/create.wsgi:63 ../src/create.wsgi:134
+#: ../src/create.wsgi:57 ../src/create.wsgi:99
 msgid "There is not enough storage space on the server"
 msgstr "伺服器上已無足夠存放空間"
 
-#: ../src/create.wsgi:71
+#: ../src/create.wsgi:63
 msgid "Unable to create new task"
 msgstr "無法建立新作業"
 
 #: ../src/create.wsgi:83
-msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr "「X-CoreFileDirectory」中指定的目錄不存在"
-
-#: ../src/create.wsgi:89
-#, c-format
-msgid ""
-"There are %d files in the '%s' directory. Only a single archive is supported"
-" at the moment"
-msgstr "有 %d 份檔案在「%s」目錄中。此刻只支援一份封存檔"
-
-#: ../src/create.wsgi:98
-#, c-format
-msgid "You header specifies '%s' type, but the file type does not match"
-msgstr "您的標頭指定的是「%s」類型，但是檔案類型不相符"
-
-#: ../src/create.wsgi:116
 msgid "Unable to save archive"
 msgstr "無法儲存封存檔"
 
-#: ../src/create.wsgi:124
+#: ../src/create.wsgi:89
 msgid "Unable to obtain unpacked size"
 msgstr "無法取得未解開的大小"
 
-#: ../src/create.wsgi:129
+#: ../src/create.wsgi:94
 msgid "Specified archive's content is too large"
 msgstr "指定的封存檔內容過大"
 
-#: ../src/create.wsgi:146
+#: ../src/create.wsgi:111
 msgid "Unable to unpack archive"
 msgstr "無法解開封存檔"
 
-#: ../src/create.wsgi:158
+#: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
 msgstr "封存檔中不允許有符號連結"
 
-#: ../src/create.wsgi:166
+#: ../src/create.wsgi:131
 #, c-format
 msgid "The '%s' file is larger than expected"
 msgstr "「%s」檔大於預期"
 
-#: ../src/create.wsgi:170
+#: ../src/create.wsgi:135
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
 msgstr "封存檔中不允許有「%s」檔案"
 
-#: ../src/create.wsgi:186
-msgid "Interactive tasks were disabled by server administrator"
-msgstr "互動式作業已由伺服器管理員停用"
-
-#: ../src/create.wsgi:196
+#: ../src/create.wsgi:147
 #, c-format
 msgid "Required file '%s' is missing"
 msgstr "遺失必要的「%s」檔"
@@ -143,18 +119,20 @@ msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s wiki:"
-msgstr "追溯伺服器是個提供核心傾印分析並透過網路生成回溯資料的可能性。您可以在追溯伺服器的 wiki 上找到更深入的資訊："
+msgstr ""
+"追溯伺服器是個提供核心傾印分析並透過網路生成回溯資料的可能性。您可以在追溯伺"
+"服器的 wiki 上找到更深入的資訊："
 
 #: ../src/index.wsgi:21
 msgid ""
-"Only the secure HTTPS connection is now allowed by the server. HTTP requests"
-" will be denied."
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
+"will be denied."
 msgstr "現在伺服器僅允許安全 HTTPS 連線。HTTP 連線請求會被拒絕。"
 
 #: ../src/index.wsgi:23
 msgid ""
-"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because"
-" of security reasons."
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
+"of security reasons."
 msgstr "HTTP 和 HTTPS 都允許。基於安全問題，嚴格建議使用 HTTPS。"
 
 #: ../src/index.wsgi:24
@@ -179,9 +157,11 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
-"您的核心傾印僅在追溯作業執行期間作保留。一旦完成作業，伺服器只留下追溯紀錄與回溯資料。所有其他資料（包括核心傾印）皆會刪除。追溯紀錄與回溯資料僅可透過獨特的作業"
-" ID 與密碼才能存取，因此沒人（除作者外）允許檢視這些資料。所有的崩潰資訊（包括回溯資料）會在無動作 %d "
-"小時後自動刪除。伺服器上便不再留存可能的隱私資料。"
+"您的核心傾印僅在追溯作業執行期間作保留。一旦完成作業，伺服器只留下追溯紀錄與"
+"回溯資料。所有其他資料（包括核心傾印）皆會刪除。追溯紀錄與回溯資料僅可透過獨"
+"特的作業 ID 與密碼才能存取，因此沒人（除作者外）允許檢視這些資料。所有的崩潰"
+"資訊（包括回溯資料）會在無動作 %d 小時後自動刪除。伺服器上便不再留存可能的隱"
+"私資料。"
 
 #: ../src/index.wsgi:33
 msgid ""
@@ -191,85 +171,103 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
-"您的核心傾印僅用於追溯用途。伺服器管理員不會從核心傾印或回溯資料中試圖取用您的私人資料。嚴格建議使用安全的溝通管道 "
-"(HTTPS)。伺服器管理員對於使用不安全溝通管道（例如 HTTP）所衍生出的任何問題一概不負責。"
+"您的核心傾印僅用於追溯用途。伺服器管理員不會從核心傾印或回溯資料中試圖取用您"
+"的私人資料。嚴格建議使用安全的溝通管道 (HTTPS)。伺服器管理員對於使用不安全溝"
+"通管道（例如 HTTP）所衍生出的任何問題一概不負責。"
 
 #: ../src/log.wsgi:30
 msgid "There is no log for the specified task"
 msgstr "沒有指定作業的紀錄"
 
-#: ../src/stats.wsgi:12
+#: ../src/stats.wsgi:10
 msgid "Architecture"
 msgstr "架構"
 
-#: ../src/stats.wsgi:13
+#: ../src/stats.wsgi:11
 msgid "Architectures"
 msgstr "架構"
 
-#: ../src/stats.wsgi:14
+#: ../src/stats.wsgi:12
 msgid "Build-id"
 msgstr "Build-id"
 
-#: ../src/stats.wsgi:15
+#: ../src/stats.wsgi:13
 msgid "Count"
 msgstr "計數"
 
-#: ../src/stats.wsgi:16
+#: ../src/stats.wsgi:14
 msgid "Denied jobs"
 msgstr "拒絕的工作"
 
-#: ../src/stats.wsgi:17
+#: ../src/stats.wsgi:15
 msgid "Failed"
 msgstr "失敗"
 
-#: ../src/stats.wsgi:18
+#: ../src/stats.wsgi:16
 msgid "First retrace"
 msgstr "第一次追溯"
 
-#: ../src/stats.wsgi:19
+#: ../src/stats.wsgi:17
 msgid "Global statistics"
 msgstr "全域統計數據"
 
-#: ../src/stats.wsgi:20
+#: ../src/stats.wsgi:18
 msgid "Missing build-ids"
 msgstr "遺失 build-id"
 
-#: ../src/stats.wsgi:21
+#: ../src/stats.wsgi:19
 msgid "Name"
 msgstr "名稱"
 
-#: ../src/stats.wsgi:22
+#: ../src/stats.wsgi:20
 msgid "Release"
 msgstr "發行版"
 
-#: ../src/stats.wsgi:23
+#: ../src/stats.wsgi:21
 msgid "Releases"
 msgstr "發行版"
 
-#: ../src/stats.wsgi:24
+#: ../src/stats.wsgi:22
 msgid "Required packages"
 msgstr "需要的軟體包"
 
-#: ../src/stats.wsgi:25
+#: ../src/stats.wsgi:23
 msgid "Retraced packages"
 msgstr "追溯的軟體包"
 
-#: ../src/stats.wsgi:26
+#: ../src/stats.wsgi:24
 msgid "Retrace Server statistics"
 msgstr "追溯伺服器統計數據"
 
-#: ../src/stats.wsgi:27
+#: ../src/stats.wsgi:25
 msgid "Shared object name"
 msgstr "共享的物件名稱"
 
-#: ../src/stats.wsgi:28
+#: ../src/stats.wsgi:26
 msgid "Successful"
 msgstr "成功"
 
-#: ../src/stats.wsgi:29
+#: ../src/stats.wsgi:27
 msgid "Total"
 msgstr "總計"
 
-#: ../src/stats.wsgi:30
+#: ../src/stats.wsgi:28
 msgid "Versions"
 msgstr "版本"
+
+#~ msgid "X-CoreFileDirectory header has been disabled by server administrator"
+#~ msgstr "X-CoreFileDirectory 標頭已經由伺服器管理員停用"
+
+#~ msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+#~ msgstr "「X-CoreFileDirectory」中指定的目錄不存在"
+
+#~ msgid ""
+#~ "There are %d files in the '%s' directory. Only a single archive is "
+#~ "supported at the moment"
+#~ msgstr "有 %d 份檔案在「%s」目錄中。此刻只支援一份封存檔"
+
+#~ msgid "You header specifies '%s' type, but the file type does not match"
+#~ msgstr "您的標頭指定的是「%s」類型，但是檔案類型不相符"
+
+#~ msgid "Interactive tasks were disabled by server administrator"
+#~ msgstr "互動式作業已由伺服器管理員停用"

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-01 08:48+0200\n"
+"POT-Creation-Date: 2012-01-02 11:31+0100\n"
 "PO-Revision-Date: 2018-02-24 11:29+0000\n"
 "Last-Translator: Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>\n"
 "Language-Team: Catalan\n"
@@ -36,7 +36,7 @@ msgstr "Contrasenya incorrecta"
 msgid "There is no backtrace for the specified task"
 msgstr "No hi ha cap traça inversa per a la tasca especificada"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:78
+#: ../src/create.wsgi:19 ../src/create.wsgi:70
 msgid "Retrace server is fully loaded at the moment"
 msgstr "Actualment el servidor de retraçat està completament carregat"
 
@@ -56,85 +56,53 @@ msgstr "Cal que establiu adequadament la capçalera Content-Length"
 msgid "Specified archive is too large"
 msgstr "L'arxiu especificat és massa gran"
 
-#: ../src/create.wsgi:40
-msgid "X-CoreFileDirectory header has been disabled by server administrator"
-msgstr ""
-"La capçalera X-CoreFileDirectory ha estat inhabilitada per l'administrador "
-"del servidor"
-
-#: ../src/create.wsgi:53
+#: ../src/create.wsgi:47
 msgid "Unable to create working directory"
 msgstr "No es pot crear el directori de treball"
 
-#: ../src/create.wsgi:59
+#: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
 msgstr "No es pot obtenir espai lliure en disc"
 
-#: ../src/create.wsgi:63 ../src/create.wsgi:134
+#: ../src/create.wsgi:57 ../src/create.wsgi:99
 msgid "There is not enough storage space on the server"
 msgstr "No hi ha prou espai d'emmagatzematge al servidor"
 
-#: ../src/create.wsgi:71
+#: ../src/create.wsgi:63
 msgid "Unable to create new task"
 msgstr "No es pot crear la tasca nova"
 
 #: ../src/create.wsgi:83
-msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr "No existeix el directori que s'ha especificat a «X-CoreFileDirectory»"
-
-#: ../src/create.wsgi:89
-#, c-format
-msgid ""
-"There are %d files in the '%s' directory. Only a single archive is supported"
-" at the moment"
-msgstr ""
-"Hi ha %d fitxers al directori «%s». Actualment només està suportat un únic "
-"arxiu"
-
-#: ../src/create.wsgi:98
-#, c-format
-msgid "You header specifies '%s' type, but the file type does not match"
-msgstr ""
-"La vostra capçalera especifica el tipus «%s», però el tipus de fitxer no "
-"correspon"
-
-#: ../src/create.wsgi:116
 msgid "Unable to save archive"
 msgstr "No es pot desar l'arxiu"
 
-#: ../src/create.wsgi:124
+#: ../src/create.wsgi:89
 msgid "Unable to obtain unpacked size"
 msgstr "No es pot obtenir la mida un cop descomprimit"
 
-#: ../src/create.wsgi:129
+#: ../src/create.wsgi:94
 msgid "Specified archive's content is too large"
 msgstr "El contingut de l'arxiu especificat és massa gran"
 
-#: ../src/create.wsgi:146
+#: ../src/create.wsgi:111
 msgid "Unable to unpack archive"
 msgstr "No es pot desempaquetar l'arxiu"
 
-#: ../src/create.wsgi:158
+#: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
 msgstr "No es permet que hi hagi enllaços simbòlics a l'arxiu"
 
-#: ../src/create.wsgi:166
+#: ../src/create.wsgi:131
 #, c-format
 msgid "The '%s' file is larger than expected"
 msgstr "El fitxer «%s» era més gran del que s'esperava"
 
-#: ../src/create.wsgi:170
+#: ../src/create.wsgi:135
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
 msgstr "El fitxer «%s» se li permet estar a l'arxiu"
 
-#: ../src/create.wsgi:186
-msgid "Interactive tasks were disabled by server administrator"
-msgstr ""
-"Les tasques interactives van ser desactivades per l'administrador del "
-"servidor"
-
-#: ../src/create.wsgi:196
+#: ../src/create.wsgi:147
 #, c-format
 msgid "Required file '%s' is missing"
 msgstr "Falta el fitxer requerit «%s»"
@@ -153,22 +121,22 @@ msgid ""
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s wiki:"
 msgstr ""
-"El servidor de retraçat és un servei que ofereix la possibilitat d'analitzar"
-" el bolc de memòria i generar la traça inversa a través de la xarxa. Podeu "
+"El servidor de retraçat és un servei que ofereix la possibilitat d'analitzar "
+"el bolc de memòria i generar la traça inversa a través de la xarxa. Podeu "
 "trobar més informació al wiki del servidor de retraçat:"
 
 #: ../src/index.wsgi:21
 msgid ""
-"Only the secure HTTPS connection is now allowed by the server. HTTP requests"
-" will be denied."
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
+"will be denied."
 msgstr ""
 "Ara tan sols la connexió segura HTTPS està permesa pel servidor. Es "
 "denegaran les peticions HTTP."
 
 #: ../src/index.wsgi:23
 msgid ""
-"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because"
-" of security reasons."
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
+"of security reasons."
 msgstr ""
 "Es permet HTTP i HTTPS. L'ús d'HTTPS és estrictament recomanable per raons "
 "de seguretat."
@@ -203,9 +171,9 @@ msgstr ""
 "(incloent-hi el bolc de la memòria). El registre de retraçat i de la traça "
 "inversa només són accessibles a través de l'id. únic de la tasca i una "
 "contrasenya, de manera que ningú (excepte l'autor) pot visualitzar-ho. Tota "
-"la informació de la pana (incloent-hi la traça inversa) s'elimina després de"
-" %d hores d'inactivitat. Possiblement cap dada privada es manté al servidor,"
-" per més temps."
+"la informació de la pana (incloent-hi la traça inversa) s'elimina després de "
+"%d hores d'inactivitat. Possiblement cap dada privada es manté al servidor, "
+"per més temps."
 
 #: ../src/index.wsgi:33
 msgid ""
@@ -216,9 +184,9 @@ msgid ""
 "an insecure channel (such as HTTP)."
 msgstr ""
 "El bolc de la memòria només s'utilitza per als propòsits de retraçat. Els "
-"administradors del servidor no intenten d'obtenir les vostres dades privades"
-" a partir dels bolcs de la memòria o de les traces inverses. L'ús d'un canal"
-" de comunicació segur (HTTPS) és estrictament recomanat. Els administradors "
+"administradors del servidor no intenten d'obtenir les vostres dades privades "
+"a partir dels bolcs de la memòria o de les traces inverses. L'ús d'un canal "
+"de comunicació segur (HTTPS) és estrictament recomanat. Els administradors "
 "del servidor no són responsables dels problemes relacionats amb l'ús d'un "
 "canal no segur (per exemple, HTTP)."
 
@@ -226,78 +194,104 @@ msgstr ""
 msgid "There is no log for the specified task"
 msgstr "No hi ha cap registre per a la tasca especificada"
 
-#: ../src/stats.wsgi:12
+#: ../src/stats.wsgi:10
 msgid "Architecture"
 msgstr "Arquitectura"
 
-#: ../src/stats.wsgi:13
+#: ../src/stats.wsgi:11
 msgid "Architectures"
 msgstr "Arquitectures"
 
-#: ../src/stats.wsgi:14
+#: ../src/stats.wsgi:12
 msgid "Build-id"
 msgstr "Id. de la construcció"
 
-#: ../src/stats.wsgi:15
+#: ../src/stats.wsgi:13
 msgid "Count"
 msgstr "Compte"
 
-#: ../src/stats.wsgi:16
+#: ../src/stats.wsgi:14
 msgid "Denied jobs"
 msgstr "Treballs denegats"
 
-#: ../src/stats.wsgi:17
+#: ../src/stats.wsgi:15
 msgid "Failed"
 msgstr "Fracassat"
 
-#: ../src/stats.wsgi:18
+#: ../src/stats.wsgi:16
 msgid "First retrace"
 msgstr "Primer retraça"
 
-#: ../src/stats.wsgi:19
+#: ../src/stats.wsgi:17
 msgid "Global statistics"
 msgstr "Estadístiques globals"
 
-#: ../src/stats.wsgi:20
+#: ../src/stats.wsgi:18
 msgid "Missing build-ids"
 msgstr "Falten els id. de la construcció"
 
-#: ../src/stats.wsgi:21
+#: ../src/stats.wsgi:19
 msgid "Name"
 msgstr "Nom"
 
-#: ../src/stats.wsgi:22
+#: ../src/stats.wsgi:20
 msgid "Release"
 msgstr "Llançament"
 
-#: ../src/stats.wsgi:23
+#: ../src/stats.wsgi:21
 msgid "Releases"
 msgstr "Llançaments"
 
-#: ../src/stats.wsgi:24
+#: ../src/stats.wsgi:22
 msgid "Required packages"
 msgstr "Paquets requerits"
 
-#: ../src/stats.wsgi:25
+#: ../src/stats.wsgi:23
 msgid "Retraced packages"
 msgstr "Paquets retraçats"
 
-#: ../src/stats.wsgi:26
+#: ../src/stats.wsgi:24
 msgid "Retrace Server statistics"
 msgstr "Estadístiques del servidor de retraçat"
 
-#: ../src/stats.wsgi:27
+#: ../src/stats.wsgi:25
 msgid "Shared object name"
 msgstr "Nom de l'objecte compartit"
 
-#: ../src/stats.wsgi:28
+#: ../src/stats.wsgi:26
 msgid "Successful"
 msgstr "Reeixit"
 
-#: ../src/stats.wsgi:29
+#: ../src/stats.wsgi:27
 msgid "Total"
 msgstr "Total"
 
-#: ../src/stats.wsgi:30
+#: ../src/stats.wsgi:28
 msgid "Versions"
 msgstr "Versions"
+
+#~ msgid "X-CoreFileDirectory header has been disabled by server administrator"
+#~ msgstr ""
+#~ "La capçalera X-CoreFileDirectory ha estat inhabilitada per "
+#~ "l'administrador del servidor"
+
+#~ msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+#~ msgstr ""
+#~ "No existeix el directori que s'ha especificat a «X-CoreFileDirectory»"
+
+#~ msgid ""
+#~ "There are %d files in the '%s' directory. Only a single archive is "
+#~ "supported at the moment"
+#~ msgstr ""
+#~ "Hi ha %d fitxers al directori «%s». Actualment només està suportat un "
+#~ "únic arxiu"
+
+#~ msgid "You header specifies '%s' type, but the file type does not match"
+#~ msgstr ""
+#~ "La vostra capçalera especifica el tipus «%s», però el tipus de fitxer no "
+#~ "correspon"
+
+#~ msgid "Interactive tasks were disabled by server administrator"
+#~ msgstr ""
+#~ "Les tasques interactives van ser desactivades per l'administrador del "
+#~ "servidor"
