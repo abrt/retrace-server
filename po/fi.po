@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-01 08:48+0200\n"
+"POT-Creation-Date: 2012-01-02 11:31+0100\n"
 "PO-Revision-Date: 2017-04-17 02:27+0000\n"
 "Last-Translator: Toni Rantala <trantalafilo@gmail.com>\n"
 "Language-Team: Finnish\n"
@@ -35,7 +35,7 @@ msgstr "Väärä salasana"
 msgid "There is no backtrace for the specified task"
 msgstr ""
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:78
+#: ../src/create.wsgi:19 ../src/create.wsgi:70
 msgid "Retrace server is fully loaded at the moment"
 msgstr ""
 
@@ -55,77 +55,53 @@ msgstr ""
 msgid "Specified archive is too large"
 msgstr ""
 
-#: ../src/create.wsgi:40
-msgid "X-CoreFileDirectory header has been disabled by server administrator"
-msgstr ""
-
-#: ../src/create.wsgi:53
+#: ../src/create.wsgi:47
 msgid "Unable to create working directory"
 msgstr "Hakemistoa ei voitu luoda"
 
-#: ../src/create.wsgi:59
+#: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
 msgstr ""
 
-#: ../src/create.wsgi:63 ../src/create.wsgi:134
+#: ../src/create.wsgi:57 ../src/create.wsgi:99
 msgid "There is not enough storage space on the server"
 msgstr "Palvelimella ei ole tarpeeksi vapaata tilaa"
 
-#: ../src/create.wsgi:71
+#: ../src/create.wsgi:63
 msgid "Unable to create new task"
 msgstr ""
 
 #: ../src/create.wsgi:83
-msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr ""
-
-#: ../src/create.wsgi:89
-#, c-format
-msgid ""
-"There are %d files in the '%s' directory. Only a single archive is supported"
-" at the moment"
-msgstr ""
-
-#: ../src/create.wsgi:98
-#, c-format
-msgid "You header specifies '%s' type, but the file type does not match"
-msgstr ""
-
-#: ../src/create.wsgi:116
 msgid "Unable to save archive"
 msgstr "Arkistoa ei voitu tallentaa"
 
-#: ../src/create.wsgi:124
+#: ../src/create.wsgi:89
 msgid "Unable to obtain unpacked size"
 msgstr ""
 
-#: ../src/create.wsgi:129
+#: ../src/create.wsgi:94
 msgid "Specified archive's content is too large"
 msgstr ""
 
-#: ../src/create.wsgi:146
+#: ../src/create.wsgi:111
 msgid "Unable to unpack archive"
 msgstr "Arkistoa ei voitu purkaa"
 
-#: ../src/create.wsgi:158
+#: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
 msgstr "Symbolisetlinkit eivät ole sallittuja arkistossa"
 
-#: ../src/create.wsgi:166
+#: ../src/create.wsgi:131
 #, c-format
 msgid "The '%s' file is larger than expected"
 msgstr "Tiedosto  '%s' on suurempi kuin odotettin"
 
-#: ../src/create.wsgi:170
+#: ../src/create.wsgi:135
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
 msgstr "Tiedosto '%s' ei ole sallittu arkistossa"
 
-#: ../src/create.wsgi:186
-msgid "Interactive tasks were disabled by server administrator"
-msgstr ""
-
-#: ../src/create.wsgi:196
+#: ../src/create.wsgi:147
 #, c-format
 msgid "Required file '%s' is missing"
 msgstr "Vaadittua tiedostoa  '%s' ei löydy"
@@ -147,15 +123,15 @@ msgstr ""
 
 #: ../src/index.wsgi:21
 msgid ""
-"Only the secure HTTPS connection is now allowed by the server. HTTP requests"
-" will be denied."
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
+"will be denied."
 msgstr ""
 "Palvelin hyväksyy vain turvalliset HTTPS-yhteydet. HTTP-pyynnöt evätään."
 
 #: ../src/index.wsgi:23
 msgid ""
-"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because"
-" of security reasons."
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
+"of security reasons."
 msgstr ""
 "Molemmat HTTP ja HTTPS sallitaan. HTTPS:n käyttöä suositellaan "
 "tietoturvasyiden vuoksi."
@@ -196,78 +172,78 @@ msgstr ""
 msgid "There is no log for the specified task"
 msgstr ""
 
-#: ../src/stats.wsgi:12
+#: ../src/stats.wsgi:10
 msgid "Architecture"
 msgstr "Arkkitehtuuri"
 
-#: ../src/stats.wsgi:13
+#: ../src/stats.wsgi:11
 msgid "Architectures"
 msgstr "Arkkitehtuurit"
 
-#: ../src/stats.wsgi:14
+#: ../src/stats.wsgi:12
 msgid "Build-id"
 msgstr "Koonti-id"
 
-#: ../src/stats.wsgi:15
+#: ../src/stats.wsgi:13
 msgid "Count"
 msgstr "Luku"
 
-#: ../src/stats.wsgi:16
+#: ../src/stats.wsgi:14
 msgid "Denied jobs"
 msgstr ""
 
-#: ../src/stats.wsgi:17
+#: ../src/stats.wsgi:15
 msgid "Failed"
 msgstr "Epäonistui"
 
-#: ../src/stats.wsgi:18
+#: ../src/stats.wsgi:16
 msgid "First retrace"
 msgstr ""
 
-#: ../src/stats.wsgi:19
+#: ../src/stats.wsgi:17
 msgid "Global statistics"
 msgstr ""
 
-#: ../src/stats.wsgi:20
+#: ../src/stats.wsgi:18
 msgid "Missing build-ids"
 msgstr "Puuttuvat koonti-id:t"
 
-#: ../src/stats.wsgi:21
+#: ../src/stats.wsgi:19
 msgid "Name"
 msgstr "Nimi"
 
-#: ../src/stats.wsgi:22
+#: ../src/stats.wsgi:20
 msgid "Release"
 msgstr "Julkaisu"
 
-#: ../src/stats.wsgi:23
+#: ../src/stats.wsgi:21
 msgid "Releases"
 msgstr "Julkaisut"
 
-#: ../src/stats.wsgi:24
+#: ../src/stats.wsgi:22
 msgid "Required packages"
 msgstr "Vaadittavat paketit"
 
-#: ../src/stats.wsgi:25
+#: ../src/stats.wsgi:23
 msgid "Retraced packages"
 msgstr ""
 
-#: ../src/stats.wsgi:26
+#: ../src/stats.wsgi:24
 msgid "Retrace Server statistics"
 msgstr ""
 
-#: ../src/stats.wsgi:27
+#: ../src/stats.wsgi:25
 msgid "Shared object name"
 msgstr ""
 
-#: ../src/stats.wsgi:28
+#: ../src/stats.wsgi:26
 msgid "Successful"
 msgstr "Onnistunut"
 
-#: ../src/stats.wsgi:29
+#: ../src/stats.wsgi:27
 msgid "Total"
 msgstr "Yhteensä"
 
-#: ../src/stats.wsgi:30
+#: ../src/stats.wsgi:28
 msgid "Versions"
 msgstr "Versiot"

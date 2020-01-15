@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-01 08:48+0200\n"
+"POT-Creation-Date: 2012-01-02 11:31+0100\n"
 "PO-Revision-Date: 2016-09-01 09:40+0000\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -11,7 +11,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2)\n"
 "X-Generator: Zanata 4.6.2\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
@@ -35,7 +36,7 @@ msgstr "Nieprawidłowe hasło"
 msgid "There is no backtrace for the specified task"
 msgstr "Brak wyjątku dla podanego zadania"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:78
+#: ../src/create.wsgi:19 ../src/create.wsgi:70
 msgid "Retrace server is fully loaded at the moment"
 msgstr "Serwer ponownego śledzenia jest całkowicie zajęty"
 
@@ -55,79 +56,53 @@ msgstr "Należy poprawnie ustawić nagłówek Content-Length"
 msgid "Specified archive is too large"
 msgstr "Podane archiwum jest za duże"
 
-#: ../src/create.wsgi:40
-msgid "X-CoreFileDirectory header has been disabled by server administrator"
-msgstr ""
-"Nagłówek X-CoreFileDirectory został wyłączony przez administratora serwera"
-
-#: ../src/create.wsgi:53
+#: ../src/create.wsgi:47
 msgid "Unable to create working directory"
 msgstr "Nie można utworzyć katalogu roboczego"
 
-#: ../src/create.wsgi:59
+#: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
 msgstr "Nie można uzyskać wolnego miejsca na dysku"
 
-#: ../src/create.wsgi:63 ../src/create.wsgi:134
+#: ../src/create.wsgi:57 ../src/create.wsgi:99
 msgid "There is not enough storage space on the server"
 msgstr "Za mało miejsca na serwerze"
 
-#: ../src/create.wsgi:71
+#: ../src/create.wsgi:63
 msgid "Unable to create new task"
 msgstr "Nie można utworzyć nowego zadania"
 
 #: ../src/create.wsgi:83
-msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr "Katalog podany w „X-CoreFileDirectory” nie istnieje"
-
-#: ../src/create.wsgi:89
-#, c-format
-msgid ""
-"There are %d files in the '%s' directory. Only a single archive is supported"
-" at the moment"
-msgstr ""
-"%d plików w katalogu „%s”. Obecnie obsługiwane są tylko pojedyncze archiwa"
-
-#: ../src/create.wsgi:98
-#, c-format
-msgid "You header specifies '%s' type, but the file type does not match"
-msgstr "Nagłówek określa typ „%s”, ale typ pliku się nie zgadza"
-
-#: ../src/create.wsgi:116
 msgid "Unable to save archive"
 msgstr "Nie można zapisać archiwum"
 
-#: ../src/create.wsgi:124
+#: ../src/create.wsgi:89
 msgid "Unable to obtain unpacked size"
 msgstr "Nie można uzyskać rozpakowanego rozmiaru"
 
-#: ../src/create.wsgi:129
+#: ../src/create.wsgi:94
 msgid "Specified archive's content is too large"
 msgstr "Zawartość podanego archiwum jest za duża"
 
-#: ../src/create.wsgi:146
+#: ../src/create.wsgi:111
 msgid "Unable to unpack archive"
 msgstr "Nie można rozpakować archiwum"
 
-#: ../src/create.wsgi:158
+#: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
 msgstr "Dowiązania symboliczne w archiwach się niedozwolone"
 
-#: ../src/create.wsgi:166
+#: ../src/create.wsgi:131
 #, c-format
 msgid "The '%s' file is larger than expected"
 msgstr "Plik „%s” jest większy niż oczekiwano"
 
-#: ../src/create.wsgi:170
+#: ../src/create.wsgi:135
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
 msgstr "Plik „%s” nie jest dozwolony w archiwum"
 
-#: ../src/create.wsgi:186
-msgid "Interactive tasks were disabled by server administrator"
-msgstr "Zadania interaktywne zostały wyłączone przez administratora serwera"
-
-#: ../src/create.wsgi:196
+#: ../src/create.wsgi:147
 #, c-format
 msgid "Required file '%s' is missing"
 msgstr "Brak wymaganego pliku „%s”"
@@ -152,16 +127,16 @@ msgstr ""
 
 #: ../src/index.wsgi:21
 msgid ""
-"Only the secure HTTPS connection is now allowed by the server. HTTP requests"
-" will be denied."
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
+"will be denied."
 msgstr ""
 "Tylko zabezpieczone połączenia HTTPS są dozwolone na serwerze. Żądania HTTP "
 "będą odrzucane."
 
 #: ../src/index.wsgi:23
 msgid ""
-"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because"
-" of security reasons."
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
+"of security reasons."
 msgstr ""
 "Połączenia HTTP i HTTPS są dozwolone. Używanie HTTPS jest mocno zalecane "
 "z powodów bezpieczeństwa."
@@ -206,87 +181,106 @@ msgid ""
 "an insecure channel (such as HTTP)."
 msgstr ""
 "Zrzut core jest używany tylko w celu ponownego śledzenia. Administratorzy "
-"serwera nie uzyskują danych osobistych użytkowników ze zrzutów lub wyjątków."
-" Używanie zabezpieczonego kanału komunikacji (HTTPS) jest mocno zalecane. "
-"Administratorzy serwera nie są odpowiedzialni za problemy związane z użyciem"
-" niezabezpieczonego kanału komunikacji (takiego jak HTTP)."
+"serwera nie uzyskują danych osobistych użytkowników ze zrzutów lub wyjątków. "
+"Używanie zabezpieczonego kanału komunikacji (HTTPS) jest mocno zalecane. "
+"Administratorzy serwera nie są odpowiedzialni za problemy związane z użyciem "
+"niezabezpieczonego kanału komunikacji (takiego jak HTTP)."
 
 #: ../src/log.wsgi:30
 msgid "There is no log for the specified task"
 msgstr "Brak dziennika dla podanego zadania"
 
-#: ../src/stats.wsgi:12
+#: ../src/stats.wsgi:10
 msgid "Architecture"
 msgstr "Architektura"
 
-#: ../src/stats.wsgi:13
+#: ../src/stats.wsgi:11
 msgid "Architectures"
 msgstr "Architektury"
 
-#: ../src/stats.wsgi:14
+#: ../src/stats.wsgi:12
 msgid "Build-id"
 msgstr "Identyfikator budowania"
 
-#: ../src/stats.wsgi:15
+#: ../src/stats.wsgi:13
 msgid "Count"
 msgstr "Liczba"
 
-#: ../src/stats.wsgi:16
+#: ../src/stats.wsgi:14
 msgid "Denied jobs"
 msgstr "Odrzucone zadania"
 
-#: ../src/stats.wsgi:17
+#: ../src/stats.wsgi:15
 msgid "Failed"
 msgstr "Niepowodzenie"
 
-#: ../src/stats.wsgi:18
+#: ../src/stats.wsgi:16
 msgid "First retrace"
 msgstr "Pierwsze ponowne śledzenie"
 
-#: ../src/stats.wsgi:19
+#: ../src/stats.wsgi:17
 msgid "Global statistics"
 msgstr "Globalne statystyki"
 
-#: ../src/stats.wsgi:20
+#: ../src/stats.wsgi:18
 msgid "Missing build-ids"
 msgstr "Brak identyfikatorów budowania"
 
-#: ../src/stats.wsgi:21
+#: ../src/stats.wsgi:19
 msgid "Name"
 msgstr "Nazwa"
 
-#: ../src/stats.wsgi:22
+#: ../src/stats.wsgi:20
 msgid "Release"
 msgstr "Wydanie"
 
-#: ../src/stats.wsgi:23
+#: ../src/stats.wsgi:21
 msgid "Releases"
 msgstr "Wydania"
 
-#: ../src/stats.wsgi:24
+#: ../src/stats.wsgi:22
 msgid "Required packages"
 msgstr "Wymagane pakiety"
 
-#: ../src/stats.wsgi:25
+#: ../src/stats.wsgi:23
 msgid "Retraced packages"
 msgstr "Ponownie prześledzone pakiety"
 
-#: ../src/stats.wsgi:26
+#: ../src/stats.wsgi:24
 msgid "Retrace Server statistics"
 msgstr "Statystyki serwera ponownego śledzenia"
 
-#: ../src/stats.wsgi:27
+#: ../src/stats.wsgi:25
 msgid "Shared object name"
 msgstr "Nazwa obiektu współdzielonego"
 
-#: ../src/stats.wsgi:28
+#: ../src/stats.wsgi:26
 msgid "Successful"
 msgstr "Powodzenie"
 
-#: ../src/stats.wsgi:29
+#: ../src/stats.wsgi:27
 msgid "Total"
 msgstr "Razem"
 
-#: ../src/stats.wsgi:30
+#: ../src/stats.wsgi:28
 msgid "Versions"
 msgstr "Wersje"
+
+#~ msgid "X-CoreFileDirectory header has been disabled by server administrator"
+#~ msgstr ""
+#~ "Nagłówek X-CoreFileDirectory został wyłączony przez administratora serwera"
+
+#~ msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+#~ msgstr "Katalog podany w „X-CoreFileDirectory” nie istnieje"
+
+#~ msgid ""
+#~ "There are %d files in the '%s' directory. Only a single archive is "
+#~ "supported at the moment"
+#~ msgstr ""
+#~ "%d plików w katalogu „%s”. Obecnie obsługiwane są tylko pojedyncze archiwa"
+
+#~ msgid "You header specifies '%s' type, but the file type does not match"
+#~ msgstr "Nagłówek określa typ „%s”, ale typ pliku się nie zgadza"
+
+#~ msgid "Interactive tasks were disabled by server administrator"
+#~ msgstr "Zadania interaktywne zostały wyłączone przez administratora serwera"

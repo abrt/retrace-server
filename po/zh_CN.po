@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-01 08:48+0200\n"
+"POT-Creation-Date: 2012-01-02 11:31+0100\n"
 "PO-Revision-Date: 2017-04-14 10:53+0000\n"
 "Last-Translator: Zamir SUN <sztsian@gmail.com>\n"
 "Language-Team: Chinese (China)\n"
@@ -37,7 +37,7 @@ msgstr "无效密码"
 msgid "There is no backtrace for the specified task"
 msgstr "没有对特定任务的追踪"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:78
+#: ../src/create.wsgi:19 ../src/create.wsgi:70
 msgid "Retrace server is fully loaded at the moment"
 msgstr "Retrace 服务器当前负载已满"
 
@@ -57,77 +57,53 @@ msgstr "你需要设置合适的 Content-Length 头"
 msgid "Specified archive is too large"
 msgstr "指定的归档过大"
 
-#: ../src/create.wsgi:40
-msgid "X-CoreFileDirectory header has been disabled by server administrator"
-msgstr "X-CoreFileDirectory 头被管理员禁用"
-
-#: ../src/create.wsgi:53
+#: ../src/create.wsgi:47
 msgid "Unable to create working directory"
 msgstr "不能创建工作目录"
 
-#: ../src/create.wsgi:59
+#: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
 msgstr "不能获得磁盘空余空间"
 
-#: ../src/create.wsgi:63 ../src/create.wsgi:134
+#: ../src/create.wsgi:57 ../src/create.wsgi:99
 msgid "There is not enough storage space on the server"
 msgstr "服务器上的存储空间不够"
 
-#: ../src/create.wsgi:71
+#: ../src/create.wsgi:63
 msgid "Unable to create new task"
 msgstr "不能创建新任务"
 
 #: ../src/create.wsgi:83
-msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr "'X-CoreFileDirectory' 所指定的目录不存在"
-
-#: ../src/create.wsgi:89
-#, c-format
-msgid ""
-"There are %d files in the '%s' directory. Only a single archive is supported"
-" at the moment"
-msgstr "'%s'  目录内有 %d 个文件。当前只支持单一归档"
-
-#: ../src/create.wsgi:98
-#, c-format
-msgid "You header specifies '%s' type, but the file type does not match"
-msgstr " 头信息设定了 '%s' 类型，但文件类型与之不匹配"
-
-#: ../src/create.wsgi:116
 msgid "Unable to save archive"
 msgstr "无法保存归档"
 
-#: ../src/create.wsgi:124
+#: ../src/create.wsgi:89
 msgid "Unable to obtain unpacked size"
 msgstr "无法获取解包后大小"
 
-#: ../src/create.wsgi:129
+#: ../src/create.wsgi:94
 msgid "Specified archive's content is too large"
 msgstr "所指定的归档内容过大"
 
-#: ../src/create.wsgi:146
+#: ../src/create.wsgi:111
 msgid "Unable to unpack archive"
 msgstr "无法解包归档"
 
-#: ../src/create.wsgi:158
+#: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
 msgstr "归档中不允许存在软链接"
 
-#: ../src/create.wsgi:166
+#: ../src/create.wsgi:131
 #, c-format
 msgid "The '%s' file is larger than expected"
 msgstr "'%s' 文件比预期大"
 
-#: ../src/create.wsgi:170
+#: ../src/create.wsgi:135
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
 msgstr "归档中不允许出现文件 '%s' "
 
-#: ../src/create.wsgi:186
-msgid "Interactive tasks were disabled by server administrator"
-msgstr "交互式任务被服务器管理员禁用"
-
-#: ../src/create.wsgi:196
+#: ../src/create.wsgi:147
 #, c-format
 msgid "Required file '%s' is missing"
 msgstr "缺少必须的文件 '%s'"
@@ -145,18 +121,20 @@ msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s wiki:"
-msgstr "Retrace 服务器提供了在网络上分析核心转储和生成回溯的服务。 你可以在 Retrace 服务器的维基页面找到更多信 : "
+msgstr ""
+"Retrace 服务器提供了在网络上分析核心转储和生成回溯的服务。 你可以在 Retrace "
+"服务器的维基页面找到更多信 : "
 
 #: ../src/index.wsgi:21
 msgid ""
-"Only the secure HTTPS connection is now allowed by the server. HTTP requests"
-" will be denied."
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
+"will be denied."
 msgstr "服务器仅允许 HTTPS 连接。HTTP 请求将被禁止。"
 
 #: ../src/index.wsgi:23
 msgid ""
-"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because"
-" of security reasons."
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
+"of security reasons."
 msgstr "HTTP 和 HTTPS 都被允许。出于安全原因强烈建议使用 HTTPS。"
 
 #: ../src/index.wsgi:24
@@ -195,78 +173,95 @@ msgstr ""
 msgid "There is no log for the specified task"
 msgstr "没有对特定任务的日志"
 
-#: ../src/stats.wsgi:12
+#: ../src/stats.wsgi:10
 msgid "Architecture"
 msgstr "架构"
 
-#: ../src/stats.wsgi:13
+#: ../src/stats.wsgi:11
 msgid "Architectures"
 msgstr "架构"
 
-#: ../src/stats.wsgi:14
+#: ../src/stats.wsgi:12
 msgid "Build-id"
 msgstr ""
 
-#: ../src/stats.wsgi:15
+#: ../src/stats.wsgi:13
 msgid "Count"
 msgstr "计数"
 
-#: ../src/stats.wsgi:16
+#: ../src/stats.wsgi:14
 msgid "Denied jobs"
 msgstr "被拒绝的任务"
 
-#: ../src/stats.wsgi:17
+#: ../src/stats.wsgi:15
 msgid "Failed"
 msgstr "失败"
 
-#: ../src/stats.wsgi:18
+#: ../src/stats.wsgi:16
 msgid "First retrace"
 msgstr "第一个回溯"
 
-#: ../src/stats.wsgi:19
+#: ../src/stats.wsgi:17
 msgid "Global statistics"
 msgstr "全局统计"
 
-#: ../src/stats.wsgi:20
+#: ../src/stats.wsgi:18
 msgid "Missing build-ids"
 msgstr ""
 
-#: ../src/stats.wsgi:21
+#: ../src/stats.wsgi:19
 msgid "Name"
 msgstr "名称"
 
-#: ../src/stats.wsgi:22
+#: ../src/stats.wsgi:20
 msgid "Release"
 msgstr ""
 
-#: ../src/stats.wsgi:23
+#: ../src/stats.wsgi:21
 msgid "Releases"
 msgstr ""
 
-#: ../src/stats.wsgi:24
+#: ../src/stats.wsgi:22
 msgid "Required packages"
 msgstr "必须的软件包"
 
-#: ../src/stats.wsgi:25
+#: ../src/stats.wsgi:23
 msgid "Retraced packages"
 msgstr "回溯的软件包"
 
-#: ../src/stats.wsgi:26
+#: ../src/stats.wsgi:24
 msgid "Retrace Server statistics"
 msgstr "Retrace 服务器统计"
 
-#: ../src/stats.wsgi:27
+#: ../src/stats.wsgi:25
 msgid "Shared object name"
 msgstr "共享对象名称"
 
-#: ../src/stats.wsgi:28
+#: ../src/stats.wsgi:26
 msgid "Successful"
 msgstr "成功"
 
-#: ../src/stats.wsgi:29
+#: ../src/stats.wsgi:27
 msgid "Total"
 msgstr "总计"
 
-#: ../src/stats.wsgi:30
+#: ../src/stats.wsgi:28
 msgid "Versions"
 msgstr "版本"
+
+#~ msgid "X-CoreFileDirectory header has been disabled by server administrator"
+#~ msgstr "X-CoreFileDirectory 头被管理员禁用"
+
+#~ msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+#~ msgstr "'X-CoreFileDirectory' 所指定的目录不存在"
+
+#~ msgid ""
+#~ "There are %d files in the '%s' directory. Only a single archive is "
+#~ "supported at the moment"
+#~ msgstr "'%s'  目录内有 %d 个文件。当前只支持单一归档"
+
+#~ msgid "You header specifies '%s' type, but the file type does not match"
+#~ msgstr " 头信息设定了 '%s' 类型，但文件类型与之不匹配"
+
+#~ msgid "Interactive tasks were disabled by server administrator"
+#~ msgstr "交互式任务被服务器管理员禁用"

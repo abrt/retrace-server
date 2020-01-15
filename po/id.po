@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-01 08:48+0200\n"
+"POT-Creation-Date: 2012-01-02 11:31+0100\n"
 "PO-Revision-Date: 2017-08-06 06:11+0000\n"
 "Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian\n"
@@ -35,7 +35,7 @@ msgstr "Kata sandi tidak valid"
 msgid "There is no backtrace for the specified task"
 msgstr "Tidak ada backtrace untuk tugas yang dinyatakan"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:78
+#: ../src/create.wsgi:19 ../src/create.wsgi:70
 msgid "Retrace server is fully loaded at the moment"
 msgstr "Server retrace sedang dalam beban penuh saat ini"
 
@@ -55,80 +55,53 @@ msgstr "Anda perlu menata header Content-Length dengan tepat"
 msgid "Specified archive is too large"
 msgstr "Arsip yang dinyatakan terlalu besar"
 
-#: ../src/create.wsgi:40
-msgid "X-CoreFileDirectory header has been disabled by server administrator"
-msgstr ""
-"Header X-CoreFileDirectory telah dinonaktifkan oleh administrator server"
-
-#: ../src/create.wsgi:53
+#: ../src/create.wsgi:47
 msgid "Unable to create working directory"
 msgstr "Tidak bisa membuat direktori kerja"
 
-#: ../src/create.wsgi:59
+#: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
 msgstr "Tidak bisa mendapatkan ruang bebas disk"
 
-#: ../src/create.wsgi:63 ../src/create.wsgi:134
+#: ../src/create.wsgi:57 ../src/create.wsgi:99
 msgid "There is not enough storage space on the server"
 msgstr "Tidak cukup ruang penyimpanan pada server"
 
-#: ../src/create.wsgi:71
+#: ../src/create.wsgi:63
 msgid "Unable to create new task"
 msgstr "Tidak bisa mencipta tugas baru"
 
 #: ../src/create.wsgi:83
-msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr "Direktori yang dinyatakan dalam \"X-CoreFileDirectory\" tidak ada"
-
-#: ../src/create.wsgi:89
-#, c-format
-msgid ""
-"There are %d files in the '%s' directory. Only a single archive is supported"
-" at the moment"
-msgstr ""
-"Ada %d berkas dalam direktori '%s'. Hanya sebuah arsip tunggal yang didukung"
-" saat ini"
-
-#: ../src/create.wsgi:98
-#, c-format
-msgid "You header specifies '%s' type, but the file type does not match"
-msgstr "Header Anda menyatakan tipe '%s', tapi tipe berkas tidak cocok"
-
-#: ../src/create.wsgi:116
 msgid "Unable to save archive"
 msgstr "Tidak bisa menyimpan arsip"
 
-#: ../src/create.wsgi:124
+#: ../src/create.wsgi:89
 msgid "Unable to obtain unpacked size"
 msgstr "Tidak bisa mendapatkan ukuran setelah dibongkar"
 
-#: ../src/create.wsgi:129
+#: ../src/create.wsgi:94
 msgid "Specified archive's content is too large"
 msgstr "Isi arsip yang dinyatakan terlalu besar"
 
-#: ../src/create.wsgi:146
+#: ../src/create.wsgi:111
 msgid "Unable to unpack archive"
 msgstr "Tidak bisa membongkar arsip"
 
-#: ../src/create.wsgi:158
+#: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
 msgstr "Symlink tidak diizinkan berada di dalam arsip"
 
-#: ../src/create.wsgi:166
+#: ../src/create.wsgi:131
 #, c-format
 msgid "The '%s' file is larger than expected"
 msgstr "Berkas '%s' lebih besar dari yang diharapkan"
 
-#: ../src/create.wsgi:170
+#: ../src/create.wsgi:135
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
 msgstr "Berkas '%s' tidak diizinkan untuk berada di dalam arsip"
 
-#: ../src/create.wsgi:186
-msgid "Interactive tasks were disabled by server administrator"
-msgstr "Tugas interaktif dinonaktifkan oleh administrator server"
-
-#: ../src/create.wsgi:196
+#: ../src/create.wsgi:147
 #, c-format
 msgid "Required file '%s' is missing"
 msgstr "Berkas '%s' yang diperlukan kurang"
@@ -153,16 +126,16 @@ msgstr ""
 
 #: ../src/index.wsgi:21
 msgid ""
-"Only the secure HTTPS connection is now allowed by the server. HTTP requests"
-" will be denied."
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
+"will be denied."
 msgstr ""
 "Hanya koneksi HTTPS aman yang kini diizinkan oleh server. Permintaan HTTP "
 "akan ditolak."
 
 #: ../src/index.wsgi:23
 msgid ""
-"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because"
-" of security reasons."
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
+"of security reasons."
 msgstr ""
 "HTTP dan HTTPS keduanya diizinkan. Memakai HTTPS sangat disarankan karena "
 "alasan keamanan."
@@ -189,13 +162,13 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
-"Coredump Anda hanya disimpan di server ketika tugas retrace sedang berjalan."
-" Sekali tugas selesai, server menyimpan log retrace dan backtrace. Semua "
-"data lain (termasuk coredump) dihapus. Log retrace dan backtrace hanya dapat"
-" diakses melalui ID tugas yang unik dan kata sandi, sehingga tidak "
-"seorangpun (kecuali pengarang) diizinkan melihatnya. Semua informasi kres "
-"(termasuk backtrace) dihapus setelah %d tanpa aktivitas. Tidak ada data "
-"privat yang disimpan di server lebih lama."
+"Coredump Anda hanya disimpan di server ketika tugas retrace sedang berjalan. "
+"Sekali tugas selesai, server menyimpan log retrace dan backtrace. Semua data "
+"lain (termasuk coredump) dihapus. Log retrace dan backtrace hanya dapat "
+"diakses melalui ID tugas yang unik dan kata sandi, sehingga tidak seorangpun "
+"(kecuali pengarang) diizinkan melihatnya. Semua informasi kres (termasuk "
+"backtrace) dihapus setelah %d tanpa aktivitas. Tidak ada data privat yang "
+"disimpan di server lebih lama."
 
 #: ../src/index.wsgi:33
 msgid ""
@@ -205,88 +178,108 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
-"Coredump Anda hanya dipakai untuk tujuan retrace. Administrator server tidak"
-" mencoba mendapatkan data privat dari coredump atau backtrace. Memakai suatu"
-" kanal komunikasi aman (HTTPS) sangat disarankan. Administrator server tidak"
-" bertanggung jawab atas masalah-masalah terkait penggunaan kanal tidak aman "
+"Coredump Anda hanya dipakai untuk tujuan retrace. Administrator server tidak "
+"mencoba mendapatkan data privat dari coredump atau backtrace. Memakai suatu "
+"kanal komunikasi aman (HTTPS) sangat disarankan. Administrator server tidak "
+"bertanggung jawab atas masalah-masalah terkait penggunaan kanal tidak aman "
 "(seperti HTTP)."
 
 #: ../src/log.wsgi:30
 msgid "There is no log for the specified task"
 msgstr "Tidak ada log untuk tugas yang dinyatakan"
 
-#: ../src/stats.wsgi:12
+#: ../src/stats.wsgi:10
 msgid "Architecture"
 msgstr "Arsitektur"
 
-#: ../src/stats.wsgi:13
+#: ../src/stats.wsgi:11
 msgid "Architectures"
 msgstr "Arsitektur"
 
-#: ../src/stats.wsgi:14
+#: ../src/stats.wsgi:12
 msgid "Build-id"
 msgstr "ID-build"
 
-#: ../src/stats.wsgi:15
+#: ../src/stats.wsgi:13
 msgid "Count"
 msgstr "Cacah"
 
-#: ../src/stats.wsgi:16
+#: ../src/stats.wsgi:14
 msgid "Denied jobs"
 msgstr "Tugas yang ditolak"
 
-#: ../src/stats.wsgi:17
+#: ../src/stats.wsgi:15
 msgid "Failed"
 msgstr "Gagal"
 
-#: ../src/stats.wsgi:18
+#: ../src/stats.wsgi:16
 msgid "First retrace"
 msgstr "Retrace pertama"
 
-#: ../src/stats.wsgi:19
+#: ../src/stats.wsgi:17
 msgid "Global statistics"
 msgstr "Statistik global"
 
-#: ../src/stats.wsgi:20
+#: ../src/stats.wsgi:18
 msgid "Missing build-ids"
 msgstr "Kurang id-build"
 
-#: ../src/stats.wsgi:21
+#: ../src/stats.wsgi:19
 msgid "Name"
 msgstr "Nama"
 
-#: ../src/stats.wsgi:22
+#: ../src/stats.wsgi:20
 msgid "Release"
 msgstr "Rilis"
 
-#: ../src/stats.wsgi:23
+#: ../src/stats.wsgi:21
 msgid "Releases"
 msgstr "Rilis"
 
-#: ../src/stats.wsgi:24
+#: ../src/stats.wsgi:22
 msgid "Required packages"
 msgstr "Paket yang diperlukan"
 
-#: ../src/stats.wsgi:25
+#: ../src/stats.wsgi:23
 msgid "Retraced packages"
 msgstr "Paket yang di-retrace"
 
-#: ../src/stats.wsgi:26
+#: ../src/stats.wsgi:24
 msgid "Retrace Server statistics"
 msgstr "Statistik Server Retrace"
 
-#: ../src/stats.wsgi:27
+#: ../src/stats.wsgi:25
 msgid "Shared object name"
 msgstr "Nama objek bersama"
 
-#: ../src/stats.wsgi:28
+#: ../src/stats.wsgi:26
 msgid "Successful"
 msgstr "Sukses"
 
-#: ../src/stats.wsgi:29
+#: ../src/stats.wsgi:27
 msgid "Total"
 msgstr "Total"
 
-#: ../src/stats.wsgi:30
+#: ../src/stats.wsgi:28
 msgid "Versions"
 msgstr "Versi"
+
+#~ msgid "X-CoreFileDirectory header has been disabled by server administrator"
+#~ msgstr ""
+#~ "Header X-CoreFileDirectory telah dinonaktifkan oleh administrator server"
+
+#~ msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+#~ msgstr "Direktori yang dinyatakan dalam \"X-CoreFileDirectory\" tidak ada"
+
+#~ msgid ""
+#~ "There are %d files in the '%s' directory. Only a single archive is "
+#~ "supported at the moment"
+#~ msgstr ""
+#~ "Ada %d berkas dalam direktori '%s'. Hanya sebuah arsip tunggal yang "
+#~ "didukung saat ini"
+
+#~ msgid "You header specifies '%s' type, but the file type does not match"
+#~ msgstr "Header Anda menyatakan tipe '%s', tapi tipe berkas tidak cocok"
+
+#~ msgid "Interactive tasks were disabled by server administrator"
+#~ msgstr "Tugas interaktif dinonaktifkan oleh administrator server"

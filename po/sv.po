@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-01 08:48+0200\n"
+"POT-Creation-Date: 2012-01-02 11:31+0100\n"
 "PO-Revision-Date: 2016-10-10 03:37+0000\n"
 "Last-Translator: Göran Uddeborg <goeran@uddeborg.se>\n"
 "Language-Team: Swedish\n"
@@ -35,7 +35,7 @@ msgstr "Felaktigt lösenord"
 msgid "There is no backtrace for the specified task"
 msgstr "Det finns inget stackspår för den angivna uppgiften"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:78
+#: ../src/create.wsgi:19 ../src/create.wsgi:70
 msgid "Retrace server is fully loaded at the moment"
 msgstr "Spårningsservern är fullt belastad för tillfället"
 
@@ -55,79 +55,53 @@ msgstr "Du behöver sätta huvudet Content-Length ordentligt"
 msgid "Specified archive is too large"
 msgstr "Det angivna arkivet är för stort"
 
-#: ../src/create.wsgi:40
-msgid "X-CoreFileDirectory header has been disabled by server administrator"
-msgstr "Huvudet X-CoreFileDirectory har avaktiverats av serveradministratören"
-
-#: ../src/create.wsgi:53
+#: ../src/create.wsgi:47
 msgid "Unable to create working directory"
 msgstr "Kan inte skapa en arbetskatalog"
 
-#: ../src/create.wsgi:59
+#: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
 msgstr "Kan inte få tag i ledigt diskutrymme"
 
-#: ../src/create.wsgi:63 ../src/create.wsgi:134
+#: ../src/create.wsgi:57 ../src/create.wsgi:99
 msgid "There is not enough storage space on the server"
 msgstr "Det finns inte tillräckligt med lagringsutrymme på servern"
 
-#: ../src/create.wsgi:71
+#: ../src/create.wsgi:63
 msgid "Unable to create new task"
 msgstr "Kan inte skapa en ny uppgift"
 
 #: ../src/create.wsgi:83
-msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr "Katalogen som anges i ”X-CoreFileDirectory” finns inte"
-
-#: ../src/create.wsgi:89
-#, c-format
-msgid ""
-"There are %d files in the '%s' directory. Only a single archive is supported"
-" at the moment"
-msgstr ""
-"Det finns %d filer i katalogen ”%s”.  Endast ett ensamt arkiv stödjs för "
-"närvarande"
-
-#: ../src/create.wsgi:98
-#, c-format
-msgid "You header specifies '%s' type, but the file type does not match"
-msgstr "Ditt huvud anger typen ”%s”, men filtypen stämmer inte med det"
-
-#: ../src/create.wsgi:116
 msgid "Unable to save archive"
 msgstr "Kan inte spara arkivet"
 
-#: ../src/create.wsgi:124
+#: ../src/create.wsgi:89
 msgid "Unable to obtain unpacked size"
 msgstr "Kan inte ta fram den opackade storleken"
 
-#: ../src/create.wsgi:129
+#: ../src/create.wsgi:94
 msgid "Specified archive's content is too large"
 msgstr "Det angivna arkivets innehåll är för stort"
 
-#: ../src/create.wsgi:146
+#: ../src/create.wsgi:111
 msgid "Unable to unpack archive"
 msgstr "Kan inte packa upp arkivet"
 
-#: ../src/create.wsgi:158
+#: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
 msgstr "Symlänkar får inte finnas i arkivet"
 
-#: ../src/create.wsgi:166
+#: ../src/create.wsgi:131
 #, c-format
 msgid "The '%s' file is larger than expected"
 msgstr "Filen ”%s” är större än förväntat"
 
-#: ../src/create.wsgi:170
+#: ../src/create.wsgi:135
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
 msgstr "Filen ”%s” får inte finnas i arkivet"
 
-#: ../src/create.wsgi:186
-msgid "Interactive tasks were disabled by server administrator"
-msgstr "Interaktiva uppgifter har avaktiverats av serveradministratören"
-
-#: ../src/create.wsgi:196
+#: ../src/create.wsgi:147
 #, c-format
 msgid "Required file '%s' is missing"
 msgstr "Den nödvändiga filen ”%s” saknas"
@@ -152,16 +126,16 @@ msgstr ""
 
 #: ../src/index.wsgi:21
 msgid ""
-"Only the secure HTTPS connection is now allowed by the server. HTTP requests"
-" will be denied."
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
+"will be denied."
 msgstr ""
 "Endast en säker HTTPS-anslutning tillåts nu av servern.  HTTP-begäranden "
 "kommer att avvisas."
 
 #: ../src/index.wsgi:23
 msgid ""
-"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because"
-" of security reasons."
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
+"of security reasons."
 msgstr ""
 "Både HTTP och HTTPS är tillåtna.  Att använda HTTPS rekommenderas starkt av "
 "säkerhetsskäl."
@@ -190,8 +164,8 @@ msgid ""
 msgstr ""
 "Din minnesdump sparas bara på servern medan spårjobbet kör.  När jobbet är "
 "klart behåller servern spårningsloggen och stackspåret.  All annan data "
-"(inklusive minnesdumpen) raderas.  Spårningsloggen och stackspåret är endast"
-" tillgängliga via unika uppgifts-ID och lösenord, alltså får ingen (utom "
+"(inklusive minnesdumpen) raderas.  Spårningsloggen och stackspåret är endast "
+"tillgängliga via unika uppgifts-ID och lösenord, alltså får ingen (utom "
 "författaren) se det.  All kraschinformation (inklusive stackspåret) raderas "
 "efter %d timmars inaktivitet.  Ingen eventuell personlig information sparas "
 "på servern längre."
@@ -214,78 +188,98 @@ msgstr ""
 msgid "There is no log for the specified task"
 msgstr "Det finns ingen logg för den angivna uppgiften"
 
-#: ../src/stats.wsgi:12
+#: ../src/stats.wsgi:10
 msgid "Architecture"
 msgstr "Arkitektur"
 
-#: ../src/stats.wsgi:13
+#: ../src/stats.wsgi:11
 msgid "Architectures"
 msgstr "Arkitekturer"
 
-#: ../src/stats.wsgi:14
+#: ../src/stats.wsgi:12
 msgid "Build-id"
 msgstr "Bygg-id"
 
-#: ../src/stats.wsgi:15
+#: ../src/stats.wsgi:13
 msgid "Count"
 msgstr "Antal"
 
-#: ../src/stats.wsgi:16
+#: ../src/stats.wsgi:14
 msgid "Denied jobs"
 msgstr "Nekade jobb"
 
-#: ../src/stats.wsgi:17
+#: ../src/stats.wsgi:15
 msgid "Failed"
 msgstr "Misslyckade"
 
-#: ../src/stats.wsgi:18
+#: ../src/stats.wsgi:16
 msgid "First retrace"
 msgstr "Första spårning"
 
-#: ../src/stats.wsgi:19
+#: ../src/stats.wsgi:17
 msgid "Global statistics"
 msgstr "Global statistik"
 
-#: ../src/stats.wsgi:20
+#: ../src/stats.wsgi:18
 msgid "Missing build-ids"
 msgstr "Saknade bygg-id:n"
 
-#: ../src/stats.wsgi:21
+#: ../src/stats.wsgi:19
 msgid "Name"
 msgstr "Namn"
 
-#: ../src/stats.wsgi:22
+#: ../src/stats.wsgi:20
 msgid "Release"
 msgstr "Utgåva"
 
-#: ../src/stats.wsgi:23
+#: ../src/stats.wsgi:21
 msgid "Releases"
 msgstr "Utgåvor"
 
-#: ../src/stats.wsgi:24
+#: ../src/stats.wsgi:22
 msgid "Required packages"
 msgstr "Nödvändiga paket"
 
-#: ../src/stats.wsgi:25
+#: ../src/stats.wsgi:23
 msgid "Retraced packages"
 msgstr "Spårade paket"
 
-#: ../src/stats.wsgi:26
+#: ../src/stats.wsgi:24
 msgid "Retrace Server statistics"
 msgstr "Spårserverstatistik"
 
-#: ../src/stats.wsgi:27
+#: ../src/stats.wsgi:25
 msgid "Shared object name"
 msgstr "Delade objekt-namn"
 
-#: ../src/stats.wsgi:28
+#: ../src/stats.wsgi:26
 msgid "Successful"
 msgstr "Lyckade"
 
-#: ../src/stats.wsgi:29
+#: ../src/stats.wsgi:27
 msgid "Total"
 msgstr "Totalt"
 
-#: ../src/stats.wsgi:30
+#: ../src/stats.wsgi:28
 msgid "Versions"
 msgstr "Versioner"
+
+#~ msgid "X-CoreFileDirectory header has been disabled by server administrator"
+#~ msgstr ""
+#~ "Huvudet X-CoreFileDirectory har avaktiverats av serveradministratören"
+
+#~ msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+#~ msgstr "Katalogen som anges i ”X-CoreFileDirectory” finns inte"
+
+#~ msgid ""
+#~ "There are %d files in the '%s' directory. Only a single archive is "
+#~ "supported at the moment"
+#~ msgstr ""
+#~ "Det finns %d filer i katalogen ”%s”.  Endast ett ensamt arkiv stödjs för "
+#~ "närvarande"
+
+#~ msgid "You header specifies '%s' type, but the file type does not match"
+#~ msgstr "Ditt huvud anger typen ”%s”, men filtypen stämmer inte med det"
+
+#~ msgid "Interactive tasks were disabled by server administrator"
+#~ msgstr "Interaktiva uppgifter har avaktiverats av serveradministratören"
