@@ -1,19 +1,21 @@
 # Davide Giunchi <davide@giunchi.net>, 2017. #zanata
 # Luca Ciavatta <luca.ciavatta@gmail.com>, 2017. #zanata
+# Alessio <alciregi@posteo.net>, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2017-04-14 04:51+0000\n"
-"Last-Translator: Davide Giunchi <davide@giunchi.net>\n"
-"Language-Team: Italian\n"
+"PO-Revision-Date: 2020-01-14 11:15+0000\n"
+"Last-Translator: Alessio <alciregi@posteo.net>\n"
+"Language-Team: Italian <https://translate.stg.fedoraproject.org/projects/"
+"abrt/retrace-server/it/>\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 3.10.1\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
@@ -34,9 +36,8 @@ msgid "Invalid password"
 msgstr "Passoword non valida"
 
 #: ../src/backtrace.wsgi:31
-#, fuzzy
 msgid "There is no backtrace for the specified task"
-msgstr "Non è presente alcun backtrace per il compito specificato."
+msgstr "Non è presente alcun backtrace per il compito specificato"
 
 #: ../src/create.wsgi:19 ../src/create.wsgi:70
 msgid "Retrace server is fully loaded at the moment"
@@ -67,7 +68,6 @@ msgid "Unable to obtain disk free space"
 msgstr "Impossibile ottenere spazio libero su disco"
 
 #: ../src/create.wsgi:57 ../src/create.wsgi:99
-#, fuzzy
 msgid "There is not enough storage space on the server"
 msgstr "Spazio insufficiente nello storage sul server"
 
@@ -235,9 +235,8 @@ msgid "Name"
 msgstr "Nome"
 
 #: ../src/stats.wsgi:20
-#, fuzzy
 msgid "Release"
-msgstr "Rilascio"
+msgstr "Versione"
 
 #: ../src/stats.wsgi:21
 msgid "Releases"
