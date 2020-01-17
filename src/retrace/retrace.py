@@ -419,18 +419,17 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
                  "retrace-image:%s" % img_cont_id],
                 stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8')
 
-            child = run("/usr/bin/podman exec -it %s bash -c "
-                        "'for PKG in /var/spool/abrt/faf-packages/*; "
-                        "do rpm2cpio $PKG | cpio -muid --quiet; done'"
-                        % img_cont_id, shell=True, stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8')
+            child = run(["/usr/bin/podman", "exec", "-it", "%s" % img_cont_id, "bash", "-c",
+                         "for PKG in /var/spool/abrt/faf-packages/*; "
+                         "do rpm2cpio $PKG | cpio -muid --quiet; done"],
+                        stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8')
             if child.returncode:
                 raise Exception("Unpacking of packages failed")
             child = run(["/usr/bin/podman", "exec", img_cont_id,
                          "/var/spool/abrt/gdb.sh"], stdout=PIPE, encoding='utf-8')
         else:
-            child = run(["/usr/bin/podman", "run", "-it", "--volume=%s:%s:ro" % (repopath, repopath),
-                         "--name=%s" % img_cont_id, "--rm", "retrace-image:%s" % img_cont_id],
-                        stdout=PIPE, encoding='utf-8')
+            child = run(["/usr/bin/podman", "run", "-it", "--name=%s" % img_cont_id,
+                         "--rm", "retrace-image:%s" % img_cont_id], stdout=PIPE, encoding='utf-8')
     else:
         raise Exception("RetraceEnvironment set to invalid value")
 
