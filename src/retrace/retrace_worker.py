@@ -497,6 +497,9 @@ class RetraceWorker():
                     dockerfile.write('\n')
                     dockerfile.write('RUN dnf install --assumeyes dnf-plugins-core\n')
                     dockerfile.write('RUN dnf config-manager --add-repo=file://%s\n' % repopath)
+                    if not CONFIG["RequireGPGCheck"]:
+                        dockerfile.write('RUN dnf config-manager --save --setopt=%s*.gpgcheck=0\n'
+                                         % repoid)
                     dockerfile.write('RUN dnf ')
                     dockerfile.write('--releasever=%s ' % version)
                     dockerfile.write('--repo=%s* ' % repoid)
