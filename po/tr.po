@@ -5,16 +5,16 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2020-01-15 20:15+0000\n"
+"PO-Revision-Date: 2020-01-27 08:16+0000\n"
 "Last-Translator: Oğuz Ersen <oguzersen@protonmail.com>\n"
-"Language-Team: Turkish <https://translate.stg.fedoraproject.org/projects/"
-"abrt/retrace-server/tr/>\n"
+"Language-Team: Turkish <https://translate.fedoraproject.org/projects/abrt/"
+"retrace-server/tr/>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n>1);\n"
-"X-Generator: Weblate 3.10.1\n"
+"X-Generator: Weblate 3.10.3\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
@@ -35,23 +35,23 @@ msgstr "Geçersiz parola"
 
 #: ../src/backtrace.wsgi:31
 msgid "There is no backtrace for the specified task"
-msgstr "Belirtilen görev için geri bildirim yok"
+msgstr "Belirtilen görev için yığın geri izlemesi yok"
 
 #: ../src/create.wsgi:19 ../src/create.wsgi:70
 msgid "Retrace server is fully loaded at the moment"
-msgstr "Retrace sunucusu şu anda tamamen yükleniyor"
+msgstr "Retrace sunucusu şu anda tam olarak yüklendi"
 
 #: ../src/create.wsgi:23
 msgid "You must use POST method"
-msgstr "POST yöntemini kullanmanız gerekir"
+msgstr "POST yöntemini kullanmalısınız"
 
 #: ../src/create.wsgi:27
 msgid "Specified archive format is not supported"
-msgstr "Belirtilen arşiv biçimi desteklenmiyor"
+msgstr "Belirtilen arşiv formatı desteklenmiyor"
 
 #: ../src/create.wsgi:31
 msgid "You need to set Content-Length header properly"
-msgstr "Content-Length başlığını uygun şekilde ayarlamanız gerekmektedir"
+msgstr "Content-Length başlığını doğru şekilde ayarlamanız gerekmektedir"
 
 #: ../src/create.wsgi:35
 msgid "Specified archive is too large"
@@ -59,7 +59,7 @@ msgstr "Belirtilen arşiv çok büyük"
 
 #: ../src/create.wsgi:47
 msgid "Unable to create working directory"
-msgstr "Çalışma dizini oluşturulamıyor"
+msgstr "Çalışma dizini oluşturulamadı"
 
 #: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
@@ -71,7 +71,7 @@ msgstr "Sunucuda yeterli depolama alanı yok"
 
 #: ../src/create.wsgi:63
 msgid "Unable to create new task"
-msgstr "Yeni görev oluşturulamıyor"
+msgstr "Yeni görev oluşturulamadı"
 
 #: ../src/create.wsgi:83
 msgid "Unable to save archive"
@@ -79,7 +79,7 @@ msgstr "Arşiv kaydedilemedi"
 
 #: ../src/create.wsgi:89
 msgid "Unable to obtain unpacked size"
-msgstr "Paketlenmemiş boyut alınamıyor"
+msgstr "Paketlenmemiş boyut alınamadı"
 
 #: ../src/create.wsgi:94
 msgid "Specified archive's content is too large"
@@ -87,11 +87,11 @@ msgstr "Belirtilen arşivin içeriği çok büyük"
 
 #: ../src/create.wsgi:111
 msgid "Unable to unpack archive"
-msgstr "Arşiv açılmıyor"
+msgstr "Arşiv açılamadı"
 
 #: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
-msgstr "Sembolik bağlantıların arşivde bulunmasına izin verilmemektedir"
+msgstr "Sembolik bağlantıların arşivde bulunmasına izin verilmiyor"
 
 #: ../src/create.wsgi:131
 #, c-format
@@ -110,11 +110,11 @@ msgstr "Gerekli '%s' dosyası eksik"
 
 #: ../src/index.wsgi:12
 msgid "Retrace Server"
-msgstr ""
+msgstr "Retrace Server"
 
 #: ../src/index.wsgi:13
 msgid "Welcome to Retrace Server"
-msgstr ""
+msgstr "Retrace Server'a hoş geldiniz"
 
 #: ../src/index.wsgi:15
 msgid ""
@@ -122,29 +122,36 @@ msgid ""
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s wiki:"
 msgstr ""
+"Retrace Server, bellek dökümünü analiz etme ve ağ üzerinden yığın geri "
+"izlemesi oluşturma olanağı sağlayan bir servistir. Retrace Server wiki "
+"sayfasında daha fazla bilgi bulabilirsiniz:"
 
 #: ../src/index.wsgi:21
 msgid ""
 "Only the secure HTTPS connection is now allowed by the server. HTTP requests "
 "will be denied."
 msgstr ""
+"Sunucu tarafından yalnızca güvenli HTTPS bağlantısına izin verilmektedir. "
+"HTTP istekleri reddedilecektir."
 
 #: ../src/index.wsgi:23
 msgid ""
 "Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
 "of security reasons."
 msgstr ""
+"Hem HTTP hem de HTTPS'ye izin verilir. Güvenlik nedeniyle HTTPS kullanılması "
+"kesinlikle önerilir."
 
 #: ../src/index.wsgi:24
 #, c-format
 msgid "The following releases are supported: %s"
-msgstr ""
+msgstr "Şu sürümler desteklenmektedir: %s"
 
 #: ../src/index.wsgi:26
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
-msgstr ""
+msgstr "Şu anda sunucu %%%d yüklendi (%d / %d iş çalıştırılıyor)."
 
 #: ../src/index.wsgi:27
 #, c-format
@@ -157,6 +164,13 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
+"Bellek dökümünüz yalnızca retrace işi çalışırken sunucuda tutulur. İş "
+"bittiğinde, sunucu retrace log kayıtlarını ve yığın geri izlemesini tutar. "
+"Diğer tüm veriler (bellek dökümü dahil) silinir. Retrace log kaydı ve yığın "
+"geri izlemesine yalnızca benzersiz görev kimliği ve parola ile erişilebilir, "
+"bu nedenle hiç kimsenin (yazar hariç) görüntülemesine izin verilmez. Tüm "
+"çökme bilgileri (yığın geri izlemesi dahil) %d saat kullanılmadığında "
+"silinir. Muhtemel özel veriler artık sunucuda tutulmamaktadır."
 
 #: ../src/index.wsgi:33
 msgid ""
@@ -166,10 +180,15 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
+"Bellek dökümünüz sadece retrace amacıyla kullanılır. Sunucu yöneticileri "
+"bellek dökümleri veya yığın geri izlemelerinden özel bilgilerinizi almaya "
+"çalışmıyor. Güvenli bir iletişim kanalı (HTTPS) kullanılması kesinlikle "
+"önerilir. Sunucu yöneticileri, güvenli olmayan bir kanalın (HTTP gibi) "
+"kullanımıyla ilgili sorunlardan sorumlu değildir."
 
 #: ../src/log.wsgi:30
 msgid "There is no log for the specified task"
-msgstr ""
+msgstr "Belirtilen görev için log kaydı yok"
 
 #: ../src/stats.wsgi:10
 msgid "Architecture"
@@ -177,35 +196,35 @@ msgstr "Mimari"
 
 #: ../src/stats.wsgi:11
 msgid "Architectures"
-msgstr ""
+msgstr "Mimariler"
 
 #: ../src/stats.wsgi:12
 msgid "Build-id"
-msgstr ""
+msgstr "Derleme-kimliği"
 
 #: ../src/stats.wsgi:13
 msgid "Count"
-msgstr ""
+msgstr "Sayı"
 
 #: ../src/stats.wsgi:14
 msgid "Denied jobs"
-msgstr ""
+msgstr "Reddedilen işler"
 
 #: ../src/stats.wsgi:15
 msgid "Failed"
-msgstr ""
+msgstr "Başarısız oldu"
 
 #: ../src/stats.wsgi:16
 msgid "First retrace"
-msgstr ""
+msgstr "İlk retrace"
 
 #: ../src/stats.wsgi:17
 msgid "Global statistics"
-msgstr ""
+msgstr "Global istatistikler"
 
 #: ../src/stats.wsgi:18
 msgid "Missing build-ids"
-msgstr ""
+msgstr "Eksik derleme kimlikleri"
 
 #: ../src/stats.wsgi:19
 msgid "Name"
@@ -213,31 +232,31 @@ msgstr "İsim"
 
 #: ../src/stats.wsgi:20
 msgid "Release"
-msgstr ""
+msgstr "Sürüm"
 
 #: ../src/stats.wsgi:21
 msgid "Releases"
-msgstr ""
+msgstr "Sürümler"
 
 #: ../src/stats.wsgi:22
 msgid "Required packages"
-msgstr ""
+msgstr "Gerekli paketler"
 
 #: ../src/stats.wsgi:23
 msgid "Retraced packages"
-msgstr ""
+msgstr "Retrace yapılan paketler"
 
 #: ../src/stats.wsgi:24
 msgid "Retrace Server statistics"
-msgstr ""
+msgstr "Retrace Server istatistikleri"
 
 #: ../src/stats.wsgi:25
 msgid "Shared object name"
-msgstr ""
+msgstr "Paylaşılan nesne adı"
 
 #: ../src/stats.wsgi:26
 msgid "Successful"
-msgstr ""
+msgstr "Başarılı"
 
 #: ../src/stats.wsgi:27
 msgid "Total"
@@ -245,7 +264,7 @@ msgstr "Toplam"
 
 #: ../src/stats.wsgi:28
 msgid "Versions"
-msgstr "Sürümler"
+msgstr "Versiyonlar"
 
 #~ msgid "X-CoreFileDirectory header has been disabled by server administrator"
 #~ msgstr ""
