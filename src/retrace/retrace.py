@@ -2030,7 +2030,7 @@ class RetraceTask:
             t = 3600
             if CONFIG["ProcessCommunicateTimeout"]:
                 t = CONFIG["ProcessCommunicateTimeout"]
-            child = run(crash_start, stdin=PIPE, stdout=PIPE, stderr=STDOUT,
+            child = run(crash_start, stdout=PIPE, stderr=STDOUT,
                         input=crash_cmdline.encode(), timeout=t)
             cmd_output = child.stdout
         except OSError as err:
