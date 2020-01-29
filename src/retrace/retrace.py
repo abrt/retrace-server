@@ -335,7 +335,7 @@ def parse_http_gettext(lang, charset):
     return result
 
 
-def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
+def run_gdb(savedir, plugin, repopath, taskid=None):
     # exception is caught on the higher level
     exec_file = open(os.path.join(savedir, "crash", "executable"), "r")
     executable = exec_file.read(ALLOWED_FILES["executable"])
@@ -398,8 +398,9 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
                              os.path.join(savedir, RetraceTask.DOCKERFILE),
                              "--volume=%s:%s:ro" % (repopath, repopath)]
         if CONFIG["UseFafPackages"]:
-            log_debug("Using FAF repository '%s'" % fafrepo)
-            podman_build_call.append("--volume=%s:/var/spool/abrt/faf-packages" % fafrepo)
+            faf_link_dir = CONFIG["FafLinkDir"]
+            log_debug("Using FAF repository")
+            podman_build_call.append("--volume=%s:%s" % (faf_link_dir, faf_link_dir))
 
         img_cont_id = str(taskid)
 
@@ -409,27 +410,8 @@ def run_gdb(savedir, plugin, repopath, fafrepo=None, taskid=None):
         if child.returncode:
             raise Exception("Unable to build podman container")
 
-
-        if CONFIG["UseFafPackages"]:
-            run(["/usr/bin/podman", "run", "-it", "--detach",
-                 "--volume=%s:%s:ro" % (repopath, repopath),
-                 "--volume=%s:/var/spool/abrt/faf-packages" % fafrepo,
-                 "--rm",
-                 "--name=%s" % img_cont_id,
-                 "retrace-image:%s" % img_cont_id],
-                stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8')
-
-            child = run(["/usr/bin/podman", "exec", "-it", "%s" % img_cont_id, "bash", "-c",
-                         "for PKG in /var/spool/abrt/faf-packages/*; "
-                         "do rpm2cpio $PKG | cpio -muid --quiet; done"],
-                        stdout=DEVNULL, stderr=DEVNULL, encoding='utf-8')
-            if child.returncode:
-                raise Exception("Unpacking of packages failed")
-            child = run(["/usr/bin/podman", "exec", img_cont_id,
-                         "/var/spool/abrt/gdb.sh"], stdout=PIPE, encoding='utf-8')
-        else:
-            child = run(["/usr/bin/podman", "run", "-it", "--name=%s" % img_cont_id,
-                         "--rm", "retrace-image:%s" % img_cont_id], stdout=PIPE, encoding='utf-8')
+        child = run(["/usr/bin/podman", "run", "-it", "--name=%s" % img_cont_id,
+                     "--rm", "retrace-image:%s" % img_cont_id], stdout=PIPE, encoding='utf-8')
     else:
         raise Exception("RetraceEnvironment set to invalid value")
 
@@ -2548,8 +2530,6 @@ class RetraceTask:
 
         if CONFIG["RetraceEnvironment"] == "podman":
             img_cont_id = str(self._taskid)
-            if CONFIG["UseFafPackages"]:
-                run(["/usr/bin/podman", "stop", img_cont_id])
             run(["/usr/bin/podman", "rmi", "retrace-image:%s" % img_cont_id])
 
         for f in os.listdir(self._savedir):

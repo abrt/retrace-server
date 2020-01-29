@@ -49,7 +49,6 @@ class RetraceWorker():
         self.plugins = Plugins()
         self.task = task
         self.logging_handler = None
-        self.fafrepo = None
         self.hook = RetraceHook(task)
 
     def begin_logging(self):
@@ -287,24 +286,11 @@ class RetraceWorker():
     def read_packages(self, crashdir, releaseid, crash_package, distribution):
         packages = [crash_package]
         missing = []
-        fafrepo = ""
 
         packagesfile = os.path.join(crashdir, "packages")
         if os.path.isfile(packagesfile):
             with open(packagesfile, "r") as f:
                 packages = f.read.split()
-        elif CONFIG["UseFafPackages"]:
-            packages = ["bash", "cpio", "glibc-debuginfo"]
-            child = run(["/usr/bin/faf-c2p", "--hardlink-dir", CONFIG["FafLinkDir"],
-                         os.path.join(crashdir, "coredump")], stdout=PIPE, stderr=PIPE, encoding='utf-8')
-            fafrepo = child.stdout.strip()
-            if child.stderr:
-                log_warn(child.stderr)
-
-            # hack - use latest glibc - for some reason gives better results
-            for filename in os.listdir(fafrepo):
-                if filename.startswith("glibc"):
-                    os.unlink(os.path.join(fafrepo, filename))
         else:
             # read required packages from coredump
             try:
@@ -359,7 +345,7 @@ class RetraceWorker():
             except Exception as ex:
                 log_error("Unable to obtain packages from 'coredump' file: %s" % ex)
                 self._fail()
-        return (packages, missing, fafrepo)
+        return (packages, missing)
 
     def start_retrace(self, custom_arch=None):
         self.hook.run("start")
@@ -396,7 +382,7 @@ class RetraceWorker():
             self._fail()
         self.hook.run("pre_prepare_debuginfo")
 
-        packages, missing, self.fafrepo = self.read_packages(crashdir, releaseid, crash_package, distribution)
+        packages, missing = self.read_packages(crashdir, releaseid, crash_package, distribution)
 
         self.hook.run("post_prepare_debuginfo")
         self.hook.run("pre_prepare_environment")
@@ -422,8 +408,6 @@ class RetraceWorker():
                     mockcfg.write("    'dirs': [\n")
                     mockcfg.write("              ('%s', '%s'),\n" % (repopath, repopath))
                     mockcfg.write("              ('%s', '/var/spool/abrt/crash'),\n" % crashdir)
-                    if CONFIG["UseFafPackages"]:
-                        mockcfg.write("              ('%s', '/packages'),\n" % self.fafrepo)
                     mockcfg.write("            ] }\n")
                     mockcfg.write("\n")
                     mockcfg.write("config_opts['yum.conf'] = \"\"\"\n")
@@ -473,10 +457,6 @@ class RetraceWorker():
             self.hook.run("post_prepare_environment")
             self.hook.run("pre_retrace")
 
-            if CONFIG["UseFafPackages"]:
-                self._retrace_run(26, ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell", "--",
-                                       "bash -c 'for PKG in /packages/*; "
-                                       "do rpm2cpio $PKG | cpio -muid --quiet; done'"])
             self._retrace_run(27, ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell",
                                    "--", "chgrp -R mock /var/spool/abrt/crash"])
 
@@ -492,8 +472,6 @@ class RetraceWorker():
                                        RetraceTask.DOCKERFILE), "w") as dockerfile:
                     dockerfile.write('FROM %s:%s\n\n' % (distribution, version))
                     dockerfile.write('RUN mkdir -p /var/spool/abrt/crash\n')
-                    if CONFIG["UseFafPackages"]:
-                        dockerfile.write('RUN mkdir -p /var/spool/abrt/faf-packages')
                     dockerfile.write('\n')
                     dockerfile.write('RUN dnf install --assumeyes dnf-plugins-core\n')
                     dockerfile.write('RUN dnf config-manager --add-repo=file://%s\n' % repopath)
@@ -512,15 +490,12 @@ class RetraceWorker():
                     dockerfile.write('RUN chmod +x /var/spool/abrt/gdb.sh\n')
                     dockerfile.write('COPY %s /var/spool/abrt/crash/\n\n'
                                      % RetraceTask.COREDUMP_FILE)
-                    if CONFIG["UseFafPackages"]:
-                        dockerfile.write('CMD ["/usr/bin/bash"]')
-                    else:
-                        dockerfile.write('RUN useradd -m retrace\n')
-                        dockerfile.write('RUN chown retrace /var/spool/abrt/gdb.sh\n')
-                        dockerfile.write('RUN chown retrace /var/spool/abrt/%s\n'
-                                         % RetraceTask.COREDUMP_FILE)
-                        dockerfile.write('USER retrace\n\n')
-                        dockerfile.write('ENTRYPOINT ["/var/spool/abrt/gdb.sh"]')
+                    dockerfile.write('RUN useradd -m retrace\n')
+                    dockerfile.write('RUN chown retrace /var/spool/abrt/gdb.sh\n')
+                    dockerfile.write('RUN chown retrace /var/spool/abrt/%s\n'
+                                     % RetraceTask.COREDUMP_FILE)
+                    dockerfile.write('USER retrace\n\n')
+                    dockerfile.write('ENTRYPOINT ["/var/spool/abrt/gdb.sh"]')
             except Exception as ex:
                 log_error("Unable to create Dockerfile: %s" % ex)
                 self._fail()
@@ -529,7 +504,7 @@ class RetraceWorker():
             self.hook.run("pre_retrace")
 
         try:
-            backtrace, exploitable = run_gdb(task.get_savedir(), self.plugin, repopath, self.fafrepo, task.get_taskid())
+            backtrace, exploitable = run_gdb(task.get_savedir(), self.plugin, repopath, task.get_taskid())
         except Exception as ex:
             log_error(str(ex))
             self._fail()
@@ -983,8 +958,6 @@ class RetraceWorker():
 
     def clean_task(self):
         self.hook.run("pre_clean_task")
-        if CONFIG["UseFafPackages"] and self.fafrepo:
-            shutil.rmtree(self.fafrepo)
         ret = self.task.clean()
         self.hook.run("post_clean_task")
         return ret
