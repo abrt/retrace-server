@@ -784,7 +784,9 @@ def unpack(archive, mime, targetdir=None):
 
 
 def response(start_response, status, body="", extra_headers=[]):
-    body = body.encode()
+    if isinstance(body, str):
+        body = body.encode("utf-8")
+
     start_response(status, [("Content-Type", "text/plain"), ("Content-Length", "%d" % len(body))] + extra_headers)
     return [body]
 
