@@ -465,37 +465,35 @@ class RetraceWorker():
         log_info(STATUS[STATUS_BACKTRACE])
 
         if CONFIG["RetraceEnvironment"] == "podman":
-            import re
-            repoid = re.sub('/', '_', CONFIG["RepoDir"][1:])
+            try:
+                with open(os.path.join(task.get_savedir(),
+                                       "podman_repo.repo"), "w") as podman_repo:
+                    podman_repo.write("[podman-%s]\n" % distribution)
+                    podman_repo.write("name=podman-%s\n" % releaseid)
+                    podman_repo.write("baseurl=file://%s/\n" % repopath)
+                    podman_repo.write("gpgcheck=%s" % CONFIG["RequireGPGCheck"])
+            except Exception as ex:
+                log_error("Unable to create podman repo file: %s" % ex)
+                self._fail()
+
             try:
                 with open(os.path.join(task.get_savedir(),
                                        RetraceTask.DOCKERFILE), "w") as dockerfile:
                     dockerfile.write('FROM %s:%s\n\n' % (distribution, version))
-                    dockerfile.write('RUN mkdir -p /var/spool/abrt/crash\n')
-                    dockerfile.write('\n')
-                    dockerfile.write('RUN dnf install --assumeyes dnf-plugins-core\n')
-                    dockerfile.write('RUN dnf config-manager --add-repo=file://%s\n' % repopath)
-                    if not CONFIG["RequireGPGCheck"]:
-                        dockerfile.write('RUN dnf config-manager --save --setopt=%s*.gpgcheck=0\n'
-                                         % repoid)
-                    dockerfile.write('RUN dnf ')
+                    dockerfile.write('RUN useradd -l retrace && \ \n')
+                    dockerfile.write('    mkdir -p /var/spool/abrt/crash\n')
+                    dockerfile.write('COPY --chown=retrace gdb.sh /var/spool/abrt/\n')
+                    dockerfile.write('COPY --chown=retrace %s /var/spool/abrt/crash/\n'
+                                     % RetraceTask.COREDUMP_FILE)
+                    dockerfile.write('COPY podman_repo.repo /etc/yum.repos.d/\n')
+                    dockerfile.write('RUN dnf --assumeyes --skip-broken --allowerasing --setopt=tsflags=nodocs ')
                     dockerfile.write('--releasever=%s ' % version)
-                    dockerfile.write('--repo=%s* ' % repoid)
-                    dockerfile.write('--assumeyes ')
-                    dockerfile.write('--skip-broken ')
-                    dockerfile.write('install abrt-addon-ccpp %s rpm ' \
-                                     'shadow-utils %s && dnf clean all\n\n'
-                                     % (self.plugin.gdb_package, " ".join(packages)))
-                    dockerfile.write('COPY gdb.sh /var/spool/abrt/\n')
-                    dockerfile.write('RUN chmod +x /var/spool/abrt/gdb.sh\n')
-                    dockerfile.write('COPY %s /var/spool/abrt/crash/\n\n'
-                                     % RetraceTask.COREDUMP_FILE)
-                    dockerfile.write('RUN useradd -m retrace\n')
-                    dockerfile.write('RUN chown retrace /var/spool/abrt/gdb.sh\n')
-                    dockerfile.write('RUN chown retrace /var/spool/abrt/%s\n'
-                                     % RetraceTask.COREDUMP_FILE)
-                    dockerfile.write('USER retrace\n\n')
-                    dockerfile.write('ENTRYPOINT ["/var/spool/abrt/gdb.sh"]')
+                    dockerfile.write('--repo="podman-%s" ' % distribution)
+                    dockerfile.write('install abrt-addon-ccpp %s %s && \ \n'
+                                     % (" \ \n".join(packages), self.plugin.gdb_package))
+                    dockerfile.write('dnf clean all\n\n')
+                    dockerfile.write('USER retrace\n')
+                    dockerfile.write('ENTRYPOINT ["bash", "/var/spool/abrt/gdb.sh"]')
             except Exception as ex:
                 log_error("Unable to create Dockerfile: %s" % ex)
                 self._fail()
