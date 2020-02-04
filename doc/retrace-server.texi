@@ -913,8 +913,7 @@ The following options can be specified in the configuration file
 @item
 @command{RequireGPGCheck} boolean; whether to use GPG check on
 the packages installed into chroot (does not apply for rawhide
-or vmcores chroot). GPG key file named @file{release-version} needs
-to be present in the @file{/usr/share/retrace-server/gpg/} directory.
+or vmcores chroot).
 Default 1.
 @item
 @command{AllowApiDelete} boolean; whether to allow task deleting by

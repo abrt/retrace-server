@@ -194,8 +194,3 @@ following elements:
                           ),
                         ]
 
-**2. GPG keys**
-
-Files containing GPG keys to verify downloaded package's signature. Dropped in
-/usr/share/retrace-server/gpg.
-
