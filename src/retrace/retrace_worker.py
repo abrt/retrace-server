@@ -418,10 +418,7 @@ class RetraceWorker():
                     mockcfg.write("logfile=/var/log/yum.log\n")
                     mockcfg.write("retries=20\n")
                     mockcfg.write("obsoletes=1\n")
-                    if version != "rawhide" and CONFIG["RequireGPGCheck"]:
-                        mockcfg.write("gpgcheck=1\n")
-                    else:
-                        mockcfg.write("gpgcheck=0\n")
+                    mockcfg.write("gpgcheck=%s\n" % CONFIG["RequireGPGCheck"])
                     mockcfg.write("assumeyes=1\n")
                     mockcfg.write("syslog_ident=mock\n")
                     mockcfg.write("syslog_device=\n")
