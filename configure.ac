@@ -139,7 +139,6 @@ AC_CONFIG_FILES([
 	src/Makefile
 	src/config/Makefile
 	src/config/hooks/Makefile
-	src/gpg/Makefile
 	src/plugins/Makefile
 	src/retrace/Makefile
 	src/retrace/hooks/Makefile

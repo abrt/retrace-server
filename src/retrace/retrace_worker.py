@@ -432,8 +432,6 @@ class RetraceWorker():
                     mockcfg.write("name=%s\n" % releaseid)
                     mockcfg.write("baseurl=file://%s/\n" % repopath)
                     mockcfg.write("failovermethod=priority\n")
-                    if version != "rawhide" and CONFIG["RequireGPGCheck"]:
-                        mockcfg.write("gpgkey=file:///usr/share/retrace-server/gpg/%s-%s\n" % (distribution, version))
                     mockcfg.write("\"\"\"\n")
 
                 # symlink defaults from /etc/mock
