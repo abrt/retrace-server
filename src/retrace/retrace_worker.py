@@ -14,7 +14,7 @@ from .retrace import (ALLOWED_FILES, REPO_PREFIX, REQUIRED_FILES,
                       STATUS, STATUS_ANALYZE, STATUS_BACKTRACE, STATUS_CLEANUP,
                       STATUS_FAIL, STATUS_INIT, STATUS_STATS, STATUS_SUCCESS,
                       TASK_DEBUG, TASK_RETRACE, TASK_RETRACE_INTERACTIVE, TASK_VMCORE,
-                      TASK_VMCORE_INTERACTIVE,
+                      TASK_VMCORE_INTERACTIVE, RETRACE_GPG_KEYS,
                       get_active_tasks,
                       get_supported_releases,
                       guess_arch,
@@ -345,6 +345,17 @@ class RetraceWorker():
                 self._fail()
         return (packages, missing)
 
+    def construct_gpg_keys(self, version, pre_rawhide_version=None, scheme="file://"):
+        final_result = ""
+
+        for key in self.plugin.gpg_keys:
+            final_result += "%s%s " % (scheme, key.format(release=version))
+
+        if pre_rawhide_version and self.plugin.gpg_keys:
+            final_result += "%s%s " % (scheme, self.plugin.gpg_keys[0].format(release=pre_rawhide_version))
+
+        return final_result
+
     def start_retrace(self, custom_arch=None):
         self.hook.run("start")
 
@@ -405,6 +416,8 @@ class RetraceWorker():
                     mockcfg.write("config_opts['plugin_conf']['bind_mount_opts'] = { 'create_dirs': True,\n")
                     mockcfg.write("    'dirs': [\n")
                     mockcfg.write("              ('%s', '%s'),\n" % (repopath, repopath))
+                    if CONFIG["RequireGPGCheck"]:
+                        mockcfg.write("              ('%s', '%s'),\n" % (RETRACE_GPG_KEYS, RETRACE_GPG_KEYS))
                     mockcfg.write("              ('%s', '/var/spool/abrt/crash'),\n" % crashdir)
                     mockcfg.write("            ] }\n")
                     mockcfg.write("\n")
@@ -426,6 +439,7 @@ class RetraceWorker():
                     mockcfg.write("[%s]\n" % distribution)
                     mockcfg.write("name=%s\n" % releaseid)
                     mockcfg.write("baseurl=file://%s/\n" % repopath)
+                    mockcfg.write("gpgkey=%s\n" % self.construct_gpg_keys(version))
                     mockcfg.write("failovermethod=priority\n")
                     mockcfg.write("\"\"\"\n")
 
@@ -465,6 +479,7 @@ class RetraceWorker():
                     podman_repo.write("name=podman-%s\n" % releaseid)
                     podman_repo.write("baseurl=file://%s/\n" % repopath)
                     podman_repo.write("gpgcheck=%s" % CONFIG["RequireGPGCheck"])
+                    podman_repo.write("gpgkey=%s" % self.construct_gpg_keys(version))
             except Exception as ex:
                 log_error("Unable to create podman repo file: %s" % ex)
                 self._fail()
@@ -473,17 +488,20 @@ class RetraceWorker():
                 with open(os.path.join(task.get_savedir(),
                                        RetraceTask.DOCKERFILE), "w") as dockerfile:
                     dockerfile.write('FROM %s:%s\n\n' % (distribution, version))
-                    dockerfile.write('RUN useradd -l retrace && \ \n')
+                    dockerfile.write('RUN useradd -l retrace && \\ \n')
                     dockerfile.write('    mkdir -p /var/spool/abrt/crash\n')
                     dockerfile.write('COPY --chown=retrace gdb.sh /var/spool/abrt/\n')
                     dockerfile.write('COPY --chown=retrace %s /var/spool/abrt/crash/\n'
                                      % RetraceTask.COREDUMP_FILE)
                     dockerfile.write('COPY podman_repo.repo /etc/yum.repos.d/\n')
-                    dockerfile.write('RUN dnf --assumeyes --skip-broken --allowerasing --setopt=tsflags=nodocs ')
+                    dockerfile.write('RUN ')
+                    if CONFIG["RequireGPGCheck"]:
+                        dockerfile.write('rpm --import %s && \\ \n' % self.construct_gpg_keys(version, scheme=""))
+                    dockerfile.write('dnf --assumeyes --skip-broken --allowerasing --setopt=tsflags=nodocs ')
                     dockerfile.write('--releasever=%s ' % version)
                     dockerfile.write('--repo="podman-%s" ' % distribution)
-                    dockerfile.write('install abrt-addon-ccpp %s %s && \ \n'
-                                     % (" \ \n".join(packages), self.plugin.gdb_package))
+                    dockerfile.write('install abrt-addon-ccpp %s %s && \\ \n'
+                                     % (" \\ \n".join(packages), self.plugin.gdb_package))
                     dockerfile.write('dnf clean all\n\n')
                     dockerfile.write('USER retrace\n')
                     dockerfile.write('ENTRYPOINT ["bash", "/var/spool/abrt/gdb.sh"]')

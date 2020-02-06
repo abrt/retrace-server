@@ -6,6 +6,9 @@ guessparser = re.compile(r"\.fc([0-9]+)")
 displayrelease = "Fedora release"
 gdb_package = "gdb"
 gdb_executable = "/usr/bin/gdb"
+gpg_keys = [
+    "/usr/share/distribution-gpg-keys/fedora/RPM-GPG-KEY-fedora-{release}-primary",
+]
 versionlist = [
     "fc22",
     "fc23",
