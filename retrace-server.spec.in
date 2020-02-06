@@ -49,6 +49,7 @@ Requires: sqlite
 Requires: crash >= 5.1.7
 Requires: wget
 Requires: kexec-tools
+Requires: distribution-gpg-keys
 %if (0%{?rhel} && 0%{?rhel} <= 7) || (0%{?fedora} && 0%{?fedora} <= 27)
 Requires(preun): /sbin/install-info
 Requires(post): /sbin/install-info

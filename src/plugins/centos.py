@@ -6,6 +6,10 @@ guessparser = re.compile(r"\.el(\d+)")
 displayrelease = "CentOS release"
 gdb_package = "gdb"
 gdb_executable = "/usr/bin/gdb"
+gpg_keys = [
+    "/usr/share/distribution-gpg-keys/epel/RPM-GPG-KEY-EPEL-{release}",
+    "/usr/share/distribution-gpg-keys/centos/RPM-GPG-KEY-CentOS-{release}",
+]
 versionlist = [
     "el6",
     "el7",

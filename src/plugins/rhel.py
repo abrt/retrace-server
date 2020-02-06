@@ -4,6 +4,10 @@ distribution = "rhel"
 abrtparser = re.compile(r"^Red Hat Enterprise Linux(?:\s\w+)? release (\d+)(?:\.(\d+))?(?:\s\w+)? \(([^\)]+)\)$")
 guessparser = re.compile(r"\.el(\d+)")
 displayrelease = "Red Hat Enterprise Linux release"
+gpg_keys = [
+    "/usr/share/distribution-gpg-keys/epel/RPM-GPG-KEY-EPEL-{release}",
+    "/usr/share/distribution-gpg-keys/redhat/RPM-GPG-KEY-redhat{release}-release",
+]
 gdb_package = "devtoolset-8-gdb"
 gdb_executable = "/opt/rh/devtoolset-8/root/usr/bin/gdb"
 versionlist = [

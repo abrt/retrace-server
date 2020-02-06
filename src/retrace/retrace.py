@@ -172,6 +172,8 @@ ARCH_MAP = {
 PYTHON_LABEL_START = "----------PYTHON-START--------"
 PYTHON_LABEL_END = "----------PYTHON--END---------"
 
+RETRACE_GPG_KEYS = "/usr/share/distribution-gpg-keys/"
+
 
 class RetraceError(Exception):
     pass
@@ -397,6 +399,10 @@ def run_gdb(savedir, plugin, repopath, taskid=None):
         podman_build_call = ["/usr/bin/podman", "build", "--file",
                              os.path.join(savedir, RetraceTask.DOCKERFILE),
                              "--volume=%s:%s:ro" % (repopath, repopath)]
+
+        if CONFIG["RequireGPGCheck"]:
+            podman_build_call.append("--volume=%s:%s:ro" % (RETRACE_GPG_KEYS, RETRACE_GPG_KEYS))
+
         if CONFIG["UseFafPackages"]:
             faf_link_dir = CONFIG["FafLinkDir"]
             log_debug("Using FAF repository")
