@@ -199,6 +199,74 @@ exit 0
 %license COPYING
 
 %changelog
+* Fri Feb 07 2020 Michal Fabik <mfabik@redhat.com> 1.21.0-1
+- README: Add translation status
+- translations: Remove zanata config and script
+- retrace: Fix bytes has no attribute encode
+- Fix error when calling run_crash_cmdline after conversion to run()
+- Fix error handling when unknown exception occurs in run_crash_cmdline
+- podman: Tweak the Dockerfile for retracing
+- Remove rpm2cpio part from podman retrace
+- Check for RequireGPGCheck
+- Simplify run calls
+- Make returncode checks more readable
+- Fix container and image cleanup
+- Tag podman images with task id
+- Replace call() and Popen() with run()
+- Fix container cleanup
+- Change home dir for user 'retrace'
+- Use more meaningful log messages
+- Replace os.devnull with subprocess.DEVNULL
+- Add podman-specific deployment instructions
+- Fix pylint issues
+- Run hooks with podman as well
+- Add UseFafPackages support in podman
+- Fix indentation
+- Add exit code to spec file scriptlet
+- Add podman as a weak dependency
+- Beautify gdb.sh
+- Run retrace in podman container
+- Create Dockerfiles
+- Make mock-specific parts conditional
+- Remove test for abrt-gdb-exploitable
+- Add RetraceEnvironment config item
+- Fix spelling
+- Tweak man pages
+- Update translations
+- r-s-reposync-faf: Fix paths to rpms
+- Update (pt) translation
+- Update (nl) translation
+- Update (de) translation
+- Update (bg) translation
+- Update (tr) translation
+- Update (it) translation
+- Add (zh_HK) translation
+- r-s-reposync: Replace old way of cmp with key
+- README.md: Change capitalization of freenode
+- Fix build error after change of mock.conf to environment.conf
+- hooks: Rename mock hook to environment
+- hooks: Add option for per-executable timeouts
+- spec: Remove upgrade script moving config to new location
+- hooks:config: Load configs from users homedir
+- hooks: Move default hook script dir to /usr/libexec
+- hooks: Log stdout and stderr of scripts after exception
+- hooks: Run hook scripts in parallel processes
+- spec: Do not replace configs on reinstall
+- hooks: Fix hook timeouts and other exceptions logs
+- hooks: Change cwd for hooks to hooks dir
+- hooks: Change of retrace hooks
+- config: Move retrace-server configuration file
+- retrace: Change logging format
+- retrace_worker: Remove distro hack from mock config
+- dockerfile_local: Install vim
+- docker: Update Makefile
+- docker: Use sbin/httpd instead of apachectl
+- dockerfile_local: Install make
+- dockerfile: Update to Fedora 31
+- dockerfile: Install mod_ssl
+- retrace_worker: Fix file mode to write to file
+- retrace-server-worker: Correct import of ArgumentParser
+
 * Tue Oct 29 2019 Michal Fabik <mfabik@redhat.com> 1.20.0-1
 - Bump Fedora Release in Dockerfile
 - retrace_worker: Use kernelver_str var
