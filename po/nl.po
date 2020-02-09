@@ -4,9 +4,9 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2020-01-22 13:15+0000\n"
+"PO-Revision-Date: 2020-01-23 15:13+0000\n"
 "Last-Translator: Geert Warrink <geert.warrink@onsnet.nu>\n"
-"Language-Team: Dutch <https://translate.stg.fedoraproject.org/projects/abrt/"
+"Language-Team: Dutch <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/nl/>\n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
@@ -62,7 +62,7 @@ msgstr "Kan geen werkmap aanmaken"
 
 #: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
-msgstr "Kan geen vrije schijfruime verkrijgen"
+msgstr "Kan geen vrije schijfruimte verkrijgen"
 
 #: ../src/create.wsgi:57 ../src/create.wsgi:99
 msgid "There is not enough storage space on the server"
@@ -113,7 +113,7 @@ msgstr "Retrace Server"
 
 #: ../src/index.wsgi:13
 msgid "Welcome to Retrace Server"
-msgstr "Welckom bij Retrace Server"
+msgstr "Welkom bij Retrace Server"
 
 #: ../src/index.wsgi:15
 msgid ""
@@ -151,7 +151,7 @@ msgstr "De volgende releases worden ondersteund: %s"
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
 msgstr ""
-"Op dit mnoment is de server voor %d%% belast (%d van de %d jobs draaien)."
+"Op dit moment is de server voor %d%% belast (%d van de %d jobs draaien)."
 
 #: ../src/index.wsgi:27
 #, c-format
@@ -182,10 +182,10 @@ msgid ""
 "an insecure channel (such as HTTP)."
 msgstr ""
 "Je coredump wordt alleen voor retrace doeleinden gebruikt. Serverbeheerders "
-"proberen niet je privé data te verkrijgen uit coredumps of\n"
-"backtraces. Het gebruik van een beveiligd communicatiekanaal (HTTPS) wordt "
-"strikt aanbevolen. Serverbeheerders zijn niet verantwoordelijk voor "
-"problemen gerelateerd aan het gebruik van een onveilig kanaal (zoals HTTP)."
+"proberen niet je privé data te verkrijgen uit coredumps of backtraces. Het "
+"gebruik van een beveiligd communicatiekanaal (HTTPS) wordt strikt "
+"aanbevolen. Serverbeheerders zijn niet verantwoordelijk voor problemen "
+"gerelateerd aan het gebruik van een onveilig kanaal (zoals HTTP)."
 
 #: ../src/log.wsgi:30
 msgid "There is no log for the specified task"

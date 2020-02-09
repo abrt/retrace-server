@@ -2,121 +2,123 @@
 # Copyright (C) 2011 THE retrace-server'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the retrace-server package.
 # Michal Toman <mtoman@redhat.com>, 2011.
-#
+# Igor Gorbounov <igor.gorbounov@gmail.com>, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: retrace-server 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2011-05-17 09:53+0200\n"
-"Last-Translator: Michal Toman <mtoman@redhat.com>\n"
-"Language-Team: Russian\n"
-"Language: \n"
+"PO-Revision-Date: 2020-02-07 20:16+0000\n"
+"Last-Translator: Igor Gorbounov <igor.gorbounov@gmail.com>\n"
+"Language-Team: Russian <https://translate.fedoraproject.org/projects/abrt/"
+"retrace-server/ru/>\n"
+"Language: ru\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ASCII\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<="
+"4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"X-Generator: Weblate 3.10.3\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
 msgid "You must use HTTPS"
-msgstr ""
+msgstr "Вы должны использовать HTTPS"
 
 #: ../src/backtrace.wsgi:16 ../src/log.wsgi:16 ../src/status.wsgi:16
 msgid "Invalid URL"
-msgstr ""
+msgstr "Неправильный URL"
 
 #: ../src/backtrace.wsgi:22 ../src/log.wsgi:21 ../src/status.wsgi:22
 msgid "There is no such task"
-msgstr ""
+msgstr "Нет такой задачи"
 
 #: ../src/backtrace.wsgi:27 ../src/log.wsgi:26 ../src/status.wsgi:27
 msgid "Invalid password"
-msgstr ""
+msgstr "Неправильный пароль"
 
 #: ../src/backtrace.wsgi:31
 msgid "There is no backtrace for the specified task"
-msgstr ""
+msgstr "Нет обратной трассировки для указанной задачи"
 
 #: ../src/create.wsgi:19 ../src/create.wsgi:70
 msgid "Retrace server is fully loaded at the moment"
-msgstr ""
+msgstr "Сервер трассировки полностью загружен в данный момент"
 
 #: ../src/create.wsgi:23
 msgid "You must use POST method"
-msgstr ""
+msgstr "Вы должны использовать метод POST"
 
 #: ../src/create.wsgi:27
 msgid "Specified archive format is not supported"
-msgstr ""
+msgstr "Указанный формат архива не поддерживается"
 
 #: ../src/create.wsgi:31
 msgid "You need to set Content-Length header properly"
-msgstr ""
+msgstr "Нужно правильно настроить заголовок Content-Length"
 
 #: ../src/create.wsgi:35
 msgid "Specified archive is too large"
-msgstr ""
+msgstr "Указанный архив слишком большой"
 
 #: ../src/create.wsgi:47
 msgid "Unable to create working directory"
-msgstr ""
+msgstr "Невозможно создать рабочий каталог"
 
 #: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
-msgstr ""
+msgstr "Невозможно получить свободное место на диске"
 
 #: ../src/create.wsgi:57 ../src/create.wsgi:99
 msgid "There is not enough storage space on the server"
-msgstr ""
+msgstr "На сервере недостаточно места для хранения"
 
 #: ../src/create.wsgi:63
 msgid "Unable to create new task"
-msgstr ""
+msgstr "Невозможно создать новую задачу"
 
 #: ../src/create.wsgi:83
 msgid "Unable to save archive"
-msgstr ""
+msgstr "Невозможно сохранить архив"
 
 #: ../src/create.wsgi:89
 msgid "Unable to obtain unpacked size"
-msgstr ""
+msgstr "Невозможно получить распакованный размер"
 
 #: ../src/create.wsgi:94
 msgid "Specified archive's content is too large"
-msgstr ""
+msgstr "Содержимое указанного массива слишком велико"
 
 #: ../src/create.wsgi:111
 msgid "Unable to unpack archive"
-msgstr ""
+msgstr "Невозможно распаковать архив"
 
 #: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
-msgstr ""
+msgstr "Символические ссылки не допускаются в архиве"
 
 #: ../src/create.wsgi:131
 #, c-format
 msgid "The '%s' file is larger than expected"
-msgstr ""
+msgstr "Файл «%s» больше, чем ожидалось"
 
 #: ../src/create.wsgi:135
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr ""
+msgstr "Файл «%s» не допускается в архиве"
 
 #: ../src/create.wsgi:147
 #, c-format
 msgid "Required file '%s' is missing"
-msgstr ""
+msgstr "Требуемый файл «%s» отсутствует"
 
 #: ../src/index.wsgi:12
 msgid "Retrace Server"
-msgstr ""
+msgstr "Сервер трассировки"
 
 #: ../src/index.wsgi:13
 msgid "Welcome to Retrace Server"
-msgstr ""
+msgstr "Добро пожаловать на сервер трассировки"
 
 #: ../src/index.wsgi:15
 msgid ""
@@ -124,29 +126,36 @@ msgid ""
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s wiki:"
 msgstr ""
+"Сервер трассировки - это служба, предоставляющая возможность анализировать "
+"аварийный дамп памяти и генерировать обратную трассировку по сети. "
+"Дополнительную информацию можно найти на вики сервера трссировки:"
 
 #: ../src/index.wsgi:21
 msgid ""
 "Only the secure HTTPS connection is now allowed by the server. HTTP requests "
 "will be denied."
 msgstr ""
+"Теперь сервером допускается только защищенное HTTPS-соединение. HTTP-запросы "
+"будут отклоняться."
 
 #: ../src/index.wsgi:23
 msgid ""
 "Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
 "of security reasons."
 msgstr ""
+"Разрешаются и HTTP, и HTTPS. Строго рекомендуется использовать HTTPS из "
+"соображений безопасности."
 
 #: ../src/index.wsgi:24
 #, c-format
 msgid "The following releases are supported: %s"
-msgstr ""
+msgstr "Поддерживаются следующие выпуски: %s"
 
 #: ../src/index.wsgi:26
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
-msgstr ""
+msgstr "В данный момент сервер загружен на %d%% (работают %d из %d задач)."
 
 #: ../src/index.wsgi:27
 #, c-format
@@ -159,6 +168,14 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
+"Ваш аварийный дамп памяти хранится на сервере только на время работы задания "
+"трассировки. Как только это задание завершается, сервер хранит журнал "
+"трассировки и обратную трассировку. Все другие данные (включая дамп памяти) "
+"удаляются. К журналу трассировки и обратной трассировке можно получить "
+"доступ только через уникальный ID задачи и пароль, поэтому никому (кроме "
+"автора) не разрешается просмотр. Все информация о сбое (включая обратную "
+"трассировку) удаляется после %d часов бездействия. Дальше никакие, вероятно, "
+"личные данные не хранятся на сервере."
 
 #: ../src/index.wsgi:33
 msgid ""
@@ -168,83 +185,88 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
+"Ваш дамп памяти используется только для трассировки. Администраторы сервера "
+"не пытаются получить ваши личные данные из дампов памяти или обратных "
+"трассировок. Использование безопасного канала связи (HTTPS) строго "
+"рекомендуется. Администраторы сервера не несут ответственность за проблемы, "
+"связанные с использованием небезопасного канала (например, HTTP)."
 
 #: ../src/log.wsgi:30
 msgid "There is no log for the specified task"
-msgstr ""
+msgstr "Нет журнала для указанной задачи"
 
 #: ../src/stats.wsgi:10
 msgid "Architecture"
-msgstr ""
+msgstr "Архитектура"
 
 #: ../src/stats.wsgi:11
 msgid "Architectures"
-msgstr ""
+msgstr "Архитектуры"
 
 #: ../src/stats.wsgi:12
 msgid "Build-id"
-msgstr ""
+msgstr "ID сборки"
 
 #: ../src/stats.wsgi:13
 msgid "Count"
-msgstr ""
+msgstr "Счет"
 
 #: ../src/stats.wsgi:14
 msgid "Denied jobs"
-msgstr ""
+msgstr "Отклоненные задания"
 
 #: ../src/stats.wsgi:15
 msgid "Failed"
-msgstr ""
+msgstr "Сбой"
 
 #: ../src/stats.wsgi:16
 msgid "First retrace"
-msgstr ""
+msgstr "Первая трассировка"
 
 #: ../src/stats.wsgi:17
 msgid "Global statistics"
-msgstr ""
+msgstr "Глобальная статистика"
 
 #: ../src/stats.wsgi:18
 msgid "Missing build-ids"
-msgstr ""
+msgstr "Идентификаторы отсутствующих сборок"
 
 #: ../src/stats.wsgi:19
 msgid "Name"
-msgstr ""
+msgstr "Имя"
 
 #: ../src/stats.wsgi:20
 msgid "Release"
-msgstr ""
+msgstr "Выпуск"
 
 #: ../src/stats.wsgi:21
 msgid "Releases"
-msgstr ""
+msgstr "Выпуски"
 
 #: ../src/stats.wsgi:22
 msgid "Required packages"
-msgstr ""
+msgstr "Требуемые пакеты"
 
 #: ../src/stats.wsgi:23
 msgid "Retraced packages"
-msgstr ""
+msgstr "Трассированные пакеты"
 
 #: ../src/stats.wsgi:24
 msgid "Retrace Server statistics"
-msgstr ""
+msgstr "Статистика сервера трассировки"
 
 #: ../src/stats.wsgi:25
 msgid "Shared object name"
-msgstr ""
+msgstr "Имя общего объекта"
 
 #: ../src/stats.wsgi:26
 msgid "Successful"
-msgstr ""
+msgstr "Успешно"
 
 #: ../src/stats.wsgi:27
 msgid "Total"
-msgstr ""
+msgstr "Всего"
 
 #: ../src/stats.wsgi:28
 msgid "Versions"
-msgstr ""
+msgstr "Версии"
