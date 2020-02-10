@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2020-01-24 21:05+0000\n"
+"PO-Revision-Date: 2020-02-05 20:16+0000\n"
 "Last-Translator: Julien Humbert <julroy67@gmail.com>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/fr/>\n"
@@ -24,7 +24,7 @@ msgstr ""
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
 msgid "You must use HTTPS"
-msgstr "Vous devez utiliser l'HTTPS"
+msgstr "Vous devez utiliser l’HTTPS"
 
 #: ../src/backtrace.wsgi:16 ../src/log.wsgi:16 ../src/status.wsgi:16
 msgid "Invalid URL"
@@ -40,7 +40,7 @@ msgstr "Mot de passe invalide"
 
 #: ../src/backtrace.wsgi:31
 msgid "There is no backtrace for the specified task"
-msgstr "Il n'y a pas de trace arrière pour la tâche indiquée"
+msgstr "Il n’y a pas de trace arrière pour la tâche indiquée"
 
 #: ../src/create.wsgi:19 ../src/create.wsgi:70
 msgid "Retrace server is fully loaded at the moment"
@@ -52,15 +52,15 @@ msgstr "Vous devez utiliser la méthode POST"
 
 #: ../src/create.wsgi:27
 msgid "Specified archive format is not supported"
-msgstr "Le format d'archive indiqué n'est pas pris en charge"
+msgstr "Le format d’archive indiqué n’est pas pris en charge"
 
 #: ../src/create.wsgi:31
 msgid "You need to set Content-Length header properly"
-msgstr "Vous devez renseigner correctement l'entête Content-Length"
+msgstr "Vous devez renseigner correctement l’entête Content-Length"
 
 #: ../src/create.wsgi:35
 msgid "Specified archive is too large"
-msgstr "L'archive indiquée est trop volumineuse"
+msgstr "L’archive indiquée est trop volumineuse"
 
 #: ../src/create.wsgi:47
 msgid "Unable to create working directory"
@@ -68,11 +68,11 @@ msgstr "Impossible de créer le dossier de travail"
 
 #: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
-msgstr "Impossible d'obtenir de l'espace libre sur le disque"
+msgstr "Impossible d’obtenir de l’espace libre sur le disque"
 
 #: ../src/create.wsgi:57 ../src/create.wsgi:99
 msgid "There is not enough storage space on the server"
-msgstr "Il n'y a pas assez d'espace de stockage sur le serveur"
+msgstr "Il n’y a pas assez d’espace de stockage sur le serveur"
 
 #: ../src/create.wsgi:63
 msgid "Unable to create new task"
@@ -80,23 +80,23 @@ msgstr "Impossible de créer une nouvelle tâche"
 
 #: ../src/create.wsgi:83
 msgid "Unable to save archive"
-msgstr "Impossible de sauvegarder l'archive"
+msgstr "Impossible de sauvegarder l’archive"
 
 #: ../src/create.wsgi:89
 msgid "Unable to obtain unpacked size"
-msgstr "Impossible d'obtenir la taille décompressée"
+msgstr "Impossible d’obtenir la taille décompressée"
 
 #: ../src/create.wsgi:94
 msgid "Specified archive's content is too large"
-msgstr "Le contenu de l'archive indiquée est trop volumineux"
+msgstr "Le contenu de l’archive indiquée est trop volumineux"
 
 #: ../src/create.wsgi:111
 msgid "Unable to unpack archive"
-msgstr "Impossible de décompresser l'archive"
+msgstr "Impossible de décompresser l’archive"
 
 #: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
-msgstr "Les liens symboliques ne sont pas autorisés dans l'archive"
+msgstr "Les liens symboliques ne sont pas autorisés dans l’archive"
 
 #: ../src/create.wsgi:131
 #, c-format
@@ -106,7 +106,7 @@ msgstr "Le fichier « %s » est plus volumineux que prévu"
 #: ../src/create.wsgi:135
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr "Le fichier « %s » n'est pas permis dans l'archive"
+msgstr "Le fichier « %s » n’est pas permis dans l’archive"
 
 #: ../src/create.wsgi:147
 #, c-format
@@ -127,10 +127,10 @@ msgid ""
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s wiki:"
 msgstr ""
-"Le serveur de retraçage est un service offrant la possibilité d'analyser des "
-"instantanés de la mémoire (coredump) et de générer des traces arrières "
-"depuis le réseau (backtrace). Vous pouvez trouver plus d'informations sur le "
-"wiki du serveur de retraçage :"
+"Le serveur de retraçage est un service offrant la possibilité d’analyser des "
+"instantanés de la mémoire (coredump) et de générer des traces arrière depuis "
+"le réseau (backtrace). Vous pouvez trouver plus d’informations sur le wiki "
+"du serveur de retraçage :"
 
 #: ../src/index.wsgi:21
 msgid ""
@@ -171,15 +171,15 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
-"L'instantané de la mémoire n'est conservé sur le serveur que le temps de "
+"L’instantané de la mémoire n’est conservé sur le serveur que le temps de "
 "réaliser le travail de retraçage. Une fois terminé, le serveur conserve le "
-"journal du retraçage et de la trace arrière. Toutes les autres données "
-"(incluant l'instantané) sont supprimées. Le fichier journal du retraçage et "
+"journal du retraçage et de la trace arrière. Toutes les autres données ("
+"incluant l’instantané) sont supprimées. Le fichier journal du retraçage et "
 "de la trace arrière sont uniquement accessibles par un identifiant unique de "
-"tâche et un mot de passe, que personne (à l'exception de l'auteur) n'est "
+"tâche et un mot de passe, que personne (à l’exception de l’auteur) n’est "
 "autorisé à voir. Toutes les informations du plantage (incluant la trace "
 "arrière) sont supprimées après %d heures sans activité. À partir de ce "
-"moment, aucune donnée potentiellement privée n'est conservée sur le serveur."
+"moment, aucune donnée potentiellement privée n’est conservée sur le serveur."
 
 #: ../src/index.wsgi:33
 msgid ""
@@ -190,11 +190,11 @@ msgid ""
 "an insecure channel (such as HTTP)."
 msgstr ""
 "Votre instantané de la mémoire est utilisé uniquement à des fins de "
-"retraçage. Les administrateurs du serveur ne sont pas en en train d'essayer "
-"de prendre vos données privées avec vos instantanés ou traces arrières. "
-"Utiliser un canal de communication sécurisé (HTTPS) est fortement "
-"recommandé. Les administrateurs systèmes ne sont pas responsables des "
-"problèmes liés à l'usage d'un canal non sécurisé (tel que HTTP)."
+"retraçage. Les administrateurs du serveur ne sont pas en train d’essayer de "
+"prendre vos données privées avec vos instantanés ou traces arrière. Utiliser "
+"un canal de communication sécurisé (HTTPS) est fortement recommandé. Les "
+"administrateurs système ne sont pas responsables des problèmes liés à l’"
+"usage d’un canal non sécurisé (tel que HTTP)."
 
 #: ../src/log.wsgi:30
 msgid "There is no log for the specified task"
@@ -262,7 +262,7 @@ msgstr "Statistiques du serveur de retraçage"
 
 #: ../src/stats.wsgi:25
 msgid "Shared object name"
-msgstr "Nom de l'objet partagé"
+msgstr "Nom de l’objet partagé"
 
 #: ../src/stats.wsgi:26
 msgid "Successful"
