@@ -54,6 +54,7 @@ Requires(preun): /sbin/install-info
 Requires(post): /sbin/install-info
 %endif
 Requires(post): /usr/bin/crontab
+Recommends: podman
 
 Obsoletes: abrt-retrace-server < 2.0.3
 Provides: abrt-retrace-server = 2.0.3
@@ -87,6 +88,7 @@ mkdir -p %{buildroot}%{_localstatedir}/log/%{name}
 mkdir -p %{buildroot}%{_localstatedir}/spool/%{name}
 mkdir -p %{buildroot}%{_sysconfdir}/%{name}
 mkdir -p %{buildroot}%{_datadir}/%{name}
+mkdir -p %{buildroot}%{_sharedstatedir}/retrace
 mkdir -p %{buildroot}%{_libexecdir}/%{name}
 mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks
 mkdir -p %{buildroot}%{_libexecdir}/%{name}/hooks/pre_start
@@ -116,7 +118,7 @@ rm -f %{buildroot}%{_infodir}/dir
 #retrace uid/gid reserved in setup, rhbz #706012
 %define retrace_gid_uid 174
 getent group retrace > /dev/null || groupadd -f -g %{retrace_gid_uid} --system retrace
-getent passwd retrace > /dev/null || useradd --system -g retrace -u %{retrace_gid_uid} -d %{_datadir}/%{name} -s /sbin/nologin retrace
+getent passwd retrace > /dev/null || useradd --system -g retrace -u %{retrace_gid_uid} -d %{_sharedstatedir}/retrace -s /sbin/nologin retrace
 exit 0
 
 %post
@@ -141,6 +143,7 @@ then
      echo %{retrace_crontab_entry3}; echo %{retrace_crontab_entry4}; \
      echo %{retrace_crontab_entry5}; echo %{retrace_crontab_entry6};) | crontab -u retrace - 2> /dev/null
 fi
+exit 0
 
 %preun
 if [ "$1" = 0 ]
@@ -151,6 +154,7 @@ then
 #comment entries in retrace's crontab
     (crontab -u retrace -l 2> /dev/null | sed "s,^\([^#].*\)$,#\1,g") | crontab -u retrace - 2> /dev/null
 fi
+exit 0
 
 %files -f %{name}.lang
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}-httpd.conf
@@ -183,6 +187,7 @@ fi
 %{_bindir}/coredump2packages
 %{python3_sitelib}/retrace/
 %{_datadir}/%{name}/
+%dir %attr(0755,retrace,retrace) %{_sharedstatedir}/retrace/
 %attr(0775,root,retrace) %{_libexecdir}/%{name}/hooks/
 %doc %{_mandir}/man1/%{name}-cleanup.1*
 %doc %{_mandir}/man1/%{name}-interact.1*
@@ -194,6 +199,74 @@ fi
 %license COPYING
 
 %changelog
+* Fri Feb 07 2020 Michal Fabik <mfabik@redhat.com> 1.21.0-1
+- README: Add translation status
+- translations: Remove zanata config and script
+- retrace: Fix bytes has no attribute encode
+- Fix error when calling run_crash_cmdline after conversion to run()
+- Fix error handling when unknown exception occurs in run_crash_cmdline
+- podman: Tweak the Dockerfile for retracing
+- Remove rpm2cpio part from podman retrace
+- Check for RequireGPGCheck
+- Simplify run calls
+- Make returncode checks more readable
+- Fix container and image cleanup
+- Tag podman images with task id
+- Replace call() and Popen() with run()
+- Fix container cleanup
+- Change home dir for user 'retrace'
+- Use more meaningful log messages
+- Replace os.devnull with subprocess.DEVNULL
+- Add podman-specific deployment instructions
+- Fix pylint issues
+- Run hooks with podman as well
+- Add UseFafPackages support in podman
+- Fix indentation
+- Add exit code to spec file scriptlet
+- Add podman as a weak dependency
+- Beautify gdb.sh
+- Run retrace in podman container
+- Create Dockerfiles
+- Make mock-specific parts conditional
+- Remove test for abrt-gdb-exploitable
+- Add RetraceEnvironment config item
+- Fix spelling
+- Tweak man pages
+- Update translations
+- r-s-reposync-faf: Fix paths to rpms
+- Update (pt) translation
+- Update (nl) translation
+- Update (de) translation
+- Update (bg) translation
+- Update (tr) translation
+- Update (it) translation
+- Add (zh_HK) translation
+- r-s-reposync: Replace old way of cmp with key
+- README.md: Change capitalization of freenode
+- Fix build error after change of mock.conf to environment.conf
+- hooks: Rename mock hook to environment
+- hooks: Add option for per-executable timeouts
+- spec: Remove upgrade script moving config to new location
+- hooks:config: Load configs from users homedir
+- hooks: Move default hook script dir to /usr/libexec
+- hooks: Log stdout and stderr of scripts after exception
+- hooks: Run hook scripts in parallel processes
+- spec: Do not replace configs on reinstall
+- hooks: Fix hook timeouts and other exceptions logs
+- hooks: Change cwd for hooks to hooks dir
+- hooks: Change of retrace hooks
+- config: Move retrace-server configuration file
+- retrace: Change logging format
+- retrace_worker: Remove distro hack from mock config
+- dockerfile_local: Install vim
+- docker: Update Makefile
+- docker: Use sbin/httpd instead of apachectl
+- dockerfile_local: Install make
+- dockerfile: Update to Fedora 31
+- dockerfile: Install mod_ssl
+- retrace_worker: Fix file mode to write to file
+- retrace-server-worker: Correct import of ArgumentParser
+
 * Tue Oct 29 2019 Michal Fabik <mfabik@redhat.com> 1.20.0-1
 - Bump Fedora Release in Dockerfile
 - retrace_worker: Use kernelver_str var

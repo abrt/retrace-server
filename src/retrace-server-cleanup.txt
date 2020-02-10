@@ -13,13 +13,15 @@ DESCRIPTION
 -----------
 The tool collects different kinds of garbage created by Retrace server:
 
-* Deletes old tasks. The limit to proclaim task old can be changed
-in the configuration file (DeleteTaskAfter).
+* Deletes old tasks based on mtime. Will remove the tasks 
+  with a failure status with an mtime defined by the DeleteFailedTaskAfter 
+  variable set in the configuration file. Successful tasks will be deleted 
+  with an mtime defined by the DeleteTaskAfter variable set in the configuration file.
 
 * Kills tasks running for a long time (> 1 hour).
 
 * Cleans up fakeroots and task directories from jobs finished
-in an unexpected way.
+  in an unexpected way.
 
 Should be set in root\'s crontab to run every hour.
 

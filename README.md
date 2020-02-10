@@ -1,5 +1,7 @@
 # Retrace Server
 
+[![Translation status](https://translate.fedoraproject.org/widgets/abrt/-/retrace-server/svg-badge.svg)](https://translate.fedoraproject.org/engage/abrt/)
+
 Remote service for generating backtraces from coredumps of crashes. Supports
 user space coredumps as well as a kernel coredumps. All communication with
 server can be over a simple HTTP API or via Web UI.

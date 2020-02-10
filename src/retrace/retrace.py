@@ -14,13 +14,13 @@ import stat
 import sys
 import time
 import hashlib
-import magic
+import urllib
 from signal import getsignal, signal, SIG_DFL, SIGPIPE
-from subprocess import PIPE, STDOUT, call, Popen, TimeoutExpired
+from subprocess import PIPE, STDOUT, DEVNULL, TimeoutExpired, run
+import magic
 
 from dnf.subject import Subject
 from hawkey import FORM_NEVRA
-import urllib
 from .config import Config, TAR_BIN, XZ_BIN, GZIP_BIN, DU_BIN, DF_BIN
 
 GETTEXT_DOMAIN = "retrace-server"
@@ -124,8 +124,7 @@ FTP_SUPPORTED_EXTENSIONS = [".tar.gz", ".tgz", ".tarz", ".tar.bz2", ".tar.xz",
                             ".tar", ".gz", ".bz2", ".xz", ".Z", ".zip"]
 
 REPO_PREFIX = "retrace-"
-EXPLOITABLE_PLUGIN_PATH = "/usr/libexec/abrt-gdb-exploitable"
-EXPLOITABLE_SEPARATOR = "== EXPLOITABLE ==\n"
+EXPLOITABLE_SEPARATOR = "== EXPLOITABLE =="
 
 TASKPASS_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -170,8 +169,8 @@ ARCH_MAP = {
     "aarch64": {"aarch64"},
 }
 
-PYTHON_LABLE_START = "----------PYTHON-START--------"
-PYTHON_LABLE_END = "----------PYTHON--END---------"
+PYTHON_LABEL_START = "----------PYTHON-START--------"
+PYTHON_LABEL_END = "----------PYTHON--END---------"
 
 
 class RetraceError(Exception):
@@ -207,10 +206,9 @@ def lock(lockfile):
     try:
         fd = os.open(lockfile, os.O_CREAT | os.O_EXCL, 0o600)
     except OSError as ex:
-        if ex[0] == errno.EEXIST:
+        if ex.errno == errno.EEXIST:
             return False
-        else:
-            raise ex
+        raise ex
 
     os.close(fd)
     return True
@@ -235,8 +233,7 @@ def get_canon_arch(arch):
 
 
 def free_space(path):
-    child = Popen([DF_BIN, "-B", "1", path], stdout=PIPE, encoding='utf-8')
-    lines = child.communicate()[0].split("\n")
+    lines = run([DF_BIN, "-B", "1", path], stdout=PIPE, encoding='utf-8').stdout.split("\n")
     for line in lines:
         match = DF_OUTPUT_PARSER.match(line)
         if match:
@@ -246,8 +243,7 @@ def free_space(path):
 
 
 def dir_size(path):
-    child = Popen([DU_BIN, "-sb", path], stdout=PIPE, encoding='utf-8')
-    lines = child.communicate()[0].split("\n")
+    lines = run([DU_BIN, "-sb", path], stdout=PIPE, encoding='utf-8').stdout.split("\n")
     for line in lines:
         match = DU_OUTPUT_PARSER.match(line)
         if match:
@@ -258,8 +254,7 @@ def dir_size(path):
 
 def unpacked_size(archive, mime):
     command, parser = HANDLE_ARCHIVE[mime]["size"]
-    child = Popen(command + [archive], stdout=PIPE, encoding='utf-8')
-    lines = child.communicate()[0].split("\n")
+    lines = run(command + [archive], stdout=PIPE, encoding='utf-8').stdout.split("\n")
     for line in lines:
         match = parser.match(line)
         if match:
@@ -269,33 +264,31 @@ def unpacked_size(archive, mime):
 
 
 def guess_arch(coredump_path):
-    child = Popen(["file", coredump_path], stdout=PIPE, encoding='utf-8')
-    output = child.communicate()[0]
+    output = run(["file", coredump_path], stdout=PIPE, encoding='utf-8').stdout
     match = CORE_ARCH_PARSER.search(output)
     if match:
         if match.group(1) == "80386":
             return "i386"
-        elif match.group(1) == "x86-64":
+        if match.group(1) == "x86-64":
             return "x86_64"
-        elif match.group(1) == "ARM":
+        if match.group(1) == "ARM":
             # hack - There is no reliable way to determine which ARM
             # version the coredump is. At the moment we only support
             # armv7hl / armhfp - let's approximate arm = armhfp
             return "armhfp"
-        elif match.group(1) == "aarch64":
+        if match.group(1) == "aarch64":
             return "aarch64"
-        elif match.group(1) == "IBM S/390":
+        if match.group(1) == "IBM S/390":
             return "s390x"
-        elif match.group(1) == "64-bit PowerPC":
+        if match.group(1) == "64-bit PowerPC":
             if "LSB" in output:
                 return "ppc64le"
 
             return "ppc64"
 
     result = None
-    child = Popen(["strings", coredump_path], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
-    line = child.stdout.readline()
-    while line:
+    lines = run(["strings", coredump_path], stdout=PIPE, stderr=STDOUT, encoding='utf-8').stdout.splitlines()
+    for line in lines:
         for canon_arch, derived_archs in ARCH_MAP.items():
             if any(arch in line for arch in derived_archs):
                 result = canon_arch
@@ -303,11 +296,6 @@ def guess_arch(coredump_path):
 
         if result is not None:
             break
-
-        line = child.stdout.readline()
-
-    child.kill()
-    child.stdout.close()
 
     # "ppc64le" matches both ppc64 and ppc64le
     # if file magic says little endian, fix it
@@ -347,7 +335,7 @@ def parse_http_gettext(lang, charset):
     return result
 
 
-def run_gdb(savedir, plugin):
+def run_gdb(savedir, plugin, repopath, taskid=None):
     # exception is caught on the higher level
     exec_file = open(os.path.join(savedir, "crash", "executable"), "r")
     executable = exec_file.read(ALLOWED_FILES["executable"])
@@ -356,68 +344,81 @@ def run_gdb(savedir, plugin):
     if '"' in executable or "'" in executable:
         raise Exception("Executable contains forbidden characters")
 
-    with open(os.devnull, "w") as null:
-        child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
-                       "--", "ls '%s'" % executable],
-                      stdout=PIPE, stderr=null, encoding='utf-8')
-        output = child.communicate()[0]
+    if CONFIG["RetraceEnvironment"] == "mock":
+        output = run(["/usr/bin/mock", "shell", "--configdir", savedir,
+                      "--", "ls '%s'" % executable], stdout=PIPE, stderr=DEVNULL, encoding='utf-8').stdout
         if output.strip() != executable:
             raise Exception("The appropriate package set could not be installed")
 
-        chmod = call(["/usr/bin/mock", "shell", "--configdir", savedir,
-                      "--", "/bin/chmod a+r '%s'" % executable],
-                     stdout=null, stderr=null)
-
-        if chmod != 0:
+        child = run(["/usr/bin/mock", "shell", "--configdir", savedir,
+                     "--", "/bin/chmod a+r '%s'" % executable])
+        if child.returncode:
             raise Exception("Unable to chmod the executable")
 
-        child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
-                       "--", "ls '%s'" % EXPLOITABLE_PLUGIN_PATH],
-                      stdout=PIPE, stderr=null, encoding='utf-8')
-        add_exploitable = child.communicate()[0].strip() == EXPLOITABLE_PLUGIN_PATH
+    batfile = os.path.join(savedir, "gdb.sh")
+    with open(batfile, "w") as gdbfile:
+        gdbfile.write("#!/usr/bin/sh\n\n%s -batch "
+                      "-ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' \\\n"
+                      "                    -ex 'file %s' \\\n"
+                      "                    -ex 'core-file /var/spool/abrt/crash/coredump' \\\n"
+                      "                    -ex 'echo %s\\n' \\\n"
+                      "                    -ex 'py-bt' \\\n"
+                      "                    -ex 'py-list' \\\n"
+                      "                    -ex 'py-locals' \\\n"
+                      "                    -ex 'echo %s\\n' \\\n"
+                      "                    -ex 'thread apply all -ascending backtrace full 2048' \\\n"
+                      "                    -ex 'info sharedlib' \\\n"
+                      "                    -ex 'print (char*)__abort_msg' \\\n"
+                      "                    -ex 'print (char*)__glib_assert_msg' \\\n"
+                      "                    -ex 'info registers' \\\n"
+                      "                    -ex 'disassemble' \\\n"
+                      "                    -ex 'echo %s\\n' \\\n"
+                      "                    -ex 'abrt-exploitable'"
+                      % (plugin.gdb_executable, executable, PYTHON_LABEL_START,
+                         PYTHON_LABEL_END, EXPLOITABLE_SEPARATOR))
 
-        batfile = os.path.join(savedir, "gdb.sh")
-        with open(batfile, "w") as gdbfile:
-            gdbfile.write("%s -batch " % plugin.gdb_executable)
-            if add_exploitable:
-                gdbfile.write("-ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' ")
-            gdbfile.write("-ex 'file %s' "
-                          "-ex 'core-file /var/spool/abrt/crash/coredump' "
-                          "-ex 'echo %s\n' "
-                          "-ex 'py-bt' "
-                          "-ex 'py-list' "
-                          "-ex 'py-locals' "
-                          "-ex 'echo %s\n' "
-                          "-ex 'thread apply all -ascending backtrace full 2048' "
-                          "-ex 'info sharedlib' "
-                          "-ex 'print (char*)__abort_msg' "
-                          "-ex 'print (char*)__glib_assert_msg' "
-                          "-ex 'info registers' "
-                          "-ex 'disassemble' " % (executable, PYTHON_LABLE_START, PYTHON_LABLE_END))
-            if add_exploitable:
-                gdbfile.write("-ex 'echo %s' "
-                              "-ex 'abrt-exploitable'" % EXPLOITABLE_SEPARATOR)
-
-        copyin = call(["/usr/bin/mock", "--configdir", savedir, "--copyin",
-                       batfile, "/var/spool/abrt/gdb.sh"],
-                      stdout=null, stderr=null)
-        if copyin:
+    if CONFIG["RetraceEnvironment"] == "mock":
+        child = run(["/usr/bin/mock", "--configdir", savedir, "--copyin",
+                     batfile, "/var/spool/abrt/gdb.sh"], stdout=DEVNULL, stderr=DEVNULL)
+        if child.returncode:
             raise Exception("Unable to copy GDB launcher into chroot")
 
-        chmod = call(["/usr/bin/mock", "--configdir", savedir, "shell",
-                      "--", "/bin/chmod a+rx /var/spool/abrt/gdb.sh"],
-                     stdout=null, stderr=null)
-        if chmod:
+        child = run(["/usr/bin/mock", "--configdir", savedir, "shell",
+                     "--", "/bin/chmod a+rx /var/spool/abrt/gdb.sh"], stdout=DEVNULL, stderr=DEVNULL)
+        if child.returncode:
             raise Exception("Unable to chmod GDB launcher")
 
-        child = Popen(["/usr/bin/mock", "shell", "--configdir", savedir,
-                       "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh'",
-                       # redirect GDB's stderr, ignore mock's stderr
-                       "2>&1"], stdout=PIPE, stderr=null, encoding='utf-8')
+        child = run(["/usr/bin/mock", "shell", "--configdir", savedir,
+                     "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh'",
+                     # redirect GDB's stderr, ignore mock's stderr
+                     "2>&1"], stdout=PIPE, stderr=DEVNULL, encoding='utf-8')
 
-    backtrace = child.communicate()[0].strip()
-    if child.wait():
+    elif CONFIG["RetraceEnvironment"] == "podman":
+        podman_build_call = ["/usr/bin/podman", "build", "--file",
+                             os.path.join(savedir, RetraceTask.DOCKERFILE),
+                             "--volume=%s:%s:ro" % (repopath, repopath)]
+        if CONFIG["UseFafPackages"]:
+            faf_link_dir = CONFIG["FafLinkDir"]
+            log_debug("Using FAF repository")
+            podman_build_call.append("--volume=%s:%s" % (faf_link_dir, faf_link_dir))
+
+        img_cont_id = str(taskid)
+
+        podman_build_call.extend(["--tag", "retrace-image:%s" % img_cont_id])
+
+        child = run(podman_build_call, stdout=DEVNULL, stderr=DEVNULL)
+        if child.returncode:
+            raise Exception("Unable to build podman container")
+
+        child = run(["/usr/bin/podman", "run", "-it", "--name=%s" % img_cont_id,
+                     "--rm", "retrace-image:%s" % img_cont_id], stdout=PIPE, encoding='utf-8')
+    else:
+        raise Exception("RetraceEnvironment set to invalid value")
+
+    if child.returncode:
         raise Exception("Running GDB failed")
+
+    backtrace = child.stdout.strip()
 
     exploitable = None
     if EXPLOITABLE_SEPARATOR in backtrace:
@@ -426,9 +427,11 @@ def run_gdb(savedir, plugin):
     if not backtrace:
         raise Exception("An unusable backtrace has been generated")
 
-    python_labels = PYTHON_LABLE_START+'\n'+PYTHON_LABLE_END+'\n'
+    python_labels = PYTHON_LABEL_START+'\n'+PYTHON_LABEL_END+'\n'
     if python_labels in backtrace:
         backtrace = backtrace.replace(python_labels, "")
+
+    log_debug(backtrace)
 
     return backtrace, exploitable
 
@@ -465,6 +468,7 @@ def is_package_known(package_nvr, arch, releaseid=None):
     if CONFIG["UseFafPackages"]:
         from pyfaf.storage import getDatabase
         from pyfaf.queries import get_package_by_nevra
+
         db = getDatabase()
         (n, v, r, e, _a) = splitFilename(package_nvr+".mockarch.rpm")
         for derived_archs in ARCH_MAP.values():
@@ -489,21 +493,21 @@ def is_package_known(package_nvr, arch, releaseid=None):
 
     candidates = []
     package_nvr = remove_epoch(package_nvr)
-    for releaseid in releases:
+    for release in releases:
         for derived_archs in ARCH_MAP.values():
             if arch not in derived_archs:
                 continue
 
             for a in derived_archs:
-                candidates.append(os.path.join(CONFIG["RepoDir"], releaseid, "Packages",
+                candidates.append(os.path.join(CONFIG["RepoDir"], release, "Packages",
                                                "%s.%s.rpm" % (package_nvr, a)))
-                candidates.append(os.path.join(CONFIG["RepoDir"], releaseid,
+                candidates.append(os.path.join(CONFIG["RepoDir"], release,
                                                "%s.%s.rpm" % (package_nvr, a)))
             break
         else:
-            candidates.append(os.path.join(CONFIG["RepoDir"], releaseid, "Packages",
+            candidates.append(os.path.join(CONFIG["RepoDir"], release, "Packages",
                                            "%s.%s.rpm" % (package_nvr, arch)))
-            candidates.append(os.path.join(CONFIG["RepoDir"], releaseid,
+            candidates.append(os.path.join(CONFIG["RepoDir"], release,
                                            "%s.%s.rpm" % (package_nvr, arch)))
 
     return any([os.path.isfile(f) for f in candidates])
@@ -534,8 +538,7 @@ def find_kernel_debuginfo(kernelver):
                 if p.has_lob("package"):
                     log_debug("LOB location {0}".format(p.get_lob_path("package")))
                     return p.get_lob_path("package")
-                else:
-                    log_debug("LOB not found {0}".format(p.get_lob_path("package")))
+                log_debug("LOB not found {0}".format(p.get_lob_path("package")))
 
     # search for the debuginfo RPM
     ver = None
@@ -584,10 +587,8 @@ def find_kernel_debuginfo(kernelver):
             url += pkgname
 
             log_debug("Trying debuginfo URL: %s" % url)
-            with open(os.devnull, "w") as null:
-                retcode = call(["wget", "-nv", "-P", downloaddir, url], stdout=null, stderr=null)
-
-            if retcode == 0:
+            child = run(["wget", "-nv", "-P", downloaddir, url], stdout=DEVNULL, stderr=DEVNULL)
+            if not child.returncode:
                 return os.path.join(downloaddir, pkgname)
 
     return None
@@ -606,13 +607,8 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
         if files[i][0] == "/":
             files[i] = ".%s" % files[i]
 
-    with open(os.devnull, "w") as null:
-        rpm2cpio = Popen(["rpm2cpio", debuginfo], stdout=PIPE, stderr=null, encoding='utf-8')
-        cpio = Popen(["cpio", "-id"] + files, stdin=rpm2cpio.stdout, stdout=null, stderr=null, cwd=basedir,
-                     encoding='utf-8')
-        rpm2cpio.wait()
-        cpio.wait()
-        rpm2cpio.stdout.close()
+    rpm2cpio = run(["rpm2cpio", debuginfo], stdout=PIPE, stderr=DEVNULL)
+    cpio = run(["cpio", "-id"] + files, input=rpm2cpio.stdout, cwd=basedir, stdout=DEVNULL, stderr=DEVNULL)
 
 
 def get_files_sizes(directory):
@@ -637,23 +633,23 @@ def get_archive_type(path):
     if "bzip2 compressed data" in filetype:
         log_debug("bzip2 detected")
         return ARCHIVE_BZ2
-    elif "gzip compressed data" in filetype or \
+    if "gzip compressed data" in filetype or \
          "compress'd data" in filetype:
         log_debug("gzip detected")
         return ARCHIVE_GZ
-    elif "xz compressed data" in filetype:
+    if "xz compressed data" in filetype:
         log_debug("xz detected")
         return ARCHIVE_XZ
-    elif "7-zip archive data" in filetype:
+    if "7-zip archive data" in filetype:
         log_debug("7-zip detected")
         return ARCHIVE_7Z
-    elif "zip archive data" in filetype:
+    if "zip archive data" in filetype:
         log_debug("zip detected")
         return ARCHIVE_ZIP
-    elif "tar archive" in filetype:
+    if "tar archive" in filetype:
         log_debug("tar detected")
         return ARCHIVE_TAR
-    elif "lzop compressed data" in filetype:
+    if "lzop compressed data" in filetype:
         log_debug("lzop detected")
         return ARCHIVE_LZOP
 
@@ -783,19 +779,21 @@ def unpack(archive, mime, targetdir=None):
         cmd.append("--directory")
         cmd.append(targetdir)
 
-    retcode = call(cmd)
-    return retcode
+    child = run(cmd)
+    return child.returncode
 
 
 def response(start_response, status, body="", extra_headers=[]):
-    body = body.encode()
+    if isinstance(body, str):
+        body = body.encode("utf-8")
+
     start_response(status, [("Content-Type", "text/plain"), ("Content-Length", "%d" % len(body))] + extra_headers)
     return [body]
 
 
 def run_ps():
-    child = Popen(["ps", "-eo", "pid,ppid,etime,cmd"], stdout=PIPE, encoding='utf-8')
-    lines = child.communicate()[0].split("\n")
+    lines = run(["ps", "-eo", "pid,ppid,etime,cmd"],
+                stdout=PIPE, encoding='utf-8').stdout.split("\n")
 
     return lines
 
@@ -852,7 +850,7 @@ def get_md5_tasks():
         else:
             status = task.get_status()
 
-        if status != STATUS_SUCCESS and status != STATUS_FAIL:
+        if status not in (STATUS_SUCCESS, STATUS_FAIL):
             continue
 
         if not task.has_finished_time():
@@ -1061,7 +1059,7 @@ def send_email(frm, to, subject, body):
 
 def ftp_init():
     if CONFIG["FTPSSL"]:
-        ftp = ftplib.FTP_SSL(CONFIG["FTPHost"])
+        ftp = ftplib.FTP_TLS(CONFIG["FTPHost"])
         ftp.prot_p()
     else:
         ftp = ftplib.FTP(CONFIG["FTPHost"])
@@ -1094,9 +1092,9 @@ def ftp_list_dir(ftpdir="/", ftp=None):
 
 
 def check_run(cmd):
-    child = Popen(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
-    stdout = child.communicate()[0]
-    if child.wait():
+    child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+    stdout = child.stdout
+    if child.returncode:
         raise Exception("%s exited with %d: %s" % (cmd[0], child.returncode, stdout))
 
 
@@ -1123,8 +1121,8 @@ def move_dir_contents(source, dest):
     shutil.rmtree(source)
 
 
-def human_readable_size(bytes):
-    size = float(bytes)
+def human_readable_size(bytesize):
+    size = float(bytesize)
     unit = 0
     while size > 1024.0 and unit < len(UNITS) - 1:
         unit += 1
@@ -1133,7 +1131,7 @@ def human_readable_size(bytes):
     return "%.2f %s" % (size, UNITS[unit])
 
 
-class KernelVer(object):
+class KernelVer():
     FLAVOUR = ["debug", "highbank", "hugemem",
                "kirkwood", "largesmp", "PAE", "omap",
                "smp", "tegra", "xen", "xenU"]
@@ -1249,17 +1247,17 @@ class KernelVMcore:
         return self._is_flattened_format
 
     def convert_flattened_format(self):
-        """Convert a vmcore in makedumpfile flattened format to normal dumpfile format"""
-        """Returns True if conversion has been done and was successful"""
+        """Convert a vmcore in makedumpfile flattened format to normal dumpfile format
+        Returns True if conversion has been done and was successful"""
         if not self._is_flattened_format:
             log_error("Cannot convert a non-flattened vmcore")
             return False
         newvmcore = "%s.normal" % self._vmcore_path
         try:
             with open(self._vmcore_path) as fd:
-                retcode = call(["makedumpfile", "-R", newvmcore], stdin=fd)
-                if retcode:
-                    log_warn("makedumpfile -R exited with %d" % retcode)
+                child = run(["makedumpfile", "-R", newvmcore], stdin=fd)
+                if child.returncode:
+                    log_warn("makedumpfile -R exited with %d" % child.returncode)
                     if os.path.isfile(newvmcore):
                         os.unlink(newvmcore)
                 else:
@@ -1283,25 +1281,20 @@ class KernelVMcore:
         if os.path.isfile(dmesg_path):
             os.unlink(dmesg_path)
 
-        with open(os.devnull, "w") as null:
-            cmd = ["makedumpfile", "-D", "--dump-dmesg", self._vmcore_path, dmesg_path]
+        cmd = ["makedumpfile", "-D", "--dump-dmesg", self._vmcore_path, dmesg_path]
 
-            result = None
-            child = Popen(cmd, stdout=PIPE, stderr=null, encoding='utf-8')
-            line = child.stdout.readline()
-            while line:
-                match = self.DUMP_LEVEL_PARSER.match(line)
-                line = child.stdout.readline()
-                if match is None:
-                    continue
+        result = None
+        lines = run(cmd, stdout=PIPE, stderr=DEVNULL, encoding='utf-8').stdout.splitlines()
+        for line in lines:
+            match = self.DUMP_LEVEL_PARSER.match(line)
+            if match is None:
+                continue
 
-                result = int(match.group(1))
-                child.terminate()
-                break
+            result = int(match.group(1))
+            break
 
-            child.wait()
-            self._dump_level = result
-            return result
+        self._dump_level = result
+        return result
 
     def has_extra_pages(self, task):
         """Returns True if vmcore has extra pages that can be stripped with makedumpfile"""
@@ -1319,8 +1312,8 @@ class KernelVMcore:
             log_debug("Vmcore dump level is %d" % dump_level)
 
         # If dump_level was readable above, then check to see if stripping is worthwhile
-        if (dump_level is not None and
-           (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
+        if (dump_level is not None
+                and (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
             log_info("Stripping to %d would have no effect" % CONFIG["VmcoreDumpLevel"])
             self._has_extra_pages = False
         return self._has_extra_pages
@@ -1332,10 +1325,10 @@ class KernelVMcore:
             return
 
         newvmcore = "%s.stripped" % self._vmcore_path
-        retcode = call(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
-                        "-x", self._vmlinux, "--message-level", "0", self._vmcore_path, newvmcore])
-        if retcode:
-            log_warn("makedumpfile exited with %d" % retcode)
+        child = run(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
+                     "-x", self._vmlinux, "--message-level", "0", self._vmcore_path, newvmcore])
+        if child.returncode:
+            log_warn("makedumpfile exited with %d" % child.returncode)
             if os.path.isfile(newvmcore):
                 os.unlink(newvmcore)
         else:
@@ -1384,10 +1377,9 @@ class KernelVMcore:
         # set SIGPIPE to default handler for bz 1540253
         save = getsignal(SIGPIPE)
         signal(SIGPIPE, SIG_DFL)
-        child = Popen(crash_cmd + ["--osrelease", self._vmcore_path],
-                      stdout=PIPE, stderr=STDOUT, encoding='utf-8')
-        release = child.communicate()[0].strip()
-        ret = child.wait()
+        child = run(crash_cmd + ["--osrelease", self._vmcore_path], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+        release = child.stdout.strip()
+        ret = child.returncode
         signal(SIGPIPE, save)
 
         # If the crash tool fails, we must try some other method.
@@ -1425,8 +1417,7 @@ class KernelVMcore:
             log_error("Failed to get kernel release from file %s" %
                       self._vmcore_path)
             return None
-        else:
-            release = release.rstrip('\0 \t\n')
+        release = release.rstrip('\0 \t\n')
 
         # check whether architecture is present
         try:
@@ -1508,9 +1499,8 @@ class KernelVMcore:
         if not debuginfo:
             if vmlinux is not None:
                 return vmlinux
-            else:
-                raise Exception("Unable to find debuginfo package and "
-                                "no cached vmlinux file")
+            raise Exception("Unable to find debuginfo package and "
+                            "no cached vmlinux file")
 
         # FIXME: Merge kernel_path with this logic
         if "EL" in kernelver.release:
@@ -1524,8 +1514,8 @@ class KernelVMcore:
         # Now open the kernel-debuginfo and get a listing of the files we may need
         vmlinux_path = None
         debugfiles = {}
-        child = Popen(["rpm", "-qpl", debuginfo], stdout=PIPE, encoding='utf-8')
-        lines = child.communicate()[0].splitlines()
+        lines = run(["rpm", "-qpl", debuginfo],
+                    stdout=PIPE, stderr=DEVNULL, encoding='utf-8').stdout.splitlines()
         for line in lines:
             if line.endswith(pattern):
                 vmlinux_path = line
@@ -1635,6 +1625,7 @@ class RetraceTask:
     MOCK_DEFAULT_CFG = "default.cfg"
     MOCK_SITE_DEFAULTS_CFG = "site-defaults.cfg"
     MOCK_LOGGING_INI = "logging.ini"
+    DOCKERFILE = "Dockerfile"
 
     def __init__(self, taskid=None):
         """Creates a new task if taskid is None,
@@ -1655,7 +1646,7 @@ class RetraceTask:
                     os.mkdir(taskdir)
                 except OSError as ex:
                     # dir exists, try another taskid
-                    if ex[0] == errno.EEXIST:
+                    if ex.errno == errno.EEXIST:
                         continue
                     # error - re-raise original exception
                     else:
@@ -1711,7 +1702,8 @@ class RetraceTask:
             cmdline.append("--arch")
             cmdline.append(arch)
 
-        return call(cmdline)
+        child = run(cmdline)
+        return child.returncode
 
     def _start_remote(self, host, debug=False, kernelver=None, arch=None):
         starturl = "%s/%d/start" % (host, self._taskid)
@@ -1799,7 +1791,7 @@ class RetraceTask:
             try:
                 shutil.copyfile(filename, tmpfilename)
             except IOError as ex:
-                if ex[0] != errno.ENOENT:
+                if ex.errno != errno.ENOENT:
                     raise
 
         with open(tmpfilename, mode) as f:
@@ -1847,8 +1839,7 @@ class RetraceTask:
                     return True
 
             return False
-        else:
-            return self.has_status() and self.get_status() not in [STATUS_SUCCESS, STATUS_FAIL]
+        return self.has_status() and self.get_status() not in [STATUS_SUCCESS, STATUS_FAIL]
 
     def get_age(self):
         """Returns the age of the task in hours."""
@@ -2038,23 +2029,23 @@ class RetraceTask:
         cmd_output = None
         returncode = 0
         try:
-            child = Popen(crash_start, stdin=PIPE, stdout=PIPE, stderr=STDOUT)
             t = 3600
             if CONFIG["ProcessCommunicateTimeout"]:
                 t = CONFIG["ProcessCommunicateTimeout"]
-            cmd_output = child.communicate(crash_cmdline.encode(), timeout=t)[0]
+            child = run(crash_start, stdout=PIPE, stderr=STDOUT,
+                        input=crash_cmdline.encode(), timeout=t)
+            cmd_output = child.stdout
         except OSError as err:
             log_warn("crash command: '%s' triggered OSError " %
                      crash_cmdline.replace('\r', '; ').replace('\n', '; '))
             log_warn("  %s" % err)
         except TimeoutExpired:
-            child.kill()
             raise Exception("WARNING: crash command: '%s' exceeded " + str(t) +
                             " second timeout - damaged vmcore?" %
                             crash_cmdline.replace('\r', '; ').replace('\n', '; '))
-        except Exception:
+        except Exception as err:
             log_warn("crash command: '%s' triggered Unknown exception %s" %
-                     crash_cmdline.replace('\r', '; ').replace('\n', '; '))
+                     (crash_cmdline.replace('\r', '; ').replace('\n', '; '), err))
             log_warn("  %s" % sys.exc_info()[0])
         try:
             cmd_output.decode('utf-8')
@@ -2063,9 +2054,9 @@ class RetraceTask:
                      crash_cmdline.replace('\r', '; ').replace('\n', '; '))
             log_warn("  %s" % err)
 
-        if child.wait():
+        if child.returncode:
             log_warn("crash '%s' exited with %d" % (crash_cmdline.replace('\r', '; ').replace('\n', '; '),
-                     child.returncode))
+                                                    child.returncode))
             returncode = child.returncode
 
         return cmd_output, returncode
@@ -2150,9 +2141,9 @@ class RetraceTask:
                     errors.append((url, "malformed URL"))
                     continue
 
-                child = Popen(["wget", "-nv", "-P", crashdir, url], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
-                stdout = child.communicate()[0]
-                if child.wait():
+                child = run(["wget", "-nv", "-P", crashdir, url], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+                stdout = child.stdout
+                if child.returncode:
                     errors.append((url, "wget exited with %d: %s" % (child.returncode, stdout)))
                     continue
 
@@ -2200,7 +2191,7 @@ class RetraceTask:
                     move_dir_contents(fullpath, crashdir)
 
             files = os.listdir(crashdir)
-            if len(files) < 1:
+            if not files:
                 errors.append(([], "No files found in the tarball"))
             elif len(files) == 1:
                 if files[0] != "vmcore":
@@ -2212,7 +2203,7 @@ class RetraceTask:
                         vmcores.append(filename)
 
                 # pick the largest file
-                if len(vmcores) < 1:
+                if not vmcores:
                     absfiles = [os.path.join(crashdir, f) for f in files]
                     files_sizes = [(os.path.getsize(f), f) for f in absfiles]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
@@ -2244,7 +2235,7 @@ class RetraceTask:
                     move_dir_contents(fullpath, crashdir)
 
             files = os.listdir(crashdir)
-            if len(files) < 1:
+            if not files:
                 errors.append(([], "No files found in the tarball"))
             elif len(files) == 1:
                 if files[0] != "coredump":
@@ -2256,7 +2247,7 @@ class RetraceTask:
                         coredumps.append(filename)
 
                 # pick the largest file
-                if len(coredumps) < 1:
+                if not coredumps:
                     absfiles = [os.path.join(crashdir, f) for f in files]
                     files_sizes = [(os.path.getsize(f), f) for f in absfiles]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
@@ -2534,12 +2525,14 @@ class RetraceTask:
     def clean(self):
         """Removes all files and directories others than
         results and logs from the task directory."""
-        with open(os.devnull, "w") as null:
-            if os.path.isfile(os.path.join(self._savedir, "default.cfg")) and \
-               os.path.isfile(os.path.join(self._savedir, "site-defaults.cfg")) and \
-               os.path.isfile(os.path.join(self._savedir, "logging.ini")):
-                call(["/usr/bin/mock", "--configdir", self._savedir, "--scrub=all"],
-                     stdout=null, stderr=null)
+        if os.path.isfile(os.path.join(self._savedir, "default.cfg")) and \
+           os.path.isfile(os.path.join(self._savedir, "site-defaults.cfg")) and \
+           os.path.isfile(os.path.join(self._savedir, "logging.ini")):
+            run(["/usr/bin/mock", "--configdir", self._savedir, "--scrub=all"])
+
+        if CONFIG["RetraceEnvironment"] == "podman":
+            img_cont_id = str(self._taskid)
+            run(["/usr/bin/podman", "rmi", "retrace-image:%s" % img_cont_id])
 
         for f in os.listdir(self._savedir):
             if f not in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,

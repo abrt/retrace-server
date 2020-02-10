@@ -7,7 +7,7 @@ import grp
 import logging
 import shutil
 import stat
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import PIPE, DEVNULL, STDOUT, run
 
 from retrace.hooks.hooks import RetraceHook
 from .retrace import (ALLOWED_FILES, INPUT_PACKAGE_PARSER, REPO_PREFIX, REQUIRED_FILES,
@@ -44,12 +44,11 @@ sys.path.insert(0, "/usr/share/retrace-server/")
 CONFIG = Config()
 
 
-class RetraceWorker(object):
+class RetraceWorker():
     def __init__(self, task):
         self.plugins = Plugins()
         self.task = task
         self.logging_handler = None
-        self.fafrepo = None
         self.hook = RetraceHook(task)
 
     def begin_logging(self):
@@ -172,8 +171,8 @@ class RetraceWorker(object):
     def _retrace_run(self, errorcode, cmd):
         "Runs cmd using subprocess.Popen and kills script with errorcode on failure"
         try:
-            child = Popen(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
-            output = child.communicate()[0]
+            child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+            output = child.stdout
         except Exception as ex:
             child = None
             log_error("An unhandled exception occured: %s" % ex)
@@ -287,26 +286,11 @@ class RetraceWorker(object):
     def read_packages(self, crashdir, releaseid, crash_package, distribution):
         packages = [crash_package]
         missing = []
-        fafrepo = ""
 
         packagesfile = os.path.join(crashdir, "packages")
         if os.path.isfile(packagesfile):
             with open(packagesfile, "r") as f:
                 packages = f.read.split()
-        elif CONFIG["UseFafPackages"]:
-            packages = ["bash", "cpio", "glibc-debuginfo"]
-            child = Popen(["/usr/bin/faf-c2p", "--hardlink-dir", CONFIG["FafLinkDir"],
-                           os.path.join(crashdir, "coredump")], stdout=PIPE, stderr=PIPE,
-                          encoding='utf-8')
-            stdout, stderr = child.communicate()
-            fafrepo = stdout.strip()
-            if stderr:
-                log_warn(stderr)
-
-            # hack - use latest glibc - for some reason gives better results
-            for filename in os.listdir(fafrepo):
-                if filename.startswith("glibc"):
-                    os.unlink(os.path.join(fafrepo, filename))
         else:
             # read required packages from coredump
             try:
@@ -318,14 +302,13 @@ class RetraceWorker(object):
                     dnfcfg.write("baseurl=file://%s/%s/\n" % (CONFIG["RepoDir"], releaseid))
                     dnfcfg.write("failovermethod=priority\n")
 
-                child = Popen(["coredump2packages", os.path.join(crashdir, "coredump"),
-                               "--repos=%s" % repoid, "--config=%s" % dnfcfgpath,
-                               "--log=%s" % os.path.join(self.task.get_savedir(), "c2p_log")],
-                              stdout=PIPE, stderr=PIPE, encoding='utf-8')
+                child = run(["coredump2packages", os.path.join(crashdir, "coredump"),
+                             "--repos=%s" % repoid, "--config=%s" % dnfcfgpath,
+                             "--log=%s" % os.path.join(self.task.get_savedir(), "c2p_log")],
+                            stdout=PIPE, stderr=PIPE, encoding='utf-8')
                 section = 0
                 crash_package_or_component = None
-                stdout, stderr = child.communicate()
-                lines = stdout.split("\n")
+                lines = child.stdout.split("\n")
                 libdb = False
                 for line in lines:
                     if line == "":
@@ -356,13 +339,13 @@ class RetraceWorker(object):
                             soname = None
                         missing.append((soname, buildid))
 
-                if stderr:
-                    log_warn(stderr)
+                if child.stderr:
+                    log_warn(child.stderr)
 
             except Exception as ex:
                 log_error("Unable to obtain packages from 'coredump' file: %s" % ex)
                 self._fail()
-        return (packages, missing, fafrepo)
+        return (packages, missing)
 
     def start_retrace(self, custom_arch=None):
         self.hook.run("start")
@@ -399,92 +382,127 @@ class RetraceWorker(object):
             self._fail()
         self.hook.run("pre_prepare_debuginfo")
 
-        packages, missing, self.fafrepo = self.read_packages(crashdir, releaseid, crash_package, distribution)
+        packages, missing = self.read_packages(crashdir, releaseid, crash_package, distribution)
 
         self.hook.run("post_prepare_debuginfo")
         self.hook.run("pre_prepare_environment")
 
-        # create mock config file
-        try:
-            repopath = os.path.join(CONFIG["RepoDir"], releaseid)
-            with open(os.path.join(task.get_savedir(), RetraceTask.MOCK_DEFAULT_CFG), "w") as mockcfg:
-                mockcfg.write("config_opts['root'] = '%d'\n" % task.get_taskid())
-                mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
-                mockcfg.write("config_opts['chroot_setup_cmd'] = '--skip-broken")
-                mockcfg.write(" install %s abrt-addon-ccpp shadow-utils %s rpm'\n" % (" ".join(packages),
-                                                                                      self.plugin.gdb_package))
-                mockcfg.write("config_opts['releasever'] = '%s'\n" % version)
-                mockcfg.write("config_opts['package_manager'] = 'dnf'\n")
-                mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
-                mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
-                mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
-                mockcfg.write("config_opts['plugin_conf']['bind_mount_enable'] = True\n")
-                mockcfg.write("config_opts['plugin_conf']['bind_mount_opts'] = { 'create_dirs': True,\n")
-                mockcfg.write("    'dirs': [\n")
-                mockcfg.write("              ('%s', '%s'),\n" % (repopath, repopath))
-                mockcfg.write("              ('%s', '/var/spool/abrt/crash'),\n" % crashdir)
-                if CONFIG["UseFafPackages"]:
-                    mockcfg.write("              ('%s', '/packages'),\n" % self.fafrepo)
-                mockcfg.write("            ] }\n")
-                mockcfg.write("\n")
-                mockcfg.write("config_opts['yum.conf'] = \"\"\"\n")
-                mockcfg.write("[main]\n")
-                mockcfg.write("cachedir=/var/cache/yum\n")
-                mockcfg.write("debuglevel=1\n")
-                mockcfg.write("reposdir=%s\n" % os.devnull)
-                mockcfg.write("logfile=/var/log/yum.log\n")
-                mockcfg.write("retries=20\n")
-                mockcfg.write("obsoletes=1\n")
-                if version != "rawhide" and CONFIG["RequireGPGCheck"]:
-                    mockcfg.write("gpgcheck=1\n")
-                else:
-                    mockcfg.write("gpgcheck=0\n")
-                mockcfg.write("assumeyes=1\n")
-                mockcfg.write("syslog_ident=mock\n")
-                mockcfg.write("syslog_device=\n")
-                mockcfg.write("\n")
-                mockcfg.write("#repos\n")
-                mockcfg.write("\n")
-                mockcfg.write("[%s]\n" % distribution)
-                mockcfg.write("name=%s\n" % releaseid)
-                mockcfg.write("baseurl=file://%s/\n" % repopath)
-                mockcfg.write("failovermethod=priority\n")
-                if version != "rawhide" and CONFIG["RequireGPGCheck"]:
-                    mockcfg.write("gpgkey=file:///usr/share/retrace-server/gpg/%s-%s\n" % (distribution, version))
-                mockcfg.write("\"\"\"\n")
+        repopath = os.path.join(CONFIG["RepoDir"], releaseid)
 
-            # symlink defaults from /etc/mock
-            os.symlink("/etc/mock/site-defaults.cfg",
-                       os.path.join(task.get_savedir(), RetraceTask.MOCK_SITE_DEFAULTS_CFG))
-            os.symlink("/etc/mock/logging.ini",
-                       os.path.join(task.get_savedir(), RetraceTask.MOCK_LOGGING_INI))
-        except Exception as ex:
-            log_error("Unable to create mock config file: %s" % ex)
-            self._fail()
+        if CONFIG["RetraceEnvironment"] == "mock":
+        # create mock config file
+            try:
+                with open(os.path.join(task.get_savedir(), RetraceTask.MOCK_DEFAULT_CFG), "w") as mockcfg:
+                    mockcfg.write("config_opts['root'] = '%d'\n" % task.get_taskid())
+                    mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
+                    mockcfg.write("config_opts['chroot_setup_cmd'] = '")
+                    mockcfg.write(" install %s abrt-addon-ccpp shadow-utils %s rpm'\n" % (" ".join(packages),
+                                                                                          self.plugin.gdb_package))
+                    mockcfg.write("config_opts['releasever'] = '%s'\n" % version)
+                    mockcfg.write("config_opts['package_manager'] = 'dnf'\n")
+                    mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
+                    mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
+                    mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
+                    mockcfg.write("config_opts['plugin_conf']['bind_mount_enable'] = True\n")
+                    mockcfg.write("config_opts['plugin_conf']['bind_mount_opts'] = { 'create_dirs': True,\n")
+                    mockcfg.write("    'dirs': [\n")
+                    mockcfg.write("              ('%s', '%s'),\n" % (repopath, repopath))
+                    mockcfg.write("              ('%s', '/var/spool/abrt/crash'),\n" % crashdir)
+                    mockcfg.write("            ] }\n")
+                    mockcfg.write("\n")
+                    mockcfg.write("config_opts['yum.conf'] = \"\"\"\n")
+                    mockcfg.write("[main]\n")
+                    mockcfg.write("cachedir=/var/cache/yum\n")
+                    mockcfg.write("debuglevel=1\n")
+                    mockcfg.write("reposdir=%s\n" % os.devnull)
+                    mockcfg.write("logfile=/var/log/yum.log\n")
+                    mockcfg.write("retries=20\n")
+                    mockcfg.write("obsoletes=1\n")
+                    if version != "rawhide" and CONFIG["RequireGPGCheck"]:
+                        mockcfg.write("gpgcheck=1\n")
+                    else:
+                        mockcfg.write("gpgcheck=0\n")
+                    mockcfg.write("assumeyes=1\n")
+                    mockcfg.write("syslog_ident=mock\n")
+                    mockcfg.write("syslog_device=\n")
+                    mockcfg.write("\n")
+                    mockcfg.write("#repos\n")
+                    mockcfg.write("\n")
+                    mockcfg.write("[%s]\n" % distribution)
+                    mockcfg.write("name=%s\n" % releaseid)
+                    mockcfg.write("baseurl=file://%s/\n" % repopath)
+                    mockcfg.write("failovermethod=priority\n")
+                    if version != "rawhide" and CONFIG["RequireGPGCheck"]:
+                        mockcfg.write("gpgkey=file:///usr/share/retrace-server/gpg/%s-%s\n" % (distribution, version))
+                    mockcfg.write("\"\"\"\n")
+
+                # symlink defaults from /etc/mock
+                os.symlink("/etc/mock/site-defaults.cfg",
+                           os.path.join(task.get_savedir(), RetraceTask.MOCK_SITE_DEFAULTS_CFG))
+                os.symlink("/etc/mock/logging.ini",
+                           os.path.join(task.get_savedir(), RetraceTask.MOCK_LOGGING_INI))
+            except Exception as ex:
+                log_error("Unable to create mock config file: %s" % ex)
+                self._fail()
 
         # run retrace
         task.set_status(STATUS_INIT)
         log_info(STATUS[STATUS_INIT])
 
-        self._retrace_run(25, ["/usr/bin/mock", "init", "--resultdir", task.get_savedir() + "/log", "--configdir",
-                          task.get_savedir()])
+        if CONFIG["RetraceEnvironment"] == "mock":
+            self._retrace_run(25, ["/usr/bin/mock", "init", "--resultdir",
+                                   task.get_savedir() + "/log", "--configdir",
+                                   task.get_savedir()])
 
-        self.hook.run("post_prepare_environment")
-        self.hook.run("pre_retrace")
+            self.hook.run("post_prepare_environment")
+            self.hook.run("pre_retrace")
 
-        if CONFIG["UseFafPackages"]:
-            self._retrace_run(26, ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell", "--",
-                                   "bash -c 'for PKG in /packages/*; "
-                                   "do rpm2cpio $PKG | cpio -muid --quiet; done'"])
-        self._retrace_run(27, ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell",
-                               "--", "chgrp -R mock /var/spool/abrt/crash"])
+            self._retrace_run(27, ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell",
+                                   "--", "chgrp -R mock /var/spool/abrt/crash"])
 
         # generate backtrace
         task.set_status(STATUS_BACKTRACE)
         log_info(STATUS[STATUS_BACKTRACE])
 
+        if CONFIG["RetraceEnvironment"] == "podman":
+            try:
+                with open(os.path.join(task.get_savedir(),
+                                       "podman_repo.repo"), "w") as podman_repo:
+                    podman_repo.write("[podman-%s]\n" % distribution)
+                    podman_repo.write("name=podman-%s\n" % releaseid)
+                    podman_repo.write("baseurl=file://%s/\n" % repopath)
+                    podman_repo.write("gpgcheck=%s" % CONFIG["RequireGPGCheck"])
+            except Exception as ex:
+                log_error("Unable to create podman repo file: %s" % ex)
+                self._fail()
+
+            try:
+                with open(os.path.join(task.get_savedir(),
+                                       RetraceTask.DOCKERFILE), "w") as dockerfile:
+                    dockerfile.write('FROM %s:%s\n\n' % (distribution, version))
+                    dockerfile.write('RUN useradd -l retrace && \ \n')
+                    dockerfile.write('    mkdir -p /var/spool/abrt/crash\n')
+                    dockerfile.write('COPY --chown=retrace gdb.sh /var/spool/abrt/\n')
+                    dockerfile.write('COPY --chown=retrace %s /var/spool/abrt/crash/\n'
+                                     % RetraceTask.COREDUMP_FILE)
+                    dockerfile.write('COPY podman_repo.repo /etc/yum.repos.d/\n')
+                    dockerfile.write('RUN dnf --assumeyes --skip-broken --allowerasing --setopt=tsflags=nodocs ')
+                    dockerfile.write('--releasever=%s ' % version)
+                    dockerfile.write('--repo="podman-%s" ' % distribution)
+                    dockerfile.write('install abrt-addon-ccpp %s %s && \ \n'
+                                     % (" \ \n".join(packages), self.plugin.gdb_package))
+                    dockerfile.write('dnf clean all\n\n')
+                    dockerfile.write('USER retrace\n')
+                    dockerfile.write('ENTRYPOINT ["bash", "/var/spool/abrt/gdb.sh"]')
+            except Exception as ex:
+                log_error("Unable to create Dockerfile: %s" % ex)
+                self._fail()
+
+            self.hook.run("post_prepare_environment")
+            self.hook.run("pre_retrace")
+
         try:
-            backtrace, exploitable = run_gdb(task.get_savedir(), self.plugin)
+            backtrace, exploitable = run_gdb(task.get_savedir(), self.plugin, repopath, task.get_taskid())
         except Exception as ex:
             log_error(str(ex))
             self._fail()
@@ -633,95 +651,156 @@ class RetraceWorker(object):
         vmlinux = ""
 
         if task.get_mock():
-            self.hook.run("post_prepare_environment")
+            if CONFIG["RetraceEnvironment"] == "mock":
+                self.hook.run("post_prepare_environment")
 
-            # we don't save config into task.get_savedir() because it is only
-            # readable by user/group retrace/CONFIG["AuthGroup"].
-            # if a non-retrace user in group mock executes
-            # setgid /usr/bin/mock, he gets permission denied.
-            # this is not a security thing - using mock gives you root anyway
-            cfgdir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
+                # we don't save config into task.get_savedir() because it is only
+                # readable by user/group retrace/CONFIG["AuthGroup"].
+                # if a non-retrace user in group mock executes
+                # setgid /usr/bin/mock, he gets permission denied.
+                # this is not a security thing - using mock gives you root anyway
+                cfgdir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
 
-            # if the directory exists, it is orphaned - nuke it
-            if os.path.isdir(cfgdir):
-                shutil.rmtree(cfgdir)
+                # if the directory exists, it is orphaned - nuke it
+                if os.path.isdir(cfgdir):
+                    shutil.rmtree(cfgdir)
 
-            mockgid = grp.getgrnam("mock").gr_gid
-            old_umask = os.umask(0o027)
-            os.mkdir(cfgdir)
-            os.chown(cfgdir, -1, mockgid)
+                mockgid = grp.getgrnam("mock").gr_gid
+                old_umask = os.umask(0o027)
+                os.mkdir(cfgdir)
+                os.chown(cfgdir, -1, mockgid)
 
-            try:
-                cfgfile = os.path.join(cfgdir, RetraceTask.MOCK_DEFAULT_CFG)
-                with open(cfgfile, "w") as mockcfg:
-                    mockcfg.write("config_opts['root'] = '%d-kernel'\n" % task.get_taskid())
-                    mockcfg.write("config_opts['target_arch'] = '%s'\n" % kernelver.arch)
-                    mockcfg.write("config_opts['chroot_setup_cmd'] = 'install bash coreutils cpio "
-                                  "crash findutils rpm shadow-utils'\n")
-                    mockcfg.write("config_opts['releasever'] = '%s'\n" % kernelver_str)
-                    mockcfg.write("config_opts['package_manager'] = 'dnf'\n")
-                    mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
-                    mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
-                    mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
-                    mockcfg.write("config_opts['plugin_conf']['bind_mount_enable'] = True\n")
-                    mockcfg.write("config_opts['plugin_conf']['bind_mount_opts'] = { \n")
-                    mockcfg.write("    'dirs': [('%s', '%s'),\n" % (CONFIG["RepoDir"], CONFIG["RepoDir"]))
-                    mockcfg.write("             ('%s', '%s'),],\n" % (task.get_savedir(), task.get_savedir()))
-                    mockcfg.write("    'create_dirs': True, }\n")
-                    mockcfg.write("\n")
-                    mockcfg.write("config_opts['yum.conf'] = \"\"\"\n")
-                    mockcfg.write("[main]\n")
-                    mockcfg.write("cachedir=/var/cache/yum\n")
-                    mockcfg.write("debuglevel=1\n")
-                    mockcfg.write("reposdir=%s\n" % os.devnull)
-                    mockcfg.write("logfile=/var/log/yum.log\n")
-                    mockcfg.write("retries=20\n")
-                    mockcfg.write("obsoletes=1\n")
-                    mockcfg.write("assumeyes=1\n")
-                    mockcfg.write("syslog_ident=mock\n")
-                    mockcfg.write("syslog_device=\n")
-                    mockcfg.write("\n")
-                    mockcfg.write("#repos\n")
-                    mockcfg.write("\n")
-                    mockcfg.write("[kernel-%s]\n" % kernelver.arch)
-                    mockcfg.write("name=kernel-%s\n" % kernelver.arch)
-                    mockcfg.write("baseurl=%s\n" % CONFIG["KernelChrootRepo"].replace("$ARCH", kernelver.arch))
-                    mockcfg.write("failovermethod=priority\n")
-                    mockcfg.write("\"\"\"\n")
+                try:
+                    cfgfile = os.path.join(cfgdir, RetraceTask.MOCK_DEFAULT_CFG)
+                    with open(cfgfile, "w") as mockcfg:
+                        mockcfg.write("config_opts['root'] = '%d-kernel'\n" % task.get_taskid())
+                        mockcfg.write("config_opts['target_arch'] = '%s'\n" % kernelver.arch)
+                        mockcfg.write("config_opts['chroot_setup_cmd'] = 'install bash coreutils cpio "
+                                      "crash findutils rpm shadow-utils'\n")
+                        mockcfg.write("config_opts['releasever'] = '%s'\n" % kernelver_str)
+                        mockcfg.write("config_opts['package_manager'] = 'dnf'\n")
+                        mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
+                        mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
+                        mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
+                        mockcfg.write("config_opts['plugin_conf']['bind_mount_enable'] = True\n")
+                        mockcfg.write("config_opts['plugin_conf']['bind_mount_opts'] = { \n")
+                        mockcfg.write("    'dirs': [('%s', '%s'),\n" % (CONFIG["RepoDir"], CONFIG["RepoDir"]))
+                        mockcfg.write("             ('%s', '%s'),],\n" % (task.get_savedir(), task.get_savedir()))
+                        mockcfg.write("    'create_dirs': True, }\n")
+                        mockcfg.write("\n")
+                        mockcfg.write("config_opts['yum.conf'] = \"\"\"\n")
+                        mockcfg.write("[main]\n")
+                        mockcfg.write("cachedir=/var/cache/yum\n")
+                        mockcfg.write("debuglevel=1\n")
+                        mockcfg.write("reposdir=%s\n" % os.devnull)
+                        mockcfg.write("logfile=/var/log/yum.log\n")
+                        mockcfg.write("retries=20\n")
+                        mockcfg.write("obsoletes=1\n")
+                        mockcfg.write("assumeyes=1\n")
+                        mockcfg.write("syslog_ident=mock\n")
+                        mockcfg.write("syslog_device=\n")
+                        mockcfg.write("\n")
+                        mockcfg.write("#repos\n")
+                        mockcfg.write("\n")
+                        mockcfg.write("[kernel-%s]\n" % kernelver.arch)
+                        mockcfg.write("name=kernel-%s\n" % kernelver.arch)
+                        mockcfg.write("baseurl=%s\n" % CONFIG["KernelChrootRepo"].replace("$ARCH", kernelver.arch))
+                        mockcfg.write("failovermethod=priority\n")
+                        mockcfg.write("\"\"\"\n")
 
-                os.chown(cfgfile, -1, mockgid)
+                    os.chown(cfgfile, -1, mockgid)
 
-                # symlink defaults from /etc/mock
-                os.symlink("/etc/mock/site-defaults.cfg",
-                           os.path.join(task.get_savedir(), RetraceTask.MOCK_SITE_DEFAULTS_CFG))
-                os.symlink("/etc/mock/logging.ini",
-                           os.path.join(task.get_savedir(), RetraceTask.MOCK_LOGGING_INI))
-            except Exception as ex:
-                raise Exception("Unable to create mock config file: %s" % ex)
-            finally:
-                os.umask(old_umask)
+                    # symlink defaults from /etc/mock
+                    os.symlink("/etc/mock/site-defaults.cfg",
+                               os.path.join(task.get_savedir(), RetraceTask.MOCK_SITE_DEFAULTS_CFG))
+                    os.symlink("/etc/mock/logging.ini",
+                               os.path.join(task.get_savedir(), RetraceTask.MOCK_LOGGING_INI))
+                except Exception as ex:
+                    raise Exception("Unable to create mock config file: %s" % ex)
+                finally:
+                    os.umask(old_umask)
 
-            child = Popen(["/usr/bin/mock", "--configdir", cfgdir, "init"], stdout=PIPE, stderr=STDOUT,
-                          encoding='utf-8')
-            stdout = child.communicate()[0]
-            if child.wait():
-                raise Exception("mock exited with %d:\n%s" % (child.returncode, stdout))
+                child = run(["/usr/bin/mock", "--configdir", cfgdir, "init"],
+                            stdout=PIPE, stderr=PIPE, encoding='utf-8')
+                stderr = child.stderr
+                if child.returncode:
+                    raise Exception("mock exited with %d:\n%s" % (child.returncode, stderr))
 
-            self.hook.run("post_prepare_environment")
+                self.hook.run("post_prepare_environment")
 
-            # no locks required, mock locks itself
-            try:
-                self.hook.run("pre_prepare_debuginfo")
-                vmlinux = vmcore.prepare_debuginfo(task, cfgdir, kernelver=kernelver)
-                self.hook.run("post_prepare_debuginfo")
-            except Exception as ex:
-                raise Exception("prepare_debuginfo failed: %s" % str(ex))
+                # no locks required, mock locks itself
+                try:
+                    self.hook.run("pre_prepare_debuginfo")
+                    vmlinux = vmcore.prepare_debuginfo(task, cfgdir, kernelver=kernelver)
+                    self.hook.run("post_prepare_debuginfo")
+                except Exception as ex:
+                    raise Exception("prepare_debuginfo failed: %s" % str(ex))
 
-            self.hook.run("pre_retrace")
-            crash_normal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                            task.get_crash_cmd() + " -s %s %s" % (vmcore_path, vmlinux)]
-            crash_minimal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                             task.get_crash_cmd() + " -s --minimal %s %s" % (vmcore_path, vmlinux)]
+                self.hook.run("pre_retrace")
+                crash_normal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                                task.get_crash_cmd() + " -s %s %s" % (vmcore_path, vmlinux)]
+                crash_minimal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                                 task.get_crash_cmd() + " -s --minimal %s %s" % (vmcore_path, vmlinux)]
+
+            elif CONFIG["RetraceEnvironment"] == "podman":
+
+                savedir = task.get_savedir()
+                crashdir = os.path.join(savedir, "crash")
+                release, distribution, version = self.read_release_file(crashdir, None)
+                try:
+                    with open(os.path.join(savedir, RetraceTask.DOCKERFILE), "w") as dockerfile:
+                        dockerfile.write('FROM %s:%s\n\n' % (distribution, version))
+                        dockerfile.write('RUN mkdir -p /var/spool/abrt/crash\n\n')
+                        dockerfile.write('RUN dnf ' \
+                                         '--releasever=%s ' \
+                                         '--assumeyes ' \
+                                         '--skip-broken ' \
+                                         'install bash coreutils cpio crash findutils rpm ' \
+                                         'shadow-utils && dnf clean all\n' % kernelver_str)
+                        dockerfile.write('RUN dnf ' \
+                                         '--assumeyes ' \
+                                         '--enablerepo=*debuginfo* ' \
+                                         'install kernel-debuginfo\n\n')
+                        dockerfile.write('COPY %s /var/spool/abrt/crash/\n\n'
+                                         % RetraceTask.VMCORE_FILE)
+                        dockerfile.write('RUN useradd -m retrace\n')
+                        dockerfile.write('RUN chown retrace /var/spool/abrt/%s\n'
+                                         % RetraceTask.VMCORE_FILE)
+                        dockerfile.write('USER retrace\n\n')
+                        dockerfile.write('CMD ["/usr/bin/bash"]')
+                except Exception as ex:
+                    log_error("Unable to create Dockerfile: %s" % ex)
+                    self._fail()
+
+                img_cont_id = str(task.get_taskid())
+
+                child = run(["/usr/bin/podman",
+                             "build",
+                             "--file",
+                             os.path.join(savedir, RetraceTask.DOCKERFILE),
+                             "--tag",
+                             "retrace-image:%s" % img_cont_id],
+                            stdout=DEVNULL, stderr=DEVNULL)
+                if child.returncode:
+                    raise Exception("Unable to build podman container")
+
+                vmlinux = vmcore.prepare_debuginfo(task, kernelver=kernelver)
+                child = run(["/usr/bin/podman", "run", "--detach", "-it", "--rm",
+                             "retrace-image:%s" % img_cont_id],
+                            stdout=PIPE, stderr=PIPE, encoding='utf-8')
+                if child.stderr:
+                    log_error(child.stderr)
+                    raise Exception("Unable to run podman container")
+
+                crash_normal = ["/usr/bin/podman", "exec", img_cont_id,
+                                task.get_crash_cmd()
+                                + " -s /var/spool/abrt/crash/vmcore %s" % vmlinux]
+                crash_minimal = ["/usr/bin/podman", "exec", img_cont_id,
+                                 task.get_crash_cmd()
+                                 + " -s --minimal /var/spool/abrt/crash/vmcore %s" % vmlinux]
+
+            else:
+                raise Exception("RetraceEnvironment set to invalid value")
 
         else:
             try:
@@ -767,6 +846,7 @@ class RetraceWorker(object):
         # If crash sys command exited with non-zero status,
         # we likely have a semi-useful vmcore
         crash_sys, ret = task.run_crash_cmdline(crash_normal, "sys\nquit\n")
+
         if ret == 0 and crash_sys:
             task.add_results("sys", crash_sys)
         else:
@@ -776,9 +856,8 @@ class RetraceWorker(object):
                 # If log < 1024 bytes, probably it is not useful so fail task
                 raise Exception("Failing task due to crash exiting with non-zero status and "
                                 "small kernellog size = %d bytes" % len(kernellog))
-            else:
-                # If log is 1024 bytes or above, try 'crash --minimal'
-                task.set_crash_cmd("crash --minimal")
+            # If log is 1024 bytes or above, try 'crash --minimal'
+            task.set_crash_cmd("crash --minimal")
 
         crashrc_lines = []
 
@@ -788,7 +867,7 @@ class RetraceWorker(object):
         results_dir = task.get_results_dir()
         crashrc_lines.append("cd %s" % results_dir)
 
-        if len(crashrc_lines) > 0:
+        if crashrc_lines:
             task.set_crashrc("%s\n" % "\n".join(crashrc_lines))
 
         self.hook.run("post_retrace")
@@ -877,8 +956,6 @@ class RetraceWorker(object):
 
     def clean_task(self):
         self.hook.run("pre_clean_task")
-        if CONFIG["UseFafPackages"] and self.fafrepo:
-            shutil.rmtree(self.fafrepo)
         ret = self.task.clean()
         self.hook.run("post_clean_task")
         return ret
