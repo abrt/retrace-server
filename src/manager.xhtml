@@ -1,239 +1,248 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>{title}</title>
-    <style type="text/css">
-      #left {
-        width: 36%;
-        float: left;
-      }
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>{title}</title>
+        <style type="text/css">
+            #left {
+                width: 36%;
+                float: left;
+            }
 
-      #right {
-        width: 63%;
-        float: right;
-      }
+            #right {
+                width: 63%;
+                float: right;
+            }
 
-      #available {
+            #available {
 
-      }
+            }
 
-      #finished {
+            #finished {
 
-      }
+            }
 
-      #running {
-        margin-bottom: 20px;
-      }
+            #running {
+                margin-bottom: 20px;
+            }
 
-      #filter
-      {
-        width: 100%;
-        text-align: center;
-        margin-bottom: 30px;
-      }
+            #filter {
+                width: 100%;
+                text-align: center;
+                margin-bottom: 30px;
+            }
 
-      #custom
-      {
-        width: 100%;
-        text-align: center;
-        margin-bottom: 20px;
-      }
+            #custom {
+                width: 100%;
+                text-align: center;
+                margin: 0 auto;
+            }
 
-      #main
-      {
-        display: inline-block;
-        margin-bottom: 20px;
-        width: 100%;
-      }
+            #main {
+                display: inline-block;
+                margin-bottom: 20px;
+                width: 100%;
+            }
 
-      .submit
-      {
-        width: 150px;
-      }
+            #middle-wrapper {
+                width: 100%;
+            }
 
-      .success
-      {
-        background-color: #aaddaa;
-      }
+            #middle {
+                width: 960px;
+                margin: 0 auto;
+                text-align: left;
+            }
 
-      .fail
-      {
-        background-color: #ddaaaa;
-      }
+            #middle .submit {
+                margin-left: 0;
+            }
 
-      .formhead
-      {
-        font-weight: bold;
-        font-size: 14px;
-      }
+            #vmcore-wrapper {
+                margin-bottom: 30px;
+            }
 
-      .formsubhead
-      {
-        font-size: 14px;
-      }
+            #usrcore-wrapper {
+                margin-bottom: 30px;
+            }
 
-      .center
-      {
-        text-align: center;
-      }
+            .submit {
+                width: 150px;
+            }
 
-      input.url
-      {
-        width: 600px;
-        font-family: monospace;
-      }
+            .success {
+                background-color: #aaddaa;
+            }
 
-      input
-      {
-        border: 1px solid black;
-        padding: 4px;
-        margin: 4px;
-      }
+            .fail {
+                background-color: #ddaaaa;
+            }
 
-      input.checkbox
-      {
-        width: auto;
-        margin-left: 40px;
-      }
+            .formhead {
+                font-weight: bold;
+                font-size: 14px;
+                min-width: 210px;
+                display: inline-block;
+            }
 
-      a:link {
-        color: blue;
-        text-decoration: none;
-      }
+            .formsubhead {
+                font-size: 14px;
+                display: inline-block;
+                min-width: 85px;
+            }
 
-      a:visited {
-        color: blue;
-        text-decoration: none;
-      }
+            .center {
+                text-align: center;
+            }
 
-      a:active {
-        color: blue;
-        text-decoration: none;
-      }
+            input.url {
+                width: 700px;
+                font-family: monospace;
+            }
 
-      a:hover {
-        color: blue;
-        text-decoration: underline;
-      }
+            input {
+                border: 1px solid black;
+                padding: 4px;
+                margin: 4px;
+            }
 
-      body {
-        font-family: sans-serif;
-        font-size: 11px;
-      }
+            input.checkbox {
+                width: auto;
+                margin-left: 0;
+            }
 
-      table {
-        border: 1px solid black;
-        border-collapse: collapse;
-        width: 100%;
-      }
+            a:link {
+                color: blue;
+                text-decoration: none;
+            }
 
-      table td {
-        border: 1px solid black;
-        padding: 2px 4px;
-      }
+            a:visited {
+                color: blue;
+                text-decoration: none;
+            }
 
-      table th.taskid
-      {
-        width: 56px;
-      }
+            a:active {
+                color: blue;
+                text-decoration: none;
+            }
 
-      table th.status
-      {
-        width: 320px;
-      }
+            a:hover {
+                color: blue;
+                text-decoration: underline;
+            }
 
-      table th.timestamp
-      {
-        width: 110px;
-      }
+            body {
+                font-family: sans-serif;
+                font-size: 11px;
+            }
 
-      table th.caseno
-      {
-        width: 56px;
-      }
+            table {
+                border: 1px solid black;
+                border-collapse: collapse;
+                width: 100%;
+            }
 
-      table th.bugzillano
-      {
-        width: 56px;
-      }
+            table td {
+                border: 1px solid black;
+                padding: 2px 4px;
+            }
 
-      table th {
-        border: 1px solid black;
-        background-color: #ccc;
-        padding: 6px;
-      }
+            table th.taskid {
+                width: 56px;
+            }
 
-      table th.tablename {
-        font-size: 14px;
-      }
+            table th.status {
+                width: 320px;
+            }
 
-      h1 {
-        font-size: 20px;
-        text-align: center;
-        margin-bottom: 20px;
-      }
+            table th.timestamp {
+                width: 110px;
+            }
 
-      code
-      {
-        font-family: monospace;
-      }
-    </style>
-  </head>
-  <body>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-    {ftpscript}
-    <h1>{sitename}</h1>
-    <form method="get" id="filter">
-      <input type="text" name="filter" />
-      <input type="submit" value="Filter" class="submit" />
-    </form>
-{vmcore_task_form}
-{usrcore_task_form}
-    <div id="main">
-      <div id="left">
-        <div id="available">
-          <table>
-            <tr>
-              <th class="tablename">{available_str}</th>
-            </tr>
-          </table>
+            table th.caseno {
+                width: 56px;
+            }
+
+            table th.bugzillano {
+                width: 56px;
+            }
+
+            table th {
+                border: 1px solid black;
+                background-color: #ccc;
+                padding: 6px;
+            }
+
+            table th.tablename {
+                font-size: 14px;
+            }
+
+            h1 {
+                font-size: 20px;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            code
+                {
+                font-family: monospace;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        {ftpscript}
+        <h1>{sitename}</h1>
+        <form method="get" id="filter">
+            <input type="text" name="filter" />
+            <input type="submit" value="Filter" class="submit" />
+        </form>
+        {vmcore_task_form}
+        {usrcore_task_form}
+        <div id="main">
+            <div id="left">
+                <div id="available">
+                    <table>
+                        <tr>
+                            <th class="tablename">{available_str}</th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div id="right">
+                <div id="running">
+                    <table>
+                        <tr>
+                            <th colspan="6" class="tablename">{running_str}</th>
+                        </tr>
+                        <tr>
+                            <th class="taskid">{taskid_str}</th>
+                            <th class="caseno">{caseno_str}</th>
+                            <th class="bugzillano">{bugzillano_str}</th>
+                            <th>{files_str}</th>
+                            <th class="timestamp">{starttime_str}</th>
+                            <th class="status">{status_str}</th>
+                        </tr>
+                        {running}
+                    </table>
+                </div>
+                <div id="finished">
+                    <table>
+                        <tr>
+                            <th colspan="5" class="tablename">{finished_str}</th>
+                        </tr>
+                        <tr>
+                            <th class="taskid">{taskid_str}</th>
+                            <th class="caseno">{caseno_str}</th>
+                            <th class="bugzillano">{bugzillano_str}</th>
+                            <th>{files_str}</th>
+                            <th class="timestamp">{finishtime_str}</th>
+                        </tr>
+                        {finished}
+                    </table>
+                </div>
+            </div>
         </div>
-      </div>
-      <div id="right">
-        <div id="running">
-          <table>
-            <tr>
-              <th colspan="6" class="tablename">{running_str}</th>
-            </tr>
-            <tr>
-              <th class="taskid">{taskid_str}</th>
-              <th class="caseno">{caseno_str}</th>
-              <th class="bugzillano">{bugzillano_str}</th>
-              <th>{files_str}</th>
-              <th class="timestamp">{starttime_str}</th>
-              <th class="status">{status_str}</th>
-            </tr>
-            {running}
-          </table>
-        </div>
-        <div id="finished">
-          <table>
-            <tr>
-              <th colspan="5" class="tablename">{finished_str}</th>
-            </tr>
-            <tr>
-              <th class="taskid">{taskid_str}</th>
-              <th class="caseno">{caseno_str}</th>
-              <th class="bugzillano">{bugzillano_str}</th>
-              <th>{files_str}</th>
-              <th class="timestamp">{finishtime_str}</th>
-            </tr>
-            {finished}
-          </table>
-        </div>
-      </div>
-    </div>
-  </body>
+    </body>
 </html>

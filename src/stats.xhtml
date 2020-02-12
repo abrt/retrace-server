@@ -1,156 +1,155 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/xml; charset=utf-8" />
-    <title>{_Retrace_Server_statistics}</title>
-    <style type="text/css">
-      #stats
-      {
-        width: 980px;
-        border: 0;
-        margin: 0 auto;
-      }
-      body
-      {
-        background-color: white;
-        color: black;
-        font-family: monospace;
-        font-size: 14px;
-      }
-      h1
-      {
-        text-align: center;
-        font-size: 20px;
-        font-weight: bold;
-      }
-      h2
-      {
-        text-align: center;
-        font-size: 18px;
-        font-weight: bold;
-      }
-      h3
-      {
-        text-align: center;
-        font-size: 16px;
-        font-weight: bold;
-        margin-top: 16px;
-        margin-bottom: 0px;
-      }
-      div.left
-      {
-        margin-top: 1px;
-        width: 49%;
-      }
-      div.right
-      {
-        margin-top: 1px;
-        float: right;
-        width: 49%;
-      }
-      table
-      {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      table td
-      {
-        border: 1px solid black;
-      }
-      table th
-      {
-        color: black;
-        background-color: #88f;
-        border: 1px solid black;
-      }
-      table tr.odd
-      {
-        background-color: #bbf;
-      }
-      table tr.even
-      {
-        background-color: #ddf;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="stats">
-      <h1>{_Retrace_Server_statistics}</h1>
-      <h2>{host}</h2>
-      <div>
-        <div class="right">
-          <h3>{_Releases}</h3>
-          <table>
-            <tr>
-              <th>{_Release}</th>
-              <th>{_Count}</th>
-            </tr>
-            {release_rows}
-          </table>
-          <h3>{_Retraced_packages}</h3>
-          <table>
-            <tr>
-              <th>{_Name}</th>
-              <th>{_Count}</th>
-            </tr>
-            {retraced_rows}
-          </table>
+    <head>
+        <meta http-equiv="Content-Type" content="text/xml; charset=utf-8" />
+        <title>{_Retrace_Server_statistics}</title>
+        <style type="text/css">
+            #stats {
+                width: 980px;
+                border: 0;
+                margin: 0 auto;
+            }
+
+            body {
+                background-color: white;
+                color: black;
+                font-family: monospace;
+                font-size: 14px;
+            }
+
+            h1 {
+                text-align: center;
+                font-size: 20px;
+                font-weight: bold;
+            }
+
+            h2 {
+                text-align: center;
+                font-size: 18px;
+                font-weight: bold;
+            }
+
+            h3 {
+                text-align: center;
+                font-size: 16px;
+                font-weight: bold;
+                margin-top: 16px;
+                margin-bottom: 0px;
+            }
+
+            div.left {
+                margin-top: 1px;
+                width: 49%;
+            }
+
+            div.right {
+                margin-top: 1px;
+                float: right;
+                width: 49%;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            table td {
+                border: 1px solid black;
+            }
+
+            table th {
+                color: black;
+                background-color: #88f;
+                border: 1px solid black;
+            }
+
+            table tr.odd {
+                background-color: #bbf;
+            }
+
+            table tr.even {
+                background-color: #ddf;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="stats">
+            <h1>{_Retrace_Server_statistics}</h1>
+            <h2>{host}</h2>
+            <div>
+                <div class="right">
+                    <h3>{_Releases}</h3>
+                    <table>
+                        <tr>
+                            <th>{_Release}</th>
+                            <th>{_Count}</th>
+                        </tr>
+                        {release_rows}
+                    </table>
+                    <h3>{_Retraced_packages}</h3>
+                    <table>
+                        <tr>
+                            <th>{_Name}</th>
+                            <th>{_Count}</th>
+                        </tr>
+                        {retraced_rows}
+                    </table>
+                </div>
+                <div class="left">
+                    <h3>{_Global_statistics}</h3>
+                    <table>
+                        <tr class="odd">
+                            <td>{_Total}</td>
+                            <td>{total}</td>
+                        </tr>
+                        <tr class="even">
+                            <td>{_Successful}</td>
+                            <td>{success}</td>
+                        </tr>
+                        <tr class="odd">
+                            <td>{_Failed}</td>
+                            <td>{fail}</td>
+                        </tr>
+                        <tr class="even">
+                            <td>{_First_retrace}</td>
+                            <td>{first}</td>
+                        </tr>
+                        <tr class="odd">
+                            <td>{_Denied_jobs}</td>
+                            <td>{denied}</td>
+                        </tr>
+                    </table>
+                    <h3>{_Architectures}</h3>
+                    <table>
+                        <tr>
+                            <th>{_Architecture}</th>
+                            <th>{_Count}</th>
+                        </tr>
+                        {arch_rows}
+                    </table>
+                    <h3>{_Required_packages}</h3>
+                    <table>
+                        <tr>
+                            <th>{_Name}</th>
+                            <th>{_Versions}</th>
+                            <th>{_Count}</th>
+                        </tr>
+                        {required_rows}
+                    </table>
+                </div>
+            </div>
+            <div>
+                <h3>{_Missing_build-ids}</h3>
+                <table>
+                    <tr>
+                        <th>{_Build-id}</th>
+                        <th>{_Shared_object_name}</th>
+                        <th>{_Count}</th>
+                    </tr>
+                    {buildids_rows}
+                </table>
+            </div>
         </div>
-        <div class="left">
-          <h3>{_Global_statistics}</h3>
-          <table>
-            <tr class="odd">
-              <td>{_Total}</td>
-              <td>{total}</td>
-            </tr>
-            <tr class="even">
-              <td>{_Successful}</td>
-              <td>{success}</td>
-            </tr>
-            <tr class="odd">
-              <td>{_Failed}</td>
-              <td>{fail}</td>
-            </tr>
-            <tr class="even">
-              <td>{_First_retrace}</td>
-              <td>{first}</td>
-            </tr>
-            <tr class="odd">
-              <td>{_Denied_jobs}</td>
-              <td>{denied}</td>
-            </tr>
-          </table>
-          <h3>{_Architectures}</h3>
-          <table>
-            <tr>
-              <th>{_Architecture}</th>
-              <th>{_Count}</th>
-            </tr>
-            {arch_rows}
-          </table>
-          <h3>{_Required_packages}</h3>
-          <table>
-            <tr>
-              <th>{_Name}</th>
-              <th>{_Versions}</th>
-              <th>{_Count}</th>
-            </tr>
-            {required_rows}
-          </table>
-        </div>
-      </div>
-      <div>
-        <h3>{_Missing_build-ids}</h3>
-        <table>
-          <tr>
-            <th>{_Build-id}</th>
-            <th>{_Shared_object_name}</th>
-            <th>{_Count}</th>
-          </tr>
-          {buildids_rows}
-        </table>
-      </div>
-    </div>
-  </body>
+    </body>
 </html>

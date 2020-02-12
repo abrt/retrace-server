@@ -1,14 +1,34 @@
+<div id="vmcore-wrapper">
     <h2>vmcore</h2>
     <form method="post" action="{create_custom_url}" id="custom">
-      <div>
-        <span class="formsubhead">Kernel version (e.g. <code>2.6.32-287.el6.x86_64</code>, empty to autodetect):</span> <input type="text" name="vra" />
-        <input type="checkbox" checked="checked" name="debug" class="checkbox" /><span class="formsubhead"> Be more verbose in case of error</span>
-      </div>
-      <div>
-        <span class="formhead">Custom core location:</span> <input type="text" name="custom_url" class="url" />
-        <input type="hidden" name="task_type" value="vmcore">
-        <input type="submit" value="Create vmcore task" class="submit" />
-        <div class="center">Any URL that <code>wget</code> can download or a local path (<code>file:///foo/bar</code> or just <code>/foo/bar</code>)</div>
-      </div>
-      <input type="checkbox" {md5_enabled} name="md5sum" class="checkbox" /><span class="formsubhead"> Calculate md5 checksum for all downloaded resources</span>
+        <div id="middle">
+            <span class="formsubhead">Kernel version:</span>
+            <input type="text" name="vra" />
+            <span>(e.g. 2.6.32-287.el6.x86_64, empty to autodetect)</span>
+        </div>
+        <div id="middle">
+            <div>
+                <input type="checkbox" checked="checked" name="debug" class="checkbox" />
+                <span class="formsubhead"> Be more verbose in case of error</span>
+            </div>
+
+            <div>
+                <input type="checkbox" {md5_enabled} name="md5sum" class="checkbox" />
+                <span class="formsubhead"> Calculate md5 checksum for all downloaded resources</span>
+            </div>
+        </div>
+        <div id="middle">
+            <div>
+                <span class="formhead">Custom core location:</span>
+                <input type="text" name="custom_url" class="url" />
+                <input type="hidden" name="task_type" value="vmcore">
+            </div>
+
+            <div class="center">
+                Any URL that wget can download or a local path (file:///foo/bar or just /foo/bar)
+            </div>
+
+            <input type="submit" value="Create vmcore task" class="submit" />
+        </div>
     </form>
+</div>

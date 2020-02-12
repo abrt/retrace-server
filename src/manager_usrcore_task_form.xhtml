@@ -1,18 +1,40 @@
+<div id="usrcore-wrapper">
     <h2>userspace core</h2>
     <form method="post" action="{create_custom_url}" id="custom">
-      <div>
-        <p>All of these three fields override contents of <code>package</code>, <code>executable</code> and <code>os_release</code> files contained in the coredump archive. If you're uploading you have just the bare (compressed) coredump, you must specify these.</p>
-        <input type="checkbox" checked="checked" name="debug" class="checkbox" /><span class="formsubhead"> Be more verbose in case of error</span><br/>
-        <span class="formsubhead">Package (e.g. <code>coreutils-8.22-11.el7</code>):</span> <input type="text" name="package" /><br/>
-        <span class="formsubhead">Executable (e.g. <code>/usr/bin/sleep</code>):</span> <input type="text" name="executable" /><br/>
-        <span class="formsubhead">OS Release (e.g. <code>Red Hat Enterprise Linux Workstation release 7.0 (Maipo)</code>):</span> <input type="text" name="os_release" />
-      </div>
-      <div>
-        <span class="formhead">Custom core location:</span> <input type="text" name="custom_url" class="url" />
-        <input type="hidden" name="task_type" value="coredump">
-        <input type="submit" value="Create coredump task" class="submit" />
-        <div class="center">Any URL that <code>wget</code> can download or a local path (<code>file:///foo/bar</code> or just <code>/foo/bar</code>)</div>
-      </div>
-      <input type="checkbox" {md5_enabled} name="md5sum" class="checkbox" /><span class="formsubhead"> Calculate md5 checksum for all downloaded resources</span>
-    </form>
+        <div id="middle">
+            <div>
+                <span class="formsubhead">Package:</span>
+                <input type="text" name="package" />
+                <span>(e.g. coreutils-8.22-11.el7)</span>
+            </div>
 
+            <div>
+                <span class="formsubhead">Executable:</span>
+                <input type="text" name="executable" />
+                <span>(e.g. /usr/bin/sleep)</span>
+            </div>
+
+            <div>
+                <span class="formsubhead">OS Release:</span>
+                <input type="text" name="os_release" />
+                <span>(e.g. Red Hat Enterprise Linux Workstation release 7.0 (Maipo))</span>
+            </div>
+
+            <p id="custom">All of these three fields override contents of package, executable and os_release files contained in the coredump archive.<br />
+            If you're uploading you have just the bare (compressed) coredump, you must specify these.</p>
+        </div>
+        <div id="middle">
+            <input type="checkbox" checked="checked" name="debug" class="checkbox" /><span class="formsubhead"> Be more verbose in case of error</span><br/>
+            <input type="checkbox" {md5_enabled} name="md5sum" class="checkbox" /><span class="formsubhead"> Calculate md5 checksum for all downloaded resources</span>
+        </div>
+        <div id="middle">
+            <span class="formhead">Custom core location:</span>
+            <input type="text" name="custom_url" class="url" />
+            <input type="hidden" name="task_type" value="coredump">
+
+            <div class="center">Any URL that wget can download or a local path (file:///foo/bar or just /foo/bar)</div>
+
+            <input type="submit" value="Create coredump task" class="submit" />
+        </div>
+    </form>
+</div>
