@@ -39,6 +39,7 @@ ALLOWED_FILES = {
     "rootdir": 256,
     "release": 128,
     "vmcore": 0,
+    "vmcore.vmem": 0,
 }
 
 TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
@@ -1243,6 +1244,7 @@ class RetraceTask:
     URL_FILE = "url"
     VMLINUX_FILE = "vmlinux"
     VMCORE_FILE = "crash/vmcore"
+    VMEM_FILE = "crash/vmcore.vmem"
     COREDUMP_FILE = "crash/coredump"
     MOCK_DEFAULT_CFG = "default.cfg"
     MOCK_SITE_DEFAULTS_CFG = "site-defaults.cfg"

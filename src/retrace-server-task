@@ -47,6 +47,18 @@ def prepare_tar(args):
         print("'{0}' does not exists".format(args['COREFILE']))
         sys.exit(1)
     tar_file.add(args['COREFILE'], arcname=args['task_type'])
+
+    if args['vmem']:
+        vmem = args['vmem']
+        vmem_file = args['task_type'] + ".vmem"
+        LOGGER.info("Adding '%s' as '%s' into tar", vmem, vmem_file)
+
+        if not os.path.isfile(vmem):
+            print("'{0}' does not exists".format(vmem))
+            sys.exit(1)
+
+        tar_file.add(vmem, arcname=vmem_file)
+
     tar_file.close()
     LOGGER.info("Tar file created as '%s'", tar_name)
     return tar_name
@@ -149,6 +161,11 @@ def create_new_task(args):
             task_type = TASK_VMCORE_INTERACTIVE
         else:
             task_type = TASK_VMCORE
+
+        if args['vmem'] and task_type not in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
+            LOGGER.warning("Ignoring: %s, option is only viable with vmcores.", args['vmem'])
+            args['vmem'] = None
+
         LOGGER.info("Task_type: %s", task_type)
 
         tar_name = prepare_tar(args)
@@ -190,9 +207,16 @@ def create_new_task(args):
 
     elif args['task_input'] == "manager":
         args['COREFILE'] = "file://" + os.path.abspath(args['COREFILE'])
+        if args['vmem']:
+            args['vmem'] = "file://" + os.path.abspath(args['vmem'])
+
         LOGGER.info("Starting new manager task")
         server = args['server'] + "/manager/"
         payload = {"custom_url": args['COREFILE']}
+        if args['vmem']:
+            payload['vmem-check'] = 'on' if args['vmem'] else 'off'
+            payload.update({"custom_vmem_url": args['vmem']})
+
         payload['md5sum'] = 'off' if args['no_md5'] else 'on'
         for itm in ["vra", "task_type", "os_release", "package", "executable"]:
             if itm in args.keys():
@@ -212,6 +236,10 @@ def create_new_task(args):
         for itm in ["vra", "task_type", "os_release", "package", "executable"]:
             if itm in args.keys():
                 payload[itm] = args[itm]
+
+        if args['vmem']:
+            payload['vmem-check'] = 'on' if args['vmem'] else 'off'
+            payload.update({"custom_vmem_url": args['vmem']})
 
         LOGGER.info("Connecting to server %s",
                     server + args['COREFILE'] + "/start")
@@ -499,6 +527,9 @@ if __name__ == "__main__":
                          help="Do not verify certificate")
         tmp.add_argument("-v", "--verbose", action="store_const",
                          default=logging.WARNING, const=logging.DEBUG)
+
+        tmp.add_argument("--vmem", metavar="VMEM",
+                         help="Virtual memory file for vmcore snapshot")
 
         tmp.add_argument("-r", "--kernelver",
                          help="Version of kernel in vmcore")

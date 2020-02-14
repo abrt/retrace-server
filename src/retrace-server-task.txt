@@ -8,7 +8,7 @@ retrace-server-task - Create a task, get and set fields on an existing task
 SYNOPSIS
 --------
 'retrace-server-task' create [-h] [-u | -k] [-t | -m | -f] [-i] [-d]
-                             [-s SERVER] [-n] [-v] [-r KERNELVER]
+                             [-s SERVER] [-n] [-v] [--vmem VMEM] [-r KERNELVER]
                              [-o OS_RELEASE] [-p PACKAGE] [-x EXECUTABLE]
                              [-e EMAIL] [-c CASENO] [-bz BUGZILLANO]
                              COREFILE
@@ -96,6 +96,10 @@ CREATE OR BATCH OPTIONS
    interactive debug session. Without this option, manager and ftp tasks are
    interactive, and http tasks are not.
 
+--vmem VMEM::
+   Virtual memory file VMEM needed for retracing kernel vmcore snapshots.
+   Only valid for kernel cores.
+
 -k KERNELVER, --kernelver KERNELVER::
    Force the kernel version in the COREFILE to KERNELVER.
    Only valid for kernel cores.
@@ -158,6 +162,10 @@ Create a task from a local file (kernel vmcore)
 Create a task where the file (kernel vmcore) exists on FTP server
 
    retrace-server-task create 012345-vmcore
+
+Create a task for kernel vmcore snapshot with vmem file included
+
+   retrace-server-task create 012345-vmcore.vmss --vmem 012345-vmcore.vmem
 
 Batch run local file on https://retrace.fedoraproject.org/ (usperspace core)
 
