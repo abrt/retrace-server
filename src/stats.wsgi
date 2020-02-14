@@ -6,10 +6,10 @@ from webob import Request
 
 from retrace.retrace import (STATUS_FAIL,
                              STATUS_SUCCESS,
-                             init_crashstats_db,
                              parse_http_gettext,
                              response)
 from retrace.plugins import Plugins
+from retrace.stats import init_crashstats_db
 
 sys.path.insert(0, "/usr/share/retrace-server/")
 

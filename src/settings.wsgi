@@ -3,9 +3,9 @@
 from retrace.retrace import (HANDLE_ARCHIVE,
                              get_active_tasks,
                              get_supported_releases,
-                             response,
-                             save_crashstats_reportfull)
+                             response)
 from retrace.config import Config
+from retrace.stats import save_crashstats_reportfull
 
 CONFIG = Config()
 

@@ -20,11 +20,11 @@ from retrace.retrace import (ALLOWED_FILES,
                              parse_http_gettext,
                              response,
                              RetraceTask,
-                             save_crashstats_reportfull,
                              unpack,
                              unpacked_size)
 
 from retrace.config import Config
+from retrace.stats import save_crashstats_reportfull
 
 CONFIG = Config()
 BUFSIZE = 1 << 20  # 1 MB

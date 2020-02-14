@@ -18,7 +18,6 @@ from .retrace import (ALLOWED_FILES, INPUT_PACKAGE_PARSER, REPO_PREFIX, REQUIRED
                       get_active_tasks,
                       get_supported_releases,
                       guess_arch,
-                      init_crashstats_db,
                       is_package_known,
                       human_readable_size,
                       KernelVMcore,
@@ -31,13 +30,14 @@ from .retrace import (ALLOWED_FILES, INPUT_PACKAGE_PARSER, REPO_PREFIX, REQUIRED
                       run_gdb,
                       RetraceTask,
                       RetraceWorkerError,
-                      save_crashstats,
-                      save_crashstats_build_ids,
-                      save_crashstats_packages,
-                      save_crashstats_success,
                       send_email)
 from .config import Config
 from .plugins import Plugins
+from .stats import (init_crashstats_db,
+                    save_crashstats,
+                    save_crashstats_build_ids,
+                    save_crashstats_packages,
+                    save_crashstats_success)
 
 sys.path.insert(0, "/usr/share/retrace-server/")
 
