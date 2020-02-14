@@ -5,6 +5,7 @@ retracelib_PYTHON = \
     argparser.py \
     retrace.py \
     retrace_worker.py \
+    stats.py \
     plugins.py
 
 nodist_retracelib_PYTHON = \
