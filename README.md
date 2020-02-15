@@ -1,6 +1,10 @@
 # Retrace Server
 
 [![Translation status](https://translate.fedoraproject.org/widgets/abrt/-/retrace-server/svg-badge.svg)](https://translate.fedoraproject.org/engage/abrt/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/abrt/retrace-server.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/abrt/retrace-server/context:python)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/abrt/retrace-server.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/abrt/retrace-server/alerts/)
+
+---
 
 Remote service for generating backtraces from coredumps of crashes. Supports
 user space coredumps as well as a kernel coredumps. All communication with
