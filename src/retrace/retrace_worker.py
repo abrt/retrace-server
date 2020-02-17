@@ -229,6 +229,7 @@ class RetraceWorker():
 
     def read_release_file(self, crashdir, crash_package):
         # read release, distribution and version from release file
+        is_rawhide = False
         release_path = None
         rootdir = None
         rootdir_path = os.path.join(crashdir, "rootdir")
@@ -281,8 +282,9 @@ class RetraceWorker():
                 self._fail()
 
         if "rawhide" in release.lower():
-            version = "rawhide"
-        return (release, distribution, version)
+            is_rawhide = True
+
+        return (release, distribution, version, is_rawhide)
 
     def read_packages(self, crashdir, releaseid, crash_package, distribution):
         packages = [crash_package]
@@ -345,7 +347,7 @@ class RetraceWorker():
                 self._fail()
         return (packages, missing)
 
-    def construct_gpg_keys(self, version, pre_rawhide_version=None, scheme="file://"):
+    def construct_gpg_keys(self, version, pre_rawhide_version, scheme="file://"):
         final_result = ""
 
         for key in self.plugin.gpg_keys:
@@ -378,7 +380,14 @@ class RetraceWorker():
         else:
             self.stats["version"] = "%s-%s" % (pkgdata["version"], pkgdata["release"])
 
-        release, distribution, version = self.read_release_file(crashdir, crash_package)
+        pre_rawhide_version = None
+        release, distribution, version, is_rawhide = self.read_release_file(crashdir, crash_package)
+
+        if is_rawhide:
+            # some packages might not be signed by rawhide key yet
+            # but with a key of previous release
+            pre_rawhide_version = int(version) - 1
+            version = "rawhide"
 
         releaseid = "%s-%s-%s" % (distribution, version, arch)
         if releaseid not in get_supported_releases():
@@ -439,7 +448,7 @@ class RetraceWorker():
                     mockcfg.write("[%s]\n" % distribution)
                     mockcfg.write("name=%s\n" % releaseid)
                     mockcfg.write("baseurl=file://%s/\n" % repopath)
-                    mockcfg.write("gpgkey=%s\n" % self.construct_gpg_keys(version))
+                    mockcfg.write("gpgkey=%s\n" % self.construct_gpg_keys(version, pre_rawhide_version))
                     mockcfg.write("failovermethod=priority\n")
                     mockcfg.write("\"\"\"\n")
 
@@ -479,7 +488,7 @@ class RetraceWorker():
                     podman_repo.write("name=podman-%s\n" % releaseid)
                     podman_repo.write("baseurl=file://%s/\n" % repopath)
                     podman_repo.write("gpgcheck=%s" % CONFIG["RequireGPGCheck"])
-                    podman_repo.write("gpgkey=%s" % self.construct_gpg_keys(version))
+                    podman_repo.write("gpgkey=%s" % self.construct_gpg_keys(version, pre_rawhide_version))
             except Exception as ex:
                 log_error("Unable to create podman repo file: %s" % ex)
                 self._fail()
@@ -496,7 +505,8 @@ class RetraceWorker():
                     dockerfile.write('COPY podman_repo.repo /etc/yum.repos.d/\n')
                     dockerfile.write('RUN ')
                     if CONFIG["RequireGPGCheck"]:
-                        dockerfile.write('rpm --import %s && \\ \n' % self.construct_gpg_keys(version, scheme=""))
+                        dockerfile.write('rpm --import %s && \\ \n'
+                                         % self.construct_gpg_keys(version, pre_rawhide_version, scheme=""))
                     dockerfile.write('dnf --assumeyes --skip-broken --allowerasing --setopt=tsflags=nodocs ')
                     dockerfile.write('--releasever=%s ' % version)
                     dockerfile.write('--repo="podman-%s" ' % distribution)
@@ -756,7 +766,7 @@ class RetraceWorker():
 
                 savedir = task.get_savedir()
                 crashdir = os.path.join(savedir, "crash")
-                release, distribution, version = self.read_release_file(crashdir, None)
+                release, distribution, version, _ = self.read_release_file(crashdir, None)
                 try:
                     with open(os.path.join(savedir, RetraceTask.DOCKERFILE), "w") as dockerfile:
                         dockerfile.write('FROM %s:%s\n\n' % (distribution, version))
