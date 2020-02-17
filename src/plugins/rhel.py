@@ -2,7 +2,7 @@ import re
 
 distribution = "rhel"
 abrtparser = re.compile(r"^Red Hat Enterprise Linux(?:\s\w+)? release (\d+)(?:\.(\d+))?(?:\s\w+)? \(([^\)]+)\)$")
-guessparser = re.compile(r"\.el([0-9]+)")
+guessparser = re.compile(r"\.el(\d+)")
 displayrelease = "Red Hat Enterprise Linux release"
 gdb_package = "devtoolset-8-gdb"
 gdb_executable = "/opt/rh/devtoolset-8/root/usr/bin/gdb"
