@@ -1,7 +1,7 @@
 import re
 
 distribution = "centos"
-abrtparser = re.compile(r"^CentOS Linux release ([0-9]+) \(([^\)]+)\)$")
+abrtparser = re.compile(r"^CentOS Linux release (\d+)(?:\.(\d+)\.(\d+))? \(([^\)]+)\)$")
 guessparser = re.compile(r"\.el([0-9]+)")
 displayrelease = "CentOS release"
 gdb_package = "gdb"
