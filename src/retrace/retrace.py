@@ -637,10 +637,6 @@ def unpack_coredump(path):
             shutil.rmtree(fullpath)
 
 
-def get_task_est_time(taskdir):
-    return 180
-
-
 def run_ps():
     lines = run(["ps", "-eo", "pid,ppid,etime,cmd"],
                 stdout=PIPE, encoding='utf-8').stdout.split("\n")
