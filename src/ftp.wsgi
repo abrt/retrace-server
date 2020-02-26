@@ -5,10 +5,8 @@ import re
 import urllib
 from webob import Request
 
-from retrace.retrace import (ftp_list_dir,
-                             parse_http_gettext,
-                             response)
 from retrace.config import Config
+from retrace.util import ftp_list_dir, parse_http_gettext, response
 
 CONFIG = Config()
 

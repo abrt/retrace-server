@@ -10,7 +10,7 @@ import stat
 from subprocess import PIPE, DEVNULL, STDOUT, run
 
 from retrace.hooks.hooks import RetraceHook
-from .retrace import (ALLOWED_FILES, INPUT_PACKAGE_PARSER, REPO_PREFIX, REQUIRED_FILES,
+from .retrace import (ALLOWED_FILES, REPO_PREFIX, REQUIRED_FILES,
                       STATUS, STATUS_ANALYZE, STATUS_BACKTRACE, STATUS_CLEANUP,
                       STATUS_FAIL, STATUS_INIT, STATUS_STATS, STATUS_SUCCESS,
                       TASK_DEBUG, TASK_RETRACE, TASK_RETRACE_INTERACTIVE, TASK_VMCORE,
@@ -19,18 +19,15 @@ from .retrace import (ALLOWED_FILES, INPUT_PACKAGE_PARSER, REPO_PREFIX, REQUIRED
                       get_supported_releases,
                       guess_arch,
                       is_package_known,
-                      human_readable_size,
                       KernelVMcore,
                       log_debug,
                       log_error,
                       log_info,
                       log_warn,
                       logger,
-                      parse_rpm_name,
                       run_gdb,
                       RetraceTask,
-                      RetraceWorkerError,
-                      send_email)
+                      RetraceWorkerError)
 from .config import Config
 from .plugins import Plugins
 from .stats import (init_crashstats_db,
@@ -38,6 +35,10 @@ from .stats import (init_crashstats_db,
                     save_crashstats_build_ids,
                     save_crashstats_packages,
                     save_crashstats_success)
+from .util import (INPUT_PACKAGE_PARSER,
+                   human_readable_size,
+                   parse_rpm_name,
+                   send_email)
 
 sys.path.insert(0, "/usr/share/retrace-server/")
 

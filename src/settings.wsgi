@@ -1,11 +1,9 @@
 #!/usr/bin/python3
 
-from retrace.retrace import (HANDLE_ARCHIVE,
-                             get_active_tasks,
-                             get_supported_releases,
-                             response)
+from retrace.retrace import get_active_tasks, get_supported_releases
 from retrace.config import Config
 from retrace.stats import save_crashstats_reportfull
+from retrace.util import HANDLE_ARCHIVE, response
 
 CONFIG = Config()
 

@@ -7,21 +7,25 @@ import time
 import urllib
 from webob import Request
 
-from retrace.retrace import (FTP_SUPPORTED_EXTENSIONS, STATUS, STATUS_DOWNLOADING, STATUS_FAIL,
+from retrace.retrace import (STATUS, STATUS_DOWNLOADING, STATUS_FAIL,
                              STATUS_SUCCESS, TASK_DEBUG, TASK_RETRACE, TASK_RETRACE_INTERACTIVE,
                              TASK_VMCORE, TASK_VMCORE_INTERACTIVE,
-                             free_space,
-                             ftp_close,
-                             ftp_init,
-                             ftp_list_dir,
-                             human_readable_size,
                              KernelVer,
-                             parse_http_gettext,
-                             response,
                              RetraceTask)
 from retrace.config import Config
+from retrace.util import (free_space,
+                          ftp_close,
+                          ftp_init,
+                          ftp_list_dir,
+                          human_readable_size,
+                          parse_http_gettext,
+                          response)
 
 CONFIG = Config()
+
+FTP_SUPPORTED_EXTENSIONS = [".tar.gz", ".tgz", ".tarz", ".tar.bz2", ".tar.xz",
+                            ".tar", ".gz", ".bz2", ".xz", ".Z", ".zip"]
+
 
 MANAGER_URL_PARSER = re.compile(r"^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|"
                                 r"bugzillano|notify|delete(/(sure/?)?)?|results/([^/]+)/?)?)?)?)?$")

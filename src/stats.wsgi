@@ -4,12 +4,10 @@ import time
 
 from webob import Request
 
-from retrace.retrace import (STATUS_FAIL,
-                             STATUS_SUCCESS,
-                             parse_http_gettext,
-                             response)
+from retrace.retrace import STATUS_FAIL, STATUS_SUCCESS
 from retrace.plugins import Plugins
 from retrace.stats import init_crashstats_db
+from retrace.util import parse_http_gettext, response
 
 sys.path.insert(0, "/usr/share/retrace-server/")
 

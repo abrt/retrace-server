@@ -2,7 +2,8 @@ import os
 import sqlite3
 import time
 
-from .retrace import CONFIG, parse_rpm_name
+from .retrace import CONFIG
+from .util import parse_rpm_name
 
 
 def init_crashstats_db():
