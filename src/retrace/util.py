@@ -9,12 +9,11 @@ from dnf.subject import Subject
 from hawkey import FORM_NEVRA
 from subprocess import run, PIPE
 
-from .config import Config, DF_BIN, DU_BIN, GZIP_BIN, TAR_BIN, XZ_BIN
+from .config import Config, DF_BIN, GZIP_BIN, TAR_BIN, XZ_BIN
 
 GETTEXT_DOMAIN = "retrace-server"
 
 DF_OUTPUT_PARSER = re.compile(r"^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
-DU_OUTPUT_PARSER = re.compile(r"^([0-9]+)")
 
 # architecture (i386, x86_64, armv7hl, mips4kec)
 INPUT_ARCH_PARSER = re.compile(r"^[a-zA-Z0-9_]+$")
@@ -77,16 +76,6 @@ def unlock(lockfile):
         return False
 
     return True
-
-
-def dir_size(path):
-    lines = run([DU_BIN, "-sb", path], stdout=PIPE, encoding='utf-8').stdout.split("\n")
-    for line in lines:
-        match = DU_OUTPUT_PARSER.match(line)
-        if match:
-            return int(match.group(1))
-
-    return 0
 
 
 def free_space(path):
