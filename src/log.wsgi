@@ -1,11 +1,9 @@
 #!/usr/bin/python3
 
 from webob import Request
-from retrace.retrace import (URL_PARSER,
-                             parse_http_gettext,
-                             response,
-                             RetraceTask)
+from retrace.retrace import RetraceTask
 from retrace.config import Config
+from retrace.util import URL_PARSER, parse_http_gettext, response
 
 CONFIG = Config()
 

@@ -6,7 +6,8 @@ retracelib_PYTHON = \
     retrace.py \
     retrace_worker.py \
     stats.py \
-    plugins.py
+    plugins.py \
+    util.py
 
 nodist_retracelib_PYTHON = \
     config.py

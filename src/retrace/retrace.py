@@ -1,13 +1,10 @@
 import errno
-import ftplib
-import gettext
 import logging
 import os
 import grp
 import re
 import random
 import shutil
-import smtplib
 import stat
 import sys
 import time
@@ -17,11 +14,19 @@ from signal import getsignal, signal, SIG_DFL, SIGPIPE
 from subprocess import PIPE, STDOUT, DEVNULL, TimeoutExpired, run
 import magic
 
-from dnf.subject import Subject
-from hawkey import FORM_NEVRA
-from .config import Config, TAR_BIN, XZ_BIN, GZIP_BIN, DU_BIN, DF_BIN
-
-GETTEXT_DOMAIN = "retrace-server"
+from .config import Config
+from .util import (ARCHIVE_7Z,
+                   ARCHIVE_BZ2,
+                   ARCHIVE_GZ,
+                   ARCHIVE_LZOP,
+                   ARCHIVE_TAR,
+                   ARCHIVE_UNKNOWN,
+                   ARCHIVE_XZ,
+                   ARCHIVE_ZIP,
+                   ftp_init,
+                   ftp_close,
+                   human_readable_size,
+                   splitFilename)
 
 # filename: max_size (<= 0 unlimited)
 ALLOWED_FILES = {
@@ -41,10 +46,6 @@ TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
 
 TASK_TYPES = [TASK_RETRACE, TASK_DEBUG, TASK_VMCORE,
               TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]
-
-ARCHIVE_UNKNOWN, ARCHIVE_GZ, ARCHIVE_ZIP, \
-  ARCHIVE_BZ2, ARCHIVE_XZ, ARCHIVE_TAR, \
-  ARCHIVE_7Z, ARCHIVE_LZOP = range(8)
 
 REQUIRED_FILES = {
     TASK_RETRACE:             ["coredump", "executable", "package"],
@@ -68,22 +69,8 @@ SUFFIX_MAP = {
 BUGZILLA_STATUS = ["NEW", "ASSIGNED", "ON_DEV", "POST", "MODIFIED", "ON_QA", "VERIFIED",
                    "RELEASE_PENDING", "CLOSED"]
 
-# characters, numbers, dash (utf-8, iso-8859-2 etc.)
-INPUT_CHARSET_PARSER = re.compile(r"^([a-zA-Z0-9\-]+)(,.*)?$")
-# en_GB, sk-SK, cs, fr etc.
-INPUT_LANG_PARSER = re.compile(r"^([a-z]{2}([_\-][A-Z]{2})?)(,.*)?$")
-# characters allowed by Fedora Naming Guidelines
-INPUT_PACKAGE_PARSER = re.compile(r"^([1-9][0-9]*:)?[a-zA-Z0-9\-\.\_\+\~]+$")
-# architecture (i386, x86_64, armv7hl, mips4kec)
-INPUT_ARCH_PARSER = re.compile(r"^[a-zA-Z0-9_]+$")
-# name-version-arch (fedora-16-x86_64, rhel-6.2-i386, opensuse-12.1-x86_64)
-INPUT_RELEASEID_PARSER = re.compile(r"^[a-zA-Z0-9]+\-[0-9a-zA-Z\.]+\-[a-zA-Z0-9_]+$")
-
 CORE_ARCH_PARSER = re.compile(r"core file,? .*(x86-64|80386|ARM|aarch64|IBM S/390|64-bit PowerPC)")
 PACKAGE_PARSER = re.compile(r"^(.+)-([0-9]+(\.[0-9]+)*-[0-9]+)\.([^-]+)$")
-DF_OUTPUT_PARSER = re.compile(r"^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
-DU_OUTPUT_PARSER = re.compile(r"^([0-9]+)")
-URL_PARSER = re.compile(r"^/([0-9]+)/?")
 
 REPODIR_NAME_PARSER = re.compile(r"^[^\-]+\-[^\-]+\-[^\-]+$")
 
@@ -94,32 +81,6 @@ WORKER_RUNNING_PARSER = re.compile(r"^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)
 
 MD5_PARSER = re.compile(r"[a-fA-F0-9]{32}")
 
-UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB"]
-
-HANDLE_ARCHIVE = {
-    "application/x-xz-compressed-tar": {
-        "unpack": [TAR_BIN, "xJf"],
-        "size": ([XZ_BIN, "--list", "--robot"],
-                 re.compile(r"^totals[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+([0-9]+).*")),
-        "type": ARCHIVE_XZ,
-    },
-
-    "application/x-gzip": {
-        "unpack": [TAR_BIN, "xzf"],
-        "size": ([GZIP_BIN, "--list"], re.compile(r"^[^0-9]*[0-9]+[^0-9]+([0-9]+).*$")),
-        "type": ARCHIVE_GZ,
-    },
-
-    "application/x-tar": {
-        "unpack": [TAR_BIN, "xf"],
-        "size": (["ls", "-l"],
-                 re.compile(r"^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+([0-9]+).*$")),
-        "type": ARCHIVE_TAR,
-    },
-}
-
-FTP_SUPPORTED_EXTENSIONS = [".tar.gz", ".tgz", ".tarz", ".tar.bz2", ".tar.xz",
-                            ".tar", ".gz", ".bz2", ".xz", ".Z", ".zip"]
 
 REPO_PREFIX = "retrace-"
 EXPLOITABLE_SEPARATOR = "== EXPLOITABLE =="
@@ -200,65 +161,12 @@ def log_error(msg):
     logger.error(msg)
 
 
-def lock(lockfile):
-    try:
-        fd = os.open(lockfile, os.O_CREAT | os.O_EXCL, 0o600)
-    except OSError as ex:
-        if ex.errno == errno.EEXIST:
-            return False
-        raise ex
-
-    os.close(fd)
-    return True
-
-
-def unlock(lockfile):
-    try:
-        if os.path.getsize(lockfile) == 0:
-            os.unlink(lockfile)
-    except OSError:
-        return False
-
-    return True
-
-
 def get_canon_arch(arch):
     for canon_arch, derived_archs in ARCH_MAP.items():
         if arch in derived_archs:
             return canon_arch
 
     return arch
-
-
-def free_space(path):
-    lines = run([DF_BIN, "-B", "1", path], stdout=PIPE, encoding='utf-8').stdout.split("\n")
-    for line in lines:
-        match = DF_OUTPUT_PARSER.match(line)
-        if match:
-            return int(match.group(4))
-
-    return None
-
-
-def dir_size(path):
-    lines = run([DU_BIN, "-sb", path], stdout=PIPE, encoding='utf-8').stdout.split("\n")
-    for line in lines:
-        match = DU_OUTPUT_PARSER.match(line)
-        if match:
-            return int(match.group(1))
-
-    return 0
-
-
-def unpacked_size(archive, mime):
-    command, parser = HANDLE_ARCHIVE[mime]["size"]
-    lines = run(command + [archive], stdout=PIPE, encoding='utf-8').stdout.split("\n")
-    for line in lines:
-        match = parser.match(line)
-        if match:
-            return int(match.group(1))
-
-    return None
 
 
 def guess_arch(coredump_path):
@@ -314,21 +222,6 @@ def get_supported_releases():
         if REPODIR_NAME_PARSER.match(f) and \
            os.path.isdir(os.path.join(fullpath, "repodata")):
             result.append(f)
-
-    return result
-
-
-def parse_http_gettext(lang, charset):
-    result = lambda x: x
-    lang_match = INPUT_LANG_PARSER.match(lang)
-    charset_match = INPUT_CHARSET_PARSER.match(charset)
-    if lang_match and charset_match:
-        try:
-            result = gettext.translation(GETTEXT_DOMAIN,
-                                         languages=[lang_match.group(1)],
-                                         codeset=charset_match.group(1)).gettext
-        except OSError:
-            pass
 
     return result
 
@@ -432,27 +325,6 @@ def run_gdb(savedir, plugin, repopath, taskid=None):
     log_debug(backtrace)
 
     return backtrace, exploitable
-
-
-def splitFilename(filename):
-    """
-    Pass in a standard style rpm fullname
-
-    Return a name, version, release, epoch, arch, e.g.::
-        foo-1.0-1.i386.rpm returns foo, 1.0, 1, i386
-    """
-
-    if filename[-4:] == '.rpm':
-        filename = filename[:-4]
-
-    subject = Subject(filename)
-    possible_nevra = list(subject.get_nevra_possibilities(forms=FORM_NEVRA))
-    if possible_nevra:
-        nevra = possible_nevra[0]
-    else:
-        return None, None, None, None, None
-
-    return nevra.name, nevra.version, nevra.release, nevra.epoch, nevra.arch
 
 
 def remove_epoch(nvr):
@@ -769,25 +641,6 @@ def get_task_est_time(taskdir):
     return 180
 
 
-def unpack(archive, mime, targetdir=None):
-    cmd = list(HANDLE_ARCHIVE[mime]["unpack"])
-    cmd.append(archive)
-    if targetdir is not None:
-        cmd.append("--directory")
-        cmd.append(targetdir)
-
-    child = run(cmd)
-    return child.returncode
-
-
-def response(start_response, status, body="", extra_headers=[]):
-    if isinstance(body, str):
-        body = body.encode("utf-8")
-
-    start_response(status, [("Content-Type", "text/plain"), ("Content-Length", "%d" % len(body))] + extra_headers)
-    return [body]
-
-
 def run_ps():
     lines = run(["ps", "-eo", "pid,ppid,etime,cmd"],
                 stdout=PIPE, encoding='utf-8').stdout.split("\n")
@@ -868,75 +721,6 @@ def get_md5_tasks():
     return tasks
 
 
-def parse_rpm_name(name):
-    result = {
-        "epoch": 0,
-        "name": None,
-        "version": "",
-        "release": "",
-        "arch": "",
-    }
-    (result["name"],
-     result["version"],
-     result["release"],
-     result["epoch"],
-     result["arch"]) = splitFilename(name + ".mockarch.rpm")
-
-    return result
-
-
-def send_email(frm, to, subject, body):
-    if isinstance(to, list):
-        to = ",".join(to)
-
-    if not isinstance(to, str):
-        raise Exception("'to' must be either string or a list of strings")
-
-    msg = "From: %s\n" \
-          "To: %s\n" \
-          "Subject: %s\n" \
-          "\n" \
-          "%s" % (frm, to, subject, body)
-
-    smtp = smtplib.SMTP("localhost")
-    smtp.sendmail(frm, to, msg)
-    smtp.close()
-
-
-def ftp_init():
-    if CONFIG["FTPSSL"]:
-        ftp = ftplib.FTP_TLS(CONFIG["FTPHost"])
-        ftp.prot_p()
-    else:
-        ftp = ftplib.FTP(CONFIG["FTPHost"])
-
-    ftp.login(CONFIG["FTPUser"], CONFIG["FTPPass"])
-    ftp.cwd(CONFIG["FTPDir"])
-
-    return ftp
-
-
-def ftp_close(ftp):
-    try:
-        ftp.quit()
-    except ftplib.all_errors:
-        ftp.close()
-
-
-def ftp_list_dir(ftpdir="/", ftp=None):
-    close = False
-    if ftp is None:
-        ftp = ftp_init()
-        close = True
-
-    result = [f.lstrip("/") for f in ftp.nlst(ftpdir)]
-
-    if close:
-        ftp_close(ftp)
-
-    return result
-
-
 def check_run(cmd):
     child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
     stdout = child.stdout
@@ -965,16 +749,6 @@ def move_dir_contents(source, dest):
 # except?
 
     shutil.rmtree(source)
-
-
-def human_readable_size(bytesize):
-    size = float(bytesize)
-    unit = 0
-    while size > 1024.0 and unit < len(UNITS) - 1:
-        unit += 1
-        size /= 1024.0
-
-    return "%.2f %s" % (size, UNITS[unit])
 
 
 class KernelVer():

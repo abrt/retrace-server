@@ -6,25 +6,25 @@ from webob import Request
 from tempfile import NamedTemporaryFile
 
 from retrace.retrace import (ALLOWED_FILES,
-                             HANDLE_ARCHIVE,
                              REQUIRED_FILES,
                              TASK_RETRACE,
                              TASK_RETRACE_INTERACTIVE,
                              TASK_TYPES,
                              TASK_VMCORE,
                              TASK_VMCORE_INTERACTIVE,
-                             free_space,
                              get_active_tasks,
                              get_archive_type,
                              KernelVMcore,
-                             parse_http_gettext,
-                             response,
-                             RetraceTask,
-                             unpack,
-                             unpacked_size)
+                             RetraceTask)
 
 from retrace.config import Config
 from retrace.stats import save_crashstats_reportfull
+from retrace.util import (HANDLE_ARCHIVE,
+                          free_space,
+                          parse_http_gettext,
+                          response,
+                          unpack,
+                          unpacked_size)
 
 CONFIG = Config()
 BUFSIZE = 1 << 20  # 1 MB
