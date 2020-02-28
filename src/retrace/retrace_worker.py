@@ -307,15 +307,12 @@ class RetraceWorker():
                              "--log=%s" % os.path.join(self.task.get_savedir(), "c2p_log")],
                             stdout=PIPE, stderr=PIPE, encoding='utf-8')
                 section = 0
-                crash_package_or_component = None
                 lines = child.stdout.split("\n")
                 libdb = False
                 for line in lines:
                     if line == "":
                         section += 1
                         continue
-                    elif section == 0:
-                        crash_package_or_component = line.strip()
                     elif section == 1:
                         stripped = line.strip()
 
@@ -849,7 +846,6 @@ class RetraceWorker():
         if ret == 0 and crash_sys:
             task.add_results("sys", crash_sys)
         else:
-            crash_sys = None
             # FIXME: Probably a better hueristic can be done here
             if len(kernellog) < 1024:
                 # If log < 1024 bytes, probably it is not useful so fail task
