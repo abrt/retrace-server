@@ -631,7 +631,6 @@ class RetraceWorker():
 
         if custom_kernelver is not None:
             kernelver = custom_kernelver
-            kernelver_str = custom_kernelver.kernelver_str
         else:
             kernelver = vmcore.get_kernel_release(task.get_crash_cmd().split())
             if not kernelver:
