@@ -19,7 +19,6 @@ BuildRequires: texinfo
 BuildRequires: asciidoc
 BuildRequires: xmlto
 BuildRequires: lsof
-BuildRequires: python3-six
 BuildRequires: python3-devel
 
 Requires: rsync
@@ -41,7 +40,6 @@ Requires: python3-magic
 Requires: python3-requests
 Requires: python3-requests-gssapi
 Requires: python3-bugzilla
-Requires: python3-six
 Requires: python3-dnf
 Requires: python3-hawkey
 Requires: mod_ssl
