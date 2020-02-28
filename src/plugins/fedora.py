@@ -31,7 +31,7 @@ repos = [
     ],
     [
         "rsync://dl.fedoraproject.org/fedora-enchilada/linux/releases/$VER/Everything/$ARCH/debug/*/*.rpm",
-        "rsync://dl.fedoraproject.org/fedora-enchilada/linux/development/$VER/"
+        "rsync://dl.fedoraproject.org/fedora-enchilada/linux/development/$VER/" +
         "Everything/$ARCH/debug/tree/Packages/*/*.rpm",
     ],
     [
