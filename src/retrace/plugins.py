@@ -63,5 +63,5 @@ class Plugins(object):
     def __getattr__(self, name):
         return getattr(self.instance, name)
 
-    def __setattr__(self, name):
-        return setattr(self.instance, name)
+    def __setattr__(self, name, value):
+        return setattr(self.instance, name, value)
