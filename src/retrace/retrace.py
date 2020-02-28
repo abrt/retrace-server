@@ -606,7 +606,7 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
             files[i] = ".%s" % files[i]
 
     rpm2cpio = run(["rpm2cpio", debuginfo], stdout=PIPE, stderr=DEVNULL)
-    cpio = run(["cpio", "-id"] + files, input=rpm2cpio.stdout, cwd=basedir, stdout=DEVNULL, stderr=DEVNULL)
+    run(["cpio", "-id"] + files, input=rpm2cpio.stdout, cwd=basedir, stdout=DEVNULL, stderr=DEVNULL)
 
 
 def get_files_sizes(directory):
