@@ -374,7 +374,7 @@ class RetraceWorker():
         self.hook.run("start")
 
         task = self.task
-        crashdir = os.path.join(task.get_savedir(), "crash")
+        crashdir = task.get_crashdir()
         corepath = os.path.join(crashdir, "coredump")
 
         try:
@@ -640,6 +640,7 @@ class RetraceWorker():
         self.hook.run("start")
 
         task = self.task
+        crashdir = task.get_crashdir()
         vmcore_path = os.path.join(task.get_savedir(), "crash", "vmcore")
 
         try:
@@ -777,7 +778,7 @@ class RetraceWorker():
             elif CONFIG["RetraceEnvironment"] == "podman":
 
                 savedir = task.get_savedir()
-                crashdir = os.path.join(savedir, "crash")
+                crashdir = task.get_crashdir()
                 release, distribution, version, _ = self.read_release_file(crashdir, None)
                 try:
                     with open(os.path.join(savedir, RetraceTask.DOCKERFILE), "w") as dockerfile:
@@ -957,7 +958,7 @@ class RetraceWorker():
             task.set_status(STATUS_ANALYZE)
             log_info(STATUS[STATUS_ANALYZE])
 
-            crashdir = os.path.join(task.get_savedir(), "crash")
+            crashdir = task.get_crashdir()
 
             tasktype = task.get_type()
 

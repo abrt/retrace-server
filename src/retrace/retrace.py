@@ -846,6 +846,7 @@ class KernelVMcore:
 
     def __init__(self, vmcore_path):
         self._vmcore_path = vmcore_path
+        self._crashdir = os.path.dirname(vmcore_path)
         self._is_flattened_format = None
         self._dump_level = None
         self._has_extra_pages = None
@@ -1366,9 +1367,13 @@ class RetraceTask:
         """Returns task's savedir"""
         return self._savedir
 
+    def get_crashdir(self):
+        """Returns task's crashdir"""
+        return os.path.join(self._savedir, "crash")
+
     def start(self, debug=False, kernelver=None, arch=None):
-        crashdir = os.path.join(self._savedir, "crash")
         if arch is None:
+            crashdir = self.get_crashdir()
             if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
                 filename = os.path.join(crashdir, "vmcore")
             else:
@@ -1654,6 +1659,7 @@ class RetraceTask:
     def run_crash_cmdline(self, crash_start, crash_cmdline):
         cmd_output = None
         returncode = 0
+        crashdir = self.get_crashdir()
         try:
             t = 3600
             if CONFIG["ProcessCommunicateTimeout"]:
@@ -1693,7 +1699,7 @@ class RetraceTask:
         downloaded = []
         errors = []
 
-        crashdir = os.path.join(self._savedir, "crash")
+        crashdir = self.get_crashdir()
         if not os.path.isdir(crashdir):
             oldmask = os.umask(0o007)
             os.makedirs(crashdir)
