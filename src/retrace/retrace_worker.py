@@ -770,10 +770,11 @@ class RetraceWorker():
                     raise Exception("prepare_debuginfo failed: %s" % str(ex))
 
                 self.hook.run("pre_retrace")
-                crash_normal = ["/usr/bin/mock", "--configdir", cfgdir, "chroot", "--",
-                                task.get_crash_cmd() + " -s %s %s" % (vmcore_path, vmlinux)]
-                crash_minimal = ["/usr/bin/mock", "--configdir", cfgdir, "chroot", "--",
-                                 task.get_crash_cmd() + " -s --minimal %s %s" % (vmcore_path, vmlinux)]
+                crash_cmd = task.get_crash_cmd()
+                crash_normal = ["/usr/bin/mock", "--configdir", cfgdir, "--cwd", crashdir,
+                                "chroot", "--", crash_cmd + " -s %s %s" % (vmcore_path, vmlinux)]
+                crash_minimal = ["/usr/bin/mock", "--configdir", cfgdir, "--cwd", crashdir,
+                                 "chroot", "--", crash_cmd + " -s --minimal %s %s" % (vmcore_path, vmlinux)]
 
             elif CONFIG["RetraceEnvironment"] == "podman":
 

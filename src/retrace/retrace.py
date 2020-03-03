@@ -1178,8 +1178,8 @@ class KernelVMcore:
 
         # Obtain the list of modules this vmcore requires
         if chroot:
-            crash_normal = ["/usr/bin/mock", "--configdir", chroot, "chroot",
-                            "--", "crash -s %s %s" % (self._vmcore_path, vmlinux)]
+            crash_normal = ["/usr/bin/mock", "--configdir", chroot, "--cwd", crashdir,
+                            "chroot", "--", "crash -s %s %s" % (self._vmcore_path, vmlinux)]
         else:
             crash_normal = crash_cmd + ["-s", self._vmcore_path, vmlinux]
         stdout, returncode = task.run_crash_cmdline(crash_normal, "mod\nquit")
@@ -1665,7 +1665,8 @@ class RetraceTask:
             if CONFIG["ProcessCommunicateTimeout"]:
                 t = CONFIG["ProcessCommunicateTimeout"]
             child = run(crash_start, stdout=PIPE, stderr=STDOUT,
-                        input=crash_cmdline.encode(), timeout=t)
+                        cwd=crashdir, timeout=t,
+                        input=crash_cmdline.encode())
             cmd_output = child.stdout
         except OSError as err:
             log_warn("crash command: '%s' triggered OSError " %
