@@ -485,7 +485,7 @@ class RetraceWorker():
             self.hook.run("post_prepare_environment")
             self.hook.run("pre_retrace")
 
-            self._retrace_run(27, ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell",
+            self._retrace_run(27, ["/usr/bin/mock", "--configdir", task.get_savedir(), "chroot",
                                    "--", "chgrp -R mock /var/spool/abrt/crash"])
 
         # generate backtrace
@@ -769,9 +769,9 @@ class RetraceWorker():
                     raise Exception("prepare_debuginfo failed: %s" % str(ex))
 
                 self.hook.run("pre_retrace")
-                crash_normal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                crash_normal = ["/usr/bin/mock", "--configdir", cfgdir, "chroot", "--",
                                 task.get_crash_cmd() + " -s %s %s" % (vmcore_path, vmlinux)]
-                crash_minimal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
+                crash_minimal = ["/usr/bin/mock", "--configdir", cfgdir, "chroot", "--",
                                  task.get_crash_cmd() + " -s --minimal %s %s" % (vmcore_path, vmlinux)]
 
             elif CONFIG["RetraceEnvironment"] == "podman":

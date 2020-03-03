@@ -241,12 +241,12 @@ def run_gdb(savedir, plugin, repopath, taskid=None):
         raise Exception("Executable contains forbidden characters")
 
     if CONFIG["RetraceEnvironment"] == "mock":
-        output = run(["/usr/bin/mock", "shell", "--configdir", savedir,
+        output = run(["/usr/bin/mock", "chroot", "--configdir", savedir,
                       "--", "ls '%s'" % executable], stdout=PIPE, stderr=DEVNULL, encoding='utf-8').stdout
         if output.strip() != executable:
             raise Exception("The appropriate package set could not be installed")
 
-        child = run(["/usr/bin/mock", "shell", "--configdir", savedir,
+        child = run(["/usr/bin/mock", "chroot", "--configdir", savedir,
                      "--", "/bin/chmod a+r '%s'" % executable])
         if child.returncode:
             raise Exception("Unable to chmod the executable")
@@ -279,15 +279,15 @@ def run_gdb(savedir, plugin, repopath, taskid=None):
         if child.returncode:
             raise Exception("Unable to copy GDB launcher into chroot")
 
-        child = run(["/usr/bin/mock", "--configdir", savedir, "shell",
+        child = run(["/usr/bin/mock", "--configdir", savedir, "chroot",
                      "--", "/bin/chmod a+rx /var/spool/abrt/gdb.sh"], stdout=DEVNULL, stderr=DEVNULL)
         if child.returncode:
             raise Exception("Unable to chmod GDB launcher")
 
-        child = run(["/usr/bin/mock", "shell", "--configdir", savedir,
-                     "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh'",
-                     # redirect GDB's stderr, ignore mock's stderr
-                     "2>&1"], stdout=PIPE, stderr=DEVNULL, encoding='utf-8')
+        child = run(["/usr/bin/mock", "chroot", "--configdir", savedir,
+                     "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh' 2>&1"],
+                    # redirect GDB's stderr, ignore mock's stderr
+                    stdout=PIPE, stderr=DEVNULL, encoding='utf-8')
 
     elif CONFIG["RetraceEnvironment"] == "podman":
         podman_build_call = ["/usr/bin/podman", "build", "--file",
@@ -1177,7 +1177,7 @@ class KernelVMcore:
 
         # Obtain the list of modules this vmcore requires
         if chroot:
-            crash_normal = ["/usr/bin/mock", "--configdir", chroot, "shell",
+            crash_normal = ["/usr/bin/mock", "--configdir", chroot, "chroot",
                             "--", "crash -s %s %s" % (self._vmcore_path, vmlinux)]
         else:
             crash_normal = crash_cmd + ["-s", self._vmcore_path, vmlinux]
