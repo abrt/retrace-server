@@ -247,7 +247,7 @@ def run_gdb(savedir, plugin, repopath, taskid=None):
             raise Exception("The appropriate package set could not be installed")
 
         child = run(["/usr/bin/mock", "chroot", "--configdir", savedir,
-                     "--", "/bin/chmod a+r '%s'" % executable])
+                     "--", "/bin/chmod a+r '%s'" % executable], stdout=DEVNULL)
         if child.returncode:
             raise Exception("Unable to chmod the executable")
 
@@ -2165,11 +2165,13 @@ class RetraceTask:
         if os.path.isfile(os.path.join(self._savedir, "default.cfg")) and \
            os.path.isfile(os.path.join(self._savedir, "site-defaults.cfg")) and \
            os.path.isfile(os.path.join(self._savedir, "logging.ini")):
-            run(["/usr/bin/mock", "--configdir", self._savedir, "--scrub=all"])
+            run(["/usr/bin/mock", "--configdir", self._savedir, "--scrub=all"],
+                stdout=DEVNULL)
 
         if CONFIG["RetraceEnvironment"] == "podman":
             img_cont_id = str(self._taskid)
-            run(["/usr/bin/podman", "rmi", "retrace-image:%s" % img_cont_id])
+            run(["/usr/bin/podman", "rmi", "retrace-image:%s" % img_cont_id],
+                stdout=DEVNULL)
 
         for f in os.listdir(self._savedir):
             if f not in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
