@@ -67,6 +67,8 @@ SUFFIX_MAP = {
     ARCHIVE_UNKNOWN: "",
 }
 
+SNAPSHOT_SUFFIXES = [".vmss", ".vmsn", ".vmem"]
+
 BUGZILLA_STATUS = ["NEW", "ASSIGNED", "ON_DEV", "POST", "MODIFIED", "ON_QA", "VERIFIED",
                    "RELEASE_PENDING", "CLOSED"]
 
@@ -1839,9 +1841,13 @@ class RetraceTask:
                     os.rename(largest_file, vmcore_path)
                 else:
                     for filename in files:
-                        if filename == vmcores[0]:
-                            if vmcores[0] != "vmcore":
-                                os.rename(os.path.join(crashdir, filename), vmcore_path)
+                        if filename == vmcores[0] and vmcores[0] != self.VMCORE_FILE:
+                            fext = os.path.splitext(filename)[1]
+                            # keep a suffix of vmcore snapshot
+                            if fext in SNAPSHOT_SUFFIXES:
+                                vmcore_path += fext
+
+                            os.rename(os.path.join(crashdir, filename), vmcore_path)
 
             files = os.listdir(crashdir)
             for filename in files:

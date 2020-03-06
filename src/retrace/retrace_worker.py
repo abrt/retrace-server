@@ -14,7 +14,7 @@ from .retrace import (ALLOWED_FILES, REPO_PREFIX, REQUIRED_FILES,
                       STATUS, STATUS_ANALYZE, STATUS_BACKTRACE, STATUS_CLEANUP,
                       STATUS_FAIL, STATUS_INIT, STATUS_STATS, STATUS_SUCCESS,
                       TASK_DEBUG, TASK_RETRACE, TASK_RETRACE_INTERACTIVE, TASK_VMCORE,
-                      TASK_VMCORE_INTERACTIVE, RETRACE_GPG_KEYS,
+                      TASK_VMCORE_INTERACTIVE, RETRACE_GPG_KEYS, SNAPSHOT_SUFFIXES,
                       get_active_tasks,
                       get_supported_releases,
                       guess_arch,
@@ -183,6 +183,18 @@ class RetraceWorker():
             self._fail(errorcode)
 
         return output
+
+    def _check_required_file(self, req, crashdir):
+        if os.path.isfile(os.path.join(crashdir, req)):
+            return True
+
+        if req == "vmcore":
+            for suffix in SNAPSHOT_SUFFIXES:
+                with_suffix = req + suffix
+                if os.path.isfile(os.path.join(crashdir, with_suffix)):
+                    return True
+
+        return False
 
     def guess_release(self, package, plugins):
         for plugin in plugins:
@@ -960,7 +972,7 @@ class RetraceWorker():
                                 os.path.join(crashdir, "os_release"))
 
             for required_file in REQUIRED_FILES[tasktype]:
-                if not os.path.isfile(os.path.join(crashdir, required_file)):
+                if not self._check_required_file(required_file, crashdir):
                     raise Exception("Crash directory does not contain required file '%s'" % required_file)
 
             if tasktype in [TASK_RETRACE, TASK_DEBUG, TASK_RETRACE_INTERACTIVE]:

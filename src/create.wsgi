@@ -7,6 +7,7 @@ from tempfile import NamedTemporaryFile
 
 from retrace.retrace import (ALLOWED_FILES,
                              REQUIRED_FILES,
+                             SNAPSHOT_SUFFIXES,
                              TASK_RETRACE,
                              TASK_RETRACE_INTERACTIVE,
                              TASK_TYPES,
@@ -175,14 +176,15 @@ def application(environ, start_response):
 
     for f in files:
         filepath = os.path.join(crashdir, f)
+        fname, fext = os.path.splitext(f)
 
         if os.path.islink(filepath):
             task.remove()
             return response(start_response, "403 Forbidden",
                             _("Symlinks are not allowed to be in the archive"))
 
-        if f in ALLOWED_FILES:
-            maxsize = ALLOWED_FILES[f]
+        if fname in ALLOWED_FILES and (not fext or fext in SNAPSHOT_SUFFIXES):
+            maxsize = ALLOWED_FILES[fname]
             if maxsize > 0 and os.path.getsize(filepath) > maxsize:
                 task.remove()
                 return response(start_response, "403 Forbidden",

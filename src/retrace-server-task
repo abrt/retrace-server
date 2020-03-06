@@ -15,6 +15,8 @@ import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from requests_gssapi import HTTPSPNEGOAuth, DISABLED
 
+from retrace.retrace import SNAPSHOT_SUFFIXES
+
 
 TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
         TASK_VMCORE_INTERACTIVE = range(5)
@@ -28,7 +30,7 @@ def ticket_check():
 def prepare_tar(args):
     """Create tar file containg all necessary files."""
     LOGGER.info("Preparing tar")
-
+    corefile = args['COREFILE']
     tmpdir = tempfile.mkdtemp()
     tar_name = os.path.join(tmpdir, "archive.tar.gz")
     tar_file = tarfile.open(tar_name, "w:gz")
@@ -40,13 +42,17 @@ def prepare_tar(args):
                 fld.write(args[itm])
             tar_file.add(fl_name, arcname=itm)
 
-    LOGGER.info("Adding '%s' as '%s' into tar",
-                args['COREFILE'],
-                args['task_type'])
-    if not os.path.isfile(args['COREFILE']):
-        print("'{0}' does not exists".format(args['COREFILE']))
+    LOGGER.info("Adding '%s' as '%s' into tar", corefile, args['task_type'])
+    if not os.path.isfile(corefile):
+        print("'{0}' does not exists".format(corefile))
         sys.exit(1)
-    tar_file.add(args['COREFILE'], arcname=args['task_type'])
+
+    file_name = args['task_type']
+    suffix = os.path.splitext(corefile)[1]
+    if suffix and suffix in SNAPSHOT_SUFFIXES:
+        file_name = file_name + suffix
+
+    tar_file.add(corefile, arcname=file_name)
 
     if args['vmem']:
         vmem = args['vmem']
