@@ -194,7 +194,7 @@ def application(environ, start_response):
         except:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
-        if "notes" in POST and len(POST["notes"]) > 0:
+        if "notes" in POST and POST["notes"]:
             task.set_notes(POST["notes"])
 
         return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
@@ -206,7 +206,7 @@ def application(environ, start_response):
         except:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
-        if "notify" in POST and len(POST["notify"]) > 0:
+        if "notify" in POST and POST["notify"]:
             task.set_notify([email for email in set(n.strip() for n in POST["notify"]
                                                     .replace(";", ",").split(",")) if email])
 
@@ -219,7 +219,7 @@ def application(environ, start_response):
         except:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
-        if "caseno" in POST and len(POST["caseno"]) > 0:
+        if "caseno" in POST and POST["caseno"]:
             if not POST["caseno"]:
                 task.delete(RetraceTask.CASENO_FILE)
             else:
@@ -239,7 +239,7 @@ def application(environ, start_response):
         except Exception:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
-        if "bugzillano" in POST and len(POST["bugzillano"]) > 0:
+        if "bugzillano" in POST and POST["bugzillano"]:
             if not POST["bugzillano"]:
                 task.delete(RetraceTask.BUGZILLANO_FILE)
             else:
@@ -296,7 +296,7 @@ def application(environ, start_response):
         if "vra" in POST:
             vra = POST["vra"]
 
-            if len(vra.strip()) > 0:
+            if vra.strip():
                 try:
                     kver = KernelVer(vra)
                     if kver.arch is None:
@@ -327,7 +327,7 @@ def application(environ, start_response):
         task.set_url("%s/%d" % (match.group(1), task.get_taskid()))
 
         starturl = "%s/%d/start" % (match.group(1), task.get_taskid())
-        if len(qs_base) > 0:
+        if qs_base:
             starturl = "%s?%s" % (starturl, "&".join(qs_base))
 
         return response(start_response, "302 Found", "", [("Location", starturl)])
@@ -628,7 +628,7 @@ def application(environ, start_response):
                     caseno = str(task.get_caseno())
 
                     url = CONFIG["CaseNumberURL"].strip()
-                    if len(url) > 0:
+                    if url:
                         try:
                             link = url % task.get_caseno()
                             caseno = "<a href=\"%s\">%d</a>" % (link, task.get_caseno())
@@ -676,7 +676,7 @@ def application(environ, start_response):
                     caseno = str(task.get_caseno())
 
                     url = CONFIG["CaseNumberURL"].strip()
-                    if len(url) > 0:
+                    if url:
                         try:
                             link = url % task.get_caseno()
                             caseno = "<a href=\"%s\">%d</a>" % (link, task.get_caseno())
