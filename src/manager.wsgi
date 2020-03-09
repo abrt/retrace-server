@@ -219,16 +219,16 @@ def application(environ, start_response):
         except:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
-        if "caseno" in POST and POST["caseno"]:
-            if not POST["caseno"]:
-                task.delete(RetraceTask.CASENO_FILE)
-            else:
+        if "caseno" in POST:
+            if POST["caseno"]:
                 try:
                     caseno = int(POST["caseno"])
                 except Exception as ex:
                     return response(start_response, "404 Not Found", _("Case number must be an integer; %s" % ex))
 
                 task.set_caseno(caseno)
+            else:
+                task.delete(RetraceTask.CASENO_FILE)
 
         return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
 
@@ -239,10 +239,8 @@ def application(environ, start_response):
         except Exception:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
-        if "bugzillano" in POST and POST["bugzillano"]:
-            if not POST["bugzillano"]:
-                task.delete(RetraceTask.BUGZILLANO_FILE)
-            else:
+        if "bugzillano" in POST:
+            if POST["bugzillano"]:
                 try:
                     bugzillano = list(filter(int, set(n.strip() for n in POST["bugzillano"]
                                                       .replace(";", ",").split(","))))
@@ -250,6 +248,8 @@ def application(environ, start_response):
                     return response(start_response, "404 Not Found", _("Bugzilla numbers must be integers; %s" % ex))
 
                 task.set_bugzillano(bugzillano)
+            else:
+                task.delete(RetraceTask.BUGZILLANO_FILE)
 
         return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
 
