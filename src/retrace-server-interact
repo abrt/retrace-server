@@ -39,7 +39,7 @@ if __name__ == "__main__":
                         help="Run `set-success` or `set-fail` action even if the task is still running")
     args = parser.parse_args()
 
-    if not args.action in ACTIONS:
+    if args.action not in ACTIONS:
         sys.stderr.write("Invalid action. Allowed actions are: '%s'.\n" % "', '".join(ACTIONS))
         sys.exit(1)
 
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         username = pwd.getpwuid(os.getuid()).pw_name
 
         if CONFIG["TaskManagerAuthDelete"] and \
-           not username in CONFIG["TaskManagerDeleteUsers"]:
+           username not in CONFIG["TaskManagerDeleteUsers"]:
             sys.stderr.write("You are not allowed to delete tasks\n")
             sys.exit(1)
 
