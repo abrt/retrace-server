@@ -589,8 +589,8 @@ class RetraceWorker():
     def dedup_vmcore(self, md5_task):
         task1 = md5_task   # primary
         task2 = self.task  # one we are going to try to hardlink and the one that gets logged to
-        v1 = CONFIG["SaveDir"] + "/" + str(task1.get_taskid()) + "/crash/vmcore"
-        v2 = CONFIG["SaveDir"] + "/" + str(task2.get_taskid()) + "/crash/vmcore"
+        v1 = task1.get_vmcore_path()
+        v2 = task2.get_vmcore_path()
         try:
             s1 = os.stat(v1)
             s2 = os.stat(v2)
@@ -641,7 +641,7 @@ class RetraceWorker():
 
         task = self.task
         crashdir = task.get_crashdir()
-        vmcore_path = os.path.join(task.get_savedir(), "crash", "vmcore")
+        vmcore_path = task.get_vmcore_path()
 
         try:
             self.stats["coresize"] = os.path.getsize(vmcore_path)
@@ -780,6 +780,7 @@ class RetraceWorker():
 
                 savedir = task.get_savedir()
                 crashdir = task.get_crashdir()
+                vmcore_file = os.path.basename(vmcore_path)
                 release, distribution, version, _ = self.read_release_file(crashdir, None)
                 try:
                     with open(os.path.join(savedir, RetraceTask.DOCKERFILE), "w") as dockerfile:
@@ -795,11 +796,9 @@ class RetraceWorker():
                                          '--assumeyes ' \
                                          '--enablerepo=*debuginfo* ' \
                                          'install kernel-debuginfo\n\n')
-                        dockerfile.write('COPY %s /var/spool/abrt/crash/\n\n'
-                                         % RetraceTask.VMCORE_FILE)
+                        dockerfile.write('COPY %s /var/spool/abrt/crash/\n\n' % vmcore_file)
                         dockerfile.write('RUN useradd -m retrace\n')
-                        dockerfile.write('RUN chown retrace /var/spool/abrt/%s\n'
-                                         % RetraceTask.VMCORE_FILE)
+                        dockerfile.write('RUN chown retrace /var/spool/abrt/%s\n' % vmcore_file)
                         dockerfile.write('USER retrace\n\n')
                         dockerfile.write('CMD ["/usr/bin/bash"]')
                 except Exception as ex:
@@ -826,12 +825,10 @@ class RetraceWorker():
                     log_error(child.stderr)
                     raise Exception("Unable to run podman container")
 
-                crash_normal = ["/usr/bin/podman", "exec", img_cont_id,
-                                task.get_crash_cmd()
-                                + " -s /var/spool/abrt/crash/vmcore %s" % vmlinux]
-                crash_minimal = ["/usr/bin/podman", "exec", img_cont_id,
-                                 task.get_crash_cmd()
-                                 + " -s --minimal /var/spool/abrt/crash/vmcore %s" % vmlinux]
+                crash_normal = ["/usr/bin/podman", "exec", img_cont_id, task.get_crash_cmd()
+                                + " -s /var/spool/abrt/crash/%s %s" % (vmcore_file, vmlinux)]
+                crash_minimal = ["/usr/bin/podman", "exec", img_cont_id, task.get_crash_cmd()
+                                 + " -s --minimal /var/spool/abrt/crash/%s %s" % (vmcore_file, vmlinux)]
 
             else:
                 raise Exception("RetraceEnvironment set to invalid value")

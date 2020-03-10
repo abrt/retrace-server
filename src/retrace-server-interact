@@ -112,8 +112,9 @@ if __name__ == "__main__":
 
         sys.stderr.write("Action '%s' is not allowed for coredumps.\n" % args.action)
         sys.exit(1)
+
     elif task.get_type() == TASK_VMCORE_INTERACTIVE:
-        vmcore_path = os.path.join(task.get_savedir(), "crash", "vmcore")
+        vmcore_path = task.get_vmcore_path()
         vmcore = KernelVMcore(vmcore_path)
 
         if task.has_kernelver():

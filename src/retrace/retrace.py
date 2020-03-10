@@ -638,7 +638,7 @@ def unpack_coredump(path):
     # If coredump is not present, the biggest file becomes it
     if "coredump" not in os.listdir(parentdir):
         os.rename(get_files_sizes(parentdir)[0][0],
-                  os.path.join(parentdir, "coredump"))
+                  os.path.join(parentdir, self.COREDUMP_FILE))
 
     for filename in os.listdir(parentdir):
         fullpath = os.path.join(parentdir, filename)
@@ -1246,9 +1246,9 @@ class RetraceTask:
     TYPE_FILE = "type"
     URL_FILE = "url"
     VMLINUX_FILE = "vmlinux"
-    VMCORE_FILE = "crash/vmcore"
-    VMEM_FILE = "crash/vmcore.vmem"
-    COREDUMP_FILE = "crash/coredump"
+    VMCORE_FILE = "vmcore"
+    VMEM_FILE = "vmcore.vmem"
+    COREDUMP_FILE = "coredump"
     MOCK_DEFAULT_CFG = "default.cfg"
     MOCK_SITE_DEFAULTS_CFG = "site-defaults.cfg"
     MOCK_LOGGING_INI = "logging.ini"
@@ -1258,7 +1258,9 @@ class RetraceTask:
         """Creates a new task if taskid is None,
         loads the task with given ID otherwise."""
 
+        self.vmcore_file = self.VMCORE_FILE
         self._mock = False
+
         if taskid is None:
             # create a new task
             # create a retrace-group-writable directory
@@ -1374,10 +1376,11 @@ class RetraceTask:
     def start(self, debug=False, kernelver=None, arch=None):
         if arch is None:
             crashdir = self.get_crashdir()
+
             if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
-                filename = os.path.join(crashdir, "vmcore")
+                filename = self.get_vmcore_path()
             else:
-                filename = os.path.join(crashdir, "coredump")
+                filename = os.path.join(crashdir, self.COREDUMP_FILE)
 
             task_arch = guess_arch(filename)
         else:
@@ -1641,11 +1644,35 @@ class RetraceTask:
         self.set(RetraceTask.VMLINUX_FILE, value)
 
     def has_vmcore(self):
-        vmcore_path = os.path.join(self._savedir, RetraceTask.VMCORE_FILE)
+        vmcore_path = self.get_vmcore_path()
         return os.path.isfile(vmcore_path)
 
+    def set_vmcore(self, value):
+        """
+        Set a name for a vmcore file.
+        """
+        self.vmcore_file = value
+
+    def get_vmcore_path(self):
+        """
+        Return a path to vmcore file in crashdir.
+        """
+        return os.path.join(self.get_crashdir(), self.vmcore_file)
+
+    def find_vmcore_file(self, filelist):
+        """
+        Search for "vmcore" file or vmcore snapshot files "vmcore(.vmss/.vmsn) in file list."
+        """
+        if "vmcore" not in filelist:
+            for f in sorted(filelist, reverse=True):
+                fname, fext = os.path.splitext(f)
+                if fname == "vmcore" and (not fext or fext in SNAPSHOT_SUFFIXES):
+                    return f
+
+        return "vmcore"
+
     def has_coredump(self):
-        coredump_path = os.path.join(self._savedir, RetraceTask.COREDUMP_FILE)
+        coredump_path = os.path.join(self._savedir, self.COREDUMP_FILE)
         return os.path.isfile(coredump_path)
 
     def download_block(self, data):
@@ -1710,6 +1737,7 @@ class RetraceTask:
             self.set_status(STATUS_DOWNLOADING)
             log_info(STATUS[STATUS_DOWNLOADING])
 
+            # download from a remote FTP
             if url.startswith("FTP "):
                 filename = url[4:].strip()
                 log_info("Retrieving FTP file '%s'" % filename)
@@ -1735,6 +1763,7 @@ class RetraceTask:
                 finally:
                     if ftp:
                         ftp_close(ftp)
+            # download local file
             elif url.startswith("/") or url.startswith("file:///"):
                 if url.startswith("file://"):
                     url = url[7:]
@@ -1767,6 +1796,7 @@ class RetraceTask:
                         continue
 
                 downloaded.append(url)
+            # use wget to download the remote file
             else:
                 log_info("Retrieving remote file '%s'" % url)
 
@@ -1816,7 +1846,7 @@ class RetraceTask:
                                  % crashdir)
 
         if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
-            vmcore_path = os.path.join(crashdir, "vmcore")
+            vmcore_path = self.get_vmcore_path()
             files = os.listdir(crashdir)
             for filename in files:
                 fullpath = os.path.join(crashdir, filename)
@@ -1827,12 +1857,12 @@ class RetraceTask:
             if not files:
                 errors.append(([], "No files found in the tarball"))
             elif len(files) == 1:
-                if files[0] != "vmcore":
+                if files[0] != self.VMCORE_FILE:
                     os.rename(os.path.join(crashdir, files[0]), vmcore_path)
             else:
                 vmcores = []
                 for filename in files:
-                    if "vmcore" in filename:
+                    if self.VMCORE_FILE in filename:
                         vmcores.append(filename)
 
                 # pick the largest file
@@ -1858,13 +1888,15 @@ class RetraceTask:
 
             files = os.listdir(crashdir)
             for filename in files:
-                if filename == "vmcore":
+                fname, fext = os.path.splitext(filename)
+                # keep vmcore snapshots with suffixes (vmss/vmsn/vmem)
+                if fname == self.VMCORE_FILE and (not fext or fext in SNAPSHOT_SUFFIXES):
                     continue
 
                 os.unlink(os.path.join(crashdir, filename))
 
         if self.get_type() in [TASK_RETRACE, TASK_RETRACE_INTERACTIVE]:
-            coredump = os.path.join(crashdir, "coredump")
+            coredump = os.path.join(crashdir, self.COREDUMP_FILE)
             files = os.listdir(crashdir)
             for filename in files:
                 fullpath = os.path.join(crashdir, filename)
@@ -1875,12 +1907,12 @@ class RetraceTask:
             if not files:
                 errors.append(([], "No files found in the tarball"))
             elif len(files) == 1:
-                if files[0] != "coredump":
+                if files[0] != self.COREDUMP_FILE:
                     os.rename(os.path.join(crashdir, files[0]), coredump)
             else:
                 coredumps = []
                 for filename in files:
-                    if "coredump" in filename:
+                    if self.COREDUMP_FILE in filename:
                         coredumps.append(filename)
 
                 # pick the largest file
@@ -1897,7 +1929,7 @@ class RetraceTask:
                 else:
                     for filename in files:
                         if filename == coredumps[0]:
-                            if coredumps[0] != "coredump":
+                            if coredumps[0] != self.COREDUMP_FILE:
                                 os.rename(os.path.join(crashdir, filename), coredump)
 
             files = os.listdir(crashdir)
