@@ -12,7 +12,7 @@ import rpm
 import dnf
 
 from functools import cmp_to_key
-from subprocess import Popen, PIPE, call
+from subprocess import run, DEVNULL, PIPE
 
 from retrace.retrace import (get_canon_arch,
                              lock,
@@ -212,15 +212,13 @@ if __name__ == "__main__":
 
         cmd_line = ["retrace-server-reposync-faf", distribution, version, arch,
                     "--outputdir", targetdir]
-        child = Popen(cmd_line, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = child.communicate()
-        if child.returncode != 0:
+        child = run(cmd_line, stdout=PIPE, stderr=PIPE, encoding="utf-8")
+        if child.returncode:
             log_error("Could not create faf repo")
-            log_debug(stderr)
-            log_debug(stdout)
+            log_debug(child.stdout)
+            log_debug(child.stderr)
             sys.exit(child.returncode)
         sys.exit(0)
-
 
     # drop privilegies if possible
     try:
@@ -259,7 +257,7 @@ if __name__ == "__main__":
 
     null = None
     if args.verbose < 2:
-        null = open(os.devnull, "w")
+        null = DEVNULL
 
     try:
         targetdir = os.path.join(CONFIG["RepoDir"], targetid)
@@ -310,7 +308,7 @@ if __name__ == "__main__":
                             log_info("Trying another mirror")
                             continue
 
-                    retcode = call(["rsync", "-t"] + files + [pkgdir], stdout=null, stderr=null)
+                    retcode = run(["rsync", "-t"] + files + [pkgdir], stdout=null, stderr=null).returncode
 
                 if retcode == 0:
                     log_info("Download succeeded")
@@ -333,10 +331,8 @@ if __name__ == "__main__":
         if CONFIG["UseCreaterepoUpdate"]:
             cmd.append("--update")
 
-        retcode = call(cmd, stdout=null, stderr=null)
+        retcode = run(cmd, stdout=null, stderr=null).returncode
     finally:
-        if null:
-            null.close()
         unlock(lockfile)
 
     if retcode != 0:

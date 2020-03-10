@@ -4,7 +4,7 @@ import sys
 import re
 import time
 
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import run, PIPE, STDOUT
 
 from retrace.retrace import (STATUS_FAIL,
                              get_active_tasks,
@@ -57,8 +57,8 @@ def check_open_crash_file(task):
     else:
         return False
 
-    lsof = Popen([LSOF_BIN, "+wt", crash_path], stdout=PIPE, encoding='utf-8')
-    pids = lsof.communicate()[0]
+    lsof = run([LSOF_BIN, "+wt", crash_path], stdout=PIPE, encoding='utf-8')
+    pids = lsof.stdout
 
     if pids:
         return True
@@ -170,20 +170,20 @@ if __name__ == "__main__":
 
                     targetfile = os.path.join(CONFIG["DropDir"],
                                               "%s-%s.tar.gz" % (filename, time.strftime("%Y%m%d%H%M%S")))
-                    with open(os.devnull, "w") as null:
-                        child = Popen(["tar", "czf", targetfile, task.get_savedir()],
-                                      stdout=PIPE, stderr=STDOUT)
-                        stdout = child.communicate()[0]
-                        if child.wait():
-                            log += "Error: tar exited with %d: %s\n" % (child.returncode, stdout)
-                            try:
-                                os.unlink(targetfile)
-                            except OSError:
-                                pass
 
-                            continue
+                    child = run(["tar", "czf", targetfile, task.get_savedir()],
+                                stdout=PIPE, stderr=STDOUT)
+                    stdout = child.stdout
+                    if child.returncode:
+                        log += "Error: tar exited with %d: %s\n" % (child.returncode, stdout)
+                        try:
+                            os.unlink(targetfile)
+                        except OSError:
+                            pass
 
-                        task.create_worker().remove_task()
+                        continue
+
+                    task.create_worker().remove_task()
 
         if CONFIG["DeleteTaskAfter"] > 0:
             # clean up old tasks

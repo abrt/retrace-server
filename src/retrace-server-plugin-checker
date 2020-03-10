@@ -2,7 +2,7 @@
 
 import sys
 import os
-from subprocess import Popen, PIPE
+from subprocess import run, DEVNULL
 import argparse
 import urllib
 
@@ -49,9 +49,8 @@ for i, r in enumerate(plugin.repos):
             except Exception as ex:
                 pass
         elif p.startswith("rsync:"):
-            p = Popen(['rsync', '--list-only', mirror_path], stdout=PIPE, stderr=PIPE)
-            p.communicate()
-            path_ok = not p.returncode
+            rsync = run(['rsync', '--list-only', mirror_path], stdout=DEVNULL, stderr=DEVNULL)
+            path_ok = not rsync.returncode
         else:
             path_ok = os.path.exists(mirror_path)
 
