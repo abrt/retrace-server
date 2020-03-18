@@ -138,6 +138,9 @@ def application(environ, start_response):
             except:
                 return response(start_response, "500 Internal Server Error", _("Unable to create a new task"))
 
+            if "vmem-check" in GET:
+                task.add_remote("FTP %s" % GET["custom_vmem_url"])
+
             if "caseno" in GET:
                 try:
                     task.set_caseno(int(GET["caseno"]))
@@ -322,6 +325,9 @@ def application(environ, start_response):
                 task.set("custom_os_release", POST["os_release"])
         else:
             task.set_type(TASK_VMCORE_INTERACTIVE)
+            if "vmem-check" in POST and POST["custom_vmem_url"]:
+                task.add_remote(POST["custom_vmem_url"])
+
         task.add_remote(POST["custom_url"])
         task.set_managed(True)
         task.set_url("%s/%d" % (match.group(1), task.get_taskid()))
