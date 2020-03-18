@@ -1862,12 +1862,13 @@ class RetraceTask:
             else:
                 vmcores = []
                 for filename in files:
-                    if self.VMCORE_FILE in filename:
+                    fname, fext = os.path.splitext(filename)
+                    if self.VMCORE_FILE in fname and fext != ".vmem":
                         vmcores.append(filename)
 
                 # pick the largest file
                 if not vmcores:
-                    absfiles = [os.path.join(crashdir, f) for f in files]
+                    absfiles = [os.path.join(crashdir, f) for f in files if ".vmem" not in f]
                     files_sizes = [(os.path.getsize(f), f) for f in absfiles]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
                     os.rename(largest_file, vmcore_path)
