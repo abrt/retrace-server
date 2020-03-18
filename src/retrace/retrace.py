@@ -537,6 +537,14 @@ def get_archive_type(path):
 
 def rename_with_suffix(frompath, topath):
     suffix = SUFFIX_MAP[get_archive_type(frompath)]
+
+    # check if the file has a snapshot suffix
+    # if it does, keep the suffix
+    if not suffix:
+        fext = os.path.splitext(frompath)[1]
+        if fext in SNAPSHOT_SUFFIXES:
+            suffix = fext
+
     if not topath.endswith(suffix):
         topath = "%s%s" % (topath, suffix)
 
@@ -546,6 +554,7 @@ def rename_with_suffix(frompath, topath):
 
 
 def unpack_vmcore(path):
+    vmcore_file = "vmcore"
     parentdir = os.path.dirname(path)
     archivebase = os.path.join(parentdir, "archive")
     archive = rename_with_suffix(path, archivebase)
@@ -573,11 +582,17 @@ def unpack_vmcore(path):
             os.unlink(archive)
 
         files_sizes = get_files_sizes(parentdir)
-        newfiles = [f for (f, s) in files_sizes]
+        newfiles = [f for (f, s) in files_sizes if f[-5:] != ".vmem"]
         diff = set(newfiles) - files
         vmcore_candidate = 0
         while vmcore_candidate < len(newfiles) and newfiles[vmcore_candidate] not in diff:
             vmcore_candidate += 1
+
+        # rename files with .vmem extension to vmcore.vmem
+        for f, _ in files_sizes:
+            fext = os.path.splitext(f)[1]
+            if fext == ".vmem":
+                os.rename(f, os.path.join(parentdir, vmcore_file + fext))
 
         if len(diff) > 1:
             archive = rename_with_suffix(newfiles[vmcore_candidate], archivebase)
@@ -603,7 +618,11 @@ def unpack_vmcore(path):
 
         filetype = get_archive_type(archive)
 
-    os.rename(archive, os.path.join(parentdir, "vmcore"))
+    fext = os.path.splitext(archive)[1]
+    if fext in SNAPSHOT_SUFFIXES:
+        vmcore_file += fext
+
+    os.rename(archive, os.path.join(parentdir, vmcore_file))
 
 
 def unpack_coredump(path):
@@ -1659,6 +1678,19 @@ class RetraceTask:
         """
         return os.path.join(self.get_crashdir(), self.vmcore_file)
 
+    def add_vmcore_suffix(self, filename, vmcore_path):
+        """
+        Checks if the original filename (vmcore) has a snapshot suffix.
+        If it does, it adds the suffix to a new vmcore path and sets a new vmcore name for the task.
+        """
+        fext = os.path.splitext(filename)[1]
+        if fext and fext in SNAPSHOT_SUFFIXES:
+            vmcore_path += fext
+            self.set_vmcore(os.path.basename(vmcore_path))
+
+        return vmcore_path
+
+
     def find_vmcore_file(self, filelist):
         """
         Search for "vmcore" file or vmcore snapshot files "vmcore(.vmss/.vmsn) in file list."
@@ -1871,20 +1903,18 @@ class RetraceTask:
                     absfiles = [os.path.join(crashdir, f) for f in files if ".vmem" not in f]
                     files_sizes = [(os.path.getsize(f), f) for f in absfiles]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
+                    vmcore_path = self.add_vmcore_suffix(largest_file, vmcore_path)
                     os.rename(largest_file, vmcore_path)
                 elif len(vmcores) > 1:
                     absfiles = [os.path.join(crashdir, f) for f in vmcores]
                     files_sizes = [(os.path.getsize(f), f) for f in absfiles]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
+                    vmcore_path = self.add_vmcore_suffix(largest_file, vmcore_path)
                     os.rename(largest_file, vmcore_path)
                 else:
                     for filename in files:
                         if filename == vmcores[0] and vmcores[0] != self.VMCORE_FILE:
-                            fext = os.path.splitext(filename)[1]
-                            # keep a suffix of vmcore snapshot
-                            if fext in SNAPSHOT_SUFFIXES:
-                                vmcore_path += fext
-
+                            vmcore_path = self.add_vmcore_suffix(filename, vmcore_path)
                             os.rename(os.path.join(crashdir, filename), vmcore_path)
 
             files = os.listdir(crashdir)
