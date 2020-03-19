@@ -10,6 +10,7 @@ import sys
 import time
 import hashlib
 import urllib
+from pathlib import Path
 from signal import getsignal, signal, SIG_DFL, SIGPIPE
 from subprocess import PIPE, STDOUT, DEVNULL, TimeoutExpired, run
 import magic
@@ -218,15 +219,12 @@ def guess_arch(coredump_path):
 
 def get_supported_releases():
     result = []
-    files = os.listdir(CONFIG["RepoDir"])
-    for f in files:
-        fullpath = os.path.join(CONFIG["RepoDir"], f)
-        if not os.path.isdir(fullpath):
+    for f in Path(CONFIG["RepoDir"]).iterdir():
+        if not f.is_dir():
             continue
 
-        if REPODIR_NAME_PARSER.match(f) and \
-           os.path.isdir(os.path.join(fullpath, "repodata")):
-            result.append(f)
+        if REPODIR_NAME_PARSER.match(f.name) and Path(f, "repodata").is_dir():
+            result.append(f.name)
 
     return result
 
@@ -492,12 +490,11 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
 def get_files_sizes(directory):
     result = []
 
-    for f in os.listdir(directory):
-        fullpath = os.path.join(directory, f)
-        if os.path.isfile(fullpath):
-            result.append((fullpath, os.path.getsize(fullpath)))
-        elif os.path.isdir(fullpath):
-            result += get_files_sizes(fullpath)
+    for f in Path(directory).iterdir():
+        if f.is_file():
+            result.append((f, f.stat().st_size))
+        elif f.is_dir():
+            result += get_files_sizes(f)
 
     return sorted(result, key=lambda f_s: f_s[1], reverse=True)
 
@@ -582,17 +579,16 @@ def unpack_vmcore(path):
             os.unlink(archive)
 
         files_sizes = get_files_sizes(parentdir)
-        newfiles = [f for (f, s) in files_sizes if f[-5:] != ".vmem"]
+        newfiles = [f for (f, s) in files_sizes if f.suffix != ".vmem"]
         diff = set(newfiles) - files
         vmcore_candidate = 0
         while vmcore_candidate < len(newfiles) and newfiles[vmcore_candidate] not in diff:
             vmcore_candidate += 1
 
         # rename files with .vmem extension to vmcore.vmem
-        for f, _ in files_sizes:
-            fext = os.path.splitext(f)[1]
-            if fext == ".vmem":
-                os.rename(f, os.path.join(parentdir, vmcore_file + fext))
+        for f in Path(parentdir).iterdir():
+            if f.suffix == ".vmem":
+                f.rename(Path(parentdir, vmcore_file + f.suffix))
 
         if len(diff) > 1:
             archive = rename_with_suffix(newfiles[vmcore_candidate], archivebase)
@@ -611,10 +607,9 @@ def unpack_vmcore(path):
         else:
             pass
 
-        for filename in os.listdir(parentdir):
-            fullpath = os.path.join(parentdir, filename)
-            if os.path.isdir(fullpath):
-                shutil.rmtree(fullpath)
+        for filename in Path(parentdir).iterdir():
+            if filename.is_dir():
+                shutil.rmtree(filename)
 
         filetype = get_archive_type(archive)
 
@@ -659,10 +654,9 @@ def unpack_coredump(path):
         os.rename(get_files_sizes(parentdir)[0][0],
                   os.path.join(parentdir, self.COREDUMP_FILE))
 
-    for filename in os.listdir(parentdir):
-        fullpath = os.path.join(parentdir, filename)
-        if os.path.isdir(fullpath):
-            shutil.rmtree(fullpath)
+    for filename in Path(parentdir).iterdir():
+        if filename.is_dir():
+            shutil.rmtree(filename)
 
 
 def run_ps():
@@ -689,12 +683,12 @@ def get_running_tasks(ps_output=None):
 def get_active_tasks():
     tasks = []
 
-    for filename in os.listdir(CONFIG["SaveDir"]):
-        if len(filename) != CONFIG["TaskIdLength"]:
+    for filename in Path(CONFIG["SaveDir"]).iterdir():
+        if len(filename.name) != CONFIG["TaskIdLength"]:
             continue
 
         try:
-            task = RetraceTask(int(filename))
+            task = RetraceTask(int(filename.name))
         except Exception:
             continue
 
@@ -710,12 +704,12 @@ def get_active_tasks():
 def get_md5_tasks():
     tasks = []
 
-    for filename in os.listdir(CONFIG["SaveDir"]):
-        if len(filename) != CONFIG["TaskIdLength"]:
+    for filename in Path(CONFIG["SaveDir"]).iterdir():
+        if len(filename.name) != CONFIG["TaskIdLength"]:
             continue
 
         try:
-            task = RetraceTask(int(filename))
+            task = RetraceTask(int(filename.name))
         except Exception:
             continue
 
@@ -753,23 +747,22 @@ def check_run(cmd):
 
 
 def move_dir_contents(source, dest):
-    for filename in os.listdir(source):
-        path = os.path.join(source, filename)
-        if os.path.isdir(path):
-            move_dir_contents(path, dest)
-        elif os.path.isfile(path):
-            destfile = os.path.join(dest, filename)
-            if os.path.isfile(destfile):
+    for filename in Path(source).iterdir():
+        if filename.is_dir():
+            move_dir_contents(filename, dest)
+        elif filename.is_file():
+            dest = Path(dest, filename)
+            if dest.is_file():
                 i = 0
-                newdest = "%s.%d" % (destfile, i)
-                while os.path.isfile(newdest):
+                newdest = Path("%s.%d" % (dest, i))
+                while newdest.is_file():
                     i += 1
-                    newdest = "%s.%d" % (destfile, i)
+                    newdest = Path("%s.%d" % (dest, i))
 
-                destfile = newdest
+                dest = newdest
 
 # try?
-            os.rename(path, destfile)
+            filename.rename(dest)
 # except?
 
     shutil.rmtree(source)
@@ -1690,7 +1683,6 @@ class RetraceTask:
 
         return vmcore_path
 
-
     def find_vmcore_file(self, filelist):
         """
         Search for "vmcore" file or vmcore snapshot files "vmcore(.vmss/.vmsn) in file list."
@@ -1879,10 +1871,8 @@ class RetraceTask:
 
         if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
             vmcore_path = self.get_vmcore_path()
-            files = os.listdir(crashdir)
-            for filename in files:
-                fullpath = os.path.join(crashdir, filename)
-                if os.path.isdir(fullpath):
+            for filename in Path(crashdir).iterdir():
+                if filename.is_dir():
                     move_dir_contents(fullpath, crashdir)
 
             files = os.listdir(crashdir)
@@ -1917,22 +1907,19 @@ class RetraceTask:
                             vmcore_path = self.add_vmcore_suffix(filename, vmcore_path)
                             os.rename(os.path.join(crashdir, filename), vmcore_path)
 
-            files = os.listdir(crashdir)
-            for filename in files:
-                fname, fext = os.path.splitext(filename)
+            for filename in Path(crashdir).iterdir():
+                suffix = filename.suffix
                 # keep vmcore snapshots with suffixes (vmss/vmsn/vmem)
-                if fname == self.VMCORE_FILE and (not fext or fext in SNAPSHOT_SUFFIXES):
+                if filename.stem == self.VMCORE_FILE and (not suffix or suffix in SNAPSHOT_SUFFIXES):
                     continue
 
-                os.unlink(os.path.join(crashdir, filename))
+                filename.unlink()
 
         if self.get_type() in [TASK_RETRACE, TASK_RETRACE_INTERACTIVE]:
             coredump = os.path.join(crashdir, self.COREDUMP_FILE)
-            files = os.listdir(crashdir)
-            for filename in files:
-                fullpath = os.path.join(crashdir, filename)
-                if os.path.isdir(fullpath):
-                    move_dir_contents(fullpath, crashdir)
+            for filename in Path(crashdir).iterdir():
+                if filename.is_dir():
+                    move_dir_contents(filename, crashdir)
 
             files = os.listdir(crashdir)
             if not files:
@@ -1963,12 +1950,11 @@ class RetraceTask:
                             if coredumps[0] != self.COREDUMP_FILE:
                                 os.rename(os.path.join(crashdir, filename), coredump)
 
-            files = os.listdir(crashdir)
-            for filename in files:
-                if filename in REQUIRED_FILES[self.get_type()]+["release", "os_release"]:
+            for filename in Path(crashdir).iterdir():
+                if filename.name in REQUIRED_FILES[self.get_type()]+["release", "os_release"]:
                     continue
 
-                os.unlink(os.path.join(crashdir, filename))
+                filename.unlink()
 
             if os.path.isfile(coredump):
                 oldsize = os.path.getsize(coredump)
@@ -2236,24 +2222,23 @@ class RetraceTask:
             run(["/usr/bin/podman", "rmi", "retrace-image:%s" % img_cont_id],
                 stdout=DEVNULL)
 
-        for f in os.listdir(self._savedir):
-            if f not in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
-                         RetraceTask.BACKTRACE_FILE, RetraceTask.DOWNLOADED_FILE,
-                         RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
-                         RetraceTask.MANAGED_FILE, RetraceTask.NOTES_FILE,
-                         RetraceTask.NOTIFY_FILE, RetraceTask.PASSWORD_FILE,
-                         RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
-                         RetraceTask.TYPE_FILE, RetraceTask.RESULTS_DIR,
-                         RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
-                         RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
-                         RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE]:
+        for f in Path(self._savedir).iterdir():
+            if f.name not in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
+                              RetraceTask.BACKTRACE_FILE, RetraceTask.DOWNLOADED_FILE,
+                              RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
+                              RetraceTask.MANAGED_FILE, RetraceTask.NOTES_FILE,
+                              RetraceTask.NOTIFY_FILE, RetraceTask.PASSWORD_FILE,
+                              RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
+                              RetraceTask.TYPE_FILE, RetraceTask.RESULTS_DIR,
+                              RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
+                              RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
+                              RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE]:
 
-                path = os.path.join(self._savedir, f)
                 try:
-                    if os.path.isdir(path):
-                        shutil.rmtree(path)
+                    if f.is_dir():
+                        shutil.rmtree(f)
                     else:
-                        os.remove(path)
+                        f.unlink()
                 except OSError:
                     # clean as much as possible
                     # ToDo advanced handling
@@ -2276,8 +2261,8 @@ class RetraceTask:
                     raise
 
         results_dir = self.get_results_dir()
-        for filename in os.listdir(results_dir):
-            os.unlink(os.path.join(results_dir, filename))
+        for filename in Path(results_dir).iterdir():
+            filename.unlink()
 
         kerneldir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % self._taskid)
         if os.path.isdir(kerneldir):
