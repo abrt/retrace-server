@@ -114,6 +114,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     elif task.get_type() == TASK_VMCORE_INTERACTIVE:
+        task.find_vmcore_file()
         vmcore_path = task.get_vmcore_path()
         vmcore = KernelVMcore(vmcore_path)
 

@@ -1662,12 +1662,6 @@ class RetraceTask:
         vmcore_path = self.get_vmcore_path()
         return os.path.isfile(vmcore_path)
 
-    def set_vmcore(self, value):
-        """
-        Set a name for a vmcore file.
-        """
-        self.vmcore_file = value
-
     def get_vmcore_path(self):
         """
         Return a path to vmcore file in crashdir.
@@ -1679,21 +1673,28 @@ class RetraceTask:
         Adds the suffix to a new vmcore path and sets a new vmcore name for the task.
         """
         vmcore_path = add_snapshot_suffix(vmcore_path, filename)
-        self.set_vmcore(os.path.basename(vmcore_path))
+        self.vmcore_file = os.path.basename(vmcore_path)
 
         return vmcore_path
 
-    def find_vmcore_file(self, filelist):
+    def find_vmcore_file(self, filepath=""):
         """
-        Search for "vmcore" file or vmcore snapshot files "vmcore(.vmss/.vmsn) in file list."
-        """
-        if "vmcore" not in filelist:
-            for f in sorted(filelist, reverse=True):
-                fname, fext = os.path.splitext(f)
-                if fname == "vmcore" and (not fext or fext in SNAPSHOT_SUFFIXES):
-                    return f
+        Return for "vmcore" file or vmcore snapshot files "vmcore(.vmss/.vmsn)" in the file path.
+        Saves the file name for the task.
 
-        return "vmcore"
+        Default filepath is task's crashdir.
+        """
+        if not filepath:
+            filepath = self.get_crashdir()
+
+        if not Path(filepath, self.VMCORE_FILE).exists():
+            for f in sorted(Path(filepath).iterdir(), reverse=True):
+                if f.stem == "vmcore" and (not f.suffix or f.suffix in SNAPSHOT_SUFFIXES):
+                    self.vmcore_file = f.name
+                    return f.name
+
+        self.vmcore_file = self.VMCORE_FILE
+        return self.VMCORE_FILE
 
     def has_coredump(self):
         coredump_path = os.path.join(self._savedir, self.COREDUMP_FILE)

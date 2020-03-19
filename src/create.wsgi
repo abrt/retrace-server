@@ -232,8 +232,7 @@ def application(environ, start_response):
                             _("Required file '%s' is missing") % required_file)
 
     if task.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
-        vmcore_file = task.find_vmcore_file(files)
-        task.set_vmcore(vmcore_file)
+        task.find_vmcore_file(crashdir)
         vmcore = KernelVMcore(task.get_vmcore_path())
         vmcore.prepare_debuginfo(task)
         vmcore.strip_extra_pages()
