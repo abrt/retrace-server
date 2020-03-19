@@ -15,7 +15,7 @@ import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from requests_gssapi import HTTPSPNEGOAuth, DISABLED
 
-from retrace.retrace import SNAPSHOT_SUFFIXES
+from retrace.retrace import add_snapshot_suffix
 
 
 TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
@@ -47,11 +47,7 @@ def prepare_tar(args):
         print("'{0}' does not exists".format(corefile))
         sys.exit(1)
 
-    file_name = args['task_type']
-    suffix = os.path.splitext(corefile)[1]
-    if suffix and suffix in SNAPSHOT_SUFFIXES:
-        file_name = file_name + suffix
-
+    file_name = add_snapshot_suffix(args['task_type'], corefile)
     tar_file.add(corefile, arcname=file_name)
 
     if args['vmem']:

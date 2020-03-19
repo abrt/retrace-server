@@ -531,6 +531,15 @@ def get_archive_type(path):
     log_debug("unknown file type, unpacking finished")
     return ARCHIVE_UNKNOWN
 
+def add_snapshot_suffix(filename, snapshot):
+    """
+    Adds a snapshot suffix to the filename.
+    """
+    suffix = Path(snapshot).suffix
+    if suffix in SNAPSHOT_SUFFIXES:
+        return filename + suffix
+
+    return filename
 
 def rename_with_suffix(frompath, topath):
     suffix = SUFFIX_MAP[get_archive_type(frompath)]
@@ -538,9 +547,7 @@ def rename_with_suffix(frompath, topath):
     # check if the file has a snapshot suffix
     # if it does, keep the suffix
     if not suffix:
-        fext = os.path.splitext(frompath)[1]
-        if fext in SNAPSHOT_SUFFIXES:
-            suffix = fext
+        suffix = add_snapshot_suffix(suffix, frompath)
 
     if not topath.endswith(suffix):
         topath = "%s%s" % (topath, suffix)
@@ -548,7 +555,6 @@ def rename_with_suffix(frompath, topath):
     os.rename(frompath, topath)
 
     return topath
-
 
 def unpack_vmcore(path):
     vmcore_file = "vmcore"
@@ -613,10 +619,7 @@ def unpack_vmcore(path):
 
         filetype = get_archive_type(archive)
 
-    fext = os.path.splitext(archive)[1]
-    if fext in SNAPSHOT_SUFFIXES:
-        vmcore_file += fext
-
+    vmcore_file = add_snapshot_suffix(vmcore_file, archive)
     os.rename(archive, os.path.join(parentdir, vmcore_file))
 
 
@@ -1671,15 +1674,12 @@ class RetraceTask:
         """
         return os.path.join(self.get_crashdir(), self.vmcore_file)
 
-    def add_vmcore_suffix(self, filename, vmcore_path):
+    def add_vmcore_suffix(self, vmcore_path, filename):
         """
-        Checks if the original filename (vmcore) has a snapshot suffix.
-        If it does, it adds the suffix to a new vmcore path and sets a new vmcore name for the task.
+        Adds the suffix to a new vmcore path and sets a new vmcore name for the task.
         """
-        fext = os.path.splitext(filename)[1]
-        if fext and fext in SNAPSHOT_SUFFIXES:
-            vmcore_path += fext
-            self.set_vmcore(os.path.basename(vmcore_path))
+        vmcore_path = add_snapshot_suffix(vmcore_path, filename)
+        self.set_vmcore(os.path.basename(vmcore_path))
 
         return vmcore_path
 
@@ -1893,18 +1893,18 @@ class RetraceTask:
                     absfiles = [os.path.join(crashdir, f) for f in files if ".vmem" not in f]
                     files_sizes = [(os.path.getsize(f), f) for f in absfiles]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
-                    vmcore_path = self.add_vmcore_suffix(largest_file, vmcore_path)
+                    vmcore_path = self.add_vmcore_suffix(vmcore_path, largest_file)
                     os.rename(largest_file, vmcore_path)
                 elif len(vmcores) > 1:
                     absfiles = [os.path.join(crashdir, f) for f in vmcores]
                     files_sizes = [(os.path.getsize(f), f) for f in absfiles]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
-                    vmcore_path = self.add_vmcore_suffix(largest_file, vmcore_path)
+                    vmcore_path = self.add_vmcore_suffix(vmcore_path, largest_file)
                     os.rename(largest_file, vmcore_path)
                 else:
                     for filename in files:
                         if filename == vmcores[0] and vmcores[0] != self.VMCORE_FILE:
-                            vmcore_path = self.add_vmcore_suffix(filename, vmcore_path)
+                            vmcore_path = self.add_vmcore_suffix(vmcore_path, filename)
                             os.rename(os.path.join(crashdir, filename), vmcore_path)
 
             for filename in Path(crashdir).iterdir():
