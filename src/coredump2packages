@@ -128,9 +128,15 @@ def process_unstrip_entry(build_id, binobj_path):
     coredump_package_list = []
     coredump_base_package_list = []
     # Ask for a known path from debuginfo package.
-    debuginfo_path = "/usr/lib/debug/.build-id/{0}/{1}.debug".format(build_id[:2], build_id[2:])
-    log.write("Dnf search for {0}...\n".format(debuginfo_path))
-    debuginfo_package_list = dnfbase.sack.query().filter(file=debuginfo_path)
+    debuginfo_paths = [
+            "/usr/lib/debug/.build-id/{0}/{1}.debug".format(build_id[:2], build_id[2:]),
+            "/usr/lib/.build-id/{0}/{1}".format(build_id[:2], build_id[2:])
+    ]
+
+    log.write("Dnf search for debuginfo packages for build-id {0}:\n".format(build_id))
+    for di_path in debuginfo_paths:
+        log.write(" - {0}\n".format(di_path))
+    debuginfo_package_list = dnfbase.sack.query().filter(file=debuginfo_paths)
 
     # A problem here is that some libraries lack debuginfo. Either
     # they were stripped during build, or they were not stripped by
@@ -145,10 +151,10 @@ def process_unstrip_entry(build_id, binobj_path):
         if len(binary_packages) == 1:
             coredump_package_list.append(str(binary_packages[0]))
         package_list.extend(binary_packages)
+
     if len(coredump_package_list) == len(coredump_base_package_list):
         return package_list, coredump_package_list
-    else:
-        return package_list, coredump_base_package_list
+    return package_list, coredump_base_package_list
 
 
 def process_unstrip_output():
