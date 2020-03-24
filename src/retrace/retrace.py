@@ -867,6 +867,7 @@ class KernelVMcore:
         self._has_extra_pages = None
         self._release = None
         self._vmlinux = None
+        self._vmem_path = os.path.join(self._crashdir, "vmcore.vmem")
 
     def get_path(self):
         return self._vmcore_path
@@ -1014,11 +1015,15 @@ class KernelVMcore:
         if self._release is not None:
             return self._release
 
+        core_path = self._vmcore_path
+        if os.path.isfile(self._vmem_path):
+            core_path = self._vmem_path
+
         # First use 'crash' to identify the kernel version.
         # set SIGPIPE to default handler for bz 1540253
         save = getsignal(SIGPIPE)
         signal(SIGPIPE, SIG_DFL)
-        child = run(crash_cmd + ["--osrelease", self._vmcore_path], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+        child = run(crash_cmd + ["--osrelease", core_path], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
         release = child.stdout.strip()
         ret = child.returncode
         signal(SIGPIPE, save)
@@ -1031,13 +1036,13 @@ class KernelVMcore:
            "\n" in release or \
            release == "unknown":
             try:
-                with open(self._vmcore_path, "rb") as fd:
+                with open(core_path, "rb") as fd:
                     fd.seek(0)
                     b = fd.read(64000000)
             except IOError as e:
                 log_error("Failed to get kernel release - failed "
                           "open/seek/read of file %s with errno(%d - '%s')"
-                          % (self._vmcore_path, e.errno, e.strerror))
+                          % (core_path, e.errno, e.strerror))
                 return None
             release = self.OSRELEASE_VAR_PARSER.search(b)
             if release:
@@ -1056,7 +1061,7 @@ class KernelVMcore:
         # Clean up the release before returning or calling KernelVer
         if release is None or release == "unknown":
             log_error("Failed to get kernel release from file %s" %
-                      self._vmcore_path)
+                      core_path)
             return None
         release = release.rstrip('\0 \t\n')
 
@@ -1065,15 +1070,15 @@ class KernelVMcore:
             result = KernelVer(release)
         except Exception as ex:
             log_error("Failed to parse kernel release from file %s, release ="
-                      " %s: %s" % (self._vmcore_path, release, str(ex)))
+                      " %s: %s" % (core_path, release, str(ex)))
             return None
 
         if result.arch is None:
-            result.arch = guess_arch(self._vmcore_path)
+            result.arch = guess_arch(core_path)
             if not result.arch:
                 log_error("Unable to determine architecture from file %s, "
                           "release = %s, arch result = %s" %
-                          (self._vmcore_path, release, result))
+                          (core_path, release, result))
                 return None
 
         self._release = result
