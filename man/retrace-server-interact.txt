@@ -1,0 +1,65 @@
+retrace-server-interact(1)
+==========================
+
+NAME
+----
+retrace-server-interact - use Retrace server's chroot
+for interactive debugging.
+
+SYNOPSIS
+--------
+'retrace-server-interact' [-h] [--priv] task_id action
+
+DESCRIPTION
+-----------
+The tool makes Retrace server\'s chroot available for interactive
+debugging. It enables user to jump into the chroot and execute
+the correct tool (gdb/crash), automatically loading all
+relevant files.
+
+ACTIONS
+-------
+shell::
+   Jump to a shell. Not available if mock chroot is not used. This is
+   the case of vmcores from the same architecture as host system.
+
+gdb::
+   Run GDB, load executable and coredump and jump to prompt. Only available
+   for binary crashes (coredumps).
+
+crash::
+   Run Crash, load vmcore and vmlinux and jump to prompt. Only available
+   for kernel crashes (vmcores).
+
+printdir::
+   Print the directory of the task.
+
+delete::
+   Delete the task.  Use with caution (there is no undo).
+
+set-success::
+   Force task status to 'success'.  This may be useful if a task has been
+   marked as "failed" by retrace-server but a user has other knowledge it
+   is still useful.  This will avoid a possible early deletion of the task
+   by retrace-server-cleanup which uses the DeleteFailedTaskAfter 
+   configuration setting.
+
+set-fail::
+   Force task status to 'fail'.  This may be useful if a task has been
+   marked as "success" by retrace-server but a user has other knowledge it
+   is not useful.  This will allow a possible early deletion of the task
+   by retrace-server-cleanup which uses DeleteFailedTaskAfter 
+   configuration setting.
+
+
+OPTIONS
+-------
+-h::
+   Display help and exit.
+
+--priv::
+   Use the chroot as privileged user.
+
+AUTHORS
+-------
+* Michal Toman <_mtoman@redhat.com_>

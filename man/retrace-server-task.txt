@@ -1,0 +1,189 @@
+retrace-server-task(1)
+======================
+
+NAME
+----
+retrace-server-task - Create a task, get and set fields on an existing task
+
+SYNOPSIS
+--------
+'retrace-server-task' create [-h] [-u | -k] [-t | -m | -f] [-i] [-d]
+                             [-s SERVER] [-n] [-v] [--vmem VMEM] [-r KERNELVER]
+                             [-o OS_RELEASE] [-p PACKAGE] [-x EXECUTABLE]
+                             [-e EMAIL] [-c CASENO] [-bz BUGZILLANO]
+                             COREFILE
+
+'retrace-server-task' get [-h] [-p PASSWORD] [-s SERVER] [-n] [-v]
+                          [-t | -b | -m | -e | -c | -bz]
+                          TASK_ID
+
+'retrace-server-task' set [-h] [-p PASSWORD] [-s SERVER] [-n] [-v]
+                          [-c CASENO] [-e EMAIL] [-bz BUGZILLANO]
+                          TASK_ID
+
+DESCRIPTION
+-----------
+This tool is able to communicate with Retrace server: create a new task,
+get and set values of an existing task. If kerberos ticket is available, all
+communication uses it. To stop using the ticket you must destroy it (kdestroy).
+
+OPERATIONS
+----------
+create::
+   Create a new task. Task can be either http task (COREFILE is compressed
+   and sent through http API), manager task (/manager site must be available)
+   or ftp task (same as manager task, but uses ftp file).
+   If none of the options "-t", "-m", or "-f" are given, the following logic
+   is tried. If COREFILE is a local file, then the "-m" option is used,
+   otherwise the "-f" option is used.
+
+set::
+    Write (set) information on an existing task. Available only for manager
+    and ftp task. See retrace-server-interact for setting the success or
+    failure of a task. See SET OPTIONS section for list of set options 
+    available.
+
+get::
+   Read (get) information on an existing task. If no parameters specified 
+   the output will default to the task status. See GET OPTIONS section
+   for list of get options available.
+
+batch::
+   Very similar to 'create' (has the same parameters) but also waits until
+   task is finished. If the task finishes successfully thebacktrace is 
+   downloaded
+
+
+COMMON OPTIONS
+-------------
+-h, --help::
+   Display help and exit.
+
+-s, --server SERVER::
+   URL for Retrace server. If not specified local server is tried and if not
+   available https://retrace.fedoraproject.org/ is used.
+
+-n, --no-verify::
+   Do not verify certificate. (off by default)
+
+-v, --verbose::
+   Be verbose
+
+-p, --password PASSWORD::
+   Password of the task (only for http tasks)
+
+CREATE OR BATCH OPTIONS
+-----------------------
+
+-u, --userspace_core::
+   The COREFILE specified is userspace core.
+
+-k, --kernel_core::
+   The COREFILE specified is kernel core. (default)
+
+-t, --http::
+   The COREFILE is assumed to be a local file, submitted through http
+
+-f, --ftp::
+   The COREFILE is assumed to be on the ftp server as configured in
+   retrace-server
+
+-m, --manager::
+   The COREFILE is assumed to be either a URL that is wget-able or a local file
+
+-i, --interactive::
+   Create an interactive (persistent) task that may be accessed later in an
+   interactive debug session. Without this option, manager and ftp tasks are
+   interactive, and http tasks are not.
+
+--vmem VMEM::
+   Virtual memory file VMEM needed for retracing kernel vmcore snapshots.
+   Only valid for kernel cores.
+
+-k KERNELVER, --kernelver KERNELVER::
+   Force the kernel version in the COREFILE to KERNELVER.
+   Only valid for kernel cores.
+
+-o OS_RELEASE, --os_release OS_RELEASE::
+   Force the version of the operating system in COREFILE to OS_RELEASE.
+   Only valid for userspace cores.
+
+-p PACKAGE, --package PACKAGE::
+   Force the version of the RPM package corresponding to COREFILE to PACKAGE.
+   Only valid for userspace cores.
+
+-x EXECUTABLE, --executable EXECUTABLE::
+   Force the COREDUMP executable to EXECUTABLE.
+   Only valid for userspace cores.
+
+GET OPTIONS
+-----------
+
+-b, --backtrace::
+   Return the backtrace in a file in the current directory
+
+-bz, --bugzillano::
+   Return the value of the bugzillano field in the task to the terminal.
+   Available only for manager and ftp task.
+
+-c, --caseno::
+   Return the value of the caseno field in the task to the terminal.
+   Available only for manager and ftp task.
+
+-e, --email::
+   Return the value of the email field in the task to the terminal.
+   Available only for manager and ftp task.
+
+-m, --md5sum::
+   Return the md5sum field in the task to the terminal.
+   Available only for manager and ftp task.
+
+SET OPTIONS
+-----------
+-bz BUGZILLANO, --bugzillano BUGZILLANO::
+   Write the bugzillano field in the task to BUGZILLANO.
+   Available only for manager and ftp task.
+
+-c CASENO, --caseno CASENO::
+   Write the caseno field in the task to CASENO.
+   Available only for manager and ftp task.
+
+-e EMAIL, --email EMAIL::
+   Write the email field in the task to EMAIL.
+   Available only for manager and ftp task.
+
+EXAMPLES
+--------
+
+Create a task from a local file (kernel vmcore)
+
+   retrace-server-task create ./localfile
+
+Create a task where the file (kernel vmcore) exists on FTP server
+
+   retrace-server-task create 012345-vmcore
+
+Create a task for kernel vmcore snapshot with vmem file included
+
+   retrace-server-task create 012345-vmcore.vmss --vmem 012345-vmcore.vmem
+
+Batch run local file on https://retrace.fedoraproject.org/ (usperspace core)
+
+   retrace-server-task batch -u -t -o "Fedora release 25 (Twenty five)" -p \
+   "coreutils-8.25-17.fc25" -x "/usr/bin/sleep" ./coredump
+
+Read the md5sum field for task 925483242
+
+   retrace-server-task get --md5sum 925483242
+
+Write the caseno field for task 925483242 to 01234567
+
+   retrace-server-task set --caseno 01234567 925483242
+
+Write the bugzillano field for task 31415926 to 53589793, 23846264
+
+   retrace-server-task set --bugzillano 53589793,23846264 31415926
+
+AUTHORS
+-------
+* Matej Marusak <mmarusak@redhat.com>

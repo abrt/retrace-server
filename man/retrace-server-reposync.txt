@@ -1,0 +1,21 @@
+retrace-server-reposync(1)
+========================
+
+NAME
+----
+retrace-server-reposync - Maintains local repository cache for Retrace server.
+
+SYNOPSIS
+--------
+'retrace-server-reposync' distribution version architecture
+
+DESCRIPTION
+-----------
+The tool downloads new packages from public repositories to a local repository
+cache. A proper plugin for every distribution needs to be installed in plugins
+directory (by default '/usr/share/retrace-server/plugins').
+Should be set up in root\'s or retrace\'s crontab to run every day.
+
+AUTHORS
+-------
+* Michal Toman <_mtoman@redhat.com_>
