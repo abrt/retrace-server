@@ -7,6 +7,7 @@ from tempfile import NamedTemporaryFile
 
 from retrace.retrace import (ALLOWED_FILES,
                              REQUIRED_FILES,
+                             SNAPSHOT_SUFFIXES,
                              TASK_RETRACE,
                              TASK_RETRACE_INTERACTIVE,
                              TASK_TYPES,
@@ -28,6 +29,19 @@ from retrace.util import (HANDLE_ARCHIVE,
 
 CONFIG = Config()
 BUFSIZE = 1 << 20  # 1 MB
+
+
+def check_required_file(filelist, required):
+    if required in filelist:
+        return True
+
+    if required == "vmcore":
+        for suffix in SNAPSHOT_SUFFIXES:
+            with_suffix = required + suffix
+            if with_suffix in filelist:
+                return True
+
+    return False
 
 
 def application(environ, start_response):
@@ -158,7 +172,7 @@ def application(environ, start_response):
                         _("There is not enough storage space on the server"))
 
     try:
-        crashdir = os.path.join(task.get_savedir(), "crash")
+        crashdir = task.get_crashdir()
         os.mkdir(crashdir)
         unpack_retcode = unpack(archive.name, request.content_type, crashdir)
 
@@ -175,14 +189,15 @@ def application(environ, start_response):
 
     for f in files:
         filepath = os.path.join(crashdir, f)
+        filename, suffix = os.path.splitext(f)
 
         if os.path.islink(filepath):
             task.remove()
             return response(start_response, "403 Forbidden",
                             _("Symlinks are not allowed to be in the archive"))
 
-        if f in ALLOWED_FILES:
-            maxsize = ALLOWED_FILES[f]
+        if filename in ALLOWED_FILES and (not suffix or suffix in SNAPSHOT_SUFFIXES):
+            maxsize = ALLOWED_FILES[filename]
             if maxsize > 0 and os.path.getsize(filepath) > maxsize:
                 task.remove()
                 return response(start_response, "403 Forbidden",
@@ -211,13 +226,14 @@ def application(environ, start_response):
         task.set_type(TASK_RETRACE)
 
     for required_file in REQUIRED_FILES[task.get_type()]:
-        if required_file not in files:
+        if not check_required_file(files, required_file):
             task.remove()
             return response(start_response, "403 Forbidden",
                             _("Required file '%s' is missing") % required_file)
 
     if task.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
-        vmcore = KernelVMcore(os.path.join(crashdir, "vmcore"))
+        task.find_vmcore_file(crashdir)
+        vmcore = KernelVMcore(task.get_vmcore_path())
         vmcore.prepare_debuginfo(task)
         vmcore.strip_extra_pages()
 

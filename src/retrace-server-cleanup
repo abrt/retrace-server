@@ -51,9 +51,9 @@ def check_open_crash_file(task):
     Check if vmcore or coredump for given task is used by another process.
     """
     if task.has_vmcore():
-        crash_path = os.path.join(task.get_savedir(), task.VMCORE_FILE)
+        crash_path = task.get_vmcore_path()
     elif task.has_coredump():
-        crash_path = os.path.join(task.get_savedir(), task.COREDUMP_FILE)
+        crash_path = os.path.join(task.get_crashdir(), task.COREDUMP_FILE)
     else:
         return False
 

@@ -14,7 +14,7 @@ from .retrace import (ALLOWED_FILES, REPO_PREFIX, REQUIRED_FILES,
                       STATUS, STATUS_ANALYZE, STATUS_BACKTRACE, STATUS_CLEANUP,
                       STATUS_FAIL, STATUS_INIT, STATUS_STATS, STATUS_SUCCESS,
                       TASK_DEBUG, TASK_RETRACE, TASK_RETRACE_INTERACTIVE, TASK_VMCORE,
-                      TASK_VMCORE_INTERACTIVE, RETRACE_GPG_KEYS,
+                      TASK_VMCORE_INTERACTIVE, RETRACE_GPG_KEYS, SNAPSHOT_SUFFIXES,
                       get_active_tasks,
                       get_supported_releases,
                       guess_arch,
@@ -183,6 +183,18 @@ class RetraceWorker():
             self._fail(errorcode)
 
         return output
+
+    def _check_required_file(self, req, crashdir):
+        if os.path.isfile(os.path.join(crashdir, req)):
+            return True
+
+        if req == "vmcore":
+            for suffix in SNAPSHOT_SUFFIXES:
+                with_suffix = req + suffix
+                if os.path.isfile(os.path.join(crashdir, with_suffix)):
+                    return True
+
+        return False
 
     def guess_release(self, package, plugins):
         for plugin in plugins:
@@ -362,7 +374,7 @@ class RetraceWorker():
         self.hook.run("start")
 
         task = self.task
-        crashdir = os.path.join(task.get_savedir(), "crash")
+        crashdir = task.get_crashdir()
         corepath = os.path.join(crashdir, "coredump")
 
         try:
@@ -473,7 +485,7 @@ class RetraceWorker():
             self.hook.run("post_prepare_environment")
             self.hook.run("pre_retrace")
 
-            self._retrace_run(27, ["/usr/bin/mock", "--configdir", task.get_savedir(), "shell",
+            self._retrace_run(27, ["/usr/bin/mock", "--configdir", task.get_savedir(), "chroot",
                                    "--", "chgrp -R mock /var/spool/abrt/crash"])
 
         # generate backtrace
@@ -577,8 +589,8 @@ class RetraceWorker():
     def dedup_vmcore(self, md5_task):
         task1 = md5_task   # primary
         task2 = self.task  # one we are going to try to hardlink and the one that gets logged to
-        v1 = CONFIG["SaveDir"] + "/" + str(task1.get_taskid()) + "/crash/vmcore"
-        v2 = CONFIG["SaveDir"] + "/" + str(task2.get_taskid()) + "/crash/vmcore"
+        v1 = task1.get_vmcore_path()
+        v2 = task2.get_vmcore_path()
         try:
             s1 = os.stat(v1)
             s2 = os.stat(v2)
@@ -628,7 +640,8 @@ class RetraceWorker():
         self.hook.run("start")
 
         task = self.task
-        vmcore_path = os.path.join(task.get_savedir(), "crash", "vmcore")
+        crashdir = task.get_crashdir()
+        vmcore_path = task.get_vmcore_path()
 
         try:
             self.stats["coresize"] = os.path.getsize(vmcore_path)
@@ -757,15 +770,17 @@ class RetraceWorker():
                     raise Exception("prepare_debuginfo failed: %s" % str(ex))
 
                 self.hook.run("pre_retrace")
-                crash_normal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                task.get_crash_cmd() + " -s %s %s" % (vmcore_path, vmlinux)]
-                crash_minimal = ["/usr/bin/mock", "--configdir", cfgdir, "shell", "--",
-                                 task.get_crash_cmd() + " -s --minimal %s %s" % (vmcore_path, vmlinux)]
+                crash_cmd = task.get_crash_cmd()
+                crash_normal = ["/usr/bin/mock", "--configdir", cfgdir, "--cwd", crashdir,
+                                "chroot", "--", crash_cmd + " -s %s %s" % (vmcore_path, vmlinux)]
+                crash_minimal = ["/usr/bin/mock", "--configdir", cfgdir, "--cwd", crashdir,
+                                 "chroot", "--", crash_cmd + " -s --minimal %s %s" % (vmcore_path, vmlinux)]
 
             elif CONFIG["RetraceEnvironment"] == "podman":
 
                 savedir = task.get_savedir()
-                crashdir = os.path.join(savedir, "crash")
+                crashdir = task.get_crashdir()
+                vmcore_file = os.path.basename(vmcore_path)
                 release, distribution, version, _ = self.read_release_file(crashdir, None)
                 try:
                     with open(os.path.join(savedir, RetraceTask.DOCKERFILE), "w") as dockerfile:
@@ -781,11 +796,9 @@ class RetraceWorker():
                                          '--assumeyes ' \
                                          '--enablerepo=*debuginfo* ' \
                                          'install kernel-debuginfo\n\n')
-                        dockerfile.write('COPY %s /var/spool/abrt/crash/\n\n'
-                                         % RetraceTask.VMCORE_FILE)
+                        dockerfile.write('COPY %s /var/spool/abrt/crash/\n\n' % vmcore_file)
                         dockerfile.write('RUN useradd -m retrace\n')
-                        dockerfile.write('RUN chown retrace /var/spool/abrt/%s\n'
-                                         % RetraceTask.VMCORE_FILE)
+                        dockerfile.write('RUN chown retrace /var/spool/abrt/%s\n' % vmcore_file)
                         dockerfile.write('USER retrace\n\n')
                         dockerfile.write('CMD ["/usr/bin/bash"]')
                 except Exception as ex:
@@ -812,12 +825,10 @@ class RetraceWorker():
                     log_error(child.stderr)
                     raise Exception("Unable to run podman container")
 
-                crash_normal = ["/usr/bin/podman", "exec", img_cont_id,
-                                task.get_crash_cmd()
-                                + " -s /var/spool/abrt/crash/vmcore %s" % vmlinux]
-                crash_minimal = ["/usr/bin/podman", "exec", img_cont_id,
-                                 task.get_crash_cmd()
-                                 + " -s --minimal /var/spool/abrt/crash/vmcore %s" % vmlinux]
+                crash_normal = ["/usr/bin/podman", "exec", img_cont_id, task.get_crash_cmd()
+                                + " -s /var/spool/abrt/crash/%s %s" % (vmcore_file, vmlinux)]
+                crash_minimal = ["/usr/bin/podman", "exec", img_cont_id, task.get_crash_cmd()
+                                 + " -s --minimal /var/spool/abrt/crash/%s %s" % (vmcore_file, vmlinux)]
 
             else:
                 raise Exception("RetraceEnvironment set to invalid value")
@@ -945,7 +956,7 @@ class RetraceWorker():
             task.set_status(STATUS_ANALYZE)
             log_info(STATUS[STATUS_ANALYZE])
 
-            crashdir = os.path.join(task.get_savedir(), "crash")
+            crashdir = task.get_crashdir()
 
             tasktype = task.get_type()
 
@@ -960,7 +971,7 @@ class RetraceWorker():
                                 os.path.join(crashdir, "os_release"))
 
             for required_file in REQUIRED_FILES[tasktype]:
-                if not os.path.isfile(os.path.join(crashdir, required_file)):
+                if not self._check_required_file(required_file, crashdir):
                     raise Exception("Crash directory does not contain required file '%s'" % required_file)
 
             if tasktype in [TASK_RETRACE, TASK_DEBUG, TASK_RETRACE_INTERACTIVE]:

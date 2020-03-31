@@ -6,7 +6,13 @@
             <input type="text" name="vra" />
             <span>(e.g. 2.6.32-287.el6.x86_64, empty to autodetect)</span>
         </div>
+
         <div id="middle">
+            <div>
+                <input type="checkbox" id="memory-check" name="vmem-check" class="checkbox" />
+                <span class="formsubhead"> Include memory file for vmcore snapshot</span>
+            </div>
+
             <div>
                 <input type="checkbox" checked="checked" name="debug" class="checkbox" />
                 <span class="formsubhead"> Be more verbose in case of error</span>
@@ -17,11 +23,17 @@
                 <span class="formsubhead"> Calculate md5 checksum for all downloaded resources</span>
             </div>
         </div>
+
         <div id="middle">
             <div>
                 <span class="formhead">Custom core location:</span>
                 <input type="text" name="custom_url" class="url" />
                 <input type="hidden" name="task_type" value="vmcore">
+            </div>
+
+            <div id="memory-box">
+                <span class="formhead">Custom memory location:</span>
+                <input type="text" name="custom_vmem_url" class="url" />
             </div>
 
             <div class="center">
@@ -31,4 +43,10 @@
             <input type="submit" value="Create vmcore task" class="submit" />
         </div>
     </form>
+
+    <script type="text/javascript">
+        $('#memory-check').click(function(){
+            this.checked?$('#memory-box').show():$('#memory-box').hide();
+        });
+    </script>
 </div>
