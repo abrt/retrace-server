@@ -20,7 +20,9 @@ import shutil
 
 from subprocess import DEVNULL, PIPE, run
 
-from retrace import *
+from retrace.retrace import *
+from retrace.retrace_worker import RetraceWorker
+from retrace.config import Config
 
 def fatal_error(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -33,7 +35,7 @@ def create_repo(packages, releaseid, version):
     """Create repo with packages passed in arg packages."""
     print("Creating repo")
 
-    conf = config.Config()
+    conf = Config()
 
     repo_path = os.path.join(conf["RepoDir"], releaseid)
     if not os.path.isdir(repo_path):
@@ -66,7 +68,7 @@ def delete_repo(releaseid):
     Note: deletes repo even though, if was not created by this script
     """
     print("Deleting repo")
-    conf = config.Config()
+    conf = Config()
     repo_path = os.path.join(conf["RepoDir"], releaseid)
     if os.path.isdir(repo_path):
         shutil.rmtree(repo_path)
