@@ -231,7 +231,8 @@ def get_supported_releases():
 
 def run_gdb(savedir, plugin, repopath, taskid=None):
     # exception is caught on the higher level
-    exec_file = open(os.path.join(savedir, "crash", "executable"), "r")
+    savedir = Path(savedir)
+    exec_file = open(savedir / "crash" / "executable", "r")
     executable = exec_file.read(ALLOWED_FILES["executable"])
     exec_file.close()
 
@@ -249,8 +250,8 @@ def run_gdb(savedir, plugin, repopath, taskid=None):
         if child.returncode:
             raise Exception("Unable to chmod the executable")
 
-    batfile = os.path.join(savedir, "gdb.sh")
-    with open(batfile, "w") as gdbfile:
+    batfile = savedir / "gdb.sh"
+    with batfile.open(mode="w") as gdbfile:
         gdbfile.write("#!/usr/bin/sh\n\n%s -batch "
                       "-ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' \\\n"
                       "                    -ex 'file %s' \\\n"
@@ -289,7 +290,7 @@ def run_gdb(savedir, plugin, repopath, taskid=None):
 
     elif CONFIG["RetraceEnvironment"] == "podman":
         podman_build_call = ["/usr/bin/podman", "build", "--file",
-                             os.path.join(savedir, RetraceTask.DOCKERFILE),
+                             savedir / RetraceTask.DOCKERFILE,
                              "--volume=%s:%s:ro" % (repopath, repopath)]
 
         if CONFIG["RequireGPGCheck"]:
@@ -369,24 +370,21 @@ def is_package_known(package_nvr, arch, releaseid=None):
 
     candidates = []
     package_nvr = remove_epoch(package_nvr)
+    repodir = Path(CONFIG["RepoDir"])
     for release in releases:
         for derived_archs in ARCH_MAP.values():
             if arch not in derived_archs:
                 continue
 
             for a in derived_archs:
-                candidates.append(os.path.join(CONFIG["RepoDir"], release, "Packages",
-                                               "%s.%s.rpm" % (package_nvr, a)))
-                candidates.append(os.path.join(CONFIG["RepoDir"], release,
-                                               "%s.%s.rpm" % (package_nvr, a)))
+                candidates.append(Path(repodir, release, "Packages", "%s.%s.rpm" % (package_nvr, a)))
+                candidates.append(Path(repodir, release, "%s.%s.rpm" % (package_nvr, a)))
             break
         else:
-            candidates.append(os.path.join(CONFIG["RepoDir"], release, "Packages",
-                                           "%s.%s.rpm" % (package_nvr, arch)))
-            candidates.append(os.path.join(CONFIG["RepoDir"], release,
-                                           "%s.%s.rpm" % (package_nvr, arch)))
+            candidates.append(Path(repodir, release, "Packages", "%s.%s.rpm" % (package_nvr, arch)))
+            candidates.append(Path(repodir, release, "%s.%s.rpm" % (package_nvr, arch)))
 
-    return any([os.path.isfile(f) for f in candidates])
+    return any([f.is_file() for f in candidates])
 
 
 def find_kernel_debuginfo(kernelver):
@@ -418,17 +416,18 @@ def find_kernel_debuginfo(kernelver):
 
     # search for the debuginfo RPM
     ver = None
-    for release in os.listdir(CONFIG["RepoDir"]):
+    repodir = Path(CONFIG["RepoDir"])
+    for release in repodir.iterdir():
         for ver in vers:
-            testfile = os.path.join(CONFIG["RepoDir"], release, "Packages", ver.package_name(debug=True))
+            testfile = release / "Packages" / ver.package_name(debug=True)
             log_debug("Trying debuginfo file: %s" % testfile)
-            if os.path.isfile(testfile):
+            if testfile.is_file():
                 return testfile
 
             # should not happen, but anyway...
-            testfile = os.path.join(CONFIG["RepoDir"], release, ver.package_name(debug=True))
+            testfile = release / ver.package_name(debug=True)
             log_debug("Trying debuginfo file: %s" % testfile)
-            if os.path.isfile(testfile):
+            if testfile.is_file():
                 return testfile
 
     if ver is not None and ver.rt:
@@ -437,18 +436,19 @@ def find_kernel_debuginfo(kernelver):
         basename = "kernel"
 
     # koji-like root
+    kojiroot = Path(CONFIG["KojiRoot"])
     for ver in vers:
-        testfile = os.path.join(CONFIG["KojiRoot"], "packages", basename, ver.version, ver.release,
-                                ver._arch, ver.package_name(debug=True))
+        testfile = kojiroot / "packages" / basename / ver.version / ver.release\
+                   / ver._arch / ver.package_name(debug=True)
         log_debug("Trying debuginfo file: %s" % testfile)
-        if os.path.isfile(testfile):
+        if testfile.is_file():
             return testfile
 
     if CONFIG["WgetKernelDebuginfos"]:
-        downloaddir = os.path.join(CONFIG["RepoDir"], "download")
-        if not os.path.isdir(downloaddir):
+        downloaddir = repodir / "download"
+        if not downloaddir.is_dir():
             oldmask = os.umask(0o007)
-            os.makedirs(downloaddir)
+            downloaddir.mkdir(parents=True)
             os.umask(oldmask)
 
         for ver in vers:
@@ -465,7 +465,7 @@ def find_kernel_debuginfo(kernelver):
             log_debug("Trying debuginfo URL: %s" % url)
             child = run(["wget", "-nv", "-P", downloaddir, url], stdout=DEVNULL, stderr=DEVNULL)
             if not child.returncode:
-                return os.path.join(downloaddir, pkgname)
+                return downloaddir / pkgname
 
     return None
 
@@ -475,7 +475,7 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
     if not files:
         return
 
-    if not os.path.isfile(debuginfo):
+    if not debuginfo.is_file():
         raise Exception("Given debuginfo file does not exist")
 
     # prepend absolute path /usr/lib/debug/... with dot, so that cpio can match it
@@ -531,17 +531,17 @@ def get_archive_type(path):
     log_debug("unknown file type, unpacking finished")
     return ARCHIVE_UNKNOWN
 
-def add_snapshot_suffix(filename, snapshot):
+def add_snapshot_suffix(filename: str, snapshot: Path) -> str:
     """
     Adds a snapshot suffix to the filename.
     """
-    suffix = Path(snapshot).suffix
+    suffix = snapshot.suffix
     if suffix in SNAPSHOT_SUFFIXES:
         return filename + suffix
 
     return filename
 
-def rename_with_suffix(frompath, topath):
+def rename_with_suffix(frompath: Path, topath: Path) -> Path:
     suffix = SUFFIX_MAP[get_archive_type(frompath)]
 
     # check if the file has a snapshot suffix
@@ -549,17 +549,17 @@ def rename_with_suffix(frompath, topath):
     if not suffix:
         suffix = add_snapshot_suffix(suffix, frompath)
 
-    if not topath.endswith(suffix):
-        topath = "%s%s" % (topath, suffix)
+    if not topath.suffix == suffix:
+        topath = topath.with_suffix(suffix)
 
-    os.rename(frompath, topath)
+    frompath.rename(topath)
 
     return topath
 
-def unpack_vmcore(path):
+def unpack_vmcore(path: Path):
     vmcore_file = "vmcore"
-    parentdir = os.path.dirname(path)
-    archivebase = os.path.join(parentdir, "archive")
+    parentdir = path.parent
+    archivebase = parentdir / "archive"
     archive = rename_with_suffix(path, archivebase)
     filetype = get_archive_type(archive)
     while filetype != ARCHIVE_UNKNOWN:
@@ -581,8 +581,8 @@ def unpack_vmcore(path):
         else:
             raise Exception("Unknown archive type")
 
-        if os.path.isfile(archive):
-            os.unlink(archive)
+        if archive.is_file():
+            archive.unlink()
 
         files_sizes = get_files_sizes(parentdir)
         newfiles = [f for (f, s) in files_sizes if f.suffix != ".vmem"]
@@ -603,7 +603,7 @@ def unpack_vmcore(path):
                    filename == newfiles[vmcore_candidate]:
                     continue
 
-                os.unlink(filename)
+                filename.unlink()
 
         elif len(diff) == 1:
             archive = rename_with_suffix(diff.pop(), archivebase)
@@ -620,12 +620,12 @@ def unpack_vmcore(path):
         filetype = get_archive_type(archive)
 
     vmcore_file = add_snapshot_suffix(vmcore_file, archive)
-    os.rename(archive, os.path.join(parentdir, vmcore_file))
+    archive.rename(parentdir / vmcore_file)
 
 
-def unpack_coredump(path):
+def unpack_coredump(path: Path):
     processed = set()
-    parentdir = os.path.dirname(path)
+    parentdir = path.parent
     files = set(f for (f, s) in get_files_sizes(parentdir))
     # Keep unpacking
     while len(files - processed) > 0:
@@ -646,16 +646,15 @@ def unpack_coredump(path):
         elif filetype == ARCHIVE_LZOP:
             check_run(["lzop", "-d", archive])
 
-        if os.path.isfile(archive) and filetype != ARCHIVE_UNKNOWN:
-            os.unlink(archive)
+        if archive.is_file() and filetype != ARCHIVE_UNKNOWN:
+            archive.unlink()
         processed.add(archive)
 
         files = set(f for (f, s) in get_files_sizes(parentdir))
 
     # If coredump is not present, the biggest file becomes it
-    if "coredump" not in os.listdir(parentdir):
-        os.rename(get_files_sizes(parentdir)[0][0],
-                  os.path.join(parentdir, self.COREDUMP_FILE))
+    if "coredump" not in [f.name for f in parentdir.iterdir()]:
+        get_files_sizes(parentdir)[0][0].rename(parentdir / self.COREDUMP_FILE)
 
     for filename in Path(parentdir).iterdir():
         if filename.is_dir():
@@ -861,13 +860,13 @@ class KernelVMcore:
 
     def __init__(self, vmcore_path):
         self._vmcore_path = vmcore_path
-        self._crashdir = os.path.dirname(vmcore_path)
+        self._crashdir = Path(vmcore_path).parent
         self._is_flattened_format = None
         self._dump_level = None
         self._has_extra_pages = None
         self._release = None
         self._vmlinux = None
-        self._vmem_path = os.path.join(self._crashdir, "vmcore.vmem")
+        self._vmem_path = self._crashdir / "vmcore.vmem"
 
     def get_path(self):
         return self._vmcore_path
@@ -900,10 +899,10 @@ class KernelVMcore:
                 child = run(["makedumpfile", "-R", newvmcore], stdin=fd)
                 if child.returncode:
                     log_warn("makedumpfile -R exited with %d" % child.returncode)
-                    if os.path.isfile(newvmcore):
-                        os.unlink(newvmcore)
+                    if newvmcore.is_file():
+                        newvmcore.unlink()
                 else:
-                    os.rename(newvmcore, self._vmcore_path)
+                    newvmcore.rename(self._vmcore_path)
         except IOError as e:
             log_error("Failed to convert flattened vmcore %s - errno(%d - '%s')" %
                       (self._vmcore_path, e.errno, e.strerror))
@@ -916,12 +915,12 @@ class KernelVMcore:
         if self._dump_level is not None:
             return self._dump_level
 
-        if not os.path.isfile(self._vmcore_path):
+        if not self._vmcore_path.is_file():
             return None
 
-        dmesg_path = os.path.join(task.get_results_dir(), "dmesg")
-        if os.path.isfile(dmesg_path):
-            os.unlink(dmesg_path)
+        dmesg_path = task.get_results_dir() / "dmesg"
+        if dmesg_path.is_file():
+            dmesg_path.unlink()
 
         cmd = ["makedumpfile", "-D", "--dump-dmesg", self._vmcore_path, dmesg_path]
 
@@ -971,10 +970,10 @@ class KernelVMcore:
                      "-x", self._vmlinux, "--message-level", "0", self._vmcore_path, newvmcore])
         if child.returncode:
             log_warn("makedumpfile exited with %d" % child.returncode)
-            if os.path.isfile(newvmcore):
-                os.unlink(newvmcore)
+            if newvmcore.is_file():
+                newvmcore.unlink()
         else:
-            os.rename(newvmcore, self._vmcore_path)
+            newvmcore.rename(self._vmcore_path)
 
     #
     # In real-world testing, approximately 60% of the time the kernel
@@ -1016,7 +1015,7 @@ class KernelVMcore:
             return self._release
 
         core_path = self._vmcore_path
-        if os.path.isfile(self._vmem_path):
+        if self._vmem_path.is_file():
             core_path = self._vmem_path
 
         # First use 'crash' to identify the kernel version.
@@ -1100,9 +1099,9 @@ class KernelVMcore:
         # Setting kernelver may reset crash_cmd
         crash_cmd = task.get_crash_cmd().split()
 
-        debugdir_base = os.path.join(CONFIG["RepoDir"], "kernel", kernelver.arch)
-        if not os.path.isdir(debugdir_base):
-            os.makedirs(debugdir_base)
+        debugdir_base = Path(CONFIG["RepoDir"], "kernel", kernelver.arch)
+        if not debugdir_base.is_dir():
+            debugdir_base.mkdir(parents=True)
 
         # First look in cache for vmlinux at the "typical" location, for example
         # CONFIG["RepoDir"]/kernel/x86_64/usr/lib/debug/lib/modules/2.6.32-504.el6.x86_64
@@ -1126,8 +1125,8 @@ class KernelVMcore:
                 kernel_path = kernel_path + "."
             kernel_path = kernel_path + str(kernelver.flavour)
 
-        vmlinux_cache_path = debugdir_base + "/usr/lib/debug/lib/modules/" + kernel_path + "/vmlinux"
-        if os.path.isfile(vmlinux_cache_path):
+        vmlinux_cache_path = debugdir_base + "usr/lib/debug/lib/modules" / kernel_path / "vmlinux"
+        if vmlinux_cache_path.is_file():
             log_info("Found cached vmlinux at path: " + vmlinux_cache_path)
             vmlinux = vmlinux_cache_path
             task.set_vmlinux(vmlinux)
@@ -1178,7 +1177,7 @@ class KernelVMcore:
                 else:
                     pattern2 = "EL%s/" % kernelver.flavour
 
-                if pattern2 not in os.path.dirname(line):
+                if pattern2 not in str(Path(line).parent):
                     continue
 
             # '-' in file name is transformed to '_' in module name
@@ -1187,9 +1186,9 @@ class KernelVMcore:
         # Only look for the vmlinux file here if it's not already been found above
         # Note the dependency from this code on the debuginfo file list
         if vmlinux is None:
-            vmlinux_debuginfo = os.path.join(debugdir_base, vmlinux_path.lstrip("/"))
+            vmlinux_debuginfo = debugdir_base / vmlinux_path.lstrip("/")
             cache_files_from_debuginfo(debuginfo, debugdir_base, [vmlinux_path])
-            if os.path.isfile(vmlinux_debuginfo):
+            if vmlinux_debuginfo.is_file():
                 log_info("Found cached vmlinux at new debuginfo location: " + vmlinux_debuginfo)
                 vmlinux = vmlinux_debuginfo
                 task.set_vmlinux(vmlinux)
@@ -1229,8 +1228,7 @@ class KernelVMcore:
 
         todo = []
         for module in modules:
-            if module in debugfiles and \
-               not os.path.isfile(os.path.join(debugdir_base, debugfiles[module].lstrip("/"))):
+            if module in debugfiles and not (debugdir_base / debugfiles[module].lstrip("/")).is_file():
                 todo.append(debugfiles[module])
 
         cache_files_from_debuginfo(debuginfo, debugdir_base, todo)
@@ -1243,36 +1241,36 @@ class KernelVMcore:
 class RetraceTask:
     """Represents Retrace server's task."""
 
-    BACKTRACE_FILE = "retrace_backtrace"
-    CASENO_FILE = "caseno"
-    BUGZILLANO_FILE = "bugzillano"
-    CRASHRC_FILE = "crashrc"
-    CRASH_CMD_FILE = "crash_cmd"
-    DOWNLOADED_FILE = "downloaded"
-    MD5SUM_FILE = "md5sum"
-    FINISHED_FILE = "finished_time"
-    KERNELVER_FILE = "kernelver"
-    LOG_FILE = "retrace_log"
-    MANAGED_FILE = "managed"
-    RESULTS_DIR = "results"
-    MOCK_LOG_DIR = "log"
-    NOTES_FILE = "notes"
-    NOTIFY_FILE = "notify"
-    PASSWORD_FILE = "password"
-    PROGRESS_FILE = "progress"
-    REMOTE_FILE = "remote"
-    STARTED_FILE = "started_time"
-    STATUS_FILE = "status"
-    TYPE_FILE = "type"
-    URL_FILE = "url"
-    VMLINUX_FILE = "vmlinux"
-    VMCORE_FILE = "vmcore"
-    VMEM_FILE = "vmcore.vmem"
-    COREDUMP_FILE = "coredump"
-    MOCK_DEFAULT_CFG = "default.cfg"
-    MOCK_SITE_DEFAULTS_CFG = "site-defaults.cfg"
-    MOCK_LOGGING_INI = "logging.ini"
-    DOCKERFILE = "Dockerfile"
+    BACKTRACE_FILE = Path("retrace_backtrace")
+    CASENO_FILE = Path("caseno")
+    BUGZILLANO_FILE = Path("bugzillano")
+    CRASHRC_FILE = Path("crashrc")
+    CRASH_CMD_FILE = Path("crash_cmd")
+    DOWNLOADED_FILE = Path("downloaded")
+    MD5SUM_FILE = Path("md5sum")
+    FINISHED_FILE = Path("finished_time")
+    KERNELVER_FILE = Path("kernelver")
+    LOG_FILE = Path("retrace_log")
+    MANAGED_FILE = Path("managed")
+    RESULTS_DIR = Path("results")
+    MOCK_LOG_DIR = Path("log")
+    NOTES_FILE = Path("notes")
+    NOTIFY_FILE = Path("notify")
+    PASSWORD_FILE = Path("password")
+    PROGRESS_FILE = Path("progress")
+    REMOTE_FILE = Path("remote")
+    STARTED_FILE = Path("started_time")
+    STATUS_FILE = Path("status")
+    TYPE_FILE = Path("type")
+    URL_FILE = Path("url")
+    VMLINUX_FILE = Path("vmlinux")
+    VMCORE_FILE = Path("vmcore")
+    VMEM_FILE = Path("vmcore.vmem")
+    COREDUMP_FILE = Path("coredump")
+    MOCK_DEFAULT_CFG = Path("default.cfg")
+    MOCK_SITE_DEFAULTS_CFG = Path("site-defaults.cfg")
+    MOCK_LOGGING_INI = Path("logging.ini")
+    DOCKERFILE = Path("Dockerfile")
 
     def __init__(self, taskid=None):
         """Creates a new task if taskid is None,
@@ -1290,9 +1288,9 @@ class RetraceTask:
             for i in range(50):
                 taskid = generator.randint(pow(10, CONFIG["TaskIdLength"] - 1),
                                            pow(10, CONFIG["TaskIdLength"]) - 1)
-                taskdir = os.path.join(CONFIG["SaveDir"], "%d" % taskid)
+                taskdir = Path(CONFIG["SaveDir"], "%d" % taskid)
                 try:
-                    os.mkdir(taskdir)
+                    taskdir.mkdir()
                 except OSError as ex:
                     # dir exists, try another taskid
                     if ex.errno == errno.EEXIST:
@@ -1309,19 +1307,19 @@ class RetraceTask:
             if self._taskid is None:
                 raise Exception("Unable to create new task")
 
-            pwdfilepath = os.path.join(self._savedir, RetraceTask.PASSWORD_FILE)
+            pwdfilepath = self._savedir / RetraceTask.PASSWORD_FILE
             with open(pwdfilepath, "w") as pwdfile:
                 for i in range(CONFIG["TaskPassLength"]):
                     pwdfile.write(generator.choice(TASKPASS_ALPHABET))
 
             self.set_crash_cmd("crash")
-            os.makedirs(os.path.join(self._savedir, RetraceTask.RESULTS_DIR))
+            (self._savedir / RetraceTask.RESULTS_DIR).mkdir(parents=True)
             os.umask(oldmask)
         else:
             # existing task
             self._taskid = int(taskid)
-            self._savedir = os.path.join(CONFIG["SaveDir"], "%d" % self._taskid)
-            if not os.path.isdir(self._savedir):
+            self._savedir = Path(CONFIG["SaveDir"], "%d" % self._taskid)
+            if not self._savedir.is_dir():
                 raise Exception("The task %d does not exist" % self._taskid)
 
     def set_mock(self, value):
@@ -1335,8 +1333,8 @@ class RetraceTask:
         return self.has(RetraceTask.MOCK_SITE_DEFAULTS_CFG)
 
     def _get_file_path(self, key):
-        key_sanitized = key.replace("/", "_").replace(" ", "_")
-        return os.path.join(self._savedir, key_sanitized)
+        key_sanitized = str(key).replace("/", "_").replace(" ", "_")
+        return self._savedir / key_sanitized
 
     def _start_local(self, debug=False, kernelver=None, arch=None):
         cmdline = ["/usr/bin/retrace-server-worker", "%d" % self._taskid]
@@ -1385,13 +1383,13 @@ class RetraceTask:
         """Returns task's ID"""
         return self._taskid
 
-    def get_savedir(self):
+    def get_savedir(self) -> Path:
         """Returns task's savedir"""
         return self._savedir
 
     def get_crashdir(self):
         """Returns task's crashdir"""
-        return os.path.join(self._savedir, "crash")
+        return self._savedir / "crash"
 
     def start(self, debug=False, kernelver=None, arch=None):
         if arch is None:
@@ -1400,7 +1398,7 @@ class RetraceTask:
             if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
                 filename = self.get_vmcore_path()
             else:
-                filename = os.path.join(crashdir, self.COREDUMP_FILE)
+                filename = crashdir / self.COREDUMP_FILE
 
             task_arch = guess_arch(filename)
         else:
@@ -1422,7 +1420,7 @@ class RetraceTask:
 
     def chmod(self, key):
         try:
-            os.chmod(self._get_file_path(key), stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+            self._get_file_path(key).chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
         except OSError:
             pass
 
@@ -1451,7 +1449,7 @@ class RetraceTask:
         with open(tmpfilename, mode) as f:
             f.write(value)
 
-        os.rename(tmpfilename, filename)
+        tmpfilename.rename(filename)
         self.chgrp(key)
         self.chmod(key)
 
@@ -1467,14 +1465,14 @@ class RetraceTask:
         return result
 
     def has(self, key):
-        return os.path.isfile(self._get_file_path(key))
+        return self._get_file_path(key).is_file()
 
     def touch(self, key):
         open(self._get_file_path(key), "a").close()
 
     def delete(self, key):
         if self.has(key):
-            os.unlink(self._get_file_path(key))
+            self._get_file_path(key).unlink()
 
     def get_password(self):
         """Returns task's password"""
@@ -1497,7 +1495,7 @@ class RetraceTask:
 
     def get_age(self):
         """Returns the age of the task in hours."""
-        return int(time.time() - os.path.getmtime(self._savedir)) // 3600
+        return int(time.time() - self._savedir.stat().st_mtime) // 3600
 
     def reset_age(self):
         """Reset the age of the task to the current time."""
@@ -1614,7 +1612,7 @@ class RetraceTask:
         if value.arch == hostarch:
             self.set_crash_cmd("crash")
             self.set_mock(False)
-        elif CONFIG["Crash%s" % value.arch] and os.path.isfile(CONFIG["Crash%s" % value.arch]):
+        elif CONFIG["Crash%s" % value.arch] and Path(CONFIG["Crash%s" % value.arch]).is_file():
             self.set_mock(False)
             self.set_crash_cmd(CONFIG["Crash%s" % value.arch])
         else:
@@ -1665,20 +1663,20 @@ class RetraceTask:
 
     def has_vmcore(self):
         vmcore_path = self.get_vmcore_path()
-        return os.path.isfile(vmcore_path)
+        return vmcore_path.is_file()
 
     def get_vmcore_path(self):
         """
         Return a path to vmcore file in crashdir.
         """
-        return os.path.join(self.get_crashdir(), self.vmcore_file)
+        return self.get_crashdir() / self.vmcore_file
 
     def add_vmcore_suffix(self, vmcore_path, filename):
         """
         Adds the suffix to a new vmcore path and sets a new vmcore name for the task.
         """
         vmcore_path = add_snapshot_suffix(vmcore_path, filename)
-        self.vmcore_file = os.path.basename(vmcore_path)
+        self.vmcore_file = vmcore_path.name
 
         return vmcore_path
 
@@ -1702,8 +1700,8 @@ class RetraceTask:
         return self.VMCORE_FILE
 
     def has_coredump(self):
-        coredump_path = os.path.join(self._savedir, self.COREDUMP_FILE)
-        return os.path.isfile(coredump_path)
+        coredump_path = self._savedir / self.COREDUMP_FILE
+        return coredump_path.is_file()
 
     def download_block(self, data):
         self._progress_write_func(data)
@@ -1758,9 +1756,9 @@ class RetraceTask:
         errors = []
 
         crashdir = self.get_crashdir()
-        if not os.path.isdir(crashdir):
+        if not crashdir.is_dir():
             oldmask = os.umask(0o007)
-            os.makedirs(crashdir)
+            crashdir.mkdir(parents=True)
             os.umask(oldmask)
 
         for url in self.get_remote():
@@ -1775,7 +1773,7 @@ class RetraceTask:
                 ftp = None
                 try:
                     ftp = ftp_init()
-                    with open(os.path.join(crashdir, filename), "wb") as target_file:
+                    with open(crashdir / filename, "wb") as target_file:
                         self._progress_write_func = target_file.write
                         self._progress_total = ftp.size(filename)
                         self._progress_total_str = human_readable_size(self._progress_total)
@@ -1796,16 +1794,18 @@ class RetraceTask:
             # download local file
             elif url.startswith("/") or url.startswith("file:///"):
                 if url.startswith("file://"):
-                    url = url[7:]
+                    url = Path(url[7:])
+                else:
+                    url = Path(url)
 
                 log_info("Retrieving local file '%s'" % url)
 
-                if not os.path.isfile(url):
+                if not url.is_file():
                     errors.append((url, "File not found"))
                     continue
 
-                filename = os.path.basename(url)
-                targetfile = os.path.join(crashdir, filename)
+                filename = url.name
+                targetfile = crashdir / filename
 
                 copy = True
                 if get_archive_type(url) == ARCHIVE_UNKNOWN:
@@ -1846,7 +1846,7 @@ class RetraceTask:
             if self.has_md5sum():
                 self.set_status(STATUS_CALCULATING_MD5SUM)
                 log_info(STATUS[STATUS_CALCULATING_MD5SUM])
-                md5v = self.calculate_md5(os.path.join(crashdir, filename))
+                md5v = self.calculate_md5(crashdir / filename)
                 md5sums.append("{0} {1}".format(md5v, downloaded[-1]))
                 self.set_md5sum("\n".join(md5sums)+"\n")
 
@@ -1854,7 +1854,7 @@ class RetraceTask:
             log_info(STATUS[STATUS_POSTPROCESS])
 
             if unpack:
-                fullpath = os.path.join(crashdir, filename)
+                fullpath = crashdir / filename
                 if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
                     try:
                         unpack_vmcore(fullpath)
@@ -1865,10 +1865,10 @@ class RetraceTask:
                         unpack_coredump(fullpath)
                     except Exception as ex:
                         errors.append((fullpath, str(ex)))
-                st = os.stat(crashdir)
+                st = crashdir.stat()
                 if (st.st_mode & stat.S_IRGRP) == 0 or (st.st_mode & stat.S_IXGRP) == 0:
                     try:
-                        os.chmod(crashdir, st.st_mode | stat.S_IRGRP | stat.S_IXGRP)
+                        crashdir.chmod(st.st_mode | stat.S_IRGRP | stat.S_IXGRP)
                     except Exception:
                         log_warn("Crashdir '%s' is not group readable and chmod"
                                  " failed. The process will continue but if"
@@ -1881,37 +1881,36 @@ class RetraceTask:
                 if filename.is_dir():
                     move_dir_contents(fullpath, crashdir)
 
-            files = os.listdir(crashdir)
+            files = list(crashdir.iterdir())
             if not files:
                 errors.append(([], "No files found in the tarball"))
             elif len(files) == 1:
                 if files[0] != self.VMCORE_FILE:
-                    os.rename(os.path.join(crashdir, files[0]), vmcore_path)
+                    files[0].rename(vmcore_path)
             else:
                 vmcores = []
                 for filename in files:
-                    fname, fext = os.path.splitext(filename)
+                    fname, fext = filename.parent / filename.stem, filename.suffix
                     if self.VMCORE_FILE in fname and fext != ".vmem":
                         vmcores.append(filename)
 
                 # pick the largest file
                 if not vmcores:
-                    absfiles = [os.path.join(crashdir, f) for f in files if ".vmem" not in f]
-                    files_sizes = [(os.path.getsize(f), f) for f in absfiles]
+                    absfiles = [f for f in files if f.suffix != ".vmem"]
+                    files_sizes = [(f.stat().st_size, f) for f in absfiles]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
                     vmcore_path = self.add_vmcore_suffix(vmcore_path, largest_file)
-                    os.rename(largest_file, vmcore_path)
+                    largest_file.rename(vmcore_path)
                 elif len(vmcores) > 1:
-                    absfiles = [os.path.join(crashdir, f) for f in vmcores]
-                    files_sizes = [(os.path.getsize(f), f) for f in absfiles]
+                    files_sizes = [(f.stat().st_size, f) for f in vmcores]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
                     vmcore_path = self.add_vmcore_suffix(vmcore_path, largest_file)
-                    os.rename(largest_file, vmcore_path)
+                    largest_file.rename(vmcore_path)
                 else:
                     for filename in files:
-                        if filename == vmcores[0] and vmcores[0] != self.VMCORE_FILE:
+                        if filename == vmcores[0] and vmcores[0].name != self.VMCORE_FILE:
                             vmcore_path = self.add_vmcore_suffix(vmcore_path, filename)
-                            os.rename(os.path.join(crashdir, filename), vmcore_path)
+                            filename.rename(vmcore_path)
 
             for filename in Path(crashdir).iterdir():
                 suffix = filename.suffix
@@ -1922,17 +1921,17 @@ class RetraceTask:
                 filename.unlink()
 
         if self.get_type() in [TASK_RETRACE, TASK_RETRACE_INTERACTIVE]:
-            coredump = os.path.join(crashdir, self.COREDUMP_FILE)
+            coredump = crashdir / self.COREDUMP_FILE
             for filename in Path(crashdir).iterdir():
                 if filename.is_dir():
                     move_dir_contents(filename, crashdir)
 
-            files = os.listdir(crashdir)
+            files = list(crashdir.iterdir())
             if not files:
                 errors.append(([], "No files found in the tarball"))
             elif len(files) == 1:
                 if files[0] != self.COREDUMP_FILE:
-                    os.rename(os.path.join(crashdir, files[0]), coredump)
+                    files[0].rename(coredump)
             else:
                 coredumps = []
                 for filename in files:
@@ -1941,20 +1940,18 @@ class RetraceTask:
 
                 # pick the largest file
                 if not coredumps:
-                    absfiles = [os.path.join(crashdir, f) for f in files]
-                    files_sizes = [(os.path.getsize(f), f) for f in absfiles]
+                    files_sizes = [(f.stat().st_size, f) for f in files]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
-                    os.rename(largest_file, coredump)
+                    largest_file.rename(coredump)
                 elif len(coredumps) > 1:
-                    absfiles = [os.path.join(crashdir, f) for f in coredumps]
-                    files_sizes = [(os.path.getsize(f), f) for f in absfiles]
+                    files_sizes = [(f.stat().st_size, f) for f in coredumps]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
-                    os.rename(largest_file, coredump)
+                    largest_file.rename(coredump)
                 else:
                     for filename in files:
                         if filename == coredumps[0]:
                             if coredumps[0] != self.COREDUMP_FILE:
-                                os.rename(os.path.join(crashdir, filename), coredump)
+                                filename.rename(coredump)
 
             for filename in Path(crashdir).iterdir():
                 if filename.name in REQUIRED_FILES[self.get_type()]+["release", "os_release"]:
@@ -1962,30 +1959,30 @@ class RetraceTask:
 
                 filename.unlink()
 
-            if os.path.isfile(coredump):
-                oldsize = os.path.getsize(coredump)
+            if coredump.is_file():
+                oldsize = coredump.stat().st_size
                 log_info("Coredump size: %s" % human_readable_size(oldsize))
 
-                st = os.stat(coredump)
+                st = coredump.stat()
                 if (st.st_mode & stat.S_IRGRP) == 0:
                     try:
-                        os.chmod(coredump, st.st_mode | stat.S_IRGRP)
+                        coredump.chmod(st.st_mode | stat.S_IRGRP)
                     except Exception:
                         log_warn("File '%s' is not group readable and chmod"
                                  " failed. The process will continue but if"
                                  " it fails this is the likely cause."
                                  % coredump)
 
-        os.unlink(os.path.join(self._savedir, RetraceTask.REMOTE_FILE))
+        (self._savedir / RetraceTask.REMOTE_FILE).unlink()
         self.set_downloaded(", ".join(downloaded))
 
         return errors
 
     def get_results_dir(self):
         """Return the directory of results; handls legacy 'misc' dir"""
-        results_dir = os.path.join(self._savedir, RetraceTask.RESULTS_DIR)
-        if not os.path.isdir(results_dir):
-            results_dir = os.path.join(self._savedir, "misc")
+        results_dir = self._savedir / RetraceTask.RESULTS_DIR
+        if not results_dir.is_dir():
+            results_dir = self._savedir / "misc"
         return results_dir
 
     def has_results(self, name):
@@ -1994,17 +1991,17 @@ class RetraceTask:
             raise Exception("name may not contain the '/' character")
 
         results_dir = self.get_results_dir()
-        results_path = os.path.join(results_dir, name)
+        results_path = results_dir / name
 
-        return os.path.isdir(results_dir) and os.path.isfile(results_path)
+        return results_dir.is_dir() and results_path.is_file()
 
     def get_results_list(self):
         """Lists all files in RESULTS_DIR."""
         results_dir = self.get_results_dir()
-        if not os.path.isdir(results_dir):
+        if not results_dir.is_dir():
             return []
 
-        return os.listdir(results_dir)
+        return [f.name for f in results_dir.iterdir()]
 
     def get_results(self, name, mode="rb"):
         """Gets content of a file named 'name' from RESULTS_DIR."""
@@ -2014,7 +2011,7 @@ class RetraceTask:
         if not self.has_results(name):
             raise Exception("There is no record with such name")
 
-        results_path = os.path.join(self.get_results_dir(), name)
+        results_path = self.get_results_dir() / name
         with open(results_path, mode) as results_file:
             result = results_file.read(1 << 24)  # 16MB
 
@@ -2030,12 +2027,12 @@ class RetraceTask:
                             "to force overwrite existing records.")
 
         results_dir = self.get_results_dir()
-        if not os.path.isdir(results_dir):
+        if not results_dir.is_dir():
             oldmask = os.umask(0o007)
-            os.makedirs(results_dir)
+            results_dir.mkdir(parents=True)
             os.umask(oldmask)
 
-        results_path = os.path.join(results_dir, name)
+        results_path = results_dir / name
         with open(results_path, mode) as results_file:
             results_file.write(value)
 
@@ -2045,7 +2042,7 @@ class RetraceTask:
             raise Exception("name may not contain the '/' character")
 
         if self.has_results(name):
-            os.unlink(os.path.join(self.get_results_dir(), name))
+            (self.get_results_dir() / name).unlink()
 
     def get_managed(self):
         """Verifies whether the task is under task management control"""
@@ -2118,8 +2115,11 @@ class RetraceTask:
         """Writes data to CRASH_CMD_FILE"""
         self.set(RetraceTask.CRASH_CMD_FILE, data)
         try:
-            os.chmod(self._get_file_path(RetraceTask.CRASH_CMD_FILE),
-                     stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH)
+            self._get_file_path(RetraceTask.CRASH_CMD_FILE).chmod(stat.S_IRUSR
+                                                                  | stat.S_IWUSR
+                                                                  | stat.S_IRGRP
+                                                                  | stat.S_IWGRP
+                                                                  | stat.S_IROTH)
         except OSError:
             pass
 
@@ -2208,18 +2208,18 @@ class RetraceTask:
 
     def get_default_started_time(self):
         """Get ctime of the task directory"""
-        return int(os.path.getctime(self._savedir))
+        return int(self._savedir.stat().st_ctime)
 
     def get_default_finished_time(self):
         """Get mtime of the task directory"""
-        return int(os.path.getmtime(self._savedir))
+        return int(self._savedir.stat().st_mtime)
 
     def clean(self):
         """Removes all files and directories others than
         results and logs from the task directory."""
-        if os.path.isfile(os.path.join(self._savedir, "default.cfg")) and \
-           os.path.isfile(os.path.join(self._savedir, "site-defaults.cfg")) and \
-           os.path.isfile(os.path.join(self._savedir, "logging.ini")):
+        if (self._savedir / "default.cfg").is_file() and \
+           (self._savedir / "site-defaults.cfg").is_file() and \
+           (self._savedir / "logging.ini").is_file():
             run(["/usr/bin/mock", "--configdir", self._savedir, "--scrub=all"],
                 stdout=DEVNULL)
 
@@ -2260,7 +2260,7 @@ class RetraceTask:
                          RetraceTask.CRASH_CMD_FILE, RetraceTask.MOCK_LOG_DIR,
                          RetraceTask.VMLINUX_FILE]:
             try:
-                os.unlink(os.path.join(self._savedir, filename))
+                (self._savedir / filename).unlink()
             except OSError as ex:
                 # ignore 'No such file or directory'
                 if ex.errno != errno.ENOENT:
@@ -2270,15 +2270,15 @@ class RetraceTask:
         for filename in Path(results_dir).iterdir():
             filename.unlink()
 
-        kerneldir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % self._taskid)
-        if os.path.isdir(kerneldir):
+        kerneldir = Path(CONFIG["SaveDir"], "%d-kernel" % self._taskid)
+        if kerneldir.is_dir():
             shutil.rmtree(kerneldir)
 
     def remove(self):
         """Completely removes the task directory."""
         self.clean()
-        kerneldir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % self._taskid)
-        if os.path.isdir(kerneldir):
+        kerneldir = Path(CONFIG["SaveDir"], "%d-kernel" % self._taskid)
+        if kerneldir.is_dir():
             shutil.rmtree(kerneldir)
 
         shutil.rmtree(self._savedir)
