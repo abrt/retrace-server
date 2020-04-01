@@ -206,14 +206,13 @@ if not dont_create_repo_arg:
     arch = worker.read_architecture(None, corepath)
 
     # read release, distribution and version
-    release, distribution, version = worker.read_release_file(crashdir,
-                                                              package)
+    (release, distribution, version, _) = worker.read_release_file(crashdir,
+                                                                   package)
     releaseid = "%s-%s-%s" % (distribution, version, arch)
 
     # find missing packages
-    packages, missing_unparsed, fafrepo = worker.read_packages(crashdir,
-                                                               releaseid, package,
-                                                               distribution)
+    packages, missing_unparsed = worker.read_packages(crashdir, releaseid,
+                                                      package, distribution)
     #find what provides missing parts
     missing = []
     cmd = ["rpm", "-qf"]
