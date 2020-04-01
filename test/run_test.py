@@ -42,9 +42,8 @@ def create_repo(packages, releaseid, version):
                   ["abrt-addon-ccpp", "shadow-utils", "gdb", "rpm"] + packages
 
     cmd = 'dnf --releasever={0} --enablerepo=\*debuginfo\* -y\
-           --installroot={1} download --resolve --destdir {2} {3}'
-           .format(version, repo_path, repo_path,\
-           " ".join(needed_packages))
+           --installroot={1} download --resolve --destdir {2} {3}'\
+          .format(version, repo_path, repo_path, " ".join(needed_packages))
 
     c = run(cmd, shell=True, stdout=PIPE, stderr=PIPE, encoding='utf-8')
     stdout, stderr = c.communicate()
