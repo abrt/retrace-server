@@ -2,6 +2,7 @@
 import os
 import sys
 
+from pathlib import Path
 from webob import Request
 from tempfile import NamedTemporaryFile
 
@@ -81,11 +82,11 @@ def application(environ, start_response):
                         _("X-CoreFileDirectory header has been disabled "
                           "by server administrator"))
 
-    workdir = CONFIG["SaveDir"]
+    workdir = Path(CONFIG["SaveDir"])
 
-    if not os.path.isdir(workdir):
+    if not workdir.is_dir():
         try:
-            os.makedirs(workdir)
+            workdir.mkdir(parents=True)
         except OSError:
             return response(start_response, "500 Internal Server Error",
                             _("Unable to create working directory"))
@@ -110,25 +111,25 @@ def application(environ, start_response):
 
     if len(get_active_tasks()) > CONFIG["MaxParallelTasks"]:
         save_crashstats_reportfull(environ["REMOTE_ADDR"])
-        os.unlink(archive.name)
+        Path(archive.name).unlink()
         task.remove()
         return response(start_response, "503 Service Unavailable",
                         _("Retrace server is fully loaded at the moment"))
 
     if "X-CoreFileDirectory" in request.headers:
-        coredir = request.headers["X-CoreFileDirectory"]
-        if not os.path.isdir(coredir):
+        coredir = Path(request.headers["X-CoreFileDirectory"])
+        if not coredir.is_dir():
             return response(start_response, "404 Not Found", _("The directory "
                                                                "specified in 'X-CoreFileDirectory' does not exist"))
 
-        files = os.listdir(coredir)
+        files = list(coredir.iterdir())
         if len(files) != 1:
             return response(start_response, "501 Not Implemented",
                             _("There are %d files in the '%s' directory. Only "
                               "a single archive is supported at the moment") %
                             (len(files), coredir))
 
-        filepath = os.path.join(coredir, files[0])
+        filepath = files[0]
         archive_meta = HANDLE_ARCHIVE[request.content_type]
         if ("type" in archive_meta and
                 get_archive_type(filepath) != archive_meta["type"]):
@@ -173,7 +174,7 @@ def application(environ, start_response):
 
     try:
         crashdir = task.get_crashdir()
-        os.mkdir(crashdir)
+        crashdir.mkdir()
         unpack_retcode = unpack(archive.name, request.content_type, crashdir)
 
         if unpack_retcode != 0:
@@ -183,22 +184,21 @@ def application(environ, start_response):
         return response(start_response, "500 Internal Server Error",
                         _("Unable to unpack archive"))
 
-    os.unlink(archive.name)
+    Path(archive.name).unlink()
 
-    files = os.listdir(crashdir)
+    files = list(crashdir.iterdir())
 
     for f in files:
-        filepath = os.path.join(crashdir, f)
-        filename, suffix = os.path.splitext(f)
+        filename, suffix = f.stem, f.suffix
 
-        if os.path.islink(filepath):
+        if f.is_symlink():
             task.remove()
             return response(start_response, "403 Forbidden",
                             _("Symlinks are not allowed to be in the archive"))
 
         if filename in ALLOWED_FILES and (not suffix or suffix in SNAPSHOT_SUFFIXES):
             maxsize = ALLOWED_FILES[filename]
-            if maxsize > 0 and os.path.getsize(filepath) > maxsize:
+            if maxsize > 0 and f.stat().st_size > maxsize:
                 task.remove()
                 return response(start_response, "403 Forbidden",
                                 _("The '%s' file is larger than expected") % f)
