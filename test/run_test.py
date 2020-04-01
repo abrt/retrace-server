@@ -48,7 +48,7 @@ def create_repo(packages, releaseid, version):
           .format(version, repo_path, repo_path, " ".join(needed_packages))
 
     c = run(cmd, shell=True, stdout=PIPE, stderr=PIPE, encoding='utf-8')
-    stdout, stderr = c.communicate()
+    stdout, stderr = c.stdout, c.stderr
     #NOTE if error-msg states: "Failed to synchronize cache for repo"
         #easiest thing is to go /etc/yum.repos.d/failed_repo and comment
         #line "skip_if_unavailable=False"
@@ -232,7 +232,7 @@ if not dont_create_repo_arg:
 
 # instead of task.start() (a few missing lines, should be added?)
 cmdline = ["retrace-server-worker", "%d" % task.get_taskid(), "--foreground"]
-call(cmdline)
+run(cmdline)
 
 # check if backtrace was generated
 if not task.has_backtrace():
