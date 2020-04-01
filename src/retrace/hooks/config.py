@@ -1,20 +1,18 @@
 #!/bin/python3
-import os
 import configparser
 from pathlib import Path
 
-MAIN_CONFIG_PATH = "/etc/retrace-server/"
-MAIN_HOOK_CONFIG_FILE = "retrace-server-hooks.conf"
-MAIN_HOOK_CONFIGS_PATH = "/etc/retrace-server/hooks"
+MAIN_CONFIG_PATH = Path("/etc/retrace-server/")
+MAIN_HOOK_CONFIG_FILE = Path("retrace-server-hooks.conf")
+MAIN_HOOK_CONFIGS_PATH = Path("/etc/retrace-server/hooks")
 USER_CONFIG_PATH = Path.home() / ".config/retrace-server/"
 USER_HOOK_CONFIGS_PATH = Path.home() / ".config/retrace-server/hooks"
-HOOK_PATH = "/usr/libexec/retrace-server/hooks/"
+HOOK_PATH = Path("/usr/libexec/retrace-server/hooks/")
 HOOK_TIMEOUT = 300
 
 
-def get_config_files(directory):
-    return [fname for fname in [os.path.abspath(os.path.join(directory, filename.name))
-                                for filename in os.scandir(directory) if filename.name.endswith(".conf")]]
+def get_config_files(directory: Path):
+    return [fname for fname in directory.iterdir() if fname.suffix == '.conf']
 
 
 def load_config_files(config_files):
