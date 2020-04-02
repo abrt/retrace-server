@@ -7,6 +7,7 @@ import grp
 import logging
 import shutil
 import stat
+from pathlib import Path
 from subprocess import PIPE, DEVNULL, STDOUT, run
 
 from retrace.hooks.hooks import RetraceHook
@@ -142,8 +143,8 @@ class RetraceWorker():
             # add a symlink to log to results directory
             # use underscore so that the log is first in the list
             try:
-                os.symlink(self.task._get_file_path(RetraceTask.LOG_FILE),
-                           os.path.join(self.task.get_results_dir(), "retrace-log"))
+                (self.task.get_results_dir() / "retrace-log").symlink_to(
+                    self.task._get_file_path(RetraceTask.LOG_FILE))
             except OSError as ex:
                 if ex.errno != errno.EEXIST:
                     raise
@@ -184,14 +185,13 @@ class RetraceWorker():
 
         return output
 
-    def _check_required_file(self, req, crashdir):
-        if os.path.isfile(os.path.join(crashdir, req)):
+    def _check_required_file(self, req: Path, crashdir: Path):
+        if (crashdir / req).is_file():
             return True
 
-        if req == "vmcore":
+        if req.name == "vmcore":
             for suffix in SNAPSHOT_SUFFIXES:
-                with_suffix = req + suffix
-                if os.path.isfile(os.path.join(crashdir, with_suffix)):
+                if (crashdir / req.with_suffix(suffix)).is_file():
                     return True
 
         return False
@@ -220,10 +220,10 @@ class RetraceWorker():
             log_debug("Determined architecture: %s" % arch)
         return arch
 
-    def read_package_file(self, crashdir):
+    def read_package_file(self, crashdir: Path):
         # read package file
         try:
-            with open(os.path.join(crashdir, "package"), "r") as package_file:
+            with Path(crashdir, "package").open() as package_file:
                 crash_package = package_file.read(ALLOWED_FILES["package"])
         except Exception as ex:
             log_error("Unable to read crash package from 'package' file: %s" % ex)
@@ -244,31 +244,31 @@ class RetraceWorker():
         is_rawhide = False
         release_path = None
         rootdir = None
-        rootdir_path = os.path.join(crashdir, "rootdir")
-        if os.path.isfile(rootdir_path):
-            with open(rootdir_path, "r") as rootdir_file:
+        rootdir_path = crashdir / "rootdir"
+        if rootdir_path.is_file():
+            with rootdir_path.open() as rootdir_file:
                 rootdir = rootdir_file.read(ALLOWED_FILES["rootdir"])
 
-            exec_path = os.path.join(crashdir, "executable")
-            with open(exec_path, "r") as exec_file:
+            exec_path = crashdir / "executable"
+            with exec_path.open() as exec_file:
                 executable = exec_file.read(ALLOWED_FILES["executable"])
 
             if executable.startswith(rootdir):
-                with open(exec_path, "w") as exec_file:
+                with exec_path.open() as exec_file:
                     exec_file.write(executable[len(rootdir):])
 
-            rel_path = os.path.join(crashdir, "os_release_in_rootdir")
-            if os.path.isfile(rel_path):
+            rel_path = crashdir / "os_release_in_rootdir"
+            if rel_path.is_file():
                 release_path = rel_path
 
         if not release_path:
-            release_path = os.path.join(crashdir, "os_release")
-            if not os.path.isfile(release_path):
-                release_path = os.path.join(crashdir, "release")
+            release_path = crashdir / "os_release"
+            if not release_path.is_file():
+                release_path = crashdir / "release"
 
         release = "Unknown Release"
         try:
-            with open(release_path, "r") as release_file:
+            with release_path.open() as release_file:
                 release = release_file.read(ALLOWED_FILES["os_release"])
 
             version = distribution = None
@@ -302,24 +302,24 @@ class RetraceWorker():
         packages = [crash_package]
         missing = []
 
-        packagesfile = os.path.join(crashdir, "packages")
-        if os.path.isfile(packagesfile):
-            with open(packagesfile, "r") as f:
+        packagesfile = crashdir / "packages"
+        if packagesfile.is_file():
+            with packagesfile.open() as f:
                 packages = f.read.split()
         else:
             # read required packages from coredump
             try:
                 repoid = "%s%s" % (REPO_PREFIX, releaseid)
-                dnfcfgpath = os.path.join(self.task.get_savedir(), "dnf.conf")
-                with open(dnfcfgpath, "w") as dnfcfg:
+                dnfcfgpath = self.task.get_savedir() / "dnf.conf"
+                with dnfcfgpath.open("w") as dnfcfg:
                     dnfcfg.write("[%s]\n" % repoid)
                     dnfcfg.write("name=%s\n" % releaseid)
                     dnfcfg.write("baseurl=file://%s/%s/\n" % (CONFIG["RepoDir"], releaseid))
                     dnfcfg.write("failovermethod=priority\n")
 
-                child = run(["coredump2packages", os.path.join(crashdir, "coredump"),
+                child = run(["coredump2packages", crashdir / "coredump",
                              "--repos=%s" % repoid, "--config=%s" % dnfcfgpath,
-                             "--log=%s" % os.path.join(self.task.get_savedir(), "c2p_log")],
+                             "--log=%s" % Path(self.task.get_savedir(), "c2p_log")],
                             stdout=PIPE, stderr=PIPE, encoding='utf-8')
                 section = 0
                 lines = child.stdout.split("\n")
@@ -375,10 +375,10 @@ class RetraceWorker():
 
         task = self.task
         crashdir = task.get_crashdir()
-        corepath = os.path.join(crashdir, "coredump")
+        corepath = crashdir / "coredump"
 
         try:
-            self.stats["coresize"] = os.path.getsize(corepath)
+            self.stats["coresize"] = corepath.stat().st_size
         except OSError:
             pass
 
@@ -417,12 +417,12 @@ class RetraceWorker():
         self.hook.run("post_prepare_debuginfo")
         self.hook.run("pre_prepare_environment")
 
-        repopath = os.path.join(CONFIG["RepoDir"], releaseid)
+        repopath = Path(CONFIG["RepoDir"], releaseid)
 
         if CONFIG["RetraceEnvironment"] == "mock":
         # create mock config file
             try:
-                with open(os.path.join(task.get_savedir(), RetraceTask.MOCK_DEFAULT_CFG), "w") as mockcfg:
+                with (task.get_savedir() / RetraceTask.MOCK_DEFAULT_CFG).open("w") as mockcfg:
                     mockcfg.write("config_opts['root'] = '%d'\n" % task.get_taskid())
                     mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
                     mockcfg.write("config_opts['chroot_setup_cmd'] = '")
@@ -465,10 +465,9 @@ class RetraceWorker():
                     mockcfg.write("\"\"\"\n")
 
                 # symlink defaults from /etc/mock
-                os.symlink("/etc/mock/site-defaults.cfg",
-                           os.path.join(task.get_savedir(), RetraceTask.MOCK_SITE_DEFAULTS_CFG))
-                os.symlink("/etc/mock/logging.ini",
-                           os.path.join(task.get_savedir(), RetraceTask.MOCK_LOGGING_INI))
+                (task.get_savedir() / RetraceTask.MOCK_SITE_DEFAULTS_CFG).symlink_to(
+                    "/etc/mock/site-defaults.cfg")
+                (task.get_savedir() / RetraceTask.MOCK_LOGGING_INI).symlink_to("/etc/mock/logging.ini")
             except Exception as ex:
                 log_error("Unable to create mock config file: %s" % ex)
                 self._fail()
@@ -479,8 +478,8 @@ class RetraceWorker():
 
         if CONFIG["RetraceEnvironment"] == "mock":
             self._retrace_run(25, ["/usr/bin/mock", "init", "--resultdir",
-                                   task.get_savedir() + "/log", "--configdir",
-                                   task.get_savedir()])
+                                   str(task.get_savedir() / "log"), "--configdir",
+                                   str(task.get_savedir())])
 
             self.hook.run("post_prepare_environment")
             self.hook.run("pre_retrace")
@@ -494,8 +493,7 @@ class RetraceWorker():
 
         if CONFIG["RetraceEnvironment"] == "podman":
             try:
-                with open(os.path.join(task.get_savedir(),
-                                       "podman_repo.repo"), "w") as podman_repo:
+                with (task.get_savedir() / "podman_repo.repo").open("w") as podman_repo:
                     podman_repo.write("[podman-%s]\n" % distribution)
                     podman_repo.write("name=podman-%s\n" % releaseid)
                     podman_repo.write("baseurl=file://%s/\n" % repopath)
@@ -506,8 +504,7 @@ class RetraceWorker():
                 self._fail()
 
             try:
-                with open(os.path.join(task.get_savedir(),
-                                       RetraceTask.DOCKERFILE), "w") as dockerfile:
+                with (task.get_savedir() / RetraceTask.DOCKERFILE).open("w") as dockerfile:
                     dockerfile.write('FROM %s:%s\n\n' % (distribution, version))
                     dockerfile.write('RUN useradd -l retrace && \\ \n')
                     dockerfile.write('    mkdir -p /var/spool/abrt/crash\n')
@@ -592,8 +589,8 @@ class RetraceWorker():
         v1 = task1.get_vmcore_path()
         v2 = task2.get_vmcore_path()
         try:
-            s1 = os.stat(v1)
-            s2 = os.stat(v2)
+            s1 = v1.stat()
+            s2 = v2.stat()
         except OSError:
             log_warn("Attempt to dedup %s and %s but 'stat' failed on one of the paths" % (v1, v2))
             return 0
@@ -613,20 +610,20 @@ class RetraceWorker():
                      % (v1, v2, v1_md5, v2_md5))
             return 0
 
-        v2_link = v2 + "-link"
+        v2_link = Path(str(v2) + "-link")
         try:
-            os.link(v1, v2_link)
+            v2_link.link_to(v1)
         except OSError:
             log_warn("Failed to dedup %s and %s - failed to create hard link from %s to %s" % (v1, v2, v2_link, v1))
             return 0
         try:
-            os.unlink(v2)
+            v2.unlink()
         except OSError:
             log_warn("Failed to dedup %s and %s - unlink of %s failed" % (v1, v2, v2))
             os.unlink(v2_link)
             return 0
         try:
-            os.rename(v2_link, v2)
+            v2_link.rename(v2)
         except OSError:
             log_error("ERROR: Failed to dedup %s and %s - rename hardlink %s to %s failed" % (v1, v2, v2_link, v2))
             return 0
@@ -644,12 +641,12 @@ class RetraceWorker():
         vmcore_path = task.get_vmcore_path()
 
         try:
-            self.stats["coresize"] = os.path.getsize(vmcore_path)
+            self.stats["coresize"] = vmcore_path.stat().st_size
         except OSError:
             pass
 
         vmcore = KernelVMcore(vmcore_path)
-        oldsize = os.path.getsize(vmcore_path)
+        oldsize = vmcore_path.stat().st_size
         log_info("Vmcore size: %s" % human_readable_size(oldsize))
         if vmcore.is_flattened_format():
             start = time.time()
@@ -657,7 +654,7 @@ class RetraceWorker():
             # NOTE: We do not need to know the kernelver or vmlinux path here
             vmcore.convert_flattened_format()
             dur = int(time.time() - start)
-            newsize = os.path.getsize(vmcore_path)
+            newsize = vmcore_path.stat().st_size
             log_info("Converted size: %s" % human_readable_size(newsize))
             log_info("Makedumpfile took %d seconds and saved %s"
                      % (dur, human_readable_size(oldsize - newsize)))
@@ -692,20 +689,20 @@ class RetraceWorker():
                 # if a non-retrace user in group mock executes
                 # setgid /usr/bin/mock, he gets permission denied.
                 # this is not a security thing - using mock gives you root anyway
-                cfgdir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
+                cfgdir = Path(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
 
                 # if the directory exists, it is orphaned - nuke it
-                if os.path.isdir(cfgdir):
+                if cfgdir.is_dir():
                     shutil.rmtree(cfgdir)
 
                 mockgid = grp.getgrnam("mock").gr_gid
                 old_umask = os.umask(0o027)
-                os.mkdir(cfgdir)
+                cfgdir.mkdir()
                 os.chown(cfgdir, -1, mockgid)
 
                 try:
-                    cfgfile = os.path.join(cfgdir, RetraceTask.MOCK_DEFAULT_CFG)
-                    with open(cfgfile, "w") as mockcfg:
+                    cfgfile = cfgdir / RetraceTask.MOCK_DEFAULT_CFG
+                    with cfgfile.open("w") as mockcfg:
                         mockcfg.write("config_opts['root'] = '%d-kernel'\n" % task.get_taskid())
                         mockcfg.write("config_opts['target_arch'] = '%s'\n" % kernelver.arch)
                         mockcfg.write("config_opts['chroot_setup_cmd'] = 'install bash coreutils cpio "
@@ -744,10 +741,9 @@ class RetraceWorker():
                     os.chown(cfgfile, -1, mockgid)
 
                     # symlink defaults from /etc/mock
-                    os.symlink("/etc/mock/site-defaults.cfg",
-                               os.path.join(task.get_savedir(), RetraceTask.MOCK_SITE_DEFAULTS_CFG))
-                    os.symlink("/etc/mock/logging.ini",
-                               os.path.join(task.get_savedir(), RetraceTask.MOCK_LOGGING_INI))
+                    (task.get_savedir() / RetraceTask.MOCK_SITE_DEFAULTS_CFG).symlink_to(
+                        "/etc/mock/site-defaults.cfg")
+                    (task.get_savedir() / RetraceTask.MOCK_LOGGING_INI).symlink_to("/etc/mock/logging.ini")
                 except Exception as ex:
                     raise Exception("Unable to create mock config file: %s" % ex)
                 finally:
@@ -780,10 +776,10 @@ class RetraceWorker():
 
                 savedir = task.get_savedir()
                 crashdir = task.get_crashdir()
-                vmcore_file = os.path.basename(vmcore_path)
+                vmcore_file = vmcore_path.name
                 release, distribution, version, _ = self.read_release_file(crashdir, None)
                 try:
-                    with open(os.path.join(savedir, RetraceTask.DOCKERFILE), "w") as dockerfile:
+                    with (savedir / RetraceTask.DOCKERFILE).open("w") as dockerfile:
                         dockerfile.write('FROM %s:%s\n\n' % (distribution, version))
                         dockerfile.write('RUN mkdir -p /var/spool/abrt/crash\n\n')
                         dockerfile.write('RUN dnf ' \
@@ -810,7 +806,7 @@ class RetraceWorker():
                 child = run(["/usr/bin/podman",
                              "build",
                              "--file",
-                             os.path.join(savedir, RetraceTask.DOCKERFILE),
+                             savedir / RetraceTask.DOCKERFILE,
                              "--tag",
                              "retrace-image:%s" % img_cont_id],
                             stdout=DEVNULL, stderr=DEVNULL)
@@ -854,16 +850,16 @@ class RetraceWorker():
             # NOTE: We need to know the kernelver and vmlinux path here
             vmcore.strip_extra_pages()
             dur = int(time.time() - start)
-            newsize = os.path.getsize(vmcore_path)
+            newsize = vmcore_path.stat().st_size
             log_info("Stripped size: %s" % human_readable_size(newsize))
             log_info("Makedumpfile took %d seconds and saved %s"
                      % (dur, human_readable_size(oldsize - newsize)))
 
-        if os.path.isfile(vmcore_path):
-            st = os.stat(vmcore_path)
+        if vmcore_path.is_file():
+            st = vmcore_path.stat()
             if (st.st_mode & stat.S_IRGRP) == 0:
                 try:
-                    os.chmod(vmcore_path, st.st_mode | stat.S_IRGRP)
+                    vmcore_path.chmod(st.st_mode | stat.S_IRGRP)
                 except Exception:
                     log_warn("File '%s' is not group readable and chmod"
                              " failed. The process will continue but if"
@@ -962,13 +958,13 @@ class RetraceWorker():
 
             if task.has("custom_executable"):
                 shutil.copyfile(task._get_file_path("custom_executable"),
-                                os.path.join(crashdir, "executable"))
+                                crashdir / "executable")
             if task.has("custom_package"):
                 shutil.copyfile(task._get_file_path("custom_package"),
-                                os.path.join(crashdir, "package"))
+                                crashdir / "package")
             if task.has("custom_os_release"):
                 shutil.copyfile(task._get_file_path("custom_os_release"),
-                                os.path.join(crashdir, "os_release"))
+                                crashdir / "os_release")
 
             for required_file in REQUIRED_FILES[tasktype]:
                 if not self._check_required_file(required_file, crashdir):
