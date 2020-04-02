@@ -12,6 +12,7 @@ import logging
 import argparse
 import tempfile
 import requests
+from pathlib import Path
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from requests_gssapi import HTTPSPNEGOAuth, DISABLED
 
@@ -30,20 +31,20 @@ def ticket_check():
 def prepare_tar(args):
     """Create tar file containg all necessary files."""
     LOGGER.info("Preparing tar")
-    corefile = args['COREFILE']
-    tmpdir = tempfile.mkdtemp()
-    tar_name = os.path.join(tmpdir, "archive.tar.gz")
+    corefile = Path(args['COREFILE'])
+    tmpdir = Path(tempfile.mkdtemp())
+    tar_name = tmpdir / "archive.tar.gz"
     tar_file = tarfile.open(tar_name, "w:gz")
     for itm in ["vra", "os_release", "package", "executable"]:
         if itm in args.keys() and args[itm]:
             LOGGER.info("Adding '%s' into tar", format(itm))
-            fl_name = os.path.join(tmpdir, itm)
+            fl_name = tmpdir / itm
             with open(fl_name, "w") as fld:
                 fld.write(args[itm])
             tar_file.add(fl_name, arcname=itm)
 
     LOGGER.info("Adding '%s' as '%s' into tar", corefile, args['task_type'])
-    if not os.path.isfile(corefile):
+    if not corefile.is_file():
         print("'{0}' does not exists".format(corefile))
         sys.exit(1)
 
@@ -51,11 +52,11 @@ def prepare_tar(args):
     tar_file.add(corefile, arcname=file_name)
 
     if args['vmem']:
-        vmem = args['vmem']
+        vmem = Path(args['vmem'])
         vmem_file = args['task_type'] + ".vmem"
         LOGGER.info("Adding '%s' as '%s' into tar", vmem, vmem_file)
 
-        if not os.path.isfile(vmem):
+        if not vmem.is_file():
             print("'{0}' does not exists".format(vmem))
             sys.exit(1)
 
@@ -170,8 +171,8 @@ def create_new_task(args):
 
         LOGGER.info("Task_type: %s", task_type)
 
-        tar_name = prepare_tar(args)
-        tar_size = os.path.getsize(tar_name)
+        tar_name = Path(prepare_tar(args))
+        tar_size = tar_name.stat().st_size
         LOGGER.info("Tar size: %s", tar_size)
 
         headers = {'Content-Type': 'application/x-tar',
@@ -195,7 +196,7 @@ def create_new_task(args):
                            stream=True,
                            verify=(not args['no_verify']))
 
-        shutil.rmtree(os.path.dirname(tar_name))
+        shutil.rmtree(tar_name.parent)
 
         check_response(res)
 
@@ -208,9 +209,9 @@ def create_new_task(args):
         return (task_id, task_password)
 
     elif args['task_input'] == "manager":
-        args['COREFILE'] = "file://" + os.path.abspath(args['COREFILE'])
+        args['COREFILE'] = Path(args['COREFILE']).resolve().as_uri()
         if args['vmem']:
-            args['vmem'] = "file://" + os.path.abspath(args['vmem'])
+            args['vmem'] = Path(args['vmem']).resolve().as_uri()
 
         LOGGER.info("Starting new manager task")
         server = args['server'] + "/manager/"
@@ -621,7 +622,7 @@ if __name__ == "__main__":
     # Try guessing type of task if no specified
     if ARGS['task_action'] in ['create', 'batch'] and not ARGS['task_input']:
         # If the file does not exist locally
-        if not os.path.isfile(ARGS['COREFILE']):
+        if not Path(ARGS['COREFILE']).is_file():
             # and server not know
             if not ARGS['server']:
                 LOGGER.info("Defaulting to ftp task")
