@@ -5,6 +5,7 @@ import multiprocessing as mp
 import os
 import shlex
 
+from pathlib import Path
 from subprocess import PIPE, CalledProcessError, run, TimeoutExpired
 
 from retrace.retrace import log_info, log_error, log_debug
@@ -29,21 +30,17 @@ from .config import HOOK_PATH, HOOK_TIMEOUT, hooks_config
 """
 
 
-def get_executables(path):
+def get_executables(path: Path):
     """ Scan `path` and return list of found executable scripts.
     """
-    def _getname(entry):
-        return entry.name
-
     script_list = []
 
-    if not os.path.isdir(path):
+    if not path.is_dir():
         return script_list
 
-    with os.scandir(path) as dirls:
-        for entry in sorted(dirls, key=_getname):
-            if entry.is_file() and os.access(entry.path, os.X_OK):
-                script_list.append(entry.path)
+    for f in sorted(path.iterdir()):
+        if f.is_file() and os.access(f, os.X_OK):
+            script_list.append(f)
 
     return script_list
 
@@ -84,8 +81,8 @@ class RetraceHook:
 
         return int(timeout)
 
-    def _process_script(self, hook, hook_path, exc_path):
-        exc = os.path.basename(exc_path)
+    def _process_script(self, hook, hook_path: Path, exc_path):
+        exc = Path(exc_path).name
         script = exc_path
 
         log_debug(f"Running '{hook}' hook - script '{exc}'")
@@ -121,7 +118,7 @@ class RetraceHook:
 
     def run(self, hook):
         """Called by the default hook implementations"""
-        hook_path = os.path.join(self._get_hookdir(), hook)
+        hook_path = Path(self._get_hookdir(), hook)
         executables = get_executables(hook_path)
 
         params = itertools.product([hook], [hook_path], executables)
