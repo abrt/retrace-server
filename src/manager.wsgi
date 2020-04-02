@@ -1,11 +1,11 @@
 #!/usr/bin/python3
-import os
 import datetime
 import fnmatch
 import re
 import time
 import urllib
 from webob import Request
+from pathlib import Path
 
 from retrace.retrace import (STATUS, STATUS_DOWNLOADING, STATUS_FAIL,
                              STATUS_SUCCESS, TASK_DEBUG, TASK_RETRACE, TASK_RETRACE_INTERACTIVE,
@@ -602,12 +602,12 @@ def application(environ, start_response):
     available = []
     running = []
     finished = []
-    for taskid in sorted(os.listdir(CONFIG["SaveDir"])):
-        if not os.path.isdir(os.path.join(CONFIG["SaveDir"], taskid)):
+    for taskdir in sorted(Path(CONFIG["SaveDir"]).iterdir()):
+        if not taskdir.is_dir():
             continue
 
         try:
-            task = RetraceTask(taskid)
+            task = RetraceTask(taskdir.name)
         except:
             continue
 
@@ -661,7 +661,7 @@ def application(environ, start_response):
                       "  <td>%s</td>" \
                       "  <td>%s</td>" \
                       "  <td>%s</td>" \
-                      "</tr>" % (status, baseurl, taskid, taskid, caseno, bugzillano, files,
+                      "</tr>" % (status, baseurl, taskdir.name, taskdir.name, caseno, bugzillano, files,
                                  finishtime_str)
 
                 if filterexp and not fnmatch.fnmatch(row, filterexp):
@@ -714,7 +714,7 @@ def application(environ, start_response):
                       "  <td>%s</td>" \
                       "  <td>%s</td>" \
                       "  <td>%s</td>" \
-                      "</tr>" % (baseurl, taskid, taskid, caseno, bugzillano, files, starttime_str,
+                      "</tr>" % (baseurl, taskdir.name, taskdir.name, caseno, bugzillano, files, starttime_str,
                                  status)
 
                 if filterexp and not fnmatch.fnmatch(row, filterexp):
@@ -726,7 +726,7 @@ def application(environ, start_response):
                   "  <td>" \
                   "    <a href=\"%s%s\">%s</a>" \
                   "  </td>" \
-                  "</tr>" % (baseurl, taskid, taskid)
+                  "</tr>" % (baseurl, taskdir.name, taskdir.name)
 
             if filterexp and not fnmatch.fnmatch(row, filterexp):
                 continue
