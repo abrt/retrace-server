@@ -14,6 +14,7 @@ import rpm
 import dnf
 
 from functools import cmp_to_key
+from pathlib import Path
 from subprocess import run, DEVNULL, PIPE
 
 from retrace.retrace import (get_canon_arch,
@@ -51,13 +52,13 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
     with open(dnftmp.name, "r") as f:
         log_debug("Using dnf config from %s\n%s" % (dnftmp.name, f.read()))
 
-    pkgdir = os.path.join(CONFIG["RepoDir"], targetid, "Packages")
-    tmpdir = os.path.join(CONFIG["RepoDir"], "temp", targetid)
-    if not os.path.isdir(tmpdir):
-        os.makedirs(tmpdir)
+    pkgdir = Path(CONFIG["RepoDir"]) / targetid / "Packages"
+    tmpdir = Path(CONFIG["RepoDir"]) / "temp" / targetid
+    if not tmpdir.is_dir():
+        tmpdir.mkdir(parents=True)
 
     try:
-        with open(os.path.join(CONFIG["LogDir"], "reposync_dnf.log"), "a") as dnflog:
+        with open(Path(CONFIG["LogDir"]) / "reposync_dnf.log", "a") as dnflog:
             old_stderr = sys.stderr
             sys.stderr = dnflog
 
@@ -69,8 +70,8 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
                 log_error("Unable to initialize DNF cache")
                 return -1
 
-            cachedir = os.path.join(dnfbase.conf.cachedir, targetid)
-            if os.path.isdir(cachedir):
+            cachedir = Path(dnfbase.conf.cachedir) / targetid
+            if cachedir.is_dir():
                 shutil.rmtree(cachedir)
             dnfbase.read_all_repos()
 
@@ -92,9 +93,9 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
             download = []
 
             for package in packages:
-                rpmname = package.location.rsplit("/", 1)[1]
-                pkgpath = os.path.join(pkgdir, rpmname)
-                if not os.path.isfile(pkgpath) or os.path.getsize(pkgpath) != package.size:
+                rpmname = Path(package.location).name
+                pkgpath = pkgdir / rpmname
+                if not pkgpath.is_file() or pkgpath.stat().st_size != package.size:
                     log_info("%s will be downloaded" % rpmname)
                     download.append(package)
                 else:
@@ -109,30 +110,30 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
                 old_stderr.write("An error occured during download\n%s: %s" % (error, errors[error]))
 
             for package in download:
-                downloadpath = package.localPkg()
-                pkgname = os.path.basename(downloadpath)
-                targetpath = os.path.join(pkgdir, pkgname)
+                downloadpath = Path(package.localPkg())
+                pkgname = downloadpath.name
+                targetpath = pkgdir / pkgname
 
-                if not os.path.isfile(downloadpath):
+                if not downloadpath.is_file():
                     # error message should be listed in errors
                     continue
 
-                if os.path.isfile(targetpath):
-                    os.unlink(targetpath)
+                if targetpath.is_file():
+                    targetpath.unlink()
 
                 try:
-                    os.rename(downloadpath, targetpath)
+                    downloadpath.rename(targetpath)
                 except OSError as ex:
                     if ex.errno != errno.EXDEV:
                         raise
 
                     shutil.copy2(downloadpath, targetpath)
-                    os.unlink(downloadpath)
+                    downloadpath.unlink()
             # END DNF
     finally:
         sys.stderr = old_stderr
         try:
-            os.unlink(dnftmp.name)
+            Path(dnftmp.name).unlink()
             repo = dnfbase.repos[targetid]
             cachedir = Path(repo.basecachedir) / targetid
             shutil.rmtree(cachedir)
@@ -153,26 +154,26 @@ def vercmp(ver1, ver2):
 
 def clean_rawhide_repo(release):
     packages = {}
-    pkgdir = os.path.join(CONFIG["RepoDir"], release, "Packages")
-    for f in os.listdir(pkgdir):
-        if not f.endswith(".rpm"):
+    pkgdir = Path(CONFIG["RepoDir"]) / release / "Packages"
+    for f in pkgdir.iterdir():
+        if f.suffix != ".rpm":
             continue
 
-        pkgdata = parse_rpm_name(f)
+        pkgdata = parse_rpm_name(f.name)
         if not pkgdata["name"]:
             continue
 
         ver = "%s-%s" % (pkgdata["version"], pkgdata["release"])
 
         if not pkgdata["name"] in packages:
-            packages[pkgdata["name"]] = {ver: [f]}
+            packages[pkgdata["name"]] = {ver: [f.name]}
             continue
 
         if ver in packages[pkgdata["name"]]:
-            packages[pkgdata["name"]][ver].append(f)
+            packages[pkgdata["name"]][ver].append(f.name)
             continue
 
-        packages[pkgdata["name"]][ver] = [f]
+        packages[pkgdata["name"]][ver] = [f.name]
 
     for package in packages:
         pkgcnt = len(packages[package])
@@ -183,7 +184,7 @@ def clean_rawhide_repo(release):
                 for filename in packages[package][ver]:
                     if i < pkgcnt - CONFIG["KeepRawhideLatest"]:
                         log_info("Removing %s" % filename)
-                        os.unlink(os.path.join(pkgdir, filename))
+                        (pkgdir / filename).unlink()
                 i += 1
 
 if __name__ == "__main__":
@@ -207,11 +208,11 @@ if __name__ == "__main__":
 
     if CONFIG["UseFafPackages"]:
         log_info("Creating repo from faf")
-        targetid = "%s-%s-%s" % (distribution, version, arch)
-        targetdir = os.path.join(CONFIG["RepoDir"], targetid)
+        targetid = Path("%s-%s-%s" % (distribution, version, arch))
+        targetdir = CONFIG["RepoDir"] / targetid
 
-        if not os.path.isdir(targetdir):
-            os.makedirs(targetdir)
+        if not targetdir.is_dir():
+            targetdir.mkdir(parents=True)
 
         cmd_line = ["retrace-server-reposync-faf", distribution, version, arch,
                     "--outputdir", targetdir]
@@ -246,10 +247,10 @@ if __name__ == "__main__":
         log_error("Unknown distribution: '%s'" % distribution)
         sys.exit(1)
 
-    targetid = "%s-%s-%s" % (distribution, version, arch)
-    lockfile = "/tmp/retrace-reposync-lock-%s" % targetid
+    targetid = Path("%s-%s-%s" % (distribution, version, arch))
+    lockfile = Path("/tmp/retrace-reposync-lock-%s" % targetid)
 
-    if os.path.isfile(lockfile):
+    if lockfile.is_file():
         log_error("Another process with repository download is running")
         sys.exit(2)
 
@@ -263,15 +264,15 @@ if __name__ == "__main__":
         null = DEVNULL
 
     try:
-        targetdir = os.path.join(CONFIG["RepoDir"], targetid)
-        pkgdir = os.path.join(targetdir, "Packages")
+        targetdir = CONFIG["RepoDir"] / targetid
+        pkgdir = targetdir / "Packages"
 
-        if not os.path.isdir(pkgdir):
-            os.makedirs(pkgdir)
+        if not pkgdir.is_dir():
+            pkgdir.mkdir(parents=True)
 
-        for filename in os.listdir(targetdir):
-            if filename.endswith(".rpm"):
-                os.rename(os.path.join(targetdir, filename), os.path.join(pkgdir, filename))
+        for filepath in targetdir.iterdir():
+            if filepath.suffix == ".rpm":
+                filepath.rename(pkgdir / filepath.name)
 
         globaldnfcfg = ""
         if hasattr(plugin, "dnfcfg"):
@@ -304,8 +305,8 @@ if __name__ == "__main__":
                         # folder in FS
                         files = []
                         try:
-                            for package in os.listdir(repourl):
-                                files.append(os.path.join(repourl, package))
+                            for package in Path(repourl).iterdir():
+                                files.append(package)
                         except Exception as ex:
                             log_warn("Download failed: %s" % ex)
                             log_info("Trying another mirror")
