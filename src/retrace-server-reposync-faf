@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
-import os
 import createrepo_c as cr
 import shutil
 from argparse import ArgumentParser
+from os.path import relpath
+from pathlib import Path
 from pyfaf.storage import getDatabase
 from pyfaf.queries import get_packages_by_osrelease
 
@@ -19,26 +20,26 @@ def get_pkglist(db, opsys, release, arch):
     for pkg in q:
         if pkg.has_lob("package"):
             print("Adding package: %s-%s-%s" % (pkg.name, pkg.build.version, pkg.build.release))
-            yield os.path.abspath(pkg.get_lob_path("package"))
+            yield Path(pkg.get_lob_path("package")).resolve()
 
 
-def generate_repo(db, outputdir, opsys, release, arch):
+def generate_repo(db, outputdir: Path, opsys, release, arch):
 
-    repodata_path = os.path.join(outputdir, "repodata")
+    repodata_path = outputdir / "repodata"
 
-    if os.path.exists(repodata_path):
+    if repodata_path.exists():
         shutil.rmtree(repodata_path)
 
-    os.makedirs(repodata_path)
+    repodata_path.mkdir(parents=True)
 
     # Prepare metadata files
-    repomd_path = os.path.join(repodata_path, "repomd.xml")
-    pri_xml_path = os.path.join(repodata_path, "primary.xml.gz")
-    fil_xml_path = os.path.join(repodata_path, "filelists.xml.gz")
-    oth_xml_path = os.path.join(repodata_path, "other.xml.gz")
-    pri_db_path = os.path.join(repodata_path, "primary.sqlite")
-    fil_db_path = os.path.join(repodata_path, "filelists.sqlite")
-    oth_db_path = os.path.join(repodata_path, "other.sqlite")
+    repomd_path = repodata_path / "repomd.xml"
+    pri_xml_path = repodata_path / "primary.xml.gz"
+    fil_xml_path = repodata_path / "filelists.xml.gz"
+    oth_xml_path = repodata_path / "other.xml.gz"
+    pri_db_path = repodata_path / "primary.sqlite"
+    fil_db_path = repodata_path / "filelists.sqlite"
+    oth_db_path = repodata_path / "other.sqlite"
 
     pri_xml = cr.PrimaryXmlFile(pri_xml_path)
     fil_xml = cr.FilelistsXmlFile(fil_xml_path)
@@ -58,7 +59,7 @@ def generate_repo(db, outputdir, opsys, release, arch):
     # Process all packages
     for filename in pkg_list:
         pkg = cr.package_from_rpm(filename)
-        pkg.location_href = os.path.relpath(filename, outputdir)
+        pkg.location_href = Path(relpath(filename, outputdir))
         pri_xml.add_pkg(pkg)
         fil_xml.add_pkg(pkg)
         oth_xml.add_pkg(pkg)
@@ -86,7 +87,7 @@ def generate_repo(db, outputdir, opsys, release, arch):
         if path.endswith('.sqlite'):
             new_path = '%s.bz2' % path
             cr.compress_file(path, new_path, cr.BZ2)
-            os.unlink(path)
+            Path(path).unlink()
             path = new_path
 
         record = cr.RepomdRecord(name, path)
@@ -106,7 +107,7 @@ if __name__ == "__main__":
     parser.add_argument("OPSYS")
     parser.add_argument("RELEASE")
     parser.add_argument("ARCHITECTURE")
-    parser.add_argument("--outputdir", default=os.getcwd())
+    parser.add_argument("--outputdir", default=Path.cwd())
     args = parser.parse_args()
 
     print("Creating repo in '%s'" % (args.outputdir))
