@@ -5,6 +5,7 @@ import re
 import time
 
 from subprocess import run, PIPE, STDOUT
+from pathlib import Path
 
 from retrace.retrace import (STATUS_FAIL,
                              get_active_tasks,
@@ -53,7 +54,7 @@ def check_open_crash_file(task):
     if task.has_vmcore():
         crash_path = task.get_vmcore_path()
     elif task.has_coredump():
-        crash_path = os.path.join(task.get_crashdir(), task.COREDUMP_FILE)
+        crash_path = task.get_crashdir() / task.COREDUMP_FILE
     else:
         return False
 
@@ -93,9 +94,9 @@ def check_config():
 if __name__ == "__main__":
     check_config()
 
-    logfile = os.path.join(CONFIG["LogDir"], "cleanup.log")
+    logfile = Path(CONFIG["LogDir"], "cleanup.log")
 
-    with open(logfile, "a") as log:
+    with logfile.open("a") as log:
         log.write(time.strftime("[%Y-%m-%d %H:%M:%S] Running cleanup\n"))
 
         # kill tasks running > 1 hour
@@ -152,24 +153,24 @@ if __name__ == "__main__":
         if CONFIG["ArchiveTaskAfter"] > 0:
             # archive old tasks
             try:
-                files = os.listdir(CONFIG["SaveDir"])
+                files = list(Path(CONFIG["SaveDir"]).iterdir())
             except OSError as ex:
                 files = []
                 log.write("Error listing task directory: %s\n" % ex)
 
-            for filename in files:
+            for filepath in files:
                 try:
-                    task = RetraceTask(filename)
+                    task = RetraceTask(filepath.name)
                 except Exception:
                     continue
 
                 if task.get_age() >= CONFIG["ArchiveTaskAfter"]:
-                    log.write("Archiving task %s\n" % filename)
-                    if not os.path.isdir(CONFIG["DropDir"]):
-                        os.makedirs(CONFIG["DropDir"])
+                    log.write("Archiving task %s\n" % filepath.name)
+                    dropdir = Path(CONFIG["DropDir"])
+                    if not dropdir.is_dir():
+                        dropdir.mkdir(parents=True)
 
-                    targetfile = os.path.join(CONFIG["DropDir"],
-                                              "%s-%s.tar.gz" % (filename, time.strftime("%Y%m%d%H%M%S")))
+                    targetfile = dropdir / "%s-%s.tar.gz" % (filepath.name, time.strftime("%Y%m%d%H%M%S"))
 
                     child = run(["tar", "czf", targetfile, task.get_savedir()],
                                 stdout=PIPE, stderr=STDOUT)
@@ -177,7 +178,7 @@ if __name__ == "__main__":
                     if child.returncode:
                         log += "Error: tar exited with %d: %s\n" % (child.returncode, stdout)
                         try:
-                            os.unlink(targetfile)
+                            targetfile.unlink()
                         except OSError:
                             pass
 
@@ -188,14 +189,14 @@ if __name__ == "__main__":
         if CONFIG["DeleteTaskAfter"] > 0:
             # clean up old tasks
             try:
-                files = os.listdir(CONFIG["SaveDir"])
+                files = list(Path(CONFIG["SaveDir"]).iterdir())
             except OSError as ex:
                 files = []
                 log.write("Error listing task directory: %s\n" % ex)
 
-            for filename in files:
+            for filepath.name in files:
                 try:
-                    task = RetraceTask(filename)
+                    task = RetraceTask(filepath.name)
                 except Exception:
                     continue
 
@@ -204,20 +205,20 @@ if __name__ == "__main__":
                         log.write("Deletion of task %d skipped - crash file is opened.\n" % task.get_taskid())
                         continue
 
-                    log.write("Deleting old task %s\n" % filename)
+                    log.write("Deleting old task %s\n" % filepath.name)
                     task.create_worker().remove_task()
 
         if CONFIG["DeleteFailedTaskAfter"] > 0:
             # clean up old failed tasks
             try:
-                files = os.listdir(CONFIG["SaveDir"])
+                files = list(Path(CONFIG["SaveDir"]).iterdir())
             except OSError as ex:
                 files = []
                 log.write("Error listing task directory: %s\n" % ex)
 
-            for filename in files:
+            for filepath.name in files:
                 try:
-                    task = RetraceTask(filename)
+                    task = RetraceTask(filepath.name)
                 except Exception:
                     continue
 
@@ -226,5 +227,5 @@ if __name__ == "__main__":
                         log.write("Deletion of task %d skipped - crash file is opened.\n" % task.get_taskid())
                         continue
 
-                    log.write("Deleting old failed task %s\n" % filename)
+                    log.write("Deleting old failed task %s\n" % filepath.name)
                     task.create_worker().remove_task()
