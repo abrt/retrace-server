@@ -4,9 +4,10 @@ Refresh tasks that have bugzilla bugs in an open state to prevent them from gett
 retrace-server-cleanup tool.
 """
 
-import os
 import time
 import bugzilla
+
+from pathlib import Path
 
 from retrace.retrace import RetraceTask
 from retrace.config import Config
@@ -15,9 +16,9 @@ CONFIG = Config()
 
 if __name__ == "__main__":
 
-    logfile = os.path.join(CONFIG["LogDir"], "bugzilla-refresh.log")
+    logfile = Path(CONFIG["LogDir"], "bugzilla-refresh.log")
 
-    with open(logfile, "a") as log:
+    with logfile.open("a") as log:
         log.write(time.strftime("[%Y-%m-%d %H:%M:%S] Running bugzilla refresh\n"))
 
         # connect to bugzilla
@@ -44,14 +45,14 @@ if __name__ == "__main__":
             log.write("Not logged in. Continue as anonymous user.\n")
 
         try:
-            files = os.listdir(CONFIG["SaveDir"])
+            files = list(Path(CONFIG["SaveDir"]).iterdir())
         except OSError as ex:
             files = []
             log.write("Error listing task directory: %s\n" % ex)
 
-        for filename in files:
+        for filepath in files:
             try:
-                task = RetraceTask(filename)
+                task = RetraceTask(filepath.name)
             except Exception:
                 continue
 
@@ -64,6 +65,6 @@ if __name__ == "__main__":
 
                 for bgz in bz_list:
                     if bgz and bgz.status not in bz_status_list:
-                        log.write("Modifying time of the task %s\n" % filename)
+                        log.write("Modifying time of the task %s\n" % filepath.name)
                         task.reset_age()
                         break
