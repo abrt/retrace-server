@@ -5,6 +5,7 @@ import os
 import pwd
 import sys
 import time
+from pathlib import Path
 from subprocess import list2cmdline
 
 from retrace.retrace import (ALLOWED_FILES,
@@ -98,7 +99,7 @@ if __name__ == "__main__":
             print_cmdline(cmdline)
             os.execvp(cmdline[0], cmdline)
         if args.action == "gdb":
-            with open(os.path.join(task.get_savedir(), "crash", "executable"), "r") as exec_file:
+            with Path(task.get_savedir(), "crash", "executable").open() as exec_file:
                 executable = exec_file.read(ALLOWED_FILES["executable"])
             if "'" in executable or '"' in executable:
                 sys.stderr.write("executable contains forbidden characters.\n")
@@ -154,7 +155,7 @@ if __name__ == "__main__":
                 else:
                     cmdline = task.get_crash_cmd().split() + [vmcore_path, vmlinux]
             else:
-                cfgdir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
+                cfgdir = Path(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
                 if task.has_crashrc():
                     cmdline = ["/usr/bin/mock", "--configdir", cfgdir,
                                "shell", "crash -i %s %s %s" % (task.get_crashrc_path(), vmcore_path, vmlinux)]
@@ -168,7 +169,7 @@ if __name__ == "__main__":
         if args.action == "shell":
             if task.has_mock():
                 cmdline = ["/usr/bin/mock", "--configdir",
-                           os.path.join(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid()), "shell"]
+                           Path(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid()), "shell"]
 
                 print_cmdline(cmdline)
                 os.execvp(cmdline[0], cmdline)
