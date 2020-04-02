@@ -18,6 +18,7 @@ import argparse
 import sys
 import shutil
 
+from pathlib import Path
 from subprocess import DEVNULL, PIPE, run
 
 from retrace.retrace import *
@@ -37,9 +38,9 @@ def create_repo(packages, releaseid, version):
 
     conf = Config()
 
-    repo_path = os.path.join(conf["RepoDir"], releaseid)
-    if not os.path.isdir(repo_path):
-        os.mkdir(repo_path)
+    repo_path = Path(conf["RepoDir"], releaseid)
+    if not repo_path.is_dir():
+        repo_path.mkdir()
     needed_packages =\
                   ["abrt-addon-ccpp", "shadow-utils", "gdb", "rpm"] + packages
 
@@ -69,8 +70,8 @@ def delete_repo(releaseid):
     """
     print("Deleting repo")
     conf = Config()
-    repo_path = os.path.join(conf["RepoDir"], releaseid)
-    if os.path.isdir(repo_path):
+    repo_path = Path(conf["RepoDir"], releaseid)
+    if repo_path.is_dir():
         shutil.rmtree(repo_path)
 
 
@@ -90,13 +91,13 @@ def generate_coredump():
     # get only second-to-last line form output - there is filename mentioned
     lastline = stdout.splitlines()[-2]
     # get the last word, that should be coredump path
-    corepath = lastline[lastline.rfind(" ")+1:]
-    if not corepath.startswith("/var/tmp"):
+    corepath = Path(lastline[lastline.rfind(" ")+1:])
+    if str(corepath.parent) != "/var/tmp":
         fatal_error("Corefile was not generated")
 
     # rename it, so it is called coredump, not coredump.XXXXX
-    os.rename(corepath, corepath[:corepath.find(".")])
-    corepath = corepath[:corepath.find(".")]
+    corepath.rename(corepath.with_suffix(""))
+    corepath = corepath.with_suffix("")
 
     # find in which package is python
     exe_link = os.readlink('/proc/self/exe')
@@ -113,11 +114,11 @@ def create_local_config(change_repo_dir):
     """Create local config file, change what is needed and edit env var."""
     # create local copy of set configuration file
     # read current configuration file
-    config_path = os.environ.get('RETRACE_SERVER_CONFIG_PATH')
+    config_path = Path(os.environ.get('RETRACE_SERVER_CONFIG_PATH'))
     new_conf_path = '/var/tmp/retrace-server.conf'
 
-    with open(config_path) as org_file:
-        with open(new_conf_path, "w") as new_file:
+    with config_path.open() as org_file:
+        with Path(new_conf_path).open("w") as new_file:
             for line in org_file:
                 if line.startswith("RepoDir") and not change_repo_dir:
                     line = 'RepoDir = /var/tmp/retrace-server-repo\n'
@@ -134,12 +135,12 @@ def create_local_config(change_repo_dir):
     os.environ["RETRACE_SERVER_CONFIG_PATH"] = new_conf_path
 
     try:
-        os.mkdir("/var/tmp/retrace-server-spool")
+        Path("/var/tmp/retrace-server-spool").mkdir()
     except:
         pass
 
     try:
-        os.mkdir("/var/tmp/retrace-server-repo")
+        Path("/var/tmp/retrace-server-repo").mkdir()
     except:
         pass
 
@@ -194,13 +195,13 @@ task.set("custom_package", package)
 task.set("custom_executable", executable)
 task.set("custom_os_release", os_release)
 
-crashdir = os.path.join(task.get_savedir(), "crash")
-os.mkdir(crashdir)
+crashdir = task.get_savedir() / "crash"
+crashdir.mkdir()
 # copy coredump to the retrace task directory
 shutil.copy(coredump_path, crashdir)
 
 if not dont_create_repo_arg:
-    corepath = os.path.join(crashdir, "coredump")
+    corepath = crashdir / "coredump"
     worker = RetraceWorker(task)
     # read architecture from coredump
     arch = worker.read_architecture(None, corepath)
@@ -240,7 +241,7 @@ if not task.has_backtrace():
 
 else:
     print("Backtrace is ready")
-    with open("../backtrace", "w") as backtrace_file:
+    with Path("../backtrace").open("w") as backtrace_file:
         bt = task.get_backtrace()
         backtrace_file.write(bt)
 
