@@ -4,11 +4,13 @@ Query bugzilla for component bugs and search through comments for trigger words.
 to a log and for tasks found in the comments set bugzillano field with bugzilla ids.
 """
 
-import os
 import sys
 import re
 import time
 import bugzilla
+
+from pathlib import Path
+
 from retrace.retrace import BUGZILLA_STATUS, RetraceTask
 from retrace.config import Config
 
@@ -16,9 +18,9 @@ CONFIG = Config()
 
 if __name__ == "__main__":
 
-    logfile = os.path.join(CONFIG["LogDir"], "bugzilla-query.log")
+    logfile = Path(CONFIG["LogDir"], "bugzilla-query.log")
 
-    with open(logfile, "a") as log:
+    with logfile.open("a") as log:
         log.write(time.strftime("[%Y-%m-%d %H:%M:%S] Running bugzilla query\n"))
 
         # connect to bugzilla
@@ -87,18 +89,18 @@ if __name__ == "__main__":
                         found_tasks[f] = [str(bug.bug_id)]
 
         try:
-            files = sorted(os.listdir(CONFIG["SaveDir"]))
+            files = sorted(Path(CONFIG["SaveDir"]).iterdir())
         except OSError as ex:
             files = []
             log.write("Error listing task directory: %s\n" % ex)
 
         # Find all tasks
         existing_tasks = []
-        for taskid in files:
-            if not os.path.isdir(os.path.join(CONFIG["SaveDir"], taskid)):
+        for taskdir in files:
+            if not taskdir.is_dir():
                 continue
 
-            existing_tasks.append(taskid)
+            existing_tasks.append(taskdir.name)
 
         log.write("------------Existing tasks with found bugzillas-----------\n")
         for taskid in found_tasks.keys():
