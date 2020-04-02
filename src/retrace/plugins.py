@@ -16,6 +16,8 @@
 import os
 import sys
 
+from pathlib import Path
+
 
 class Plugins(object):
     class __plugins:
@@ -23,24 +25,24 @@ class Plugins(object):
             self.plugins_read = False
             self.PLUGINS = []
 
-        def load(self, plugin_dir="/usr/share/retrace-server/plugins"):
+        def load(self, plugin_dir=Path("/usr/share/retrace-server/plugins")):
             self.PLUGINS = []
             self.plugins_read = True
             # if environment variable set, use rather that
             env_plugin_dir = os.environ.get('RETRACE_SERVER_PLUGIN_DIR')
             if env_plugin_dir:
-                plugin_dir = env_plugin_dir
-            sys.path.insert(0, plugin_dir)
+                plugin_dir = Path(env_plugin_dir)
+            sys.path.insert(0, str(plugin_dir))
 
             try:
-                files = os.listdir(plugin_dir)
+                files = list(plugin_dir.iterdir())
             except Exception as ex:
                 print("Unable to list directory '%s': %s" % (plugin_dir, ex))
                 raise ImportError(ex)
 
-            for filename in files:
-                if not filename.startswith("_") and filename.endswith(".py"):
-                    pluginname = filename.replace(".py", "")
+            for filepath in files:
+                if not filepath.name.startswith("_") and filepath.suffix == ".py":
+                    pluginname = filepath.stem
                     try:
                         this = __import__(pluginname)
                     except Exception:
