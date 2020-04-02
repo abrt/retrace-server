@@ -7,6 +7,7 @@ import smtplib
 
 from dnf.subject import Subject
 from hawkey import FORM_NEVRA
+from pathlib import Path
 from subprocess import run, PIPE
 
 from .config import Config, DF_BIN, GZIP_BIN, TAR_BIN, XZ_BIN
@@ -56,7 +57,7 @@ HANDLE_ARCHIVE = {
 }
 
 
-def lock(lockfile):
+def lock(lockfile: Path):
     try:
         fd = os.open(lockfile, os.O_CREAT | os.O_EXCL, 0o600)
     except OSError as ex:
@@ -68,10 +69,10 @@ def lock(lockfile):
     return True
 
 
-def unlock(lockfile):
+def unlock(lockfile: Path):
     try:
-        if os.path.getsize(lockfile) == 0:
-            os.unlink(lockfile)
+        if lockfile.stat().st_size == 0:
+            lockfile.unlink()
     except OSError:
         return False
 
