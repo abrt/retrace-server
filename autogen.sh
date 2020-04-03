@@ -37,7 +37,7 @@ case "$1" in
 
             if [ "$2" == "--install" ]; then
                 set -x verbose
-                eval sudo dnf install --setopt=strict=0 $DEPS_LIST
+                eval sudo dnf install --setopt=strict=0 $DEPS_LIST -y
                 set +x verbose
             else
                 echo $DEPS_LIST
