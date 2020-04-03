@@ -141,14 +141,14 @@ def application(environ, start_response):
             if "vmem-check" in GET:
                 task.add_remote("FTP %s" % GET["custom_vmem_url"])
 
-            if "caseno" in GET:
+            if "caseno" in GET and GET["caseno"]:
                 try:
                     task.set_caseno(int(GET["caseno"]))
                 except:
                     # caseno is invalid number - do nothing, it can be set later
                     pass
 
-            if "bugzillano" in GET:
+            if "bugzillano" in GET and GET["bugzillano"]:
                 try:
                     bugzillano = list(filter(int, set(n.strip() for n in GET["bugzillano"].
                                                       replace(";", ",").split(","))))
@@ -163,7 +163,7 @@ def application(environ, start_response):
         debug = "debug" in GET
         kernelver = None
         arch = None
-        if "kernelver" in GET:
+        if "kernelver" in GET and GET["kernelver"]:
             try:
                 kernelver = KernelVer(GET["kernelver"])
                 if kernelver.arch is None:
@@ -175,7 +175,7 @@ def application(environ, start_response):
             arch = kernelver.arch
             kernelver = str(kernelver)
 
-        if "notify" in GET:
+        if "notify" in GET and GET["notify"]:
             task.set_notify([email for email in set(n.strip() for n in GET["notify"].
                                                     replace(";", ",").split(",")) if email])
 
