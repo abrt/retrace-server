@@ -1,0 +1,18 @@
+specfile_path: retrace-server.spec
+synced_files:
+  - .packit.yml
+  - retrace-server.spec
+upstream_package_name: retrace-server
+upstream_project_url: https://github.com/abrt/retrace-server
+downstream_package_name: retrace-server
+jobs:
+- job: propose_downstream
+  trigger: release
+  metadata:
+    dist-git-branch: fedora-all
+- job: copr_build
+  trigger: pull_request
+  metadata:
+    targets:
+    - epel-8
+    - fedora-all
