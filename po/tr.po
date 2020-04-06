@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2020-01-27 08:16+0000\n"
+"PO-Revision-Date: 2020-03-27 19:38+0000\n"
 "Last-Translator: Oğuz Ersen <oguzersen@protonmail.com>\n"
 "Language-Team: Turkish <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/tr/>\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n>1);\n"
-"X-Generator: Weblate 3.10.3\n"
+"X-Generator: Weblate 3.11.3\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
@@ -59,11 +59,11 @@ msgstr "Belirtilen arşiv çok büyük"
 
 #: ../src/create.wsgi:47
 msgid "Unable to create working directory"
-msgstr "Çalışma dizini oluşturulamadı"
+msgstr "Çalışma dizini oluşturulamıyor"
 
 #: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
-msgstr "Disk boş alanı alınamadı"
+msgstr "Boş disk alanı alınamıyor"
 
 #: ../src/create.wsgi:57 ../src/create.wsgi:99
 msgid "There is not enough storage space on the server"
@@ -71,15 +71,15 @@ msgstr "Sunucuda yeterli depolama alanı yok"
 
 #: ../src/create.wsgi:63
 msgid "Unable to create new task"
-msgstr "Yeni görev oluşturulamadı"
+msgstr "Yeni görev oluşturulamıyor"
 
 #: ../src/create.wsgi:83
 msgid "Unable to save archive"
-msgstr "Arşiv kaydedilemedi"
+msgstr "Arşiv kaydedilemiyor"
 
 #: ../src/create.wsgi:89
 msgid "Unable to obtain unpacked size"
-msgstr "Paketlenmemiş boyut alınamadı"
+msgstr "Paketlenmemiş boyut alınamıyor"
 
 #: ../src/create.wsgi:94
 msgid "Specified archive's content is too large"
@@ -87,7 +87,7 @@ msgstr "Belirtilen arşivin içeriği çok büyük"
 
 #: ../src/create.wsgi:111
 msgid "Unable to unpack archive"
-msgstr "Arşiv açılamadı"
+msgstr "Arşiv çıkarılamıyor"
 
 #: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
