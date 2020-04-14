@@ -49,16 +49,16 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
     dnftmp.write(localdnfcfg)
     dnftmp.close()
 
-    with open(dnftmp.name, "r") as f:
+    with Path(dnftmp.name).open("r") as f:
         log_debug("Using dnf config from %s\n%s" % (dnftmp.name, f.read()))
 
-    pkgdir = Path(CONFIG["RepoDir"]) / targetid / "Packages"
-    tmpdir = Path(CONFIG["RepoDir"]) / "temp" / targetid
+    pkgdir = Path(CONFIG["RepoDir"], targetid, "Packages")
+    tmpdir = Path(CONFIG["RepoDir"], "temp", targetid)
     if not tmpdir.is_dir():
         tmpdir.mkdir(parents=True)
 
     try:
-        with open(Path(CONFIG["LogDir"]) / "reposync_dnf.log", "a") as dnflog:
+        with Path(CONFIG["LogDir"], "reposync_dnf.log").open(mode="a") as dnflog:
             old_stderr = sys.stderr
             sys.stderr = dnflog
 
@@ -70,7 +70,7 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
                 log_error("Unable to initialize DNF cache")
                 return -1
 
-            cachedir = Path(dnfbase.conf.cachedir) / targetid
+            cachedir = Path(dnfbase.conf.cachedir, targetid)
             if cachedir.is_dir():
                 shutil.rmtree(cachedir)
             dnfbase.read_all_repos()
@@ -154,7 +154,7 @@ def vercmp(ver1, ver2):
 
 def clean_rawhide_repo(release):
     packages = {}
-    pkgdir = Path(CONFIG["RepoDir"]) / release / "Packages"
+    pkgdir = Path(CONFIG["RepoDir"], release, "Packages")
     for f in pkgdir.iterdir():
         if f.suffix != ".rpm":
             continue
