@@ -10,6 +10,10 @@ jobs:
   trigger: release
   metadata:
     dist_git_branch: fedora-all
+- job: propose_downstream
+  trigger: release
+  metadata:
+    dist_git_branch: epel8
 - job: copr_build
   trigger: pull_request
   metadata:
