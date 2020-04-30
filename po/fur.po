@@ -2,118 +2,122 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # Weblate <noreply@weblate.org>, 2020.
+# Fabio Tomat <f.t.public@gmail.com>, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: Automatically generated\n"
-"Language-Team: none\n"
+"PO-Revision-Date: 2020-04-21 13:40+0000\n"
+"Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
+"Language-Team: Friulian <https://translate.fedoraproject.org/projects/abrt/"
+"retrace-server/fur/>\n"
 "Language: fur\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.0.1\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
 msgid "You must use HTTPS"
-msgstr ""
+msgstr "Si scugne doprâ HTTPS"
 
 #: ../src/backtrace.wsgi:16 ../src/log.wsgi:16 ../src/status.wsgi:16
 msgid "Invalid URL"
-msgstr ""
+msgstr "URL no valit"
 
 #: ../src/backtrace.wsgi:22 ../src/log.wsgi:21 ../src/status.wsgi:22
 msgid "There is no such task"
-msgstr ""
+msgstr "Compit inesistent"
 
 #: ../src/backtrace.wsgi:27 ../src/log.wsgi:26 ../src/status.wsgi:27
 msgid "Invalid password"
-msgstr ""
+msgstr "Password no valide"
 
 #: ../src/backtrace.wsgi:31
 msgid "There is no backtrace for the specified task"
-msgstr ""
+msgstr "No'nd è olmis cun ce lâ indaûr pal compit specificât"
 
 #: ../src/create.wsgi:19 ../src/create.wsgi:70
 msgid "Retrace server is fully loaded at the moment"
-msgstr ""
+msgstr "Il servidôr Retrace al è ben che dal dut cjamât pal moment"
 
 #: ../src/create.wsgi:23
 msgid "You must use POST method"
-msgstr ""
+msgstr "Si scugne doprâ il metodi POST"
 
 #: ../src/create.wsgi:27
 msgid "Specified archive format is not supported"
-msgstr ""
+msgstr "Il formât di archiviazion specificât nol è supuartât"
 
 #: ../src/create.wsgi:31
 msgid "You need to set Content-Length header properly"
-msgstr ""
+msgstr "Si scugne stabilî in maniere juste la intestazion Content-Length"
 
 #: ../src/create.wsgi:35
 msgid "Specified archive is too large"
-msgstr ""
+msgstr "L'archivi specificât al è masse grant"
 
 #: ../src/create.wsgi:47
 msgid "Unable to create working directory"
-msgstr ""
+msgstr "Impussibil creâ la cartele di lavôr"
 
 #: ../src/create.wsgi:53
 msgid "Unable to obtain disk free space"
-msgstr ""
+msgstr "Impussibil otignî spazi libar su disc"
 
 #: ../src/create.wsgi:57 ../src/create.wsgi:99
 msgid "There is not enough storage space on the server"
-msgstr ""
+msgstr "Nol è vonde spazi di archiviazion sul servidôr"
 
 #: ../src/create.wsgi:63
 msgid "Unable to create new task"
-msgstr ""
+msgstr "Impussibil creâ un gnûf compit"
 
 #: ../src/create.wsgi:83
 msgid "Unable to save archive"
-msgstr ""
+msgstr "Impussibil salvâ l'archivi"
 
 #: ../src/create.wsgi:89
 msgid "Unable to obtain unpacked size"
-msgstr ""
+msgstr "Impussibil otignî la dimension une volte estrat"
 
 #: ../src/create.wsgi:94
 msgid "Specified archive's content is too large"
-msgstr ""
+msgstr "Il contignût dal archivi specificât al è masse grant"
 
 #: ../src/create.wsgi:111
 msgid "Unable to unpack archive"
-msgstr ""
+msgstr "Impussibil estrai l'archivi"
 
 #: ../src/create.wsgi:123
 msgid "Symlinks are not allowed to be in the archive"
-msgstr ""
+msgstr "Tal archivi no son permetûts i colegaments simbolics"
 
 #: ../src/create.wsgi:131
 #, c-format
 msgid "The '%s' file is larger than expected"
-msgstr ""
+msgstr "Il file '%s' al è plui grant di ce che si previodeve"
 
 #: ../src/create.wsgi:135
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr ""
+msgstr "Tal archivi nol è permetût il file '%s'"
 
 #: ../src/create.wsgi:147
 #, c-format
 msgid "Required file '%s' is missing"
-msgstr ""
+msgstr "Il file '%s' domandât al mancje"
 
 #: ../src/index.wsgi:12
 msgid "Retrace Server"
-msgstr ""
+msgstr "Servidôr Retrace"
 
 #: ../src/index.wsgi:13
 msgid "Welcome to Retrace Server"
-msgstr ""
+msgstr "Benvignûts tal servidôr Retrace"
 
 #: ../src/index.wsgi:15
 msgid ""
@@ -121,29 +125,38 @@ msgid ""
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s wiki:"
 msgstr ""
+"Il servidôr Retrace al è un servizi che al furnìs la pussibilitât di analizâ "
+"i nucleis di memorie salvâts (coredump) e gjenerâ lis olmis che cun chês lâ "
+"indaûr a mieç de rêt. Tu puedis cjatâ plui informazions tal wiki dal "
+"servidôr Retrace:"
 
 #: ../src/index.wsgi:21
 msgid ""
 "Only the secure HTTPS connection is now allowed by the server. HTTP requests "
 "will be denied."
 msgstr ""
+"Dome lis conessions HTTPS siguris a son cumò permetudis dal servidôr. Lis "
+"richiestis HTTP a vignaran dineadis."
 
 #: ../src/index.wsgi:23
 msgid ""
 "Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
 "of security reasons."
 msgstr ""
+"Sedi lis conessions HTTP che chês HTTPS a son permetudis. Doprâ HTTPS al è "
+"conseât cun rigorositât par cuistions di sigurece."
 
 #: ../src/index.wsgi:24
 #, c-format
 msgid "The following releases are supported: %s"
-msgstr ""
+msgstr "A son supuartadis chestis publicazions: %s"
 
 #: ../src/index.wsgi:26
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
 msgstr ""
+"Pal moment il servidôr al è cjariât pal %d%% (eseguint %d su %d lavôrs)."
 
 #: ../src/index.wsgi:27
 #, c-format
@@ -156,6 +169,17 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
+"Il to nuclei di memorie salvât (coredump) al è tignût dome sul servidôr "
+"intant che al è in esecuzion il lavôr par tornâ a percori i pas. Une volte "
+"che il lavôr al sarà finît, il servidôr al tignarà sedi il regjistri fat par "
+"tornâ a percori i pas che lis olmis par tornâ indaûr. Ducj i altris dâts ("
+"includût il nuclei di memorie salvât) a vegnin eliminâts. Il regjistri par "
+"tornâ a percori i pas e lis olmis par tornâ indaûr a son acessibii dome a "
+"mieç di un ID di ativitât univoc e di une password, duncje a nissun (infûr "
+"dal autôr) e ven permetude la visualizazion. Dutis lis informazions sul "
+"colàs (includudis lis olmis par tornâ indaûr tal procès) a vignaran "
+"eliminadis dopo %d oris di inativitât. Nissun pussibil dât privât al ven "
+"tignût sul servidôr par plui di chel timp."
 
 #: ../src/index.wsgi:33
 msgid ""
@@ -165,83 +189,90 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
+"Il propri nuclei di memorie salvât (coredump) al è doprât dome par resons "
+"che a puedin permeti di tornâ a percori i pas. L'aministradôr dal servidôr "
+"nol sta cirint di otignî i vuestris dâts privâts dai nucleis di memorie o "
+"des olmis par tornâ indaûr tal procès. Doprâ un canâl di comunicazion sigûr "
+"(HTTPS) al è une vore conseât. I aministradôrs dal servidôr no son "
+"responsabii pai problemis leâts al ûs di canâi che no son sigûrs (tant che "
+"HTTP)."
 
 #: ../src/log.wsgi:30
 msgid "There is no log for the specified task"
-msgstr ""
+msgstr "Nol è nissun regjistri pe ativitât specificade"
 
 #: ../src/stats.wsgi:10
 msgid "Architecture"
-msgstr ""
+msgstr "Architeture"
 
 #: ../src/stats.wsgi:11
 msgid "Architectures"
-msgstr ""
+msgstr "Architeturis"
 
 #: ../src/stats.wsgi:12
 msgid "Build-id"
-msgstr ""
+msgstr "Id di compilazion"
 
 #: ../src/stats.wsgi:13
 msgid "Count"
-msgstr ""
+msgstr "Conte"
 
 #: ../src/stats.wsgi:14
 msgid "Denied jobs"
-msgstr ""
+msgstr "Lavôrs dineâts"
 
 #: ../src/stats.wsgi:15
 msgid "Failed"
-msgstr ""
+msgstr "Falît"
 
 #: ../src/stats.wsgi:16
 msgid "First retrace"
-msgstr ""
+msgstr "Prin \"tornâ a percori\""
 
 #: ../src/stats.wsgi:17
 msgid "Global statistics"
-msgstr ""
+msgstr "Statistichis globâls"
 
 #: ../src/stats.wsgi:18
 msgid "Missing build-ids"
-msgstr ""
+msgstr "A mancjin i id di compilazion"
 
 #: ../src/stats.wsgi:19
 msgid "Name"
-msgstr ""
+msgstr "Non"
 
 #: ../src/stats.wsgi:20
 msgid "Release"
-msgstr ""
+msgstr "Publicazion"
 
 #: ../src/stats.wsgi:21
 msgid "Releases"
-msgstr ""
+msgstr "Publicazions"
 
 #: ../src/stats.wsgi:22
 msgid "Required packages"
-msgstr ""
+msgstr "Pachets domandâts"
 
 #: ../src/stats.wsgi:23
 msgid "Retraced packages"
-msgstr ""
+msgstr "Pachets tornâts a percori"
 
 #: ../src/stats.wsgi:24
 msgid "Retrace Server statistics"
-msgstr ""
+msgstr "Statistichis dal servidôr Retrace"
 
 #: ../src/stats.wsgi:25
 msgid "Shared object name"
-msgstr ""
+msgstr "Non dal ogjet condividût"
 
 #: ../src/stats.wsgi:26
 msgid "Successful"
-msgstr ""
+msgstr "Vignût ben"
 
 #: ../src/stats.wsgi:27
 msgid "Total"
-msgstr ""
+msgstr "Totâl"
 
 #: ../src/stats.wsgi:28
 msgid "Versions"
-msgstr ""
+msgstr "Versions"
