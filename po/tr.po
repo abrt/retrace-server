@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2020-03-27 19:38+0000\n"
+"PO-Revision-Date: 2020-04-18 18:40+0000\n"
 "Last-Translator: Oğuz Ersen <oguzersen@protonmail.com>\n"
 "Language-Team: Turkish <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/tr/>\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n>1);\n"
-"X-Generator: Weblate 3.11.3\n"
+"X-Generator: Weblate 4.0.1\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
@@ -47,7 +47,7 @@ msgstr "POST yöntemini kullanmalısınız"
 
 #: ../src/create.wsgi:27
 msgid "Specified archive format is not supported"
-msgstr "Belirtilen arşiv formatı desteklenmiyor"
+msgstr "Belirtilen arşiv biçimi desteklenmiyor"
 
 #: ../src/create.wsgi:31
 msgid "You need to set Content-Length header properly"
@@ -123,7 +123,7 @@ msgid ""
 "information at Retrace Server&apos;s wiki:"
 msgstr ""
 "Retrace Server, bellek dökümünü analiz etme ve ağ üzerinden yığın geri "
-"izlemesi oluşturma olanağı sağlayan bir servistir. Retrace Server wiki "
+"izlemesi oluşturma olanağı sağlayan bir hizmettir. Retrace Server wiki "
 "sayfasında daha fazla bilgi bulabilirsiniz:"
 
 #: ../src/index.wsgi:21
@@ -264,7 +264,7 @@ msgstr "Toplam"
 
 #: ../src/stats.wsgi:28
 msgid "Versions"
-msgstr "Versiyonlar"
+msgstr "Sürümler"
 
 #~ msgid "X-CoreFileDirectory header has been disabled by server administrator"
 #~ msgstr ""

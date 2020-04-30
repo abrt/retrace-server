@@ -2,7 +2,7 @@
 # Copyright (C) 2011 THE retrace-server'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the retrace-server package.
 # Michal Toman <mtoman@redhat.com>, 2011.
-# Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>, 2016. #zanata
+# Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>, 2016. #zanata, 2020.
 # José Fournier <jaaf64@zoraldia.com>, 2016. #zanata
 # Julien Humbert <julroy67@gmail.com>, 2020.
 msgid ""
@@ -10,8 +10,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2020-02-05 20:16+0000\n"
-"Last-Translator: Julien Humbert <julroy67@gmail.com>\n"
+"PO-Revision-Date: 2020-04-21 13:40+0000\n"
+"Last-Translator: Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/fr/>\n"
 "Language: fr\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 3.10.3\n"
+"X-Generator: Weblate 4.0.1\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
@@ -28,7 +28,7 @@ msgstr "Vous devez utiliser l’HTTPS"
 
 #: ../src/backtrace.wsgi:16 ../src/log.wsgi:16 ../src/status.wsgi:16
 msgid "Invalid URL"
-msgstr "URL invalide"
+msgstr "L’URL est invalide"
 
 #: ../src/backtrace.wsgi:22 ../src/log.wsgi:21 ../src/status.wsgi:22
 msgid "There is no such task"
