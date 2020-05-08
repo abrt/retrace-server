@@ -2,20 +2,22 @@
 # Copyright (C) 2011 THE retrace-server'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the retrace-server package.
 # Michal Toman <mtoman@redhat.com>, 2011.
-#
+# Yaron Shahrabani <sh.yaron@gmail.com>, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: retrace-server 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2011-05-17 09:53+0200\n"
-"Last-Translator: Michal Toman <mtoman@redhat.com>\n"
-"Language-Team: Hebrew\n"
-"Language: \n"
+"PO-Revision-Date: 2020-05-01 21:40+0000\n"
+"Last-Translator: Yaron Shahrabani <sh.yaron@gmail.com>\n"
+"Language-Team: Hebrew <https://translate.fedoraproject.org/projects/abrt/"
+"retrace-server/he/>\n"
+"Language: he\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ASCII\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Weblate 4.0.1\n"
 
 #: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
 #: ../src/status.wsgi:11
@@ -210,7 +212,7 @@ msgstr ""
 
 #: ../src/stats.wsgi:19
 msgid "Name"
-msgstr ""
+msgstr "שם"
 
 #: ../src/stats.wsgi:20
 msgid "Release"
