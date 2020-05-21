@@ -8,6 +8,8 @@ import pwd
 import shutil
 import sys
 import tempfile
+from pathlib import Path
+
 import rpm
 import dnf
 
@@ -131,7 +133,9 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
         sys.stderr = old_stderr
         try:
             os.unlink(dnftmp.name)
-            shutil.rmtree(dnfbase.repos[targetid].cachedir)
+            repo = dnfbase.repos[targetid]
+            cachedir = Path(repo.basecachedir) / targetid
+            shutil.rmtree(cachedir)
         except Exception as ex:
             log_error("Unable to clean up: %s." % ex)
             return -1
