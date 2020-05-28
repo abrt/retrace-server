@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import argparse
+import contextlib
 import errno
 import os
 import logging
@@ -39,6 +40,17 @@ TARGET_GROUP = CONFIG["AuthGroup"]
 BUFSIZE = 1 << 22 # 4 MB
 
 
+@contextlib.contextmanager
+def redirect_stderr(path):
+    with Path(path).open(mode="a") as dnflog:
+        _stderr = sys.stderr
+        sys.stderr = dnflog
+
+        try:
+            yield (_stderr, dnflog)
+        finally:
+            sys.stderr = _stderr
+
 def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
     dnftmp = tempfile.NamedTemporaryFile(mode="w", delete=False,
                                          prefix="repo", suffix=".conf")
@@ -57,89 +69,77 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
     if not tmpdir.is_dir():
         tmpdir.mkdir(parents=True)
 
-    try:
-        with Path(CONFIG["LogDir"], "reposync_dnf.log").open(mode="a") as dnflog:
-            old_stderr = sys.stderr
-            sys.stderr = dnflog
+    with redirect_stderr(Path(CONFIG["LogDir"]) / "reposync_dnf.log") as (old_stderr, new_stderr):
+        # BEGIN DNF
+        dnfbase = dnf.Base()
+        dnfbase.conf.read(filename=dnftmp.name)
+        if not dnfbase.conf.cachedir:
+            sys.stderr = old_stderr
+            log_error("Unable to initialize DNF cache")
+            return -1
 
-            # BEGIN DNF
-            dnfbase = dnf.Base()
-            dnfbase.conf.read(filename=dnftmp.name)
-            if not dnfbase.conf.cachedir:
-                sys.stderr = old_stderr
-                log_error("Unable to initialize DNF cache")
-                return -1
+        cachedir = Path(dnfbase.conf.cachedir) / targetid
+        if cachedir.is_dir():
+            shutil.rmtree(cachedir)
+        dnfbase.read_all_repos()
 
-            cachedir = Path(dnfbase.conf.cachedir, targetid)
-            if cachedir.is_dir():
-                shutil.rmtree(cachedir)
-            dnfbase.read_all_repos()
+        for repo in dnfbase.repos.iter_enabled():
+            repo.disable()
 
-            for repo in dnfbase.repos.iter_enabled():
-                repo.disable()
+        try:
+            # Fill the sack with repository packages
+            dnfbase.fill_sack(load_system_repo=False)
+        except Exception as ex:
+            sys.stderr = old_stderr
+            log_error(str(ex))
+            return -1
 
-            dnfbase.repos[targetid].enable()
+        packages = list(dnfbase.sack.query())
+        retcode = 0
+        download = []
+
+        for package in packages:
+            rpmname = package.location.rsplit("/", 1)[1]
+            pkgpath = Path(pkgdir) / rpmname
+            if not pkgpath.is_file() or pkgpath.stat().st_size() != package.size:
+                log_info("%s will be downloaded" % rpmname)
+                download.append(package)
+            else:
+                log_debug("%s is already downloaded, skipping" % rpmname)
+
+        errors = dnfbase.download_packages(download)
+        for error in errors:
+            old_stderr.write("An error occured during download\n%s: %s" % (error, errors[error]))
+
+        for package in download:
+            downloadpath = Path(package.localPkg())
+            targetpath = pkgdir / downloadpath.name
+
+            if not downloadpath.is_file():
+                # error message should be listed in errors
+                continue
+
+            if targetpath.is_file():
+                targetpath.unlink()
 
             try:
-                # Fill the sack with repository packages
-                dnfbase.fill_sack(load_system_repo=False)
-            except Exception as ex:
-                sys.stderr = old_stderr
-                log_error(str(ex))
-                return -1
+                downloadpath.rename(targetpath)
+            except OSError as ex:
+                if ex.errno != errno.EXDEV:
+                    raise
 
-            packages = list(dnfbase.sack.query())
-            retcode = 0
-            download = []
+                shutil.copy2(downloadpath, targetpath)
+                downloadpath.unlink()
+        # END DNF
 
-            for package in packages:
-                rpmname = Path(package.location).name
-                pkgpath = pkgdir / rpmname
-                if not pkgpath.is_file() or pkgpath.stat().st_size != package.size:
-                    log_info("%s will be downloaded" % rpmname)
-                    download.append(package)
-                else:
-                    log_debug("%s is already downloaded, skipping" % rpmname)
-
-
-
-
-
-            errors = dnfbase.download_packages(download)
-            for error in errors:
-                old_stderr.write("An error occured during download\n%s: %s" % (error, errors[error]))
-
-            for package in download:
-                downloadpath = Path(package.localPkg())
-                pkgname = downloadpath.name
-                targetpath = pkgdir / pkgname
-
-                if not downloadpath.is_file():
-                    # error message should be listed in errors
-                    continue
-
-                if targetpath.is_file():
-                    targetpath.unlink()
-
-                try:
-                    downloadpath.rename(targetpath)
-                except OSError as ex:
-                    if ex.errno != errno.EXDEV:
-                        raise
-
-                    shutil.copy2(downloadpath, targetpath)
-                    downloadpath.unlink()
-            # END DNF
-    finally:
-        sys.stderr = old_stderr
-        try:
-            Path(dnftmp.name).unlink()
-            repo = dnfbase.repos[targetid]
-            cachedir = Path(repo.basecachedir) / targetid
-            shutil.rmtree(cachedir)
-        except Exception as ex:
-            log_error("Unable to clean up: %s." % ex)
-            return -1
+    try:
+        os.unlink(dnftmp.name)
+        repo = dnfbase.repos[targetid]
+        cachedir = Path(repo.basecachedir) / targetid
+        shutil.rmtree(cachedir)
+    except Exception as ex:
+        log_error("Unable to clean up: %s." % ex)
+        return -1
 
     return retcode
 
