@@ -66,8 +66,8 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
 
     pkgdir = Path(CONFIG["RepoDir"], targetid, "Packages")
     tmpdir = Path(CONFIG["RepoDir"], "temp", targetid)
-    if not tmpdir.is_dir():
-        tmpdir.mkdir(parents=True)
+
+    tmpdir.mkdir(parents=True, exist_ok=True)
 
     with redirect_stderr(Path(CONFIG["LogDir"]) / "reposync_dnf.log") as (old_stderr, new_stderr):
         # BEGIN DNF
