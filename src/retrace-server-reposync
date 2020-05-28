@@ -62,7 +62,10 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
         log_debug("Using dnf config from %s\n%s" % (dnftmp.name, f.read()))
 
     pkgdir = Path(CONFIG["RepoDir"], targetid, "Packages")
-    tmpdir = Path(CONFIG["RepoDir"], "temp", targetid)
+    cachedir = Path(CONFIG["RepoDir"], "temp", targetid)
+
+    if cachedir.is_dir():
+        shutil.rmtree(cachedir)
 
     tmpdir.mkdir(parents=True, exist_ok=True)
 
@@ -70,16 +73,10 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
         # BEGIN DNF
         dnfbase = dnf.Base()
         dnfbase.conf.read(filename=dnftmp.name)
-        if not dnfbase.conf.cachedir:
-            sys.stderr = old_stderr
-            log_error("Unable to initialize DNF cache")
-            return -1
+
+        dnfbase.conf.cachedir = cachedir
 
         dnfbase.repos.add_new_repo(targetid, dnfbase.conf, baseurl=[repourl])
-
-        cachedir = Path(dnfbase.conf.cachedir) / targetid
-        if cachedir.is_dir():
-            shutil.rmtree(cachedir)
 
         try:
             # Fill the sack with repository packages
@@ -128,8 +125,6 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
 
     try:
         os.unlink(dnftmp.name)
-        repo = dnfbase.repos[targetid]
-        cachedir = Path(repo.basecachedir) / targetid
         shutil.rmtree(cachedir)
     except Exception as ex:
         log_error("Unable to clean up: %s." % ex)
