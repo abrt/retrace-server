@@ -86,7 +86,6 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
             log_error(str(ex))
             return -1
 
-        retcode = 0
         download = []
 
         for package in dnfbase.sack.query():
@@ -130,7 +129,7 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
         log_error("Unable to clean up: %s." % ex)
         return -1
 
-    return retcode
+    return 0
 
 def vercmp(ver1, ver2):
     # ToDo: Involve epoch?
