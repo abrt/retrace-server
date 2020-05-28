@@ -55,9 +55,6 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
     dnftmp = tempfile.NamedTemporaryFile(mode="w", delete=False,
                                          prefix="repo", suffix=".conf")
     dnftmp.write(globaldnfcfg)
-    dnftmp.write("[%s]\n" % targetid)
-    dnftmp.write("name=%s\n" % targetid)
-    dnftmp.write("baseurl=%s\n" % repourl)
     dnftmp.write(localdnfcfg)
     dnftmp.close()
 
@@ -78,13 +75,11 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
             log_error("Unable to initialize DNF cache")
             return -1
 
+        dnfbase.repos.add_new_repo(targetid, dnfbase.conf, baseurl=[repourl])
+
         cachedir = Path(dnfbase.conf.cachedir) / targetid
         if cachedir.is_dir():
             shutil.rmtree(cachedir)
-        dnfbase.read_all_repos()
-
-        for repo in dnfbase.repos.iter_enabled():
-            repo.disable()
 
         try:
             # Fill the sack with repository packages
