@@ -89,11 +89,10 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
             log_error(str(ex))
             return -1
 
-        packages = list(dnfbase.sack.query())
         retcode = 0
         download = []
 
-        for package in packages:
+        for package in dnfbase.sack.query():
             rpmname = package.location.rsplit("/", 1)[1]
             pkgpath = Path(pkgdir) / rpmname
             if not pkgpath.is_file() or pkgpath.stat().st_size() != package.size:
