@@ -208,8 +208,8 @@ if __name__ == "__main__":
 
     if CONFIG["UseFafPackages"]:
         log_info("Creating repo from faf")
-        targetid = Path("%s-%s-%s" % (distribution, version, arch))
-        targetdir = CONFIG["RepoDir"] / targetid
+        targetid = "%s-%s-%s" % (distribution, version, arch)
+        targetdir = Path(CONFIG["RepoDir"], targetid)
 
         if not targetdir.is_dir():
             targetdir.mkdir(parents=True)
@@ -247,7 +247,7 @@ if __name__ == "__main__":
         log_error("Unknown distribution: '%s'" % distribution)
         sys.exit(1)
 
-    targetid = Path("%s-%s-%s" % (distribution, version, arch))
+    targetid = "%s-%s-%s" % (distribution, version, arch)
     lockfile = Path("/tmp/retrace-reposync-lock-%s" % targetid)
 
     if lockfile.is_file():
@@ -264,7 +264,7 @@ if __name__ == "__main__":
         null = DEVNULL
 
     try:
-        targetdir = CONFIG["RepoDir"] / targetid
+        targetdir = Path(CONFIG["RepoDir"], targetid)
         pkgdir = targetdir / "Packages"
 
         if not pkgdir.is_dir():
