@@ -97,9 +97,10 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
             else:
                 log_debug("%s is already downloaded, skipping" % rpmname)
 
-        errors = dnfbase.download_packages(download)
-        for error in errors:
-            old_stderr.write("An error occured during download\n%s: %s" % (error, errors[error]))
+        try:
+            dnfbase.download_packages(download)
+        except dnf.exceptions.DownloadError as ex:
+            print("Some errors occurred during download:\n%s" % ex, file=old_stderr)
 
         for package in download:
             downloadpath = Path(package.localPkg())
