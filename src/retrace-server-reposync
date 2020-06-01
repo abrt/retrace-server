@@ -89,7 +89,7 @@ def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
         download = []
 
         for package in dnfbase.sack.query():
-            rpmname = package.location.rsplit("/", 1)[1]
+            rpmname = Path(package.location).name
             pkgpath = Path(pkgdir) / rpmname
             if not pkgpath.is_file() or pkgpath.stat().st_size() != package.size:
                 log_info("%s will be downloaded" % rpmname)
