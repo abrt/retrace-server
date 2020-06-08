@@ -176,8 +176,8 @@ def create_new_task(args):
         LOGGER.info("Tar size: %s", tar_size)
 
         headers = {'Content-Type': 'application/x-tar',
-                   'Content-Length': tar_size,
-                   'X-Task-Type': task_type,
+                   'Content-Length': str(tar_size),
+                   'X-Task-Type': str(task_type),
                    'Connection': 'close'}
 
         req = requests.Request('POST',
