@@ -1825,7 +1825,7 @@ class RetraceTask:
                         errors.append((url, str(ex)))
                         continue
 
-                downloaded.append(url)
+                downloaded.append(str(url))
             # use wget to download the remote file
             else:
                 log_info("Retrieving remote file '%s'" % url)
