@@ -1125,13 +1125,13 @@ class KernelVMcore:
                 kernel_path = kernel_path + "."
             kernel_path = kernel_path + str(kernelver.flavour)
 
-        vmlinux_cache_path = debugdir_base + "usr/lib/debug/lib/modules" / kernel_path / "vmlinux"
+        vmlinux_cache_path = debugdir_base / "usr/lib/debug/lib/modules" / kernel_path / "vmlinux"
         if vmlinux_cache_path.is_file():
-            log_info("Found cached vmlinux at path: " + vmlinux_cache_path)
+            log_info("Found cached vmlinux at path: {}".format(vmlinux_cache_path))
             vmlinux = vmlinux_cache_path
             task.set_vmlinux(vmlinux)
         else:
-            log_info("Unable to find cached vmlinux at path: " + vmlinux_cache_path)
+            log_info("Unable to find cached vmlinux at path: {}".format(vmlinux_cache_path))
             vmlinux = None
 
         # For now, unconditionally search for kernel-debuginfo.  However,
@@ -1189,11 +1189,11 @@ class KernelVMcore:
             vmlinux_debuginfo = debugdir_base / vmlinux_path.lstrip("/")
             cache_files_from_debuginfo(debuginfo, debugdir_base, [vmlinux_path])
             if vmlinux_debuginfo.is_file():
-                log_info("Found cached vmlinux at new debuginfo location: " + vmlinux_debuginfo)
+                log_info("Found cached vmlinux at new debuginfo location: {}".format(vmlinux_debuginfo))
                 vmlinux = vmlinux_debuginfo
                 task.set_vmlinux(vmlinux)
             else:
-                raise Exception("Failed vmlinux caching from debuginfo at location: " + vmlinux_debuginfo)
+                raise Exception("Failed vmlinux caching from debuginfo at location: {}".format(vmlinux_debuginfo))
 
         # Obtain the list of modules this vmcore requires
         if chroot:
