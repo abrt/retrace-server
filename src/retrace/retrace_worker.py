@@ -185,13 +185,15 @@ class RetraceWorker():
 
         return output
 
-    def _check_required_file(self, req: Path, crashdir: Path):
-        if (crashdir / req).is_file():
+    def _check_required_file(self, req: str, crashdir: Path):
+        path = Path(crashdir, req)
+
+        if path.is_file():
             return True
 
-        if req.name == "vmcore":
+        if path.name == "vmcore":
             for suffix in SNAPSHOT_SUFFIXES:
-                if (crashdir / req.with_suffix(suffix)).is_file():
+                if path.with_suffix(suffix).is_file():
                     return True
 
         return False
