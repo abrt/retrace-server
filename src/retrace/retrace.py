@@ -934,6 +934,7 @@ class KernelVMcore:
             result = int(match.group(1))
             break
 
+        os.chmod(dmesg_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
         self._dump_level = result
         return result
 
