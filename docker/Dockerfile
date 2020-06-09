@@ -1,12 +1,29 @@
-FROM fedora:31
-MAINTAINER mmarusak@redhat.com
+FROM fedora:32
+USER root
+RUN dnf --assumeyes install git-core make tito
+COPY . /src
+WORKDIR /src
+RUN \
+    dnf --assumeyes builddep --spec retrace-server.spec && \
+    useradd --no-create-home builder && \
+    chown --recursive --quiet builder. .
+USER builder
+RUN tito build --output=rpm --rpm --test
+
+FROM fedora:32 as build
+USER root
+COPY --from=0 /src/rpm/noarch/retrace-server*.rpm rpm/
+RUN \
+    dnf --assumeyes install mod_ssl uwsgi rpm/retrace-server*.rpm && \
+    dnf clean all
+
+FROM build
 
 ENV NAME="Retrace Server" \
     SUMMARY="Application for remote coredump analysis " \
     DESCRIPTION=" Remote service for generating backtraces from coredumps of crashes. \
 Supports user space coredumps as well as a kernel coredumps. \
 All communication with server can be over a simple HTTP API or via Web UI."
-
 
 LABEL summary="$SUMMARY" \
       description="$DESCRIPTION" \
@@ -17,10 +34,6 @@ LABEL summary="$SUMMARY" \
       name="$NAME" \
       usage="docker run -d --name retrace-server" \
       maintainer="ABRT devel team <abrt-devel-list@redhat.com>"
-
-RUN dnf -y update && \
-    dnf -y install --setopt=tsflags=nodocs retrace-server uwsgi mod_ssl && \
-    dnf clean all
 
 # Copy main run script
 COPY docker/files/usr/bin /usr/bin
