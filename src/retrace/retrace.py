@@ -9,7 +9,8 @@ import stat
 import sys
 import time
 import hashlib
-import urllib
+import urllib.parse
+import urllib.request
 from pathlib import Path
 from signal import getsignal, signal, SIG_DFL, SIGPIPE
 from subprocess import PIPE, STDOUT, DEVNULL, TimeoutExpired, run
@@ -414,7 +415,7 @@ def find_kernel_debuginfo(kernelver: KernelVer) -> Optional[Path]:
                 log_debug("FAF package found for {0}".format(str(ver)))
                 if p.has_lob("package"):
                     log_debug("LOB location {0}".format(p.get_lob_path("package")))
-                    return p.get_lob_path("package")
+                    return Path(p.get_lob_path("package"))
                 log_debug("LOB not found {0}".format(p.get_lob_path("package")))
 
     # search for the debuginfo RPM
@@ -505,7 +506,7 @@ def get_files_sizes(directory: Union[str, Path]) -> List[Tuple[Path, int]]:
 def get_archive_type(path: Union[str, Path]) -> int:
     ms = magic.open(magic.MAGIC_NONE)
     ms.load()
-    filetype = ms.file(path).lower()
+    filetype = ms.file(str(path)).lower()
     log_debug("File type: %s" % filetype)
 
     if "bzip2 compressed data" in filetype:
@@ -634,20 +635,21 @@ def unpack_coredump(path: Path) -> None:
     while len(files - processed) > 0:
         archive = list(files - processed)[0]
         filetype = get_archive_type(archive)
+        archive_path = str(archive)
         if filetype == ARCHIVE_GZ:
-            check_run(["gunzip", archive])
+            check_run(["gunzip", archive_path])
         elif filetype == ARCHIVE_BZ2:
-            check_run(["bunzip2", archive])
+            check_run(["bunzip2", archive_path])
         elif filetype == ARCHIVE_XZ:
-            check_run(["unxz", archive])
+            check_run(["unxz", archive_path])
         elif filetype == ARCHIVE_ZIP:
-            check_run(["unzip", archive, "-d", parentdir])
+            check_run(["unzip", archive_path, "-d", str(parentdir)])
         elif filetype == ARCHIVE_7Z:
-            check_run(["7za", "e", "-o%s" % parentdir, archive])
+            check_run(["7za", "e", "-o%s" % parentdir, archive_path])
         elif filetype == ARCHIVE_TAR:
-            check_run(["tar", "-C", parentdir, "-xf", archive])
+            check_run(["tar", "-C", str(parentdir), "-xf", archive_path])
         elif filetype == ARCHIVE_LZOP:
-            check_run(["lzop", "-d", archive])
+            check_run(["lzop", "-d", archive_path])
 
         if archive.is_file() and filetype != ARCHIVE_UNKNOWN:
             archive.unlink()
@@ -1345,6 +1347,8 @@ class RetraceTask:
                     cmd = CONFIG["KernelDebuggerPath"]
                 self.set_crash_cmd(cmd)
 
+        assert isinstance(self._taskid, int)
+
     def has_mock(self) -> bool:
         """Verifies whether MOCK_SITE_DEFAULTS_CFG is present in the task directory."""
         return self.has(RetraceTask.MOCK_SITE_DEFAULTS_CFG)
@@ -1398,8 +1402,10 @@ class RetraceTask:
 
         return 0
 
-    def get_taskid(self) -> Optional[int]:
+    def get_taskid(self) -> int:
         """Returns task's ID"""
+        # This invariant is ensured by the constructor.
+        assert isinstance(self._taskid, int)
         return self._taskid
 
     def get_savedir(self) -> Path:

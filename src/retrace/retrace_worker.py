@@ -211,16 +211,18 @@ class RetraceWorker():
     def read_architecture(self, custom_arch: Optional[str], corepath: Path) -> str:
         if custom_arch is not None:
             log_debug("Using custom architecture: %s" % custom_arch)
-            arch = custom_arch
-        else:
-            # read architecture from coredump
-            arch = guess_arch(corepath)
+            return custom_arch
 
-            if not arch:
-                log_error("Unable to determine architecture from coredump")
-                self._fail()
+        # read architecture from coredump
+        arch = guess_arch(str(corepath))
 
-            log_debug("Determined architecture: %s" % arch)
+        if arch is None:
+            log_error("Unable to determine architecture from coredump")
+            self._fail()
+
+        log_debug("Determined architecture: %s" % arch)
+
+        assert isinstance(arch, str)
         return arch
 
     def read_package_file(self, crashdir: Path) -> Tuple[str, Dict[int, str]]:
@@ -309,7 +311,7 @@ class RetraceWorker():
         packagesfile = crashdir / "packages"
         if packagesfile.is_file():
             with packagesfile.open() as f:
-                packages = f.read.split()
+                packages = f.read().split()
         else:
             # read required packages from coredump
             try:
@@ -422,7 +424,7 @@ class RetraceWorker():
         self.hook.run("post_prepare_debuginfo")
         self.hook.run("pre_prepare_environment")
 
-        repopath = Path(CONFIG["RepoDir"], releaseid)
+        repopath = str(Path(CONFIG["RepoDir"], releaseid))
 
         if CONFIG["RetraceEnvironment"] == "mock":
         # create mock config file
@@ -948,7 +950,7 @@ class RetraceWorker():
             task.set_started_time(int(time.time()))
 
             if task.has_remote():
-                errors = task.download_remote(kernelver=kernelver)
+                errors = task.download_remote()
                 if errors:
                     for _, error in errors:
                         log_warn(error)
