@@ -1084,7 +1084,7 @@ class KernelVMcore:
         self._release = result
         return result
 
-    def prepare_debuginfo(self, task, chroot=None, kernelver=None):
+    def prepare_debuginfo(self, task, chroot=None, kernelver=None) -> str:
         log_info("Calling prepare_debuginfo ")
         if kernelver is None:
             kernelver = self.get_kernel_release()
@@ -1129,7 +1129,7 @@ class KernelVMcore:
         vmlinux_cache_path = debugdir_base / "usr/lib/debug/lib/modules" / kernel_path / "vmlinux"
         if vmlinux_cache_path.is_file():
             log_info("Found cached vmlinux at path: {}".format(vmlinux_cache_path))
-            vmlinux = vmlinux_cache_path
+            vmlinux: str = str(vmlinux_cache_path)
             task.set_vmlinux(vmlinux)
         else:
             log_info("Unable to find cached vmlinux at path: {}".format(vmlinux_cache_path))
@@ -1191,7 +1191,7 @@ class KernelVMcore:
             cache_files_from_debuginfo(debuginfo, debugdir_base, [vmlinux_path])
             if vmlinux_debuginfo.is_file():
                 log_info("Found cached vmlinux at new debuginfo location: {}".format(vmlinux_debuginfo))
-                vmlinux = vmlinux_debuginfo
+                vmlinux: str = str(vmlinux_debuginfo)
                 task.set_vmlinux(vmlinux)
             else:
                 raise Exception("Failed vmlinux caching from debuginfo at location: {}".format(vmlinux_debuginfo))
@@ -1425,7 +1425,7 @@ class RetraceTask:
         except OSError:
             pass
 
-    def set(self, key, value, mode="w"):
+    def set(self, key, value: str, mode="w"):
         if mode not in ["w", "a"]:
             raise ValueError("mode must be either 'w' or 'a'")
 
@@ -1434,7 +1434,7 @@ class RetraceTask:
             self.chgrp(key)
             self.chmod(key)
 
-    def set_atomic(self, key, value, mode="w"):
+    def set_atomic(self, key, value: str, mode="w"):
         if mode not in ["w", "a", "wb"]:
             raise ValueError("mode must be 'w', 'a', or 'wb'")
 
@@ -1538,7 +1538,7 @@ class RetraceTask:
         # max 16 MB
         return self.get(RetraceTask.BACKTRACE_FILE, maxlen=1 << 24)
 
-    def set_backtrace(self, backtrace, mode="w"):
+    def set_backtrace(self, backtrace: str, mode="w"):
         """Atomically writes given string into BACKTRACE_FILE."""
         self.set_atomic(RetraceTask.BACKTRACE_FILE, backtrace, mode)
 
@@ -1551,7 +1551,7 @@ class RetraceTask:
         LOG_FILE's contents otherwise."""
         return self.get(RetraceTask.LOG_FILE, maxlen=1 << 22)
 
-    def set_log(self, log, append=False):
+    def set_log(self, log: str, append=False):
         """Atomically writes or appends given string into LOG_FILE."""
         mode = "w"
         if append:
@@ -1572,7 +1572,7 @@ class RetraceTask:
 
         return int(result)
 
-    def set_status(self, statuscode):
+    def set_status(self, statuscode: int):
         """Atomically writes given statuscode into STATUS_FILE."""
         self.set_atomic(RetraceTask.STATUS_FILE, "%d" % statuscode)
 
@@ -1626,7 +1626,7 @@ class RetraceTask:
     def get_notes(self):
         return self.get(RetraceTask.NOTES_FILE, maxlen=1 << 22)
 
-    def set_notes(self, value):
+    def set_notes(self, value: str):
         self.set_atomic(RetraceTask.NOTES_FILE, value)
 
     def has_notify(self):
@@ -1649,7 +1649,7 @@ class RetraceTask:
     def get_url(self):
         return self.get(RetraceTask.URL_FILE, maxlen=1 << 14)
 
-    def set_url(self, value):
+    def set_url(self, value: str):
         self.set(RetraceTask.URL_FILE, value)
 
     def has_vmlinux(self):
@@ -1659,7 +1659,7 @@ class RetraceTask:
         """Gets the contents of VMLINUX_FILE"""
         return self.get(RetraceTask.VMLINUX_FILE, maxlen=1 << 22)
 
-    def set_vmlinux(self, value):
+    def set_vmlinux(self, value: str):
         self.set(RetraceTask.VMLINUX_FILE, value)
 
     def has_vmcore(self):
@@ -2072,7 +2072,7 @@ class RetraceTask:
         """Gets contents of DOWNLOADED_FILE"""
         return self.get(RetraceTask.DOWNLOADED_FILE, maxlen=1 << 22)
 
-    def set_downloaded(self, value):
+    def set_downloaded(self, value: str):
         """Writes (not atomically) content to DOWNLOADED_FILE"""
         self.set(RetraceTask.DOWNLOADED_FILE, value)
 
@@ -2084,7 +2084,7 @@ class RetraceTask:
         """Gets contents of MD5SUM_FILE"""
         return self.get(RetraceTask.MD5SUM_FILE, maxlen=1 << 22)
 
-    def set_md5sum(self, value):
+    def set_md5sum(self, value: str):
         """Writes (not atomically) content to MD5SUM_FILE"""
         self.set(RetraceTask.MD5SUM_FILE, value)
 
@@ -2100,7 +2100,7 @@ class RetraceTask:
         """Gets the contents of CRASHRC_FILE"""
         return self.get(RetraceTask.CRASHRC_FILE, maxlen=1 << 22)
 
-    def set_crashrc(self, data):
+    def set_crashrc(self, data: str):
         """Writes data to CRASHRC_FILE"""
         self.set(RetraceTask.CRASHRC_FILE, data)
 
@@ -2112,7 +2112,7 @@ class RetraceTask:
             return "crash"
         return result
 
-    def set_crash_cmd(self, data):
+    def set_crash_cmd(self, data: str):
         """Writes data to CRASH_CMD_FILE"""
         self.set(RetraceTask.CRASH_CMD_FILE, data)
         try:
