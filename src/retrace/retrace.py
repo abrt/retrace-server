@@ -1915,7 +1915,7 @@ class RetraceTask:
             for filename in Path(crashdir).iterdir():
                 suffix = filename.suffix
                 # keep vmcore snapshots with suffixes (vmss/vmsn/vmem)
-                if filename.stem == self.VMCORE_FILE and (not suffix or suffix in SNAPSHOT_SUFFIXES):
+                if filename.stem == str(self.VMCORE_FILE) and (not suffix or suffix in SNAPSHOT_SUFFIXES):
                     continue
 
                 filename.unlink()
