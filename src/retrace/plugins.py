@@ -49,7 +49,7 @@ class Plugins(object):
                 if not filepath.name.startswith("_") and filepath.suffix == ".py":
                     pluginname = filepath.stem
                     try:
-                        this = __import__(pluginname)
+                        this = import_module(pluginname)
                     except Exception:
                         continue
                     if "distribution" in this.__dict__ and "repos" in this.__dict__:

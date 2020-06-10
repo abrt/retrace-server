@@ -34,13 +34,13 @@ def load_hook_config() -> Dict[str, str]:
     hook_configs += get_config_files(MAIN_HOOK_CONFIGS_PATH)
 
     main_hook_config_file = Path(MAIN_CONFIG_PATH, MAIN_HOOK_CONFIG_FILE)
-    hook_configs.append(str(main_hook_config_file))
+    hook_configs.append(main_hook_config_file)
 
     if USER_HOOK_CONFIGS_PATH.exists():
         hook_configs += get_config_files(USER_HOOK_CONFIGS_PATH)
 
     if USER_CONFIG_PATH.exists():
-        hook_configs.append(str(USER_CONFIG_PATH))
+        hook_configs.append(USER_CONFIG_PATH)
 
     cfgs = load_config_files(hook_configs)
 
