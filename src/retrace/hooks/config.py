@@ -1,6 +1,7 @@
 #!/bin/python3
 import configparser
 from pathlib import Path
+from typing import Dict, List
 
 MAIN_CONFIG_PATH = Path("/etc/retrace-server/")
 MAIN_HOOK_CONFIG_FILE = Path("retrace-server-hooks.conf")
@@ -11,11 +12,11 @@ HOOK_PATH = Path("/usr/libexec/retrace-server/hooks/")
 HOOK_TIMEOUT = 300
 
 
-def get_config_files(directory: Path):
+def get_config_files(directory: Path) -> List[Path]:
     return [fname for fname in directory.iterdir() if fname.suffix == '.conf']
 
 
-def load_config_files(config_files):
+def load_config_files(config_files: List[Path]) -> Dict[str, str]:
     result = {}
     cfg_parser = configparser.ConfigParser()
     cfg_parser.read(config_files)
@@ -28,8 +29,8 @@ def load_config_files(config_files):
     return result
 
 
-def load_hook_config():
-    hook_configs = []
+def load_hook_config() -> Dict[str, str]:
+    hook_configs: List[Path] = []
     hook_configs += get_config_files(MAIN_HOOK_CONFIGS_PATH)
 
     main_hook_config_file = Path(MAIN_CONFIG_PATH, MAIN_HOOK_CONFIG_FILE)

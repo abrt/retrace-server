@@ -9,6 +9,7 @@ from dnf.subject import Subject
 from hawkey import FORM_NEVRA
 from pathlib import Path
 from subprocess import run, PIPE
+from typing import Dict, Optional, Tuple, Union
 
 from .config import Config, DF_BIN, GZIP_BIN, TAR_BIN, XZ_BIN
 
@@ -149,7 +150,7 @@ def parse_http_gettext(lang, charset):
     return result
 
 
-def parse_rpm_name(name):
+def parse_rpm_name(name: str) -> Dict[str, Union[int, Optional[str]]]:
     result = {
         "epoch": 0,
         "name": None,
@@ -192,7 +193,7 @@ def send_email(frm, to, subject, body):
     smtp.close()
 
 
-def splitFilename(filename):
+def splitFilename(filename: str) -> Union[Tuple[None, None, None, None, None], Tuple[str, str, str, str, str]]:
     """
     Pass in a standard style rpm fullname
 
