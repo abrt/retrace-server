@@ -8,6 +8,7 @@ import shutil
 import stat
 import sys
 import time
+from typing import Set
 import hashlib
 import urllib
 from pathlib import Path
@@ -624,7 +625,7 @@ def unpack_vmcore(path: Path):
 
 
 def unpack_coredump(path: Path):
-    processed = set()
+    processed: Set[Path] = set()
     parentdir = path.parent
     files = set(f for (f, s) in get_files_sizes(parentdir))
     # Keep unpacking

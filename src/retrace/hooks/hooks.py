@@ -4,6 +4,7 @@ import itertools
 import multiprocessing as mp
 import os
 import shlex
+from typing import List
 
 from pathlib import Path
 from subprocess import PIPE, CalledProcessError, run, TimeoutExpired
@@ -33,7 +34,7 @@ from .config import HOOK_PATH, HOOK_TIMEOUT, hooks_config
 def get_executables(path: Path):
     """ Scan `path` and return list of found executable scripts.
     """
-    script_list = []
+    script_list: List[Path] = []
 
     if not path.is_dir():
         return script_list

@@ -1,4 +1,5 @@
 import re
+from typing import List
 
 distribution = "centos"
 abrtparser = re.compile(r"^CentOS Linux release (\d+)(?:\.(\d+)\.(\d+))? \(([^\)]+)\)$")
@@ -15,6 +16,4 @@ versionlist = [
     "el7",
     "el8",
 ]
-repos = [
-    []
-]
+repos: List[List[str]] = [[]]

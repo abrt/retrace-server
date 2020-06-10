@@ -1,4 +1,5 @@
 import re
+from typing import List
 
 distribution = "rhel"
 abrtparser = re.compile(r"^Red Hat Enterprise Linux(?:\s\w+)? release (\d+)(?:\.(\d+))?(?:\s\w+)? \(([^\)]+)\)$")
@@ -20,4 +21,4 @@ versionlist = [
     "el7",
     "el8",
 ]
-repos = [[]]
+repos: List[List[str]] = [[]]
