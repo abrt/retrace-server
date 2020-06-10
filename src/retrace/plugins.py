@@ -15,17 +15,22 @@
 
 import os
 import sys
-
+from importlib import import_module
 from pathlib import Path
+from types import ModuleType
+from typing import Any, Iterable, Optional
 
 
 class Plugins(object):
     class __plugins:
-        def __init__(self):
-            self.plugins_read = False
-            self.PLUGINS = []
+        plugins_read: bool
+        PLUGINS: Iterable[ModuleType]
 
-        def load(self, plugin_dir=Path("/usr/share/retrace-server/plugins")):
+        def __init__(self) -> None:
+            self.PLUGINS = []
+            self.plugins_read = False
+
+        def load(self, plugin_dir: Path = Path("/usr/share/retrace-server/plugins")) -> None:
             self.PLUGINS = []
             self.plugins_read = True
             # if environment variable set, use rather that
@@ -50,20 +55,20 @@ class Plugins(object):
                     if "distribution" in this.__dict__ and "repos" in this.__dict__:
                         self.PLUGINS.append(this)
 
-        def all(self):
+        def all(self) -> Iterable[ModuleType]:
             if not self.plugins_read:
                 self.load()
             return self.PLUGINS
 
-    instance = None
+    instance: Optional[ModuleType] = None
 
     def __new__(cls,):
         if not Plugins.instance:
             Plugins.instance = Plugins.__plugins()
         return Plugins.instance
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         return getattr(self.instance, name)
 
-    def __setattr__(self, name, value):
-        return setattr(self.instance, name, value)
+    def __setattr__(self, name: str, value: Any) -> None:
+        setattr(self.instance, name, value)

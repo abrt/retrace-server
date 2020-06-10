@@ -8,12 +8,12 @@ import shutil
 import stat
 import sys
 import time
-from typing import Optional, Set, Union
 import hashlib
 import urllib
 from pathlib import Path
 from signal import getsignal, signal, SIG_DFL, SIGPIPE
 from subprocess import PIPE, STDOUT, DEVNULL, TimeoutExpired, run
+from typing import Dict, List, Optional, Set, Tuple, Union
 import magic
 
 from .config import Config
@@ -123,7 +123,7 @@ ARCHITECTURES = {"src", "noarch", "i386", "i486", "i586", "i686", "x86_64",
 # "arm" has been intentionally removed - when guessing architecture, it matches
 # "alarm" or "hdparm" and thus leads to wrong results.
 # As soon as plain "arm" needs to be supported, this needs to be solved properly.
-ARCH_MAP = {
+ARCH_MAP: Dict[str, Set[str]] = {
     "i386": {"i386", "i486", "i586", "i686"},
     "armhfp": {"armhfp", "armel", "armv5tel", "armv7l", "armv7hl", "armv7hnl"},
     "x86_64": {"x86_64"},
@@ -144,7 +144,7 @@ class RetraceError(Exception):
 
 
 class RetraceWorkerError(RetraceError):
-    def __init__(self, message=None, errorcode=1):
+    def __init__(self, message: str = None, errorcode: int = 1):
         super(RetraceWorkerError, self).__init__(message)
         self.errorcode = errorcode
 
@@ -152,23 +152,23 @@ class RetraceWorkerError(RetraceError):
 logger = logging.getLogger(__name__)
 
 
-def log_info(msg):
+def log_info(msg: str):
     logger.info(msg)
 
 
-def log_debug(msg):
+def log_debug(msg: str):
     logger.debug(msg)
 
 
-def log_warn(msg):
+def log_warn(msg: str):
     logger.warn(msg)
 
 
-def log_error(msg):
+def log_error(msg: str):
     logger.error(msg)
 
 
-def get_canon_arch(arch):
+def get_canon_arch(arch: str) -> str:
     for canon_arch, derived_archs in ARCH_MAP.items():
         if arch in derived_archs:
             return canon_arch
@@ -218,7 +218,7 @@ def guess_arch(coredump_path: Path) -> Optional[str]:
     return result
 
 
-def get_supported_releases():
+def get_supported_releases() -> List[str]:
     result = []
     for f in Path(CONFIG["RepoDir"]).iterdir():
         if not f.is_dir():
@@ -230,7 +230,7 @@ def get_supported_releases():
     return result
 
 
-def run_gdb(savedir, plugin, repopath, taskid=None):
+def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: Optional[int] = None):
     # exception is caught on the higher level
     savedir = Path(savedir)
     exec_file = open(savedir / "crash" / "executable", "r")
@@ -338,14 +338,14 @@ def run_gdb(savedir, plugin, repopath, taskid=None):
     return backtrace, exploitable
 
 
-def remove_epoch(nvr):
+def remove_epoch(nvr: str) -> str:
     pos = nvr.find(":")
     if pos > 0:
         return nvr[pos + 1:]
     return nvr
 
 
-def is_package_known(package_nvr, arch, releaseid=None):
+def is_package_known(package_nvr: str, arch: str, releaseid: Optional[str] = None):
     if CONFIG["UseFafPackages"]:
         from pyfaf.storage import getDatabase
         from pyfaf.queries import get_package_by_nevra
@@ -390,7 +390,7 @@ def is_package_known(package_nvr, arch, releaseid=None):
     return any([f.is_file() for f in candidates])
 
 
-def find_kernel_debuginfo(kernelver) -> Optional[Union[str, Path]]:
+def find_kernel_debuginfo(kernelver: KernelVer) -> Optional[Path]:
     vers = [kernelver]
 
     for canon_arch, derived_archs in ARCH_MAP.items():
@@ -473,7 +473,7 @@ def find_kernel_debuginfo(kernelver) -> Optional[Union[str, Path]]:
     return None
 
 
-def cache_files_from_debuginfo(debuginfo, basedir, files):
+def cache_files_from_debuginfo(debuginfo: Path, basedir: Path, files: List[str]) -> None:
     # important! if empty list is specified, the whole debuginfo would be unpacked
     if not files:
         return
@@ -490,7 +490,7 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
     run(["cpio", "-id"] + files, input=rpm2cpio.stdout, cwd=basedir, stdout=DEVNULL, stderr=DEVNULL)
 
 
-def get_files_sizes(directory):
+def get_files_sizes(directory: Union[str, Path]) -> List[Tuple[Path, int]]:
     result = []
 
     for f in Path(directory).iterdir():
@@ -502,7 +502,7 @@ def get_files_sizes(directory):
     return sorted(result, key=lambda f_s: f_s[1], reverse=True)
 
 
-def get_archive_type(path):
+def get_archive_type(path: Union[str, Path]) -> int:
     ms = magic.open(magic.MAGIC_NONE)
     ms.load()
     filetype = ms.file(path).lower()
@@ -559,7 +559,7 @@ def rename_with_suffix(frompath: Path, topath: Path) -> Path:
 
     return topath
 
-def unpack_vmcore(path: Path):
+def unpack_vmcore(path: Path) -> None:
     vmcore_file = "vmcore"
     parentdir = path.parent
     archivebase = parentdir / "archive"
@@ -626,7 +626,7 @@ def unpack_vmcore(path: Path):
     archive.rename(parentdir / vmcore_file)
 
 
-def unpack_coredump(path: Path):
+def unpack_coredump(path: Path) -> None:
     processed: Set[Path] = set()
     parentdir = path.parent
     files = set(f for (f, s) in get_files_sizes(parentdir))
@@ -664,15 +664,15 @@ def unpack_coredump(path: Path):
             shutil.rmtree(filename)
 
 
-def run_ps():
+def run_ps() -> List[str]:
     lines = run(["ps", "-eo", "pid,ppid,etime,cmd"],
-                stdout=PIPE, encoding='utf-8').stdout.split("\n")
+                stdout=PIPE, encoding='utf-8').stdout.splitlines()
 
     return lines
 
 
-def get_running_tasks(ps_output=None):
-    if not ps_output:
+def get_running_tasks(ps_output: Optional[List[str]] = None) -> List[Tuple[int, int, str]]:
+    if ps_output is None:
         ps_output = run_ps()
 
     result = []
@@ -685,7 +685,7 @@ def get_running_tasks(ps_output=None):
     return result
 
 
-def get_active_tasks():
+def get_active_tasks() -> List[int]:
     tasks = []
 
     for filename in Path(CONFIG["SaveDir"]).iterdir():
@@ -706,7 +706,7 @@ def get_active_tasks():
     return tasks
 
 
-def get_md5_tasks():
+def get_md5_tasks() -> List[RetraceTask]:
     tasks = []
 
     for filename in Path(CONFIG["SaveDir"]).iterdir():
@@ -744,14 +744,14 @@ def get_md5_tasks():
     return tasks
 
 
-def check_run(cmd):
+def check_run(cmd: List[str]) -> None:
     child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
     stdout = child.stdout
     if child.returncode:
         raise Exception("%s exited with %d: %s" % (cmd[0], child.returncode, stdout))
 
 
-def move_dir_contents(source, dest):
+def move_dir_contents(source: Union[str, Path], dest: Union[str, Path]) -> None:
     for filename in Path(source).iterdir():
         if filename.is_dir():
             move_dir_contents(filename, dest)
@@ -780,15 +780,19 @@ class KernelVer():
 
     ARCH = ARCHITECTURES
 
+    _arch: Optional[str]
+
     @property
-    def arch(self):
+    def arch(self) -> Optional[str]:
+        if self._arch is None:
+            return None
         return get_canon_arch(self._arch)
 
     @arch.setter
-    def arch(self, value):
+    def arch(self, value: str) -> None:
         self._arch = value
 
-    def __init__(self, kernelver_str):
+    def __init__(self, kernelver_str: str) -> None:
         log_debug("Parsing kernel version '%s'" % kernelver_str)
         self.kernelver_str = kernelver_str
         self.flavour = None
@@ -819,7 +823,7 @@ class KernelVer():
         log_debug("Version: '%s'; Release: '%s'; Arch: '%s'; Flavour: '%s'; Realtime: %s"
                   % (self.version, self.release, self._arch, self.flavour, self.rt))
 
-    def __str__(self):
+    def __str__(self) -> str:
         result = "%s-%s" % (self.version, self.release)
 
         if self._arch:
@@ -830,10 +834,10 @@ class KernelVer():
 
         return result
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def package_name_base(self, debug=False):
+    def package_name_base(self, debug: bool = False) -> str:
         base = "kernel"
         if self.rt:
             base = "%s-rt" % base
@@ -846,7 +850,7 @@ class KernelVer():
 
         return base
 
-    def package_name(self, debug=False):
+    def package_name(self, debug: bool = False) -> str:
         if self._arch is None:
             raise Exception("Architecture is required for building package name")
 
@@ -854,14 +858,19 @@ class KernelVer():
 
         return "%s-%s-%s.%s.rpm" % (base, self.version, self.release, self._arch)
 
-    def needs_arch(self):
+    def needs_arch(self) -> bool:
         return self._arch is None
 
 
 class KernelVMcore:
     DUMP_LEVEL_PARSER = re.compile(r"^[ \t]*dump_level[ \t]*:[ \t]*([0-9]+).*$")
+    _dump_level: Optional[int]
+    _has_extra_pages: Optional[bool]
+    _is_flattened_format: Optional[bool]
+    _release: Optional[KernelVer]
+    _vmlinux: Optional[str]
 
-    def __init__(self, vmcore_path: Path):
+    def __init__(self, vmcore_path: Path) -> None:
         self._vmcore_path: Path = vmcore_path
         self._crashdir: Path = vmcore_path.parent
         self._is_flattened_format = None
@@ -914,7 +923,7 @@ class KernelVMcore:
         self._is_flattened_format = False
         return True
 
-    def get_dump_level(self, task):
+    def get_dump_level(self, task: RetraceTask) -> Optional[int]:
         if self._dump_level is not None:
             return self._dump_level
 
@@ -943,7 +952,7 @@ class KernelVMcore:
         self._dump_level = result
         return result
 
-    def has_extra_pages(self, task):
+    def has_extra_pages(self, task: RetraceTask) -> bool:
         """Returns True if vmcore has extra pages that can be stripped with makedumpfile"""
         if self._has_extra_pages is not None:
             return self._has_extra_pages
@@ -965,7 +974,7 @@ class KernelVMcore:
             self._has_extra_pages = False
         return self._has_extra_pages
 
-    def strip_extra_pages(self):
+    def strip_extra_pages(self) -> None:
         """Strip extra pages from vmcore with makedumpfile"""
         if self._vmlinux is None:
             log_error("Cannot strip pages if vmlinux is not known for vmcore")
@@ -1016,7 +1025,7 @@ class KernelVMcore:
     KERNEL_RELEASE_PARSER = re.compile(b'(\d+\.\d+\.\d+)-(\d+\.[^\x00\s]+)')
     #
 
-    def get_kernel_release(self, crash_cmd=["crash"]):
+    def get_kernel_release(self, crash_cmd: List[str] = ["crash"]) -> KernelVer:
         if self._release is not None:
             return self._release
 
@@ -1089,7 +1098,8 @@ class KernelVMcore:
         self._release = result
         return result
 
-    def prepare_debuginfo(self, task, chroot=None, kernelver=None) -> str:
+    def prepare_debuginfo(self, task: RetraceTask, chroot: Optional[str] = None,
+            kernelver: Optional[KernelVer] = None) -> str:
         log_info("Calling prepare_debuginfo ")
         if kernelver is None:
             kernelver = self.get_kernel_release()
@@ -1278,7 +1288,7 @@ class RetraceTask:
     MOCK_LOGGING_INI = Path("logging.ini")
     DOCKERFILE = Path("Dockerfile")
 
-    def __init__(self, taskid=None):
+    def __init__(self, taskid: Optional[int] = None):
         """Creates a new task if taskid is None,
         loads the task with given ID otherwise."""
 
@@ -1335,16 +1345,17 @@ class RetraceTask:
                     cmd = CONFIG["KernelDebuggerPath"]
                 self.set_crash_cmd(cmd)
 
-    def has_mock(self):
+    def has_mock(self) -> bool:
         """Verifies whether MOCK_SITE_DEFAULTS_CFG is present in the task directory."""
         return self.has(RetraceTask.MOCK_SITE_DEFAULTS_CFG)
 
-    def _get_file_path(self, key):
+    def _get_file_path(self, key: Union[str, Path]) -> Path:
         key_sanitized = str(key).replace("/", "_").replace(" ", "_")
         return self._savedir / key_sanitized
 
-    def _start_local(self, debug=False, kernelver=None, arch=None):
-        cmdline = ["/usr/bin/retrace-server-worker", "%d" % self._taskid]
+    def _start_local(self, debug: bool = False, kernelver: Optional[str] = None,
+                     arch: Optional[str] = None) -> int:
+        cmdline = ["/usr/bin/retrace-server-worker", "%d" % self.get_taskid()]
         if debug:
             cmdline.append("-v")
 
@@ -1359,8 +1370,9 @@ class RetraceTask:
         child = run(cmdline)
         return child.returncode
 
-    def _start_remote(self, host, debug=False, kernelver=None, arch=None):
-        starturl = "%s/%d/start" % (host, self._taskid)
+    def _start_remote(self, host: str, debug: bool = False, kernelver: Optional[str] = None,
+                      arch: Optional[str] = None) -> int:
+        starturl = "%s/%d/start" % (host, self.get_taskid())
         qs = {}
         if debug:
             qs["debug"] = ""
@@ -1386,7 +1398,7 @@ class RetraceTask:
 
         return 0
 
-    def get_taskid(self):
+    def get_taskid(self) -> Optional[int]:
         """Returns task's ID"""
         return self._taskid
 
@@ -1398,7 +1410,8 @@ class RetraceTask:
         """Returns task's crashdir"""
         return self._savedir / "crash"
 
-    def start(self, debug=False, kernelver=None, arch=None):
+    def start(self, debug: bool = False, kernelver: Optional[str] = None,
+              arch: Optional[str] = None):
         if arch is None:
             crashdir = self.get_crashdir()
 
@@ -1418,20 +1431,20 @@ class RetraceTask:
 
         return self._start_local(debug=debug, kernelver=kernelver, arch=arch)
 
-    def chgrp(self, key):
+    def chgrp(self, key: Union[str, Path]) -> None:
         gr = grp.getgrnam(CONFIG["AuthGroup"])
         try:
             os.chown(self._get_file_path(key), -1, gr.gr_gid)
         except OSError:
             pass
 
-    def chmod(self, key):
+    def chmod(self, key: Union[str, Path]) -> None:
         try:
             self._get_file_path(key).chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
         except OSError:
             pass
 
-    def set(self, key, value: str, mode="w"):
+    def set(self, key: Union[str, Path], value: Union[str, bytes], mode: str = "w") -> None:
         if mode not in ["w", "a"]:
             raise ValueError("mode must be either 'w' or 'a'")
 
@@ -1440,7 +1453,7 @@ class RetraceTask:
             self.chgrp(key)
             self.chmod(key)
 
-    def set_atomic(self, key, value: str, mode="w"):
+    def set_atomic(self, key: Union[str, Path], value: Union[str, bytes], mode: str = "w") -> None:
         if mode not in ["w", "a", "wb"]:
             raise ValueError("mode must be 'w', 'a', or 'wb'")
 
@@ -1461,7 +1474,7 @@ class RetraceTask:
         self.chmod(key)
 
     # 256MB should be enough by default
-    def get(self, key, maxlen=268435456):
+    def get(self, key: Union[str, Path], maxlen: int = 268435456) -> Optional[str]:
         if not self.has(key):
             return None
 
@@ -1471,13 +1484,13 @@ class RetraceTask:
 
         return result
 
-    def has(self, key):
+    def has(self, key: Union[str, Path]):
         return self._get_file_path(key).is_file()
 
-    def touch(self, key):
+    def touch(self, key: Union[str, Path]):
         open(self._get_file_path(key), "a").close()
 
-    def delete(self, key):
+    def delete(self, key: Union[str, Path]):
         if self.has(key):
             self._get_file_path(key).unlink()
 
@@ -1489,7 +1502,7 @@ class RetraceTask:
         """Verifies if the given password matches task's password."""
         return self.get_password() == password
 
-    def is_running(self, readproc=False):
+    def is_running(self, readproc: bool = False) -> bool:
         """Returns whether the task is running. Reads /proc if readproc=True
         otherwise just reads the STATUS_FILE."""
         if readproc:
@@ -1500,15 +1513,15 @@ class RetraceTask:
             return False
         return self.has_status() and self.get_status() not in [STATUS_SUCCESS, STATUS_FAIL]
 
-    def get_age(self):
+    def get_age(self) -> int:
         """Returns the age of the task in hours."""
         return int(time.time() - self._savedir.stat().st_mtime) // 3600
 
-    def reset_age(self):
+    def reset_age(self) -> None:
         """Reset the age of the task to the current time."""
         os.utime(self._savedir, None)
 
-    def calculate_md5(self, file_name, chunk_size=65536):
+    def calculate_md5(self, file_name: str, chunk_size: int = 65536):
         hash_md5 = hashlib.md5()
         with open(file_name, "rb") as f:
             while True:
@@ -1518,7 +1531,7 @@ class RetraceTask:
                 hash_md5.update(chunk)
         return hash_md5.hexdigest()
 
-    def get_type(self):
+    def get_type(self) -> int:
         """Returns task type. If TYPE_FILE is missing,
         task is considered standard TASK_RETRACE."""
         result = self.get(RetraceTask.TYPE_FILE, maxlen=8)
@@ -1527,32 +1540,32 @@ class RetraceTask:
 
         return int(result)
 
-    def set_type(self, newtype):
+    def set_type(self, newtype: int) -> None:
         """Atomically writes given type into TYPE_FILE."""
         if newtype not in TASK_TYPES:
             newtype = TASK_RETRACE
 
         self.set_atomic(RetraceTask.TYPE_FILE, str(newtype))
 
-    def has_backtrace(self):
+    def has_backtrace(self) -> bool:
         """Verifies whether BACKTRACE_FILE is present in the task directory."""
         return self.has(RetraceTask.BACKTRACE_FILE)
 
-    def get_backtrace(self):
+    def get_backtrace(self) -> Optional[str]:
         """Returns None if there is no BACKTRACE_FILE in the task directory,
         BACKTRACE_FILE's contents otherwise."""
         # max 16 MB
         return self.get(RetraceTask.BACKTRACE_FILE, maxlen=1 << 24)
 
-    def set_backtrace(self, backtrace: str, mode="w"):
+    def set_backtrace(self, backtrace: str, mode: str = "w") -> None:
         """Atomically writes given string into BACKTRACE_FILE."""
         self.set_atomic(RetraceTask.BACKTRACE_FILE, backtrace, mode)
 
-    def has_log(self):
+    def has_log(self) -> bool:
         """Verifies whether LOG_FILE is present in the task directory."""
         return self.has(RetraceTask.LOG_FILE)
 
-    def get_log(self):
+    def get_log(self) -> Optional[str]:
         """Returns None if there is no LOG_FILE in the task directory,
         LOG_FILE's contents otherwise."""
         return self.get(RetraceTask.LOG_FILE, maxlen=1 << 22)
@@ -1565,11 +1578,11 @@ class RetraceTask:
 
         self.set_atomic(RetraceTask.LOG_FILE, log, mode=mode)
 
-    def has_status(self):
+    def has_status(self) -> bool:
         """Verifies whether STATUS_FILE is present in the task directory."""
         return self.has(RetraceTask.STATUS_FILE)
 
-    def get_status(self):
+    def get_status(self) -> Optional[int]:
         """Returns None if there is no STATUS_FILE in the task directory,
         an integer status code otherwise."""
         result = self.get(RetraceTask.STATUS_FILE, maxlen=8)
@@ -1578,22 +1591,22 @@ class RetraceTask:
 
         return int(result)
 
-    def set_status(self, statuscode: int):
+    def set_status(self, statuscode: int) -> None:
         """Atomically writes given statuscode into STATUS_FILE."""
         self.set_atomic(RetraceTask.STATUS_FILE, "%d" % statuscode)
 
-    def has_remote(self):
+    def has_remote(self) -> bool:
         """Verifies whether REMOTE_FILE is present in the task directory."""
         return self.has(RetraceTask.REMOTE_FILE)
 
-    def add_remote(self, url):
+    def add_remote(self, url: str) -> None:
         """Appends a remote resource to REMOTE_FILE."""
         if "\n" in url:
             url = url.split("\n")[0]
 
         self.set(RetraceTask.REMOTE_FILE, "%s\n" % url, mode="a")
 
-    def get_remote(self):
+    def get_remote(self) -> List[str]:
         """Returns the list of remote resources."""
         result = self.get(RetraceTask.REMOTE_FILE, maxlen=1 << 22)
         if result is None:
@@ -1601,11 +1614,11 @@ class RetraceTask:
 
         return result.splitlines()
 
-    def has_kernelver(self):
+    def has_kernelver(self) -> bool:
         """Verifies whether KERNELVER_FILE is present in the task directory."""
         return self.has(RetraceTask.KERNELVER_FILE)
 
-    def get_kernelver(self):
+    def get_kernelver(self) -> Optional[str]:
         """Returns None if there is no KERNELVER_FILE in the task directory,
         KERNELVER_FILE's contents otherwise."""
         return self.get(RetraceTask.KERNELVER_FILE, maxlen=1 << 16)
@@ -1614,49 +1627,48 @@ class RetraceTask:
         """Atomically writes given value into KERNELVER_FILE."""
         self.set_atomic(RetraceTask.KERNELVER_FILE, str(value))
 
-    def has_notes(self):
+    def has_notes(self) -> bool:
         return self.has(RetraceTask.NOTES_FILE)
 
-    def get_notes(self):
+    def get_notes(self) -> Optional[str]:
         return self.get(RetraceTask.NOTES_FILE, maxlen=1 << 22)
 
-    def set_notes(self, value: str):
+    def set_notes(self, value: str) -> None:
         self.set_atomic(RetraceTask.NOTES_FILE, value)
 
-    def has_notify(self):
+    def has_notify(self) -> bool:
         return self.has(RetraceTask.NOTIFY_FILE)
 
-    def get_notify(self):
+    def get_notify(self) -> List[str]:
         result = self.get(RetraceTask.NOTIFY_FILE, maxlen=1 << 16)
+        if result is None:
+            return []
         return [email for email in set(n.strip() for n in result.split("\n")) if email]
 
-    def set_notify(self, values):
-        if not isinstance(values, list) or not all([isinstance(v, str) for v in values]):
-            raise Exception("values must be a list of strings")
-
+    def set_notify(self, values: List[str]) -> None:
         self.set_atomic(RetraceTask.NOTIFY_FILE,
                         "%s\n" % "\n".join(filter(None, set(v.strip().replace("\n", " ") for v in values))))
 
-    def has_url(self):
+    def has_url(self) -> bool:
         return self.has(RetraceTask.URL_FILE)
 
-    def get_url(self):
+    def get_url(self) -> Optional[str]:
         return self.get(RetraceTask.URL_FILE, maxlen=1 << 14)
 
-    def set_url(self, value: str):
+    def set_url(self, value: str) -> None:
         self.set(RetraceTask.URL_FILE, value)
 
-    def has_vmlinux(self):
+    def has_vmlinux(self) -> bool:
         return self.has(RetraceTask.VMLINUX_FILE)
 
-    def get_vmlinux(self) -> str:
+    def get_vmlinux(self) -> Optional[str]:
         """Gets the contents of VMLINUX_FILE"""
         return self.get(RetraceTask.VMLINUX_FILE, maxlen=1 << 22)
 
-    def set_vmlinux(self, value: str):
+    def set_vmlinux(self, value: str) -> None:
         self.set(RetraceTask.VMLINUX_FILE, value)
 
-    def has_vmcore(self):
+    def has_vmcore(self) -> bool:
         vmcore_path = self.get_vmcore_path()
         return vmcore_path.is_file()
 
@@ -1744,7 +1756,7 @@ class RetraceTask:
 
         return cmd_output, returncode
 
-    def download_remote(self, unpack=True, timeout=0, kernelver=None):
+    def download_remote(self, unpack: bool = True) -> List[Tuple[Union[str, Path, List[None]], str]]:
         """Downloads all remote resources and returns a list of errors."""
         md5sums = []
         downloaded = []
@@ -1973,14 +1985,14 @@ class RetraceTask:
 
         return errors
 
-    def get_results_dir(self):
+    def get_results_dir(self) -> Path:
         """Return the directory of results; handls legacy 'misc' dir"""
         results_dir = self._savedir / RetraceTask.RESULTS_DIR
         if not results_dir.is_dir():
             results_dir = self._savedir / "misc"
         return results_dir
 
-    def has_results(self, name):
+    def has_results(self, name: str) -> bool:
         """Verifies whether a file named 'name' is present in RESULTS_DIR."""
         if "/" in name:
             raise Exception("name may not contain the '/' character")
@@ -1990,7 +2002,7 @@ class RetraceTask:
 
         return results_dir.is_dir() and results_path.is_file()
 
-    def get_results_list(self):
+    def get_results_list(self) -> List[str]:
         """Lists all files in RESULTS_DIR."""
         results_dir = self.get_results_dir()
         if not results_dir.is_dir():
@@ -1998,7 +2010,7 @@ class RetraceTask:
 
         return [f.name for f in results_dir.iterdir()]
 
-    def get_results(self, name, mode="rb"):
+    def get_results(self, name: str, mode: str = "rb") -> Union[str, bytes]:
         """Gets content of a file named 'name' from RESULTS_DIR."""
         if "/" in name:
             raise Exception("name may not contain the '/' character")
@@ -2012,7 +2024,7 @@ class RetraceTask:
 
         return result
 
-    def add_results(self, name, value, overwrite=False, mode="wb"):
+    def add_results(self, name: str, value: Union[str, bytes], overwrite: bool = False, mode: str = "wb") -> None:
         """Adds a file named 'name' into RESULTS_DIR and writes 'value' into it."""
         if "/" in name:
             raise Exception("name may not contain the '/' character")
@@ -2031,7 +2043,7 @@ class RetraceTask:
         with open(results_path, mode) as results_file:
             results_file.write(value)
 
-    def del_results(self, name):
+    def del_results(self, name: str) -> None:
         """Deletes the file named 'name' from RESULTS_DIR."""
         if "/" in name:
             raise Exception("name may not contain the '/' character")
@@ -2039,14 +2051,14 @@ class RetraceTask:
         if self.has_results(name):
             (self.get_results_dir() / name).unlink()
 
-    def get_managed(self):
+    def get_managed(self) -> bool:
         """Verifies whether the task is under task management control"""
         if not CONFIG["AllowTaskManager"]:
             raise Exception("Task management is disabled")
 
         return self.has(RetraceTask.MANAGED_FILE)
 
-    def set_managed(self, managed):
+    def set_managed(self, managed: bool) -> None:
         """Puts or removes the task from task management control"""
         if not CONFIG["AllowTaskManager"]:
             raise Exception("Task management is disabled")
@@ -2058,55 +2070,55 @@ class RetraceTask:
         elif not managed and self.has(RetraceTask.MANAGED_FILE):
             self.delete(RetraceTask.MANAGED_FILE)
 
-    def has_downloaded(self):
+    def has_downloaded(self) -> bool:
         """Verifies whether DOWNLOAD_FILE exists"""
         return self.has(RetraceTask.DOWNLOADED_FILE)
 
-    def get_downloaded(self):
+    def get_downloaded(self) -> Optional[str]:
         """Gets contents of DOWNLOADED_FILE"""
         return self.get(RetraceTask.DOWNLOADED_FILE, maxlen=1 << 22)
 
-    def set_downloaded(self, value: str):
+    def set_downloaded(self, value: str) -> None:
         """Writes (not atomically) content to DOWNLOADED_FILE"""
         self.set(RetraceTask.DOWNLOADED_FILE, value)
 
-    def has_md5sum(self):
+    def has_md5sum(self) -> bool:
         """Verifies whether MD5SUM_FILE exists"""
         return self.has(RetraceTask.MD5SUM_FILE)
 
-    def get_md5sum(self):
+    def get_md5sum(self) -> Optional[str]:
         """Gets contents of MD5SUM_FILE"""
         return self.get(RetraceTask.MD5SUM_FILE, maxlen=1 << 22)
 
-    def set_md5sum(self, value: str):
+    def set_md5sum(self, value: str) -> None:
         """Writes (not atomically) content to MD5SUM_FILE"""
         self.set(RetraceTask.MD5SUM_FILE, value)
 
-    def has_crashrc(self):
+    def has_crashrc(self) -> bool:
         """Verifies whether CRASHRC_FILE exists"""
         return self.has(RetraceTask.CRASHRC_FILE)
 
-    def get_crashrc_path(self):
+    def get_crashrc_path(self) -> Path:
         """Gets the absolute path of CRASHRC_FILE"""
         return self._get_file_path(RetraceTask.CRASHRC_FILE)
 
-    def get_crashrc(self):
+    def get_crashrc(self) -> Optional[str]:
         """Gets the contents of CRASHRC_FILE"""
         return self.get(RetraceTask.CRASHRC_FILE, maxlen=1 << 22)
 
-    def set_crashrc(self, data: str):
+    def set_crashrc(self, data: str) -> None:
         """Writes data to CRASHRC_FILE"""
         self.set(RetraceTask.CRASHRC_FILE, data)
 
-    def has_crash_cmd(self):
+    def has_crash_cmd(self) -> bool:
         """Verifies whether CRASH_CMD_FILE exists"""
         return self.has(RetraceTask.CRASH_CMD_FILE)
 
-    def get_crash_cmd(self):
+    def get_crash_cmd(self) -> Optional[str]:
         """Gets the contents of CRASH_CMD_FILE"""
         return self.get(RetraceTask.CRASH_CMD_FILE, maxlen=1 << 22)
 
-    def set_crash_cmd(self, data: str):
+    def set_crash_cmd(self, data: str) -> None:
         """Writes data to CRASH_CMD_FILE"""
         self.set(RetraceTask.CRASH_CMD_FILE, data)
         try:
@@ -2118,11 +2130,11 @@ class RetraceTask:
         except OSError:
             pass
 
-    def has_started_time(self):
+    def has_started_time(self) -> bool:
         """Verifies whether STARTED_FILE exists"""
         return self.has(RetraceTask.STARTED_FILE)
 
-    def get_started_time(self):
+    def get_started_time(self) -> Optional[int]:
         """Gets the unix timestamp from STARTED_FILE"""
         result = self.get(RetraceTask.STARTED_FILE, maxlen=1 << 8)
         if result is None:
@@ -2130,7 +2142,7 @@ class RetraceTask:
 
         return int(result)
 
-    def set_started_time(self, value):
+    def set_started_time(self, value: int) -> None:
         """Writes the unix timestamp to STARTED_FILE"""
         try:
             data = int(value)
@@ -2139,11 +2151,11 @@ class RetraceTask:
 
         self.set(RetraceTask.STARTED_FILE, "%d" % data)
 
-    def has_caseno(self):
+    def has_caseno(self) -> bool:
         """Verifies whether CASENO_FILE exists"""
         return self.has(RetraceTask.CASENO_FILE)
 
-    def get_caseno(self):
+    def get_caseno(self) -> Optional[int]:
         """Gets the case number from CASENO_FILE"""
         result = self.get(RetraceTask.CASENO_FILE, maxlen=1 << 8)
         if result is None:
@@ -2151,7 +2163,7 @@ class RetraceTask:
 
         return int(result)
 
-    def set_caseno(self, value):
+    def set_caseno(self, value: int) -> None:
         """Writes case number into CASENO_FILE"""
         try:
             data = int(value)
@@ -2160,11 +2172,11 @@ class RetraceTask:
 
         self.set(RetraceTask.CASENO_FILE, "%d" % data)
 
-    def has_bugzillano(self):
+    def has_bugzillano(self) -> bool:
         """Verifies whether BUGZILLANO_FILE exists"""
         return self.has(RetraceTask.BUGZILLANO_FILE)
 
-    def get_bugzillano(self):
+    def get_bugzillano(self) -> Optional[List[str]]:
         """Gets the bugzilla number from BUGZILLANO_FILE"""
         result = self.get(RetraceTask.BUGZILLANO_FILE, maxlen=1 << 8)
         if result is None:
@@ -2172,19 +2184,16 @@ class RetraceTask:
 
         return [bz_number for bz_number in set(n.strip() for n in result.split("\n")) if bz_number]
 
-    def set_bugzillano(self, values):
+    def set_bugzillano(self, values: List[str]) -> None:
         """Writes bugzilla numbers into BUGZILLANO_FILE"""
-        if not isinstance(values, list) or not all([isinstance(v, str) for v in values]):
-            raise Exception("values must be a list of integers")
-
         self.set_atomic(RetraceTask.BUGZILLANO_FILE,
                         "%s\n" % "\n".join(filter(None, set(v.strip().replace("\n", " ") for v in values))))
 
-    def has_finished_time(self):
+    def has_finished_time(self) -> bool:
         """Verifies whether FINISHED_FILE exists"""
         return self.has(RetraceTask.FINISHED_FILE)
 
-    def get_finished_time(self):
+    def get_finished_time(self) -> Optional[int]:
         """Gets the unix timestamp from FINISHED_FILE"""
         result = self.get(RetraceTask.FINISHED_FILE, 1 << 8)
         if result is None:
@@ -2192,7 +2201,7 @@ class RetraceTask:
 
         return int(result)
 
-    def set_finished_time(self, value):
+    def set_finished_time(self, value: int) -> None:
         """Writes the unix timestamp to FINISHED_FILE"""
         try:
             data = int(value)
@@ -2201,15 +2210,15 @@ class RetraceTask:
 
         self.set(RetraceTask.FINISHED_FILE, "%d" % data)
 
-    def get_default_started_time(self):
+    def get_default_started_time(self) -> int:
         """Get ctime of the task directory"""
         return int(self._savedir.stat().st_ctime)
 
-    def get_default_finished_time(self):
+    def get_default_finished_time(self) -> int:
         """Get mtime of the task directory"""
         return int(self._savedir.stat().st_mtime)
 
-    def clean(self):
+    def clean(self) -> None:
         """Removes all files and directories others than
         results and logs from the task directory."""
         if (self._savedir / "default.cfg").is_file() and \
@@ -2269,7 +2278,7 @@ class RetraceTask:
         if kerneldir.is_dir():
             shutil.rmtree(kerneldir)
 
-    def remove(self):
+    def remove(self) -> None:
         """Completely removes the task directory."""
         self.clean()
         kerneldir = Path(CONFIG["SaveDir"], "%d-kernel" % self._taskid)

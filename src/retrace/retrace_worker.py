@@ -9,6 +9,7 @@ import shutil
 import stat
 from pathlib import Path
 from subprocess import PIPE, DEVNULL, STDOUT, run
+from typing import Dict, List, Optional, Tuple, Union
 
 from retrace.hooks.hooks import RetraceHook
 from .retrace import (ALLOWED_FILES, REPO_PREFIX, REQUIRED_FILES,
@@ -47,13 +48,13 @@ CONFIG = Config()
 
 
 class RetraceWorker():
-    def __init__(self, task):
+    def __init__(self, task: RetraceTask):
         self.plugins = Plugins()
         self.task = task
-        self.logging_handler = None
+        self.logging_handler: Optional[logging.FileHandler] = None
         self.hook = RetraceHook(task)
 
-    def begin_logging(self):
+    def begin_logging(self) -> None:
         if self.logging_handler is None:
             self.logging_handler = logging.FileHandler(
                 self.task._get_file_path(RetraceTask.LOG_FILE))
@@ -63,12 +64,12 @@ class RetraceWorker():
         self.logging_handler.setFormatter(formatter)
         logger.addHandler(self.logging_handler)
 
-    def end_logging(self):
+    def end_logging(self) -> None:
         if self.logging_handler is not None:
             logger.removeHandler(self.logging_handler)
 
 
-    def notify_email(self):
+    def notify_email(self) -> None:
         task = self.task
         if not CONFIG["EmailNotify"] or not task.has_notify():
             return
@@ -138,7 +139,7 @@ class RetraceWorker():
         except Exception as ex:
             log_error("Failed to send e-mail: %s" % ex)
 
-    def _symlink_log(self):
+    def _symlink_log(self) -> None:
         if self.task.has_log():
             # add a symlink to log to results directory
             # use underscore so that the log is first in the list
@@ -149,7 +150,7 @@ class RetraceWorker():
                 if ex.errno != errno.EEXIST:
                     raise
 
-    def _fail(self, errorcode=1):
+    def _fail(self, errorcode: int = 1) -> None:
         task = self.task
         task.set_status(STATUS_FAIL)
         task.set_finished_time(int(time.time()))
@@ -170,7 +171,7 @@ class RetraceWorker():
 
         raise RetraceWorkerError(errorcode=errorcode)
 
-    def _retrace_run(self, errorcode, cmd):
+    def _retrace_run(self, errorcode: int, cmd: List[str]) -> str:
         "Runs cmd using subprocess.Popen and kills script with errorcode on failure"
         try:
             child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
@@ -185,7 +186,7 @@ class RetraceWorker():
 
         return output
 
-    def _check_required_file(self, req: str, crashdir: Path):
+    def _check_required_file(self, req: str, crashdir: Path) -> bool:
         path = Path(crashdir, req)
 
         if path.is_file():
@@ -198,7 +199,7 @@ class RetraceWorker():
 
         return False
 
-    def guess_release(self, package, plugins):
+    def guess_release(self, package: str, plugins) -> Union[Tuple[None, None], Tuple[str, str]]:
         for plugin in plugins:
             match = plugin.guessparser.search(package)
             if match:
@@ -207,8 +208,8 @@ class RetraceWorker():
 
         return None, None
 
-    def read_architecture(self, custom_arch, corepath):
-        if custom_arch:
+    def read_architecture(self, custom_arch: Optional[str], corepath: Path) -> str:
+        if custom_arch is not None:
             log_debug("Using custom architecture: %s" % custom_arch)
             arch = custom_arch
         else:
@@ -222,7 +223,7 @@ class RetraceWorker():
             log_debug("Determined architecture: %s" % arch)
         return arch
 
-    def read_package_file(self, crashdir: Path):
+    def read_package_file(self, crashdir: Path) -> Tuple[str, Dict[int, str]]:
         # read package file
         try:
             with Path(crashdir, "package").open() as package_file:
@@ -300,7 +301,8 @@ class RetraceWorker():
 
         return (release, distribution, version, is_rawhide)
 
-    def read_packages(self, crashdir, releaseid, crash_package, distribution):
+    def read_packages(self, crashdir: Path, releaseid: str, crash_package: str,
+                      distribution: str) -> Tuple[List[str], List[Tuple[str, str]]]:
         packages = [crash_package]
         missing = []
 
@@ -361,7 +363,8 @@ class RetraceWorker():
                 self._fail()
         return (packages, missing)
 
-    def construct_gpg_keys(self, version, pre_rawhide_version, scheme="file://"):
+    def construct_gpg_keys(self, version: str, pre_rawhide_version: Optional[int],
+                           scheme: str = "file://") -> str:
         final_result = ""
 
         for key in self.plugin.gpg_keys:
@@ -372,7 +375,7 @@ class RetraceWorker():
 
         return final_result
 
-    def start_retrace(self, custom_arch=None):
+    def start_retrace(self, custom_arch: Optional[str] = None) -> bool:
         self.hook.run("start")
 
         task = self.task
@@ -635,7 +638,7 @@ class RetraceWorker():
 
         return s1.st_size
 
-    def start_vmcore(self, custom_kernelver=None):
+    def start_vmcore(self, custom_kernelver: Optional[str] = None) -> None:
         self.hook.run("start")
 
         task = self.task
@@ -926,7 +929,7 @@ class RetraceWorker():
         self.notify_email()
         self.hook.run("success")
 
-    def start(self, kernelver=None, arch=None):
+    def start(self, kernelver: Optional[str] = None, arch: Optional[str] = None) -> None:
         self.hook.run("pre_start")
         self.stats = {
             "taskid": self.task.get_taskid(),
@@ -947,7 +950,7 @@ class RetraceWorker():
             if task.has_remote():
                 errors = task.download_remote(kernelver=kernelver)
                 if errors:
-                    for error in errors:
+                    for _, error in errors:
                         log_warn(error)
 
             task.set_status(STATUS_ANALYZE)
@@ -981,14 +984,12 @@ class RetraceWorker():
             log_error(str(ex))
             self._fail()
 
-    def clean_task(self):
+    def clean_task(self) -> None:
         self.hook.run("pre_clean_task")
-        ret = self.task.clean()
+        self.task.clean()
         self.hook.run("post_clean_task")
-        return ret
 
     def remove_task(self):
         self.hook.run("pre_remove_task")
-        ret = self.task.remove()
+        self.task.remove()
         self.hook.run("post_remove_task")
-        return ret
