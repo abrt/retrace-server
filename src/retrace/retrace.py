@@ -655,7 +655,7 @@ def unpack_coredump(path: Path):
 
     # If coredump is not present, the biggest file becomes it
     if "coredump" not in [f.name for f in parentdir.iterdir()]:
-        get_files_sizes(parentdir)[0][0].rename(parentdir / self.COREDUMP_FILE)
+        get_files_sizes(parentdir)[0][0].rename(parentdir / RetraceTask.COREDUMP_FILE)
 
     for filename in Path(parentdir).iterdir():
         if filename.is_dir():
