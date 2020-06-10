@@ -62,3 +62,6 @@ x86_64
 #bytecode
 *.pyc
 *.pyo
+
+#typing
+.mypy_cache/
