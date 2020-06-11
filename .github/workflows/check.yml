@@ -1,0 +1,78 @@
+name: Static analysis
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+jobs:
+  mypy:
+    container:
+      image: fedora:latest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v2
+
+      - name: Install build environment
+        run: dnf --assumeyes install dnf-plugins-core python3-mypy
+
+      - name: Install build dependencies
+        run: |
+            dnf --assumeyes builddep --spec retrace-server.spec
+            # For the pyfaf imports.
+            dnf --assumeyes copr enable @abrt/faf-el8-devel
+            dnf --assumeyes install faf
+
+      - name: Build
+        run: |
+          meson build
+          ninja -C build
+
+      - name: Run mypy
+        run: |
+          stubgen --output mypy_stubs --package pyfaf
+          MYPYPATH=$(pwd)/mypy_stubs mypy --config-file=mypy.ini build/src
+          MYPYPATH=$(pwd)/mypy_stubs mypy --config-file=mypy.ini --scripts-are-modules \
+            build/src/coredump2packages \
+            build/src/retrace-server-bugzilla-query \
+            build/src/retrace-server-bugzilla-refresh \
+            build/src/retrace-server-cleanup \
+            build/src/retrace-server-interact \
+            build/src/retrace-server-plugin-checker \
+            build/src/retrace-server-reposync \
+            build/src/retrace-server-reposync-faf \
+            build/src/retrace-server-task \
+            build/src/retrace-server-worker
+  pylint:
+    container:
+      image: fedora:latest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v2
+
+      - name: Install build environment
+        run: dnf --assumeyes install dnf-plugins-core python3-pylint
+
+      - name: Install build dependencies
+        run: dnf --assumeyes builddep --spec retrace-server.spec
+
+      - name: Build
+        run: |
+          meson build
+          ninja -C build
+
+      - name: Run pylint
+        run: |
+          python3 -m pylint \
+            build/src \
+            build/src/coredump2packages \
+            build/src/retrace-server-bugzilla-query \
+            build/src/retrace-server-bugzilla-refresh \
+            build/src/retrace-server-cleanup \
+            build/src/retrace-server-interact \
+            build/src/retrace-server-plugin-checker \
+            build/src/retrace-server-reposync \
+            build/src/retrace-server-reposync-faf \
+            build/src/retrace-server-task \
+            build/src/retrace-server-worker
