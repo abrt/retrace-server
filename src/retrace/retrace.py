@@ -1198,7 +1198,7 @@ class KernelVMcore:
 
         # Obtain the list of modules this vmcore requires
         if chroot:
-            crash_normal = ["/usr/bin/mock", "--configdir", chroot, "--cwd", crashdir,
+            crash_normal = ["/usr/bin/mock", "--configdir", chroot, "--cwd", str(task.get_crashdir()),
                             "chroot", "--", "crash -s %s %s" % (self._vmcore_path, vmlinux)]
         else:
             crash_normal = crash_cmd + ["-s", str(self._vmcore_path), vmlinux]
