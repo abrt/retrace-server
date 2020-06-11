@@ -22,7 +22,7 @@ CONFIG = Config()
 
 ACTIONS = ["shell", "gdb", "crash", "printdir", "delete", "set-success", "set-fail"]
 
-def print_cmdline(cmdline):
+def print_cmdline(cmdline: List[str]):
     sys.stderr.write("If you want to execute the command manually, you can run\n")
     sys.stderr.write("$ %s\n\n" % list2cmdline(cmdline))
 
@@ -151,17 +151,17 @@ if __name__ == "__main__":
 
             if not task.has_mock():
                 if task.has_crashrc():
-                    cmdline = task.get_crash_cmd().split() + ["-i", task.get_crashrc_path(), vmcore_path, vmlinux]
+                    cmdline = task.get_crash_cmd().split() + ["-i", task.get_crashrc_path(), str(vmcore_path), vmlinux]
                 else:
-                    cmdline = task.get_crash_cmd().split() + [vmcore_path, vmlinux]
+                    cmdline = task.get_crash_cmd().split() + [str(vmcore_path), vmlinux]
             else:
                 cfgdir = Path(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
                 if task.has_crashrc():
                     cmdline = ["/usr/bin/mock", "--configdir", cfgdir,
-                               "shell", "crash -i %s %s %s" % (task.get_crashrc_path(), vmcore_path, vmlinux)]
+                               "shell", "crash -i %s %s %s" % (task.get_crashrc_path(), str(vmcore_path), vmlinux)]
                 else:
                     cmdline = ["/usr/bin/mock", "--configdir", cfgdir,
-                               "shell", "crash %s %s" % (vmcore_path, vmlinux)]
+                               "shell", "crash %s %s" % (str(vmcore_path), vmlinux)]
 
             print_cmdline(cmdline)
             os.execvp(cmdline[0], cmdline)
