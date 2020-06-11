@@ -15,11 +15,15 @@ BuildArch: noarch
 
 BuildRequires: asciidoc
 BuildRequires: gettext
+BuildRequires: gzip
+BuildRequires: lsof
 BuildRequires: lsof
 BuildRequires: meson
 BuildRequires: python3-devel
+BuildRequires: tar
 BuildRequires: texinfo
 BuildRequires: xmlto
+BuildRequires: xz
 
 Requires: rsync
 Requires: mock >= 1.4.7
