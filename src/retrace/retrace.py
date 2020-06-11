@@ -859,17 +859,17 @@ class KernelVer():
 class KernelVMcore:
     DUMP_LEVEL_PARSER = re.compile(r"^[ \t]*dump_level[ \t]*:[ \t]*([0-9]+).*$")
 
-    def __init__(self, vmcore_path):
-        self._vmcore_path = vmcore_path
-        self._crashdir = Path(vmcore_path).parent
+    def __init__(self, vmcore_path: Path):
+        self._vmcore_path: Path = vmcore_path
+        self._crashdir: Path = vmcore_path.parent
         self._is_flattened_format = None
         self._dump_level = None
         self._has_extra_pages = None
         self._release = None
         self._vmlinux = None
-        self._vmem_path = self._crashdir / "vmcore.vmem"
+        self._vmem_path: Path = self._crashdir / "vmcore.vmem"
 
-    def get_path(self):
+    def get_path(self) -> Path:
         return self._vmcore_path
 
     def is_flattened_format(self):
@@ -894,10 +894,10 @@ class KernelVMcore:
         if not self._is_flattened_format:
             log_error("Cannot convert a non-flattened vmcore")
             return False
-        newvmcore = "%s.normal" % self._vmcore_path
+        newvmcore = Path("%s.normal" % self._vmcore_path)
         try:
             with open(self._vmcore_path) as fd:
-                child = run(["makedumpfile", "-R", newvmcore], stdin=fd)
+                child = run(["makedumpfile", "-R", str(newvmcore)], stdin=fd)
                 if child.returncode:
                     log_warn("makedumpfile -R exited with %d" % child.returncode)
                     if newvmcore.is_file():
@@ -923,7 +923,7 @@ class KernelVMcore:
         if dmesg_path.is_file():
             dmesg_path.unlink()
 
-        cmd = ["makedumpfile", "-D", "--dump-dmesg", self._vmcore_path, dmesg_path]
+        cmd = ["makedumpfile", "-D", "--dump-dmesg", str(self._vmcore_path), dmesg_path]
 
         result = None
         lines = run(cmd, stdout=PIPE, stderr=DEVNULL, encoding='utf-8').stdout.splitlines()
@@ -966,9 +966,9 @@ class KernelVMcore:
             log_error("Cannot strip pages if vmlinux is not known for vmcore")
             return
 
-        newvmcore = "%s.stripped" % self._vmcore_path
+        newvmcore: Path = Path("%s.stripped" % self._vmcore_path)
         child = run(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
-                     "-x", self._vmlinux, "--message-level", "0", self._vmcore_path, newvmcore])
+                     "-x", self._vmlinux, "--message-level", "0", str(self._vmcore_path), str(newvmcore)])
         if child.returncode:
             log_warn("makedumpfile exited with %d" % child.returncode)
             if newvmcore.is_file():
@@ -1191,7 +1191,7 @@ class KernelVMcore:
             cache_files_from_debuginfo(debuginfo, debugdir_base, [vmlinux_path])
             if vmlinux_debuginfo.is_file():
                 log_info("Found cached vmlinux at new debuginfo location: {}".format(vmlinux_debuginfo))
-                vmlinux: str = str(vmlinux_debuginfo)
+                vmlinux = str(vmlinux_debuginfo)
                 task.set_vmlinux(vmlinux)
             else:
                 raise Exception("Failed vmlinux caching from debuginfo at location: {}".format(vmlinux_debuginfo))
@@ -1201,7 +1201,7 @@ class KernelVMcore:
             crash_normal = ["/usr/bin/mock", "--configdir", chroot, "--cwd", crashdir,
                             "chroot", "--", "crash -s %s %s" % (self._vmcore_path, vmlinux)]
         else:
-            crash_normal = crash_cmd + ["-s", self._vmcore_path, vmlinux]
+            crash_normal = crash_cmd + ["-s", str(self._vmcore_path), vmlinux]
         stdout, returncode = task.run_crash_cmdline(crash_normal, "mod\nquit")
         if returncode == 1 and "el5" in kernelver.release:
             log_info("Unable to list modules but el5 detected, trying crash fixup for vmss files")
@@ -1209,7 +1209,7 @@ class KernelVMcore:
             crash_cmd.append("phys_base=0x200000")
             log_info("trying crash_cmd = " + str(crash_cmd))
             # FIXME: mock
-            crash_normal = crash_cmd + ["-s", self._vmcore_path, vmlinux]
+            crash_normal = crash_cmd + ["-s", str(self._vmcore_path), vmlinux]
             stdout, returncode = task.run_crash_cmdline(crash_normal, "mod\nquit")
 
         # If we fail to get the list of modules, is the vmcore even usable?
@@ -1388,7 +1388,7 @@ class RetraceTask:
         """Returns task's savedir"""
         return self._savedir
 
-    def get_crashdir(self):
+    def get_crashdir(self) -> Path:
         """Returns task's crashdir"""
         return self._savedir / "crash"
 
@@ -1655,7 +1655,7 @@ class RetraceTask:
     def has_vmlinux(self):
         return self.has(RetraceTask.VMLINUX_FILE)
 
-    def get_vmlinux(self):
+    def get_vmlinux(self) -> str:
         """Gets the contents of VMLINUX_FILE"""
         return self.get(RetraceTask.VMLINUX_FILE, maxlen=1 << 22)
 
@@ -1666,7 +1666,7 @@ class RetraceTask:
         vmcore_path = self.get_vmcore_path()
         return vmcore_path.is_file()
 
-    def get_vmcore_path(self):
+    def get_vmcore_path(self) -> Path:
         """
         Return a path to vmcore file in crashdir.
         """
