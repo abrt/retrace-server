@@ -1,19 +1,30 @@
+subdir('plugins')
 subdir('retrace')
 
-install_data([
-    'coredump2packages',
-    'retrace-server-cleanup',
-    'retrace-server-reposync',
-    'retrace-server-reposync-faf',
-    'retrace-server-worker',
-    'retrace-server-interact',
-    'retrace-server-plugin-checker',
-    'retrace-server-task',
-    'retrace-server-bugzilla-refresh',
-    'retrace-server-bugzilla-query',
-  ],
+scripts = [
+  'coredump2packages',
+  'retrace-server-cleanup',
+  'retrace-server-reposync',
+  'retrace-server-reposync-faf',
+  'retrace-server-worker',
+  'retrace-server-interact',
+  'retrace-server-plugin-checker',
+  'retrace-server-task',
+  'retrace-server-bugzilla-refresh',
+  'retrace-server-bugzilla-query',
+]
+
+foreach file: scripts
+  configure_file(
+    copy: true,
+    input: file,
+    output: file,
+  )
+endforeach
+install_data(scripts,
   install_dir: bindir,
 )
+
 install_data([
     'backtrace.wsgi',
     'create.wsgi',
@@ -37,14 +48,7 @@ install_data([
   ],
   install_dir: join_paths(datadir, meson.project_name())
 )
-install_data([
-    'plugins/__init__.py',
-    'plugins/centos.py',
-    'plugins/fedora.py',
-    'plugins/rhel.py',
-  ],
-  install_dir: join_paths(datadir, meson.project_name(), 'plugins'),
-)
+
 install_data([
     'config/retrace-server.conf',
     'config/retrace-server-hooks.conf',
