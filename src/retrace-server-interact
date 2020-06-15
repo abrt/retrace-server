@@ -149,12 +149,7 @@ if __name__ == "__main__":
                                     "Try restarting or resubmitting the task.\n" %
                                     task.get_taskid())
 
-            if not task.has_mock():
-                if task.has_crashrc():
-                    cmdline = task.get_crash_cmd().split() + ["-i", task.get_crashrc_path(), str(vmcore_path), vmlinux]
-                else:
-                    cmdline = task.get_crash_cmd().split() + [str(vmcore_path), vmlinux]
-            else:
+            if task.has_mock():
                 cfgdir = Path(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
                 if task.has_crashrc():
                     cmdline = ["/usr/bin/mock", "--configdir", cfgdir,
@@ -162,6 +157,11 @@ if __name__ == "__main__":
                 else:
                     cmdline = ["/usr/bin/mock", "--configdir", cfgdir,
                                "shell", "crash %s %s" % (str(vmcore_path), vmlinux)]
+            else:
+                if task.has_crashrc():
+                    cmdline = task.get_crash_cmd().split() + ["-i", task.get_crashrc_path(), str(vmcore_path), vmlinux]
+                else:
+                    cmdline = task.get_crash_cmd().split() + [str(vmcore_path), vmlinux]
 
             print_cmdline(cmdline)
             os.execvp(cmdline[0], cmdline)
