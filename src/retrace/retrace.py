@@ -1314,7 +1314,10 @@ class RetraceTask:
                 for i in range(CONFIG["TaskPassLength"]):
                     pwdfile.write(generator.choice(TASKPASS_ALPHABET))
 
-            self.set_crash_cmd("crash")
+            cmd = "crash"
+            if CONFIG["KernelDebuggerPath"]:
+                cmd = CONFIG["KernelDebuggerPath"]
+            self.set_crash_cmd(cmd)
             (self._savedir / RetraceTask.RESULTS_DIR).mkdir(parents=True)
             os.umask(oldmask)
         else:
@@ -1602,7 +1605,6 @@ class RetraceTask:
     def set_kernelver(self, value):
         """Atomically writes given value into KERNELVER_FILE."""
         self.set_atomic(RetraceTask.KERNELVER_FILE, str(value))
-        self.set_crash_cmd("crash")
 
     def has_notes(self):
         return self.has(RetraceTask.NOTES_FILE)
@@ -2090,11 +2092,7 @@ class RetraceTask:
 
     def get_crash_cmd(self):
         """Gets the contents of CRASH_CMD_FILE"""
-        result = self.get(RetraceTask.CRASH_CMD_FILE, maxlen=1 << 22)
-        if result is None:
-            self.set_crash_cmd("crash")
-            return "crash"
-        return result
+        return self.get(RetraceTask.CRASH_CMD_FILE, maxlen=1 << 22)
 
     def set_crash_cmd(self, data: str):
         """Writes data to CRASH_CMD_FILE"""

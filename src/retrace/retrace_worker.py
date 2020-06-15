@@ -884,7 +884,7 @@ class RetraceWorker():
                 raise Exception("Failing task due to crash exiting with non-zero status and "
                                 "small kernellog size = %d bytes" % len(kernellog))
             # If log is 1024 bytes or above, try 'crash --minimal'
-            task.set_crash_cmd("crash --minimal")
+            task.set_crash_cmd(task.get_crash_cmd() + " --minimal")
 
         crashrc_lines = []
 
