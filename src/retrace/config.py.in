@@ -80,7 +80,6 @@ class Config(object):
             "BugzillaComponent": "kernel",
             "BugzillaTriggerWords": "",
             "BugzillaRegExes": "",
-            "Crashi386": "",
             "ProcessCommunicateTimeout": 3600,
         }
 
