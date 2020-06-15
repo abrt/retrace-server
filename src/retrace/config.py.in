@@ -81,6 +81,7 @@ class Config(object):
             "BugzillaTriggerWords": "",
             "BugzillaRegExes": "",
             "ProcessCommunicateTimeout": 3600,
+            "KernelDebuggerPath": "/usr/bin/crash",
         }
 
         def __getitem__(self, key):
