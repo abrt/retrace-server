@@ -312,6 +312,8 @@ def run_gdb(savedir, plugin, repopath, taskid=None):
 
         child = run(["/usr/bin/podman", "run", "-it", "--name=%s" % img_cont_id,
                      "--rm", "retrace-image:%s" % img_cont_id], stdout=PIPE, encoding='utf-8')
+    elif CONFIG["RetraceEnvironment"] == "native":
+        raise Exception("RetraceEnvironment == native not implemented for gdb")
     else:
         raise Exception("RetraceEnvironment set to invalid value")
 
@@ -1278,7 +1280,6 @@ class RetraceTask:
         loads the task with given ID otherwise."""
 
         self.vmcore_file = self.VMCORE_FILE
-        self._mock = False
 
         if taskid is None:
             # create a new task
@@ -1322,12 +1323,6 @@ class RetraceTask:
             self._savedir = Path(CONFIG["SaveDir"], "%d" % self._taskid)
             if not self._savedir.is_dir():
                 raise Exception("The task %d does not exist" % self._taskid)
-
-    def set_mock(self, value):
-        self._mock = value
-
-    def get_mock(self):
-        return self._mock
 
     def has_mock(self):
         """Verifies whether MOCK_SITE_DEFAULTS_CFG is present in the task directory."""
@@ -1607,18 +1602,7 @@ class RetraceTask:
     def set_kernelver(self, value):
         """Atomically writes given value into KERNELVER_FILE."""
         self.set_atomic(RetraceTask.KERNELVER_FILE, str(value))
-        # Only use mock if we're cross arch, and there's no arch-specific crash available
-        # Set crash_cmd based on arch and any config setting
-        hostarch = get_canon_arch(os.uname()[4])
-        if value.arch == hostarch:
-            self.set_crash_cmd("crash")
-            self.set_mock(False)
-        elif CONFIG["Crash%s" % value.arch] and Path(CONFIG["Crash%s" % value.arch]).is_file():
-            self.set_mock(False)
-            self.set_crash_cmd(CONFIG["Crash%s" % value.arch])
-        else:
-            self.set_mock(True)
-            self.set_crash_cmd("crash")
+        self.set_crash_cmd("crash")
 
     def has_notes(self):
         return self.has(RetraceTask.NOTES_FILE)
