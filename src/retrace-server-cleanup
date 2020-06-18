@@ -194,7 +194,7 @@ if __name__ == "__main__":
                 files = []
                 log.write("Error listing task directory: %s\n" % ex)
 
-            for filepath.name in files:
+            for filepath in files:
                 try:
                     task = RetraceTask(filepath.name)
                 except Exception:
@@ -216,7 +216,7 @@ if __name__ == "__main__":
                 files = []
                 log.write("Error listing task directory: %s\n" % ex)
 
-            for filepath.name in files:
+            for filepath in files:
                 try:
                     task = RetraceTask(filepath.name)
                 except Exception:
