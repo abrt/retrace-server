@@ -84,13 +84,13 @@ def generate_repo(db, outputdir: Path, opsys, release, arch):
 
     for name, path, db_to_update in repomdrecords:
         # Compress sqlite files with bzip2
-        if path.endswith('.sqlite'):
+        if path.suffix == '.sqlite':
             new_path = '%s.bz2' % path
             cr.compress_file(path, new_path, cr.BZ2)
-            Path(path).unlink()
-            path = new_path
+            path.unlink()
+            path = Path(new_path)
 
-        record = cr.RepomdRecord(name, path)
+        record = cr.RepomdRecord(name, str(path))
         record.fill(cr.SHA256)
         record.rename_file()
         if (db_to_update):
