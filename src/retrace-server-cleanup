@@ -172,7 +172,7 @@ if __name__ == "__main__":
 
                     targetfile = dropdir / ("%s-%s.tar.gz" % (filepath.name, time.strftime("%Y%m%d%H%M%S")))
 
-                    child = run(["tar", "czf", targetfile, task.get_savedir()],
+                    child = run(["tar", "czf", str(targetfile), str(task.get_savedir())],
                                 stdout=PIPE, stderr=STDOUT)
                     stdout = child.stdout
                     if child.returncode:

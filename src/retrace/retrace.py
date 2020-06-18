@@ -8,7 +8,7 @@ import shutil
 import stat
 import sys
 import time
-from typing import Set
+from typing import Optional, Set, Union
 import hashlib
 import urllib
 from pathlib import Path
@@ -176,8 +176,8 @@ def get_canon_arch(arch):
     return arch
 
 
-def guess_arch(coredump_path):
-    output = run(["file", coredump_path], stdout=PIPE, encoding='utf-8').stdout
+def guess_arch(coredump_path: Path) -> Optional[str]:
+    output = run(["file", str(coredump_path)], stdout=PIPE, encoding='utf-8').stdout
     match = CORE_ARCH_PARSER.search(output)
     if match:
         if match.group(1) == "80386":
@@ -200,7 +200,7 @@ def guess_arch(coredump_path):
             return "ppc64"
 
     result = None
-    lines = run(["strings", coredump_path], stdout=PIPE, stderr=STDOUT, encoding='utf-8').stdout.splitlines()
+    lines = run(["strings", str(coredump_path)], stdout=PIPE, stderr=STDOUT, encoding='utf-8').stdout.splitlines()
     for line in lines:
         for canon_arch, derived_archs in ARCH_MAP.items():
             if any(arch in line for arch in derived_archs):
@@ -390,7 +390,7 @@ def is_package_known(package_nvr, arch, releaseid=None):
     return any([f.is_file() for f in candidates])
 
 
-def find_kernel_debuginfo(kernelver):
+def find_kernel_debuginfo(kernelver) -> Optional[Union[str, Path]]:
     vers = [kernelver]
 
     for canon_arch, derived_archs in ARCH_MAP.items():
@@ -478,7 +478,7 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
     if not files:
         return
 
-    if not debuginfo.is_file():
+    if not Path(debuginfo).is_file():
         raise Exception("Given debuginfo file does not exist")
 
     # prepend absolute path /usr/lib/debug/... with dot, so that cpio can match it
@@ -486,7 +486,7 @@ def cache_files_from_debuginfo(debuginfo, basedir, files):
         if files[i][0] == "/":
             files[i] = ".%s" % files[i]
 
-    rpm2cpio = run(["rpm2cpio", debuginfo], stdout=PIPE, stderr=DEVNULL)
+    rpm2cpio = run(["rpm2cpio", str(debuginfo)], stdout=PIPE, stderr=DEVNULL)
     run(["cpio", "-id"] + files, input=rpm2cpio.stdout, cwd=basedir, stdout=DEVNULL, stderr=DEVNULL)
 
 
@@ -568,19 +568,19 @@ def unpack_vmcore(path: Path):
     while filetype != ARCHIVE_UNKNOWN:
         files = set(f for (f, s) in get_files_sizes(parentdir))
         if filetype == ARCHIVE_GZ:
-            check_run(["gunzip", archive])
+            check_run(["gunzip", str(archive)])
         elif filetype == ARCHIVE_BZ2:
-            check_run(["bunzip2", archive])
+            check_run(["bunzip2", str(archive)])
         elif filetype == ARCHIVE_XZ:
-            check_run(["unxz", archive])
+            check_run(["unxz", str(archive)])
         elif filetype == ARCHIVE_ZIP:
-            check_run(["unzip", archive, "-d", parentdir])
+            check_run(["unzip", str(archive), "-d", str(parentdir)])
         elif filetype == ARCHIVE_7Z:
-            check_run(["7za", "e", "-o%s" % parentdir, archive])
+            check_run(["7za", "e", "-o%s" % parentdir, str(archive)])
         elif filetype == ARCHIVE_TAR:
-            check_run(["tar", "-C", parentdir, "-xf", archive])
+            check_run(["tar", "-C", str(parentdir), "-xf", str(archive)])
         elif filetype == ARCHIVE_LZOP:
-            check_run(["lzop", "-d", archive])
+            check_run(["lzop", "-d", str(archive)])
         else:
             raise Exception("Unknown archive type")
 
@@ -925,7 +925,7 @@ class KernelVMcore:
         if dmesg_path.is_file():
             dmesg_path.unlink()
 
-        cmd = ["makedumpfile", "-D", "--dump-dmesg", str(self._vmcore_path), dmesg_path]
+        cmd = ["makedumpfile", "-D", "--dump-dmesg", str(self._vmcore_path), str(dmesg_path)]
 
         result = None
         lines = run(cmd, stdout=PIPE, stderr=DEVNULL, encoding='utf-8').stdout.splitlines()
@@ -1028,7 +1028,7 @@ class KernelVMcore:
         # set SIGPIPE to default handler for bz 1540253
         save = getsignal(SIGPIPE)
         signal(SIGPIPE, SIG_DFL)
-        child = run(crash_cmd + ["--osrelease", core_path], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+        child = run(crash_cmd + ["--osrelease", str(core_path)], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
         release = child.stdout.strip()
         ret = child.returncode
         signal(SIGPIPE, save)
@@ -1165,7 +1165,7 @@ class KernelVMcore:
         # Now open the kernel-debuginfo and get a listing of the files we may need
         vmlinux_path = None
         debugfiles = {}
-        lines = run(["rpm", "-qpl", debuginfo],
+        lines = run(["rpm", "-qpl", str(debuginfo)],
                     stdout=PIPE, stderr=DEVNULL, encoding='utf-8').stdout.splitlines()
         for line in lines:
             if line.endswith(pattern):
@@ -1203,7 +1203,7 @@ class KernelVMcore:
 
         # Obtain the list of modules this vmcore requires
         if chroot:
-            crash_normal = ["/usr/bin/mock", "--configdir", chroot, "--cwd", str(task.get_crashdir()),
+            crash_normal = ["/usr/bin/mock", "--configdir", str(chroot), "--cwd", str(task.get_crashdir()),
                             "chroot", "--", "crash -s %s %s" % (self._vmcore_path, vmlinux)]
         else:
             crash_normal = crash_cmd + ["-s", str(self._vmcore_path), vmlinux]
@@ -1829,7 +1829,7 @@ class RetraceTask:
                     errors.append((url, "malformed URL"))
                     continue
 
-                child = run(["wget", "-nv", "-P", crashdir, url], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+                child = run(["wget", "-nv", "-P", str(crashdir), url], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
                 stdout = child.stdout
                 if child.returncode:
                     errors.append((url, "wget exited with %d: %s" % (child.returncode, stdout)))

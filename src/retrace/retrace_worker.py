@@ -319,7 +319,7 @@ class RetraceWorker():
                     dnfcfg.write("baseurl=file://%s/%s/\n" % (CONFIG["RepoDir"], releaseid))
                     dnfcfg.write("failovermethod=priority\n")
 
-                child = run(["coredump2packages", crashdir / "coredump",
+                child = run(["coredump2packages", str(crashdir / "coredump"),
                              "--repos=%s" % repoid, "--config=%s" % dnfcfgpath,
                              "--log=%s" % Path(self.task.get_savedir(), "c2p_log")],
                             stdout=PIPE, stderr=PIPE, encoding='utf-8')
@@ -486,7 +486,7 @@ class RetraceWorker():
             self.hook.run("post_prepare_environment")
             self.hook.run("pre_retrace")
 
-            self._retrace_run(27, ["/usr/bin/mock", "--configdir", task.get_savedir(), "chroot",
+            self._retrace_run(27, ["/usr/bin/mock", "--configdir", str(task.get_savedir()), "chroot",
                                    "--", "chgrp -R mock /var/spool/abrt/crash"])
 
         # generate backtrace
@@ -750,7 +750,7 @@ class RetraceWorker():
             finally:
                 os.umask(old_umask)
 
-            child = run(["/usr/bin/mock", "--configdir", cfgdir, "init"],
+            child = run(["/usr/bin/mock", "--configdir", str(cfgdir), "init"],
                         stdout=PIPE, stderr=PIPE, encoding='utf-8')
             stderr = child.stderr
             if child.returncode:
@@ -768,9 +768,9 @@ class RetraceWorker():
 
             self.hook.run("pre_retrace")
             crash_cmd = task.get_crash_cmd()
-            crash_normal = ["/usr/bin/mock", "--configdir", cfgdir, "--cwd", crashdir,
+            crash_normal = ["/usr/bin/mock", "--configdir", str(cfgdir), "--cwd", str(crashdir),
                             "chroot", "--", crash_cmd + " -s %s %s" % (vmcore_path, vmlinux)]
-            crash_minimal = ["/usr/bin/mock", "--configdir", cfgdir, "--cwd", crashdir,
+            crash_minimal = ["/usr/bin/mock", "--configdir", str(cfgdir), "--cwd", str(crashdir),
                              "chroot", "--", crash_cmd + " -s --minimal %s %s" % (vmcore_path, vmlinux)]
 
         elif CONFIG["RetraceEnvironment"] == "podman":
@@ -807,7 +807,7 @@ class RetraceWorker():
             child = run(["/usr/bin/podman",
                          "build",
                          "--file",
-                         savedir / RetraceTask.DOCKERFILE,
+                         str(savedir / RetraceTask.DOCKERFILE),
                          "--tag",
                          "retrace-image:%s" % img_cont_id],
                         stdout=DEVNULL, stderr=DEVNULL)
