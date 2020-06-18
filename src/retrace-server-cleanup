@@ -170,7 +170,7 @@ if __name__ == "__main__":
                     if not dropdir.is_dir():
                         dropdir.mkdir(parents=True)
 
-                    targetfile = dropdir / "%s-%s.tar.gz" % (filepath.name, time.strftime("%Y%m%d%H%M%S"))
+                    targetfile = dropdir / ("%s-%s.tar.gz" % (filepath.name, time.strftime("%Y%m%d%H%M%S")))
 
                     child = run(["tar", "czf", targetfile, task.get_savedir()],
                                 stdout=PIPE, stderr=STDOUT)
