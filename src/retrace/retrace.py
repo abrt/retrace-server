@@ -1907,7 +1907,7 @@ class RetraceTask:
                             vmcore_path = self.add_vmcore_suffix(vmcore_path, filename)
                             filename.rename(vmcore_path)
 
-            for filename in Path(crashdir).iterdir():
+            for filename in crashdir.iterdir():
                 suffix = filename.suffix
                 # keep vmcore snapshots with suffixes (vmss/vmsn/vmem)
                 if filename.stem == str(self.VMCORE_FILE) and (not suffix or suffix in SNAPSHOT_SUFFIXES):
@@ -1917,7 +1917,7 @@ class RetraceTask:
 
         if self.get_type() in [TASK_RETRACE, TASK_RETRACE_INTERACTIVE]:
             coredump = crashdir / self.COREDUMP_FILE
-            for filename in Path(crashdir).iterdir():
+            for filename in crashdir.iterdir():
                 if filename.is_dir():
                     move_dir_contents(filename, crashdir)
 
@@ -1948,7 +1948,7 @@ class RetraceTask:
                             if coredumps[0] != self.COREDUMP_FILE:
                                 filename.rename(coredump)
 
-            for filename in Path(crashdir).iterdir():
+            for filename in crashdir.iterdir():
                 if filename.name in REQUIRED_FILES[self.get_type()]+["release", "os_release"]:
                     continue
 
