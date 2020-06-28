@@ -1329,6 +1329,11 @@ class RetraceTask:
             self._savedir = Path(CONFIG["SaveDir"], "%d" % self._taskid)
             if not self._savedir.is_dir():
                 raise Exception("The task %d does not exist" % self._taskid)
+            if not self.has_crash_cmd():
+                cmd = "crash"
+                if CONFIG["KernelDebuggerPath"]:
+                    cmd = CONFIG["KernelDebuggerPath"]
+                self.set_crash_cmd(cmd)
 
     def has_mock(self):
         """Verifies whether MOCK_SITE_DEFAULTS_CFG is present in the task directory."""
@@ -2092,6 +2097,10 @@ class RetraceTask:
     def set_crashrc(self, data: str):
         """Writes data to CRASHRC_FILE"""
         self.set(RetraceTask.CRASHRC_FILE, data)
+
+    def has_crash_cmd(self):
+        """Verifies whether CRASH_CMD_FILE exists"""
+        return self.has(RetraceTask.CRASH_CMD_FILE)
 
     def get_crash_cmd(self):
         """Gets the contents of CRASH_CMD_FILE"""
