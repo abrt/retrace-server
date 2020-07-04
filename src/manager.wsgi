@@ -27,7 +27,7 @@ FTP_SUPPORTED_EXTENSIONS = [".tar.gz", ".tgz", ".tarz", ".tar.bz2", ".tar.xz",
                             ".tar", ".gz", ".bz2", ".xz", ".Z", ".zip"]
 
 
-MANAGER_URL_PARSER = re.compile(r"^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|caseno|"
+MANAGER_URL_PARSER = re.compile(r"^(.*/manager)(/(([^/]+)(/(__custom__|start|restart|backtrace|savenotes|caseno|"
                                 r"bugzillano|notify|delete(/(sure/?)?)?|results/([^/]+)/?)?)?)?)?$")
 
 LONG_TYPES = {TASK_RETRACE: "Coredump retrace",
@@ -286,6 +286,33 @@ def application(environ, start_response):
         task.remove()
 
         return response(start_response, "302 Found", "", [("Location", match.group(1))])
+
+    elif match.group(6) and match.group(6) == "restart":
+        POST = request.POST
+        try:
+            task = RetraceTask(filename)
+        except:
+            return response(start_response, "404 Not Found", _("There is no such task"))
+
+        debug = "debug" in POST
+        kernelver = None
+        arch = None
+        if "vra" in POST and POST["vra"]:
+            try:
+                kernelver = KernelVer(POST["vra"])
+                if kernelver.arch is None:
+                    raise Exception
+            except Exception as ex:
+                return response(start_response, "403 Forbidden",
+                                _("Please use VRA format for kernel version (e.g. 2.6.32-287.el6.x86_64)"))
+
+            arch = kernelver.arch
+            kernelver = str(kernelver)
+
+        task.restart(debug=debug, kernelver=kernelver, arch=arch)
+
+        return response(start_response, "302 Found", "", [("Location", "%s/%d" % (match.group(1), task.get_taskid()))])
+
     elif filename and filename == "__custom__":
         POST = request.POST
 

@@ -1437,6 +1437,23 @@ class RetraceTask:
 
         return self._start_local(debug=debug, kernelver=kernelver, arch=arch)
 
+    def restart(self, debug=False, kernelver=None, arch=None):
+        cmdline = ["/usr/bin/retrace-server-worker", "%d" % self._taskid]
+        cmdline.append("--restart")
+        if debug:
+            cmdline.append("-v")
+
+        if kernelver is not None:
+            cmdline.append("--kernelver")
+            cmdline.append(kernelver)
+
+        if arch is not None:
+            cmdline.append("--arch")
+            cmdline.append(arch)
+
+        child = run(cmdline)
+        return child.returncode
+
     def chgrp(self, key: Union[str, Path]) -> None:
         gr = grp.getgrnam(CONFIG["AuthGroup"])
         try:
