@@ -13,6 +13,10 @@ SYNOPSIS
                              [-e EMAIL] [-c CASENO] [-bz BUGZILLANO]
                              COREFILE
 
+'retrace-server-task' restart [-h] [-s SERVER] [-n] [-v]
+                              [-r KERNELVER]
+                              TASK_ID
+
 'retrace-server-task' get [-h] [-p PASSWORD] [-s SERVER] [-n] [-v]
                           [-t | -b | -m | -e | -c | -bz]
                           TASK_ID
@@ -24,8 +28,9 @@ SYNOPSIS
 DESCRIPTION
 -----------
 This tool is able to communicate with Retrace server: create a new task,
-get and set values of an existing task. If kerberos ticket is available, all
-communication uses it. To stop using the ticket you must destroy it (kdestroy).
+restart an existing task, get and set values of an existing task. If kerberos
+ticket is available, all communication uses it. To stop using the ticket you
+must destroy it (kdestroy).
 
 OPERATIONS
 ----------
@@ -36,6 +41,10 @@ create::
    If none of the options "-t", "-m", or "-f" are given, the following logic
    is tried. If COREFILE is a local file, then the "-m" option is used,
    otherwise the "-f" option is used.
+
+restart::
+   Restart an existing task. Note that restarting an existing task removes
+   all files inside the 'results' directory.
 
 set::
     Write (set) information on an existing task. Available only for manager
@@ -116,6 +125,13 @@ CREATE OR BATCH OPTIONS
    Force the COREDUMP executable to EXECUTABLE.
    Only valid for userspace cores.
 
+RESTART OPTIONS
+---------------
+
+-k KERNELVER, --kernelver KERNELVER::
+   Force the kernel version in the COREFILE to KERNELVER.
+   Only valid for kernel cores.
+
 GET OPTIONS
 -----------
 
@@ -183,6 +199,14 @@ Write the caseno field for task 925483242 to 01234567
 Write the bugzillano field for task 31415926 to 53589793, 23846264
 
    retrace-server-task set --bugzillano 53589793,23846264 31415926
+
+Restart task 790216008
+
+   retrace-server-task restart 790216008
+
+Restart task 164167944 forcing kernel version to 4.18.0-80.el8.x86_64
+
+   retrace-server-task restart 790216008 --kernelver 4.18.0-80.el8.x86_64
 
 AUTHORS
 -------
