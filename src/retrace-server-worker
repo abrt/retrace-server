@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import sys
 import os
+import pwd
 from retrace.argparser import ArgumentParser
 from retrace.retrace import (log_debug,
                              log_error,
@@ -24,6 +25,10 @@ if __name__ == "__main__":
     cmdline = cmdline_parser.parse_args()
 
     log = cmdline._log
+
+    if pwd.getpwnam('retrace').pw_uid != os.getuid():
+        sys.stderr.write("Please use 'retrace-server-task' to restart or create a new task\n")
+        sys.exit(1)
 
     # do not use logging yet - we need the task
     if cmdline.kernelver and not cmdline.arch:
