@@ -114,14 +114,14 @@ class RetraceWorker():
             if task.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE] and task.get_status() == STATUS_FAIL:
                 message += "\nIf kernel version detection failed (the log shows 'Unable to determine kernel " \
                            "version'), and you know the kernel version, you may try re-starting the task " \
-                           "with the 'retrace-server-worker --restart' command.  Please check the log below " \
+                           "with the 'retrace-server-task restart' command.  Please check the log below " \
                            "for more information on why the task failed.  The following example assumes " \
                            "the vmcore's kernel version is 2.6.32-358.el6 on x86_64 arch: \n" \
-                           "$ retrace-server-worker --restart --kernelver 2.6.32-358.el6.x86_64 --arch x86_64 %d\n" \
+                           "$ retrace-server-task restart --kernelver 2.6.32-358.el6.x86_64 %d\n" \
                            % task.get_taskid()
                 message += "\nIf this is a test kernel with a non-errata kernel version, or for some reason " \
                            "the kernel-debuginfo repository is unavailable, you can place the kernel-debuginfo RPM " \
-                           "at %s/download/ and restart the task with: \n$ retrace-server-worker --restart %d\n" \
+                           "at %s/download/ and restart the task with: \n$ retrace-server-task restart %d\n" \
                            % (CONFIG["RepoDir"], task.get_taskid())
                 message += "\nIf the retrace-log contains a message similar to 'Failing task due to crash " \
                            "exiting with non-zero status and small kernellog size' then the vmcore may be " \
