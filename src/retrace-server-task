@@ -150,6 +150,24 @@ def parse_bugzillano(response):
                 return "Bugzilla number is not set."
             return candidate
 
+def restart_existing_task(args):
+    """Restart exiting task."""
+    LOGGER.info("Restarting task from server %s",
+                args['server'] + "/manager/" + args['TASK_ID'])
+    server = args['server'] + "/manager/" + args['TASK_ID'] + "/restart"
+    payload = {}
+    for itm in ["vra", "debug"]:
+        if itm in args.keys():
+            payload[itm] = args[itm]
+    res = requests.post(server,
+                        data=payload,
+                        verify=(not args['no_verify']),
+                        auth=args['kerberos'])
+
+    check_response(res)
+
+    print("Restarted task '{0}'"
+          .format(args['TASK_ID']))
 
 def create_new_task(args):
     """Start new task."""
@@ -602,6 +620,18 @@ if __name__ == "__main__":
     TMP.add_argument("-bz", "--bugzillano",
                      help="Set bugzilla number of the task.")
 
+    TMP = TASK_PARSER.add_parser('restart')
+    TMP.add_argument("TASK_ID",
+                     help="ID of existing task")
+    TMP.add_argument("-s", "--server",
+                     help="URL for retrace-server")
+    TMP.add_argument("-n", "--no-verify", action="store_true",
+                     help="Do not verify certificate")
+    TMP.add_argument("-v", "--verbose", action="store_const",
+                     default=logging.WARNING, const=logging.DEBUG)
+    TMP.add_argument("-r", "--kernelver",
+                     help="Version of kernel in vmcore")
+
     ARGS = vars(PARSER.parse_args())
 
     # if not verifying certificates, suppress warning
@@ -681,3 +711,7 @@ if __name__ == "__main__":
             update_caseno(ARGS)
         if ARGS['bugzillano']:
             update_bugzillano(ARGS)
+
+    if ARGS['task_action'] == "restart":
+        restart_existing_task(ARGS)
+
