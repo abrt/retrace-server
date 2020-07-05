@@ -293,6 +293,9 @@ def application(environ, start_response):
             task = RetraceTask(filename)
         except:
             return response(start_response, "404 Not Found", _("There is no such task"))
+        if not task.has_finished_time() or (task.get_status() != STATUS_SUCCESS and task.get_status() != STATUS_FAIL):
+            return response(start_response, "403 Forbidden",
+                                _("Task is still running, cannot restart"))
 
         debug = "debug" in POST
         kernelver = None
