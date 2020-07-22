@@ -391,89 +391,6 @@ def is_package_known(package_nvr: str, arch: str, releaseid: Optional[str] = Non
     return any([f.is_file() for f in candidates])
 
 
-def find_kernel_debuginfo(kernelver: KernelVer) -> Optional[Path]:
-    vers = [kernelver]
-
-    for canon_arch, derived_archs in ARCH_MAP.items():
-        if kernelver.arch == canon_arch:
-            vers = []
-            for arch in derived_archs:
-                cand = KernelVer(str(kernelver))
-                cand.arch = arch
-                vers.append(cand)
-
-    if CONFIG["UseFafPackages"]:
-        from pyfaf.storage import getDatabase
-        from pyfaf.queries import get_package_by_nevra
-        db = getDatabase()
-        for ver in vers:
-            p = get_package_by_nevra(db, ver.package_name_base(debug=True),
-                                     0, ver.version, ver.release, ver._arch)
-            if p is None:
-                log_debug("FAF package not found for {0}".format(str(ver)))
-            else:
-                log_debug("FAF package found for {0}".format(str(ver)))
-                if p.has_lob("package"):
-                    log_debug("LOB location {0}".format(p.get_lob_path("package")))
-                    return Path(p.get_lob_path("package"))
-                log_debug("LOB not found {0}".format(p.get_lob_path("package")))
-
-    # search for the debuginfo RPM
-    ver = None
-    repodir = Path(CONFIG["RepoDir"])
-    for release in repodir.iterdir():
-        for ver in vers:
-            testfile = release / "Packages" / ver.package_name(debug=True)
-            log_debug("Trying debuginfo file: %s" % testfile)
-            if testfile.is_file():
-                return testfile
-
-            # should not happen, but anyway...
-            testfile = release / ver.package_name(debug=True)
-            log_debug("Trying debuginfo file: %s" % testfile)
-            if testfile.is_file():
-                return testfile
-
-    if ver is not None and ver.rt:
-        basename = "kernel-rt"
-    else:
-        basename = "kernel"
-
-    # koji-like root
-    kojiroot = Path(CONFIG["KojiRoot"])
-    for ver in vers:
-        testfile = kojiroot / "packages" / basename / ver.version / ver.release\
-                   / ver._arch / ver.package_name(debug=True)
-        log_debug("Trying debuginfo file: %s" % testfile)
-        if testfile.is_file():
-            return testfile
-
-    if CONFIG["WgetKernelDebuginfos"]:
-        downloaddir = repodir / "download"
-        if not downloaddir.is_dir():
-            oldmask = os.umask(0o007)
-            downloaddir.mkdir(parents=True)
-            os.umask(oldmask)
-
-        for ver in vers:
-            pkgname = ver.package_name(debug=True)
-            url = CONFIG["KernelDebuginfoURL"] \
-                .replace("$VERSION", ver.version) \
-                .replace("$RELEASE", ver.release) \
-                .replace("$ARCH", ver._arch) \
-                .replace("$BASENAME", basename)
-            if not url.endswith("/"):
-                url += "/"
-            url += pkgname
-
-            log_debug("Trying debuginfo URL: %s" % url)
-            child = run(["wget", "-nv", "-P", downloaddir, url], stdout=DEVNULL, stderr=DEVNULL)
-            if not child.returncode:
-                return downloaddir / pkgname
-
-    return None
-
-
 def cache_files_from_debuginfo(debuginfo: Path, basedir: Path, files: List[str]) -> None:
     # important! if empty list is specified, the whole debuginfo would be unpacked
     if not files:
@@ -708,44 +625,6 @@ def get_active_tasks() -> List[int]:
     return tasks
 
 
-def get_md5_tasks() -> List[RetraceTask]:
-    tasks = []
-
-    for filename in Path(CONFIG["SaveDir"]).iterdir():
-        if len(filename.name) != CONFIG["TaskIdLength"]:
-            continue
-
-        try:
-            task = RetraceTask(int(filename.name))
-        except Exception:
-            continue
-
-        if not task.has_status():
-            continue
-        else:
-            status = task.get_status()
-
-        if status not in (STATUS_SUCCESS, STATUS_FAIL):
-            continue
-
-        if not task.has_finished_time():
-            continue
-
-        if not task.has_vmcore() and not task.has_coredump():
-            continue
-
-        if not task.has_md5sum():
-            continue
-
-        md5 = str.split(task.get_md5sum())[0]
-        if not MD5_PARSER.search(md5):
-            continue
-
-        tasks.append(task)
-
-    return tasks
-
-
 def check_run(cmd: List[str]) -> None:
     child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
     stdout = child.stdout
@@ -864,396 +743,87 @@ class KernelVer():
         return self._arch is None
 
 
-class KernelVMcore:
-    DUMP_LEVEL_PARSER = re.compile(r"^[ \t]*dump_level[ \t]*:[ \t]*([0-9]+).*$")
-    _dump_level: Optional[int]
-    _has_extra_pages: Optional[bool]
-    _is_flattened_format: Optional[bool]
-    _release: Optional[KernelVer]
-    _vmlinux: Optional[str]
+def find_kernel_debuginfo(kernelver: KernelVer) -> Optional[Path]:
+    vers = [kernelver]
 
-    def __init__(self, vmcore_path: Path) -> None:
-        self._vmcore_path: Path = vmcore_path
-        self._crashdir: Path = vmcore_path.parent
-        self._is_flattened_format = None
-        self._dump_level = None
-        self._has_extra_pages = None
-        self._release = None
-        self._vmlinux = None
-        self._vmem_path: Path = self._crashdir / "vmcore.vmem"
+    for canon_arch, derived_archs in ARCH_MAP.items():
+        if kernelver.arch == canon_arch:
+            vers = []
+            for arch in derived_archs:
+                cand = KernelVer(str(kernelver))
+                cand.arch = arch
+                vers.append(cand)
 
-    def get_path(self) -> Path:
-        return self._vmcore_path
-
-    def is_flattened_format(self):
-        """Returns True if vmcore is in makedumpfile flattened format"""
-        if self._is_flattened_format is not None:
-            return self._is_flattened_format
-        try:
-            with open(self._vmcore_path, "rb") as fd:
-                fd.seek(0)
-                # Read 16 bytes (SIG_LEN_MDF from crash-utility makedumpfile.h)
-                b = fd.read(16)
-                self._is_flattened_format = b.startswith(b'makedumpfile')
-        except IOError as e:
-            log_error("Failed to get makedumpfile header - failed open/seek/read of "
-                      "%s with errno(%d - '%s')" %
-                      (self._vmcore_path, e.errno, e.strerror))
-        return self._is_flattened_format
-
-    def convert_flattened_format(self):
-        """Convert a vmcore in makedumpfile flattened format to normal dumpfile format
-        Returns True if conversion has been done and was successful"""
-        if not self._is_flattened_format:
-            log_error("Cannot convert a non-flattened vmcore")
-            return False
-        newvmcore = Path("%s.normal" % self._vmcore_path)
-        try:
-            with open(self._vmcore_path) as fd:
-                child = run(["makedumpfile", "-R", str(newvmcore)], stdin=fd)
-                if child.returncode:
-                    log_warn("makedumpfile -R exited with %d" % child.returncode)
-                    if newvmcore.is_file():
-                        newvmcore.unlink()
-                else:
-                    newvmcore.rename(self._vmcore_path)
-        except IOError as e:
-            log_error("Failed to convert flattened vmcore %s - errno(%d - '%s')" %
-                      (self._vmcore_path, e.errno, e.strerror))
-            return False
-
-        self._is_flattened_format = False
-        return True
-
-    def get_dump_level(self, task: RetraceTask) -> Optional[int]:
-        if self._dump_level is not None:
-            return self._dump_level
-
-        if not self._vmcore_path.is_file():
-            return None
-
-        dmesg_path = task.get_results_dir() / "dmesg"
-        if dmesg_path.is_file():
-            dmesg_path.unlink()
-
-        cmd = ["makedumpfile", "-D", "--dump-dmesg", str(self._vmcore_path), str(dmesg_path)]
-
-        result = None
-        lines = run(cmd, stdout=PIPE, stderr=DEVNULL, encoding='utf-8').stdout.splitlines()
-        for line in lines:
-            match = self.DUMP_LEVEL_PARSER.match(line)
-            if match is None:
-                continue
-
-            result = int(match.group(1))
-            break
-
-        if dmesg_path.is_file():
-            dmesg_path.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
-
-        self._dump_level = result
-        return result
-
-    def has_extra_pages(self, task: RetraceTask) -> bool:
-        """Returns True if vmcore has extra pages that can be stripped with makedumpfile"""
-        if self._has_extra_pages is not None:
-            return self._has_extra_pages
-
-        # Assume the vmcore has extra pages if the VmcoreDumpLevel is set
-        self._has_extra_pages = CONFIG["VmcoreDumpLevel"] > 0 and CONFIG["VmcoreDumpLevel"] < 32
-
-        # Now try to read the dump_level from the vmcore
-        dump_level = self.get_dump_level(task)
-        if dump_level is None:
-            log_warn("Unable to determine vmcore dump level")
-        else:
-            log_debug("Vmcore dump level is %d" % dump_level)
-
-        # If dump_level was readable above, then check to see if stripping is worthwhile
-        if (dump_level is not None
-                and (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
-            log_info("Stripping to %d would have no effect" % CONFIG["VmcoreDumpLevel"])
-            self._has_extra_pages = False
-        return self._has_extra_pages
-
-    def strip_extra_pages(self) -> None:
-        """Strip extra pages from vmcore with makedumpfile"""
-        if self._vmlinux is None:
-            log_error("Cannot strip pages if vmlinux is not known for vmcore")
-            return
-
-        newvmcore: Path = Path("%s.stripped" % self._vmcore_path)
-        child = run(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
-                     "-x", self._vmlinux, "--message-level", "0", str(self._vmcore_path), str(newvmcore)])
-        if child.returncode:
-            log_warn("makedumpfile exited with %d" % child.returncode)
-            if newvmcore.is_file():
-                newvmcore.unlink()
-        else:
-            newvmcore.rename(self._vmcore_path)
-
-    #
-    # In real-world testing, approximately 60% of the time the kernel
-    # version of a vmcore can be identified with the crash tool.
-    # In the other 40% of the time, we must use some other method.
-    #
-    # The below function contains a couple regex searches that work
-    # across a wide variety of vmcore formats and kernel versions.
-    # We do not attempt to identify the file type since this is often not
-    # reliable, but we assume the version information exists in some form
-    # in the first portion of the file.  Testing has indicated that we do
-    # not need to scan the entire file but can rely on a small portion
-    # at the start of the file, which helps preserve useful pages in the
-    # OS page cache.
-    #
-    # The following regex's are used for the 40% scenario
-    # 1. Look for 'OSRELEASE='.  For example:
-    # OSRELEASE=2.6.18-406.el5
-    # NOTE: We can get "OSRELEASE=%" so we disallow the '%' character
-    # after the '='
-    OSRELEASE_VAR_PARSER = re.compile(b"OSRELEASE=([^%][^\x00\s]+)")
-    #
-    # 2. Look for "Linux version" string.  Note that this was taken from
-    # CAS 'fingerprint' database code.  For more info, see
-    # https://bugzilla.redhat.com/show_bug.cgi?id=1535592#c9 and
-    # https://github.com/battlemidget/core-analysis-system/blob/master/lib/cas/core.py#L96
-    # For exmaple:
-    # Linux version 3.10.0-693.11.1.el7.x86_64 (mockbuild@x86-041.build.eng.bos.redhat.com)
-    # (gcc version 4.8.5 20150623 (Red Hat 4.8.5-16) (GCC) ) #1 SMP Fri Oct 27 05:39:05 EDT 2017
-    LINUX_VERSION_PARSER = re.compile(b'Linux\sversion\s(\S+)\s+(.*20\d{1,2}|#1\s.*20\d{1,2})')
-    #
-    # 3. Look for the actual kernel release. For example:
-    # 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
-    KERNEL_RELEASE_PARSER = re.compile(b'(\d+\.\d+\.\d+)-(\d+\.[^\x00\s]+)')
-    #
-
-    def get_kernel_release(self, crash_cmd: List[str] = ["crash"]) -> KernelVer:
-        if self._release is not None:
-            return self._release
-
-        core_path = self._vmcore_path
-        if self._vmem_path.is_file():
-            core_path = self._vmem_path
-
-        # First use 'crash' to identify the kernel version.
-        # set SIGPIPE to default handler for bz 1540253
-        save = getsignal(SIGPIPE)
-        signal(SIGPIPE, SIG_DFL)
-        child = run(crash_cmd + ["--osrelease", str(core_path)], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
-        release = child.stdout.strip()
-        ret = child.returncode
-        signal(SIGPIPE, save)
-
-        # If the crash tool fails, we must try some other method.
-        # Read the first small portion of the file and use a few different
-        # regex searches on the file.
-        if ret != 0 or \
-           not release or \
-           "\n" in release or \
-           release == "unknown":
-            try:
-                with open(core_path, "rb") as fd:
-                    fd.seek(0)
-                    b = fd.read(64000000)
-            except IOError as e:
-                log_error("Failed to get kernel release - failed "
-                          "open/seek/read of file %s with errno(%d - '%s')"
-                          % (core_path, e.errno, e.strerror))
-                return None
-            release = self.OSRELEASE_VAR_PARSER.search(b)
-            if release:
-                release = release.group(1)
-            if not release:
-                release = self.LINUX_VERSION_PARSER.search(b)
-                if release:
-                    release = release.group(1)
-            if not release:
-                release = self.KERNEL_RELEASE_PARSER.search(b)
-                if release:
-                    release = release.group(0)
-            if release:
-                release = release.decode('utf-8')
-
-        # Clean up the release before returning or calling KernelVer
-        if release is None or release == "unknown":
-            log_error("Failed to get kernel release from file %s" %
-                      core_path)
-            return None
-        release = release.rstrip('\0 \t\n')
-
-        # check whether architecture is present
-        try:
-            result = KernelVer(release)
-        except Exception as ex:
-            log_error("Failed to parse kernel release from file %s, release ="
-                      " %s: %s" % (core_path, release, str(ex)))
-            return None
-
-        if result.arch is None:
-            result.arch = guess_arch(core_path)
-            if not result.arch:
-                log_error("Unable to determine architecture from file %s, "
-                          "release = %s, arch result = %s" %
-                          (core_path, release, result))
-                return None
-
-        self._release = result
-        return result
-
-    def prepare_debuginfo(self, task: RetraceTask, chroot: Optional[str] = None,
-            kernelver: Optional[KernelVer] = None) -> str:
-        log_info("Calling prepare_debuginfo ")
-        if kernelver is None:
-            kernelver = self.get_kernel_release()
-
-        if kernelver is None:
-            raise Exception("Unable to determine kernel version")
-
-        if self._vmlinux is not None:
-            return self._vmlinux
-
-        # FIXME: get_kernel_release sets _release vs 'kernelver' here ?
-        task.set_kernelver(kernelver)
-        # Setting kernelver may reset crash_cmd
-        crash_cmd = task.get_crash_cmd().split()
-
-        debugdir_base = Path(CONFIG["RepoDir"], "kernel", kernelver.arch)
-        if not debugdir_base.is_dir():
-            debugdir_base.mkdir(parents=True)
-
-        # First look in cache for vmlinux at the "typical" location, for example
-        # CONFIG["RepoDir"]/kernel/x86_64/usr/lib/debug/lib/modules/2.6.32-504.el6.x86_64
-        log_info("Version: '%s'; Release: '%s'; Arch: '%s'; _arch: '%s'; "
-                 "Flavour: '%s'; Realtime: %s"
-                 % (kernelver.version, kernelver.release, kernelver.arch,
-                    kernelver._arch, kernelver.flavour, kernelver.rt))
-        kernel_path = ""
-        if kernelver.version is not None:
-            kernel_path = kernel_path + str(kernelver.version)
-        if kernelver.release is not None:
-            kernel_path = kernel_path + "-" + str(kernelver.release)
-        # Skip the 'arch' on RHEL5 and RHEL4 due to different kernel-debuginfo
-        # path to vmlinux
-        if kernelver._arch is not None and "EL" not in kernelver.release and\
-           "el5" not in kernelver.release:
-            kernel_path = kernel_path + "." + str(kernelver._arch)
-        if kernelver.flavour is not None:
-            # 'debug' flavours on rhel6 and above require a '.' before the 'debug'
-            if "EL" not in kernelver.release and "el5" not in kernelver.release:
-                kernel_path = kernel_path + "."
-            kernel_path = kernel_path + str(kernelver.flavour)
-
-        vmlinux_cache_path = debugdir_base / "usr/lib/debug/lib/modules" / kernel_path / "vmlinux"
-        if vmlinux_cache_path.is_file():
-            log_info("Found cached vmlinux at path: {}".format(vmlinux_cache_path))
-            vmlinux: str = str(vmlinux_cache_path)
-            task.set_vmlinux(vmlinux)
-        else:
-            log_info("Unable to find cached vmlinux at path: {}".format(vmlinux_cache_path))
-            vmlinux = None
-
-        # For now, unconditionally search for kernel-debuginfo.  However,
-        # if the vmlinux file existed in the cache, don't raise an exception
-        # on the task since the vmcore may still be usable, and instead,
-        # return early.  A second optimization would be to avoid this
-        # completely if the modules files all exist in the cache.
-        log_info("Searching for kernel-debuginfo package for " + str(kernelver))
-        debuginfo = find_kernel_debuginfo(kernelver)
-        if not debuginfo:
-            if vmlinux is not None:
-                return vmlinux
-            raise Exception("Unable to find debuginfo package and "
-                            "no cached vmlinux file")
-
-        # FIXME: Merge kernel_path with this logic
-        if "EL" in kernelver.release:
-            if kernelver.flavour is None:
-                pattern = "EL/vmlinux"
+    if CONFIG["UseFafPackages"]:
+        from pyfaf.storage import getDatabase
+        from pyfaf.queries import get_package_by_nevra
+        db = getDatabase()
+        for ver in vers:
+            p = get_package_by_nevra(db, ver.package_name_base(debug=True),
+                                     0, ver.version, ver.release, ver._arch)
+            if p is None:
+                log_debug("FAF package not found for {0}".format(str(ver)))
             else:
-                pattern = "EL%s/vmlinux" % kernelver.flavour
-        else:
-            pattern = "/vmlinux"
+                log_debug("FAF package found for {0}".format(str(ver)))
+                if p.has_lob("package"):
+                    log_debug("LOB location {0}".format(p.get_lob_path("package")))
+                    return Path(p.get_lob_path("package"))
+                log_debug("LOB not found {0}".format(p.get_lob_path("package")))
 
-        # Now open the kernel-debuginfo and get a listing of the files we may need
-        vmlinux_path = None
-        debugfiles = {}
-        lines = run(["rpm", "-qpl", str(debuginfo)],
-                    stdout=PIPE, stderr=DEVNULL, encoding='utf-8').stdout.splitlines()
-        for line in lines:
-            if line.endswith(pattern):
-                vmlinux_path = line
-                continue
+    # search for the debuginfo RPM
+    ver = None
+    repodir = Path(CONFIG["RepoDir"])
+    for release in repodir.iterdir():
+        for ver in vers:
+            testfile = release / "Packages" / ver.package_name(debug=True)
+            log_debug("Trying debuginfo file: %s" % testfile)
+            if testfile.is_file():
+                return testfile
 
-            match = KO_DEBUG_PARSER.match(line)
-            if not match:
-                continue
+            # should not happen, but anyway...
+            testfile = release / ver.package_name(debug=True)
+            log_debug("Trying debuginfo file: %s" % testfile)
+            if testfile.is_file():
+                return testfile
 
-            # only pick the correct flavour for el4
-            if "EL" in kernelver.release:
-                if kernelver.flavour is None:
-                    pattern2 = "EL/"
-                else:
-                    pattern2 = "EL%s/" % kernelver.flavour
+    if ver is not None and ver.rt:
+        basename = "kernel-rt"
+    else:
+        basename = "kernel"
 
-                if pattern2 not in str(Path(line).parent):
-                    continue
+    # koji-like root
+    kojiroot = Path(CONFIG["KojiRoot"])
+    for ver in vers:
+        testfile = kojiroot / "packages" / basename / ver.version / ver.release\
+                   / ver._arch / ver.package_name(debug=True)
+        log_debug("Trying debuginfo file: %s" % testfile)
+        if testfile.is_file():
+            return testfile
 
-            # '-' in file name is transformed to '_' in module name
-            debugfiles[match.group(1).replace("-", "_")] = line
+    if CONFIG["WgetKernelDebuginfos"]:
+        downloaddir = repodir / "download"
+        if not downloaddir.is_dir():
+            oldmask = os.umask(0o007)
+            downloaddir.mkdir(parents=True)
+            os.umask(oldmask)
 
-        # Only look for the vmlinux file here if it's not already been found above
-        # Note the dependency from this code on the debuginfo file list
-        if vmlinux is None:
-            vmlinux_debuginfo = debugdir_base / vmlinux_path.lstrip("/")
-            cache_files_from_debuginfo(debuginfo, debugdir_base, [vmlinux_path])
-            if vmlinux_debuginfo.is_file():
-                log_info("Found cached vmlinux at new debuginfo location: {}".format(vmlinux_debuginfo))
-                vmlinux = str(vmlinux_debuginfo)
-                task.set_vmlinux(vmlinux)
-            else:
-                raise Exception("Failed vmlinux caching from debuginfo at location: {}".format(vmlinux_debuginfo))
+        for ver in vers:
+            pkgname = ver.package_name(debug=True)
+            url = CONFIG["KernelDebuginfoURL"] \
+                .replace("$VERSION", ver.version) \
+                .replace("$RELEASE", ver.release) \
+                .replace("$ARCH", ver._arch) \
+                .replace("$BASENAME", basename)
+            if not url.endswith("/"):
+                url += "/"
+            url += pkgname
 
-        # Obtain the list of modules this vmcore requires
-        if chroot:
-            crash_normal = ["/usr/bin/mock", "--configdir", str(chroot), "--cwd", str(task.get_crashdir()),
-                            "chroot", "--", "crash -s %s %s" % (self._vmcore_path, vmlinux)]
-        else:
-            crash_normal = crash_cmd + ["-s", str(self._vmcore_path), vmlinux]
-        stdout, returncode = task.run_crash_cmdline(crash_normal, "mod\nquit")
-        if returncode == 1 and "el5" in kernelver.release:
-            log_info("Unable to list modules but el5 detected, trying crash fixup for vmss files")
-            crash_cmd.append("--machdep")
-            crash_cmd.append("phys_base=0x200000")
-            log_info("trying crash_cmd = " + str(crash_cmd))
-            # FIXME: mock
-            crash_normal = crash_cmd + ["-s", str(self._vmcore_path), vmlinux]
-            stdout, returncode = task.run_crash_cmdline(crash_normal, "mod\nquit")
+            log_debug("Trying debuginfo URL: %s" % url)
+            child = run(["wget", "-nv", "-P", downloaddir, url], stdout=DEVNULL, stderr=DEVNULL)
+            if not child.returncode:
+                return downloaddir / pkgname
 
-        # If we fail to get the list of modules, is the vmcore even usable?
-        if returncode:
-            log_warn("Unable to list modules: crash exited with %d:\n%s" % (returncode, stdout))
-            self._vmlinux = vmlinux
-            return vmlinux
-
-        modules = []
-        for line in stdout.decode('utf-8').splitlines():
-            # skip header
-            if "NAME" in line:
-                continue
-
-            if " " in line:
-                modules.append(line.split()[1])
-
-        todo = []
-        for module in modules:
-            if module in debugfiles and not (debugdir_base / debugfiles[module].lstrip("/")).is_file():
-                todo.append(debugfiles[module])
-
-        cache_files_from_debuginfo(debuginfo, debugdir_base, todo)
-
-        self._release = kernelver
-        self._vmlinux = vmlinux
-        return vmlinux
+    return None
 
 
 class RetraceTask:
@@ -2315,6 +1885,436 @@ class RetraceTask:
         # TODO: let it be configurable
         from .retrace_worker import RetraceWorker
         return RetraceWorker(self)
+
+
+def get_md5_tasks() -> List[RetraceTask]:
+    tasks = []
+
+    for filename in Path(CONFIG["SaveDir"]).iterdir():
+        if len(filename.name) != CONFIG["TaskIdLength"]:
+            continue
+
+        try:
+            task = RetraceTask(int(filename.name))
+        except Exception:
+            continue
+
+        if not task.has_status():
+            continue
+        else:
+            status = task.get_status()
+
+        if status not in (STATUS_SUCCESS, STATUS_FAIL):
+            continue
+
+        if not task.has_finished_time():
+            continue
+
+        if not task.has_vmcore() and not task.has_coredump():
+            continue
+
+        if not task.has_md5sum():
+            continue
+
+        md5 = str.split(task.get_md5sum())[0]
+        if not MD5_PARSER.search(md5):
+            continue
+
+        tasks.append(task)
+
+    return tasks
+
+
+class KernelVMcore:
+    DUMP_LEVEL_PARSER = re.compile(r"^[ \t]*dump_level[ \t]*:[ \t]*([0-9]+).*$")
+    _dump_level: Optional[int]
+    _has_extra_pages: Optional[bool]
+    _is_flattened_format: Optional[bool]
+    _release: Optional[KernelVer]
+    _vmlinux: Optional[str]
+
+    def __init__(self, vmcore_path: Path) -> None:
+        self._vmcore_path: Path = vmcore_path
+        self._crashdir: Path = vmcore_path.parent
+        self._is_flattened_format = None
+        self._dump_level = None
+        self._has_extra_pages = None
+        self._release = None
+        self._vmlinux = None
+        self._vmem_path: Path = self._crashdir / "vmcore.vmem"
+
+    def get_path(self) -> Path:
+        return self._vmcore_path
+
+    def is_flattened_format(self):
+        """Returns True if vmcore is in makedumpfile flattened format"""
+        if self._is_flattened_format is not None:
+            return self._is_flattened_format
+        try:
+            with open(self._vmcore_path, "rb") as fd:
+                fd.seek(0)
+                # Read 16 bytes (SIG_LEN_MDF from crash-utility makedumpfile.h)
+                b = fd.read(16)
+                self._is_flattened_format = b.startswith(b'makedumpfile')
+        except IOError as e:
+            log_error("Failed to get makedumpfile header - failed open/seek/read of "
+                      "%s with errno(%d - '%s')" %
+                      (self._vmcore_path, e.errno, e.strerror))
+        return self._is_flattened_format
+
+    def convert_flattened_format(self):
+        """Convert a vmcore in makedumpfile flattened format to normal dumpfile format
+        Returns True if conversion has been done and was successful"""
+        if not self._is_flattened_format:
+            log_error("Cannot convert a non-flattened vmcore")
+            return False
+        newvmcore = Path("%s.normal" % self._vmcore_path)
+        try:
+            with open(self._vmcore_path) as fd:
+                child = run(["makedumpfile", "-R", str(newvmcore)], stdin=fd)
+                if child.returncode:
+                    log_warn("makedumpfile -R exited with %d" % child.returncode)
+                    if newvmcore.is_file():
+                        newvmcore.unlink()
+                else:
+                    newvmcore.rename(self._vmcore_path)
+        except IOError as e:
+            log_error("Failed to convert flattened vmcore %s - errno(%d - '%s')" %
+                      (self._vmcore_path, e.errno, e.strerror))
+            return False
+
+        self._is_flattened_format = False
+        return True
+
+    def get_dump_level(self, task: RetraceTask) -> Optional[int]:
+        if self._dump_level is not None:
+            return self._dump_level
+
+        if not self._vmcore_path.is_file():
+            return None
+
+        dmesg_path = task.get_results_dir() / "dmesg"
+        if dmesg_path.is_file():
+            dmesg_path.unlink()
+
+        cmd = ["makedumpfile", "-D", "--dump-dmesg", str(self._vmcore_path), str(dmesg_path)]
+
+        result = None
+        lines = run(cmd, stdout=PIPE, stderr=DEVNULL, encoding='utf-8').stdout.splitlines()
+        for line in lines:
+            match = self.DUMP_LEVEL_PARSER.match(line)
+            if match is None:
+                continue
+
+            result = int(match.group(1))
+            break
+
+        if dmesg_path.is_file():
+            dmesg_path.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+
+        self._dump_level = result
+        return result
+
+    def has_extra_pages(self, task: RetraceTask) -> bool:
+        """Returns True if vmcore has extra pages that can be stripped with makedumpfile"""
+        if self._has_extra_pages is not None:
+            return self._has_extra_pages
+
+        # Assume the vmcore has extra pages if the VmcoreDumpLevel is set
+        self._has_extra_pages = CONFIG["VmcoreDumpLevel"] > 0 and CONFIG["VmcoreDumpLevel"] < 32
+
+        # Now try to read the dump_level from the vmcore
+        dump_level = self.get_dump_level(task)
+        if dump_level is None:
+            log_warn("Unable to determine vmcore dump level")
+        else:
+            log_debug("Vmcore dump level is %d" % dump_level)
+
+        # If dump_level was readable above, then check to see if stripping is worthwhile
+        if (dump_level is not None
+                and (dump_level & CONFIG["VmcoreDumpLevel"]) == CONFIG["VmcoreDumpLevel"]):
+            log_info("Stripping to %d would have no effect" % CONFIG["VmcoreDumpLevel"])
+            self._has_extra_pages = False
+        return self._has_extra_pages
+
+    def strip_extra_pages(self) -> None:
+        """Strip extra pages from vmcore with makedumpfile"""
+        if self._vmlinux is None:
+            log_error("Cannot strip pages if vmlinux is not known for vmcore")
+            return
+
+        newvmcore: Path = Path("%s.stripped" % self._vmcore_path)
+        child = run(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
+                     "-x", self._vmlinux, "--message-level", "0", str(self._vmcore_path), str(newvmcore)])
+        if child.returncode:
+            log_warn("makedumpfile exited with %d" % child.returncode)
+            if newvmcore.is_file():
+                newvmcore.unlink()
+        else:
+            newvmcore.rename(self._vmcore_path)
+
+    #
+    # In real-world testing, approximately 60% of the time the kernel
+    # version of a vmcore can be identified with the crash tool.
+    # In the other 40% of the time, we must use some other method.
+    #
+    # The below function contains a couple regex searches that work
+    # across a wide variety of vmcore formats and kernel versions.
+    # We do not attempt to identify the file type since this is often not
+    # reliable, but we assume the version information exists in some form
+    # in the first portion of the file.  Testing has indicated that we do
+    # not need to scan the entire file but can rely on a small portion
+    # at the start of the file, which helps preserve useful pages in the
+    # OS page cache.
+    #
+    # The following regex's are used for the 40% scenario
+    # 1. Look for 'OSRELEASE='.  For example:
+    # OSRELEASE=2.6.18-406.el5
+    # NOTE: We can get "OSRELEASE=%" so we disallow the '%' character
+    # after the '='
+    OSRELEASE_VAR_PARSER = re.compile(b"OSRELEASE=([^%][^\x00\s]+)")
+    #
+    # 2. Look for "Linux version" string.  Note that this was taken from
+    # CAS 'fingerprint' database code.  For more info, see
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1535592#c9 and
+    # https://github.com/battlemidget/core-analysis-system/blob/master/lib/cas/core.py#L96
+    # For exmaple:
+    # Linux version 3.10.0-693.11.1.el7.x86_64 (mockbuild@x86-041.build.eng.bos.redhat.com)
+    # (gcc version 4.8.5 20150623 (Red Hat 4.8.5-16) (GCC) ) #1 SMP Fri Oct 27 05:39:05 EDT 2017
+    LINUX_VERSION_PARSER = re.compile(b'Linux\sversion\s(\S+)\s+(.*20\d{1,2}|#1\s.*20\d{1,2})')
+    #
+    # 3. Look for the actual kernel release. For example:
+    # 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
+    KERNEL_RELEASE_PARSER = re.compile(b'(\d+\.\d+\.\d+)-(\d+\.[^\x00\s]+)')
+    #
+
+    def get_kernel_release(self, crash_cmd: List[str] = ["crash"]) -> KernelVer:
+        if self._release is not None:
+            return self._release
+
+        core_path = self._vmcore_path
+        if self._vmem_path.is_file():
+            core_path = self._vmem_path
+
+        # First use 'crash' to identify the kernel version.
+        # set SIGPIPE to default handler for bz 1540253
+        save = getsignal(SIGPIPE)
+        signal(SIGPIPE, SIG_DFL)
+        child = run(crash_cmd + ["--osrelease", str(core_path)], stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+        release = child.stdout.strip()
+        ret = child.returncode
+        signal(SIGPIPE, save)
+
+        # If the crash tool fails, we must try some other method.
+        # Read the first small portion of the file and use a few different
+        # regex searches on the file.
+        if ret != 0 or \
+           not release or \
+           "\n" in release or \
+           release == "unknown":
+            try:
+                with open(core_path, "rb") as fd:
+                    fd.seek(0)
+                    b = fd.read(64000000)
+            except IOError as e:
+                log_error("Failed to get kernel release - failed "
+                          "open/seek/read of file %s with errno(%d - '%s')"
+                          % (core_path, e.errno, e.strerror))
+                return None
+            release = self.OSRELEASE_VAR_PARSER.search(b)
+            if release:
+                release = release.group(1)
+            if not release:
+                release = self.LINUX_VERSION_PARSER.search(b)
+                if release:
+                    release = release.group(1)
+            if not release:
+                release = self.KERNEL_RELEASE_PARSER.search(b)
+                if release:
+                    release = release.group(0)
+            if release:
+                release = release.decode('utf-8')
+
+        # Clean up the release before returning or calling KernelVer
+        if release is None or release == "unknown":
+            log_error("Failed to get kernel release from file %s" %
+                      core_path)
+            return None
+        release = release.rstrip('\0 \t\n')
+
+        # check whether architecture is present
+        try:
+            result = KernelVer(release)
+        except Exception as ex:
+            log_error("Failed to parse kernel release from file %s, release ="
+                      " %s: %s" % (core_path, release, str(ex)))
+            return None
+
+        if result.arch is None:
+            result.arch = guess_arch(core_path)
+            if not result.arch:
+                log_error("Unable to determine architecture from file %s, "
+                          "release = %s, arch result = %s" %
+                          (core_path, release, result))
+                return None
+
+        self._release = result
+        return result
+
+    def prepare_debuginfo(self, task: RetraceTask, chroot: Optional[str] = None,
+            kernelver: Optional[KernelVer] = None) -> str:
+        log_info("Calling prepare_debuginfo ")
+        if kernelver is None:
+            kernelver = self.get_kernel_release()
+
+        if kernelver is None:
+            raise Exception("Unable to determine kernel version")
+
+        if self._vmlinux is not None:
+            return self._vmlinux
+
+        # FIXME: get_kernel_release sets _release vs 'kernelver' here ?
+        task.set_kernelver(kernelver)
+        # Setting kernelver may reset crash_cmd
+        crash_cmd = task.get_crash_cmd().split()
+
+        debugdir_base = Path(CONFIG["RepoDir"], "kernel", kernelver.arch)
+        if not debugdir_base.is_dir():
+            debugdir_base.mkdir(parents=True)
+
+        # First look in cache for vmlinux at the "typical" location, for example
+        # CONFIG["RepoDir"]/kernel/x86_64/usr/lib/debug/lib/modules/2.6.32-504.el6.x86_64
+        log_info("Version: '%s'; Release: '%s'; Arch: '%s'; _arch: '%s'; "
+                 "Flavour: '%s'; Realtime: %s"
+                 % (kernelver.version, kernelver.release, kernelver.arch,
+                    kernelver._arch, kernelver.flavour, kernelver.rt))
+        kernel_path = ""
+        if kernelver.version is not None:
+            kernel_path = kernel_path + str(kernelver.version)
+        if kernelver.release is not None:
+            kernel_path = kernel_path + "-" + str(kernelver.release)
+        # Skip the 'arch' on RHEL5 and RHEL4 due to different kernel-debuginfo
+        # path to vmlinux
+        if kernelver._arch is not None and "EL" not in kernelver.release and\
+           "el5" not in kernelver.release:
+            kernel_path = kernel_path + "." + str(kernelver._arch)
+        if kernelver.flavour is not None:
+            # 'debug' flavours on rhel6 and above require a '.' before the 'debug'
+            if "EL" not in kernelver.release and "el5" not in kernelver.release:
+                kernel_path = kernel_path + "."
+            kernel_path = kernel_path + str(kernelver.flavour)
+
+        vmlinux_cache_path = debugdir_base / "usr/lib/debug/lib/modules" / kernel_path / "vmlinux"
+        if vmlinux_cache_path.is_file():
+            log_info("Found cached vmlinux at path: {}".format(vmlinux_cache_path))
+            vmlinux: str = str(vmlinux_cache_path)
+            task.set_vmlinux(vmlinux)
+        else:
+            log_info("Unable to find cached vmlinux at path: {}".format(vmlinux_cache_path))
+            vmlinux = None
+
+        # For now, unconditionally search for kernel-debuginfo.  However,
+        # if the vmlinux file existed in the cache, don't raise an exception
+        # on the task since the vmcore may still be usable, and instead,
+        # return early.  A second optimization would be to avoid this
+        # completely if the modules files all exist in the cache.
+        log_info("Searching for kernel-debuginfo package for " + str(kernelver))
+        debuginfo = find_kernel_debuginfo(kernelver)
+        if not debuginfo:
+            if vmlinux is not None:
+                return vmlinux
+            raise Exception("Unable to find debuginfo package and "
+                            "no cached vmlinux file")
+
+        # FIXME: Merge kernel_path with this logic
+        if "EL" in kernelver.release:
+            if kernelver.flavour is None:
+                pattern = "EL/vmlinux"
+            else:
+                pattern = "EL%s/vmlinux" % kernelver.flavour
+        else:
+            pattern = "/vmlinux"
+
+        # Now open the kernel-debuginfo and get a listing of the files we may need
+        vmlinux_path = None
+        debugfiles = {}
+        lines = run(["rpm", "-qpl", str(debuginfo)],
+                    stdout=PIPE, stderr=DEVNULL, encoding='utf-8').stdout.splitlines()
+        for line in lines:
+            if line.endswith(pattern):
+                vmlinux_path = line
+                continue
+
+            match = KO_DEBUG_PARSER.match(line)
+            if not match:
+                continue
+
+            # only pick the correct flavour for el4
+            if "EL" in kernelver.release:
+                if kernelver.flavour is None:
+                    pattern2 = "EL/"
+                else:
+                    pattern2 = "EL%s/" % kernelver.flavour
+
+                if pattern2 not in str(Path(line).parent):
+                    continue
+
+            # '-' in file name is transformed to '_' in module name
+            debugfiles[match.group(1).replace("-", "_")] = line
+
+        # Only look for the vmlinux file here if it's not already been found above
+        # Note the dependency from this code on the debuginfo file list
+        if vmlinux is None:
+            vmlinux_debuginfo = debugdir_base / vmlinux_path.lstrip("/")
+            cache_files_from_debuginfo(debuginfo, debugdir_base, [vmlinux_path])
+            if vmlinux_debuginfo.is_file():
+                log_info("Found cached vmlinux at new debuginfo location: {}".format(vmlinux_debuginfo))
+                vmlinux = str(vmlinux_debuginfo)
+                task.set_vmlinux(vmlinux)
+            else:
+                raise Exception("Failed vmlinux caching from debuginfo at location: {}".format(vmlinux_debuginfo))
+
+        # Obtain the list of modules this vmcore requires
+        if chroot:
+            crash_normal = ["/usr/bin/mock", "--configdir", str(chroot), "--cwd", str(task.get_crashdir()),
+                            "chroot", "--", "crash -s %s %s" % (self._vmcore_path, vmlinux)]
+        else:
+            crash_normal = crash_cmd + ["-s", str(self._vmcore_path), vmlinux]
+        stdout, returncode = task.run_crash_cmdline(crash_normal, "mod\nquit")
+        if returncode == 1 and "el5" in kernelver.release:
+            log_info("Unable to list modules but el5 detected, trying crash fixup for vmss files")
+            crash_cmd.append("--machdep")
+            crash_cmd.append("phys_base=0x200000")
+            log_info("trying crash_cmd = " + str(crash_cmd))
+            # FIXME: mock
+            crash_normal = crash_cmd + ["-s", str(self._vmcore_path), vmlinux]
+            stdout, returncode = task.run_crash_cmdline(crash_normal, "mod\nquit")
+
+        # If we fail to get the list of modules, is the vmcore even usable?
+        if returncode:
+            log_warn("Unable to list modules: crash exited with %d:\n%s" % (returncode, stdout))
+            self._vmlinux = vmlinux
+            return vmlinux
+
+        modules = []
+        for line in stdout.decode('utf-8').splitlines():
+            # skip header
+            if "NAME" in line:
+                continue
+
+            if " " in line:
+                modules.append(line.split()[1])
+
+        todo = []
+        for module in modules:
+            if module in debugfiles and not (debugdir_base / debugfiles[module].lstrip("/")).is_file():
+                todo.append(debugfiles[module])
+
+        cache_files_from_debuginfo(debuginfo, debugdir_base, todo)
+
+        self._release = kernelver
+        self._vmlinux = vmlinux
+        return vmlinux
 
 
 ### create ConfigClass instance on import ###
