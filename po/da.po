@@ -1,131 +1,159 @@
-# scootergrisen <scootergrisen@gmail.com>, 2017. #zanata
-# scootergrisen <scootergrisen@gmail.com>, 2018. #zanata
+# scootergrisen <scootergrisen@gmail.com>, 2017. #zanata, 2020.
+# scootergrisen <scootergrisen@gmail.com>, 2018. #zanata, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-02 11:31+0100\n"
-"PO-Revision-Date: 2018-09-20 09:50+0000\n"
+"POT-Creation-Date: 2020-05-27 21:44+0200\n"
+"PO-Revision-Date: 2020-07-25 03:28+0000\n"
 "Last-Translator: scootergrisen <scootergrisen@gmail.com>\n"
-"Language-Team: Danish\n"
+"Language-Team: Danish <https://translate.fedoraproject.org/projects/abrt/"
+"retrace-server/da/>\n"
 "Language: da\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.1.1\n"
 
-#: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
-#: ../src/status.wsgi:11
+#: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
+#: ../src/status.wsgi:19
 msgid "You must use HTTPS"
 msgstr "Du skal bruge HTTPS"
 
-#: ../src/backtrace.wsgi:16 ../src/log.wsgi:16 ../src/status.wsgi:16
+#: ../src/backtrace.wsgi:23 ../src/log.wsgi:24 ../src/status.wsgi:24
 msgid "Invalid URL"
 msgstr "Ugyldig URL"
 
-#: ../src/backtrace.wsgi:22 ../src/log.wsgi:21 ../src/status.wsgi:22
+#: ../src/backtrace.wsgi:29 ../src/log.wsgi:29 ../src/status.wsgi:30
 msgid "There is no such task"
 msgstr "Opgaven findes ikke"
 
-#: ../src/backtrace.wsgi:27 ../src/log.wsgi:26 ../src/status.wsgi:27
+#: ../src/backtrace.wsgi:34 ../src/log.wsgi:34 ../src/status.wsgi:35
 msgid "Invalid password"
 msgstr "Ugyldig adgangskode"
 
-#: ../src/backtrace.wsgi:31
+#: ../src/backtrace.wsgi:38
 msgid "There is no backtrace for the specified task"
 msgstr "Der er ingen backtrace til den angivne opgave"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:70
+#: ../src/create.wsgi:60 ../src/create.wsgi:116
 msgid "Retrace server is fully loaded at the moment"
 msgstr "Retrace-server er fuldt optaget på nuværende tidspunkt"
 
-#: ../src/create.wsgi:23
+#: ../src/create.wsgi:64
 msgid "You must use POST method"
 msgstr "Du skal bruge POST-metode"
 
-#: ../src/create.wsgi:27
+#: ../src/create.wsgi:68
 msgid "Specified archive format is not supported"
 msgstr "Angivne arkivformat understøttes ikke"
 
-#: ../src/create.wsgi:31
+#: ../src/create.wsgi:72
 msgid "You need to set Content-Length header properly"
 msgstr "Du skal sætte Content-Length-header ordentligt"
 
-#: ../src/create.wsgi:35
+#: ../src/create.wsgi:76
 msgid "Specified archive is too large"
 msgstr "Angivne arkiv er for stort"
 
-#: ../src/create.wsgi:47
+#: ../src/create.wsgi:81
+msgid "X-CoreFileDirectory header has been disabled by server administrator"
+msgstr ""
+"X-CoreFileDirectory-header er blevet deaktiveret af serveradministrator"
+
+#: ../src/create.wsgi:91
 msgid "Unable to create working directory"
 msgstr "Kan ikke oprette arbejdsmappe"
 
-#: ../src/create.wsgi:53
+#: ../src/create.wsgi:97
 msgid "Unable to obtain disk free space"
 msgstr "Kan ikke hente diskens ledige plads"
 
-#: ../src/create.wsgi:57 ../src/create.wsgi:99
+#: ../src/create.wsgi:101 ../src/create.wsgi:172
 msgid "There is not enough storage space on the server"
 msgstr "Der er ikke nok lagerplads på serveren"
 
-#: ../src/create.wsgi:63
+#: ../src/create.wsgi:109
 msgid "Unable to create new task"
 msgstr "Kan ikke oprette ny opgave"
 
-#: ../src/create.wsgi:83
+#: ../src/create.wsgi:121
+msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+msgstr "Mappen angivet i 'X-CoreFileDirectory' findes ikke"
+
+#: ../src/create.wsgi:127
+#, c-format
+msgid ""
+"There are %d files in the '%s' directory. Only a single archive is supported "
+"at the moment"
+msgstr ""
+"Der er %d filer i mappen '%s'. Kun et enkelt arkiv understøttes på nuværende "
+"tidspunkt"
+
+#: ../src/create.wsgi:136
+#, c-format
+msgid "You header specifies '%s' type, but the file type does not match"
+msgstr "Din header angiver '%s'-type, men filtypen passer ikke"
+
+#: ../src/create.wsgi:154
 msgid "Unable to save archive"
 msgstr "Kan ikke gemme arkiv"
 
-#: ../src/create.wsgi:89
+#: ../src/create.wsgi:162
 msgid "Unable to obtain unpacked size"
 msgstr "Kan ikke hente udpakket størrelse"
 
-#: ../src/create.wsgi:94
+#: ../src/create.wsgi:167
 msgid "Specified archive's content is too large"
 msgstr "Angivne arkivers indhold er for stort"
 
-#: ../src/create.wsgi:111
+#: ../src/create.wsgi:184
 msgid "Unable to unpack archive"
 msgstr "Kan ikke udpakke arkiv"
 
-#: ../src/create.wsgi:123
+#: ../src/create.wsgi:197
 msgid "Symlinks are not allowed to be in the archive"
 msgstr "Symlinks er ikke tilladt i arkivet"
 
-#: ../src/create.wsgi:131
+#: ../src/create.wsgi:204
 #, c-format
 msgid "The '%s' file is larger than expected"
 msgstr "Filen '%s' er større end ventet"
 
-#: ../src/create.wsgi:135
+#: ../src/create.wsgi:208
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
 msgstr "Filen '%s' må ikke være i arkivet"
 
-#: ../src/create.wsgi:147
+#: ../src/create.wsgi:223
+msgid "Interactive tasks were disabled by server administrator"
+msgstr "Interaktive opgaver er deaktiveret af serveradministrator"
+
+#: ../src/create.wsgi:232
 #, c-format
 msgid "Required file '%s' is missing"
 msgstr "Krævet fil '%s' mangler"
 
-#: ../src/index.wsgi:12
+#: ../src/index.wsgi:20
 msgid "Retrace Server"
 msgstr "Retrace-server"
 
-#: ../src/index.wsgi:13
+#: ../src/index.wsgi:21
 msgid "Welcome to Retrace Server"
 msgstr "Velkommen til retrace-server"
 
-#: ../src/index.wsgi:15
+#: ../src/index.wsgi:23
 msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
-"information at Retrace Server&apos;s wiki:"
+"information at Retrace Server&apos;s github:"
 msgstr ""
 "Retrace-server er en tjeneste som giver mulighed for at analysere kernedump "
 "og generere backtrace over netværk. Du kan finde yderligere information på "
-"retrace-server&apos;s wiki:"
+"retrace-server&apos;s github:"
 
-#: ../src/index.wsgi:21
+#: ../src/index.wsgi:29
 msgid ""
 "Only the secure HTTPS connection is now allowed by the server. HTTP requests "
 "will be denied."
@@ -133,7 +161,7 @@ msgstr ""
 "Kun den sikre HTTPS-forbindelse er nu tilladt af serveren. HTTP-"
 "forespørgsler vil blive nægtet."
 
-#: ../src/index.wsgi:23
+#: ../src/index.wsgi:31
 msgid ""
 "Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
 "of security reasons."
@@ -141,18 +169,13 @@ msgstr ""
 "Både HTTP og HTTPS er tilladt. Brug af HTTPS anbefales på det kraftigste af "
 "sikkerhedsårsager."
 
-#: ../src/index.wsgi:24
+#: ../src/index.wsgi:32
 #, c-format
 msgid "The following releases are supported: %s"
 msgstr "Følgende udgivelser understøttes: %s"
 
-#: ../src/index.wsgi:26
-#, c-format
-msgid ""
-"At the moment the server is loaded for %d%% (running %d out of %d jobs)."
-msgstr "Når serveren indlæses for %d%% (kører %d ud af %d jobs)."
-
-#: ../src/index.wsgi:27
+#. CONFIG["MaxParallelTasks"], active, CONFIG["MaxParallelTasks"]))
+#: ../src/index.wsgi:36
 #, c-format
 msgid ""
 "Your coredump is only kept on the server while the retrace job is running. "
@@ -171,7 +194,7 @@ msgstr ""
 "slettes efter %d timers inaktivitet. Ingen data som muligvis er private "
 "opbevares på serveren længere end det."
 
-#: ../src/index.wsgi:33
+#: ../src/index.wsgi:43
 msgid ""
 "Your coredump is only used for retrace purposes. Server administrators are "
 "not trying to get your private data from coredumps or backtraces. Using a "
@@ -185,102 +208,88 @@ msgstr ""
 "Serveradministratorer er ikke ansvarlige for problemer relateret til "
 "anvendelsen af en usikker kanal (såsom HTTP)."
 
-#: ../src/log.wsgi:30
+#: ../src/index.wsgi:34
+#, c-format
+msgid ""
+"At the moment the server is loaded for %d%% (running %d out of %d jobs)."
+msgstr "Når serveren indlæses for %d%% (kører %d ud af %d jobs)."
+
+#: ../src/log.wsgi:38
 msgid "There is no log for the specified task"
 msgstr "Der er ingen log for den angive opgave"
 
-#: ../src/stats.wsgi:10
+#: ../src/stats.wsgi:36
 msgid "Architecture"
 msgstr "Arkitektur"
 
-#: ../src/stats.wsgi:11
+#: ../src/stats.wsgi:37
 msgid "Architectures"
 msgstr "Arkitekturer"
 
-#: ../src/stats.wsgi:12
+#: ../src/stats.wsgi:38
 msgid "Build-id"
 msgstr "Bygge-id"
 
-#: ../src/stats.wsgi:13
+#: ../src/stats.wsgi:39
 msgid "Count"
 msgstr "Antal"
 
-#: ../src/stats.wsgi:14
+#: ../src/stats.wsgi:40
 msgid "Denied jobs"
 msgstr "Nægtet jobs"
 
-#: ../src/stats.wsgi:15
+#: ../src/stats.wsgi:41
 msgid "Failed"
 msgstr "Mislykkedes"
 
-#: ../src/stats.wsgi:16
+#: ../src/stats.wsgi:42
 msgid "First retrace"
 msgstr "Første retrace"
 
-#: ../src/stats.wsgi:17
+#: ../src/stats.wsgi:43
 msgid "Global statistics"
 msgstr "Global statistik"
 
-#: ../src/stats.wsgi:18
+#: ../src/stats.wsgi:44
 msgid "Missing build-ids"
 msgstr "Manglende bygge-id'er"
 
-#: ../src/stats.wsgi:19
+#: ../src/stats.wsgi:45
 msgid "Name"
 msgstr "Navn"
 
-#: ../src/stats.wsgi:20
+#: ../src/stats.wsgi:46
 msgid "Release"
 msgstr "Udgivelse"
 
-#: ../src/stats.wsgi:21
+#: ../src/stats.wsgi:47
 msgid "Releases"
 msgstr "Udgivelser"
 
-#: ../src/stats.wsgi:22
+#: ../src/stats.wsgi:48
 msgid "Required packages"
 msgstr "Krævet pakker"
 
-#: ../src/stats.wsgi:23
+#: ../src/stats.wsgi:49
 msgid "Retraced packages"
 msgstr "Retraced pakker"
 
-#: ../src/stats.wsgi:24
+#: ../src/stats.wsgi:50
 msgid "Retrace Server statistics"
 msgstr "Retrace-server statistik"
 
-#: ../src/stats.wsgi:25
+#: ../src/stats.wsgi:51
 msgid "Shared object name"
 msgstr "Delt objektnavn"
 
-#: ../src/stats.wsgi:26
+#: ../src/stats.wsgi:52
 msgid "Successful"
 msgstr "Succes"
 
-#: ../src/stats.wsgi:27
+#: ../src/stats.wsgi:53
 msgid "Total"
 msgstr "Samlet"
 
-#: ../src/stats.wsgi:28
+#: ../src/stats.wsgi:54
 msgid "Versions"
 msgstr "Versioner"
-
-#~ msgid "X-CoreFileDirectory header has been disabled by server administrator"
-#~ msgstr ""
-#~ "X-CoreFileDirectory-header er blevet deaktiveret af serveradministrator"
-
-#~ msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-#~ msgstr "Mappen angivet i 'X-CoreFileDirectory' findes ikke"
-
-#~ msgid ""
-#~ "There are %d files in the '%s' directory. Only a single archive is "
-#~ "supported at the moment"
-#~ msgstr ""
-#~ "Der er %d filer i mappen '%s'. Kun et enkelt arkiv understøttes på "
-#~ "nuværende tidspunkt"
-
-#~ msgid "You header specifies '%s' type, but the file type does not match"
-#~ msgstr "Din header angiver '%s'-type, men filtypen passer ikke"
-
-#~ msgid "Interactive tasks were disabled by server administrator"
-#~ msgstr "Interaktive opgaver er deaktiveret af serveradministrator"

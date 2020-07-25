@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-02 11:31+0100\n"
+"POT-Creation-Date: 2020-05-27 21:44+0200\n"
 "PO-Revision-Date: 2017-04-17 03:59+0000\n"
 "Last-Translator: Tobias Weise <tobias.weise@web.de>\n"
 "Language-Team: German\n"
@@ -15,117 +15,152 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 4.6.2\n"
 
-#: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
-#: ../src/status.wsgi:11
+#: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
+#: ../src/status.wsgi:19
 msgid "You must use HTTPS"
 msgstr "Sie müssen HTTPS verwenden"
 
-#: ../src/backtrace.wsgi:16 ../src/log.wsgi:16 ../src/status.wsgi:16
+#: ../src/backtrace.wsgi:23 ../src/log.wsgi:24 ../src/status.wsgi:24
 msgid "Invalid URL"
 msgstr "Ungültige URL"
 
-#: ../src/backtrace.wsgi:22 ../src/log.wsgi:21 ../src/status.wsgi:22
+#: ../src/backtrace.wsgi:29 ../src/log.wsgi:29 ../src/status.wsgi:30
 msgid "There is no such task"
 msgstr "Es gibt keine solche Aufgabe"
 
-#: ../src/backtrace.wsgi:27 ../src/log.wsgi:26 ../src/status.wsgi:27
+#: ../src/backtrace.wsgi:34 ../src/log.wsgi:34 ../src/status.wsgi:35
 msgid "Invalid password"
 msgstr "Ungültiges Passwort"
 
-#: ../src/backtrace.wsgi:31
+#: ../src/backtrace.wsgi:38
 msgid "There is no backtrace for the specified task"
 msgstr "Es gibt keine Ablaufverfolgung für die angegebenen Aufgabe"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:70
+#: ../src/create.wsgi:60 ../src/create.wsgi:116
 msgid "Retrace server is fully loaded at the moment"
 msgstr "Der Retrace-Server ist im Moment vollständig ausgelastet"
 
-#: ../src/create.wsgi:23
+#: ../src/create.wsgi:64
 msgid "You must use POST method"
 msgstr "Sie müssen eine POST-Methode verwenden"
 
-#: ../src/create.wsgi:27
+#: ../src/create.wsgi:68
 msgid "Specified archive format is not supported"
 msgstr "Das angegebene Archivformat wird nicht unterstützt"
 
-#: ../src/create.wsgi:31
+#: ../src/create.wsgi:72
 msgid "You need to set Content-Length header properly"
 msgstr "Sie müssen den Content-Length-Header richtig einstellen"
 
-#: ../src/create.wsgi:35
+#: ../src/create.wsgi:76
 msgid "Specified archive is too large"
 msgstr "Das angegebene Archiv ist zu groß"
 
-#: ../src/create.wsgi:47
+#: ../src/create.wsgi:81
+msgid "X-CoreFileDirectory header has been disabled by server administrator"
+msgstr ""
+"Der X-CoreFileDirectory-Header wurde vom Serveradministrator deaktiviert"
+
+#: ../src/create.wsgi:91
 msgid "Unable to create working directory"
 msgstr "Das Arbeitsverzeichnis konnte nicht angelegt werden"
 
-#: ../src/create.wsgi:53
+#: ../src/create.wsgi:97
 msgid "Unable to obtain disk free space"
 msgstr "Der freie Speicher des Laufwerks konnte nicht ermittelt werden"
 
-#: ../src/create.wsgi:57 ../src/create.wsgi:99
+#: ../src/create.wsgi:101 ../src/create.wsgi:172
 msgid "There is not enough storage space on the server"
 msgstr "Es ist nicht genügend Speicherplatz auf dem Server vorhanden"
 
-#: ../src/create.wsgi:63
+#: ../src/create.wsgi:109
 msgid "Unable to create new task"
 msgstr "Es konnte kein neuer Task angelegt werden"
 
-#: ../src/create.wsgi:83
+#: ../src/create.wsgi:121
+msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+msgstr ""
+"Das Verzeichnis, welches in \"X-CoreFileDirectory\" spezifiziert wird, "
+"existiert nicht"
+
+#: ../src/create.wsgi:127
+#, c-format
+msgid ""
+"There are %d files in the '%s' directory. Only a single archive is supported "
+"at the moment"
+msgstr ""
+"Es befinden sich %d Dateien im Verzeichnis '%s'. Nur ein einziges Archiv "
+"kann im Moment unterstützt werden"
+
+#: ../src/create.wsgi:136
+#, c-format
+msgid "You header specifies '%s' type, but the file type does not match"
+msgstr ""
+"Ihr Header legt den Typ %s fest, aber die Dateityp stimmt nicht überein"
+
+#: ../src/create.wsgi:154
 msgid "Unable to save archive"
 msgstr "Archiv konnte nicht gespeichert werden"
 
-#: ../src/create.wsgi:89
+#: ../src/create.wsgi:162
 msgid "Unable to obtain unpacked size"
 msgstr "Die ausgepackte Größe konnte nicht ermittelt werden"
 
-#: ../src/create.wsgi:94
+#: ../src/create.wsgi:167
 msgid "Specified archive's content is too large"
 msgstr "Der angegebene Inhalt des Archivs ist zu groß"
 
-#: ../src/create.wsgi:111
+#: ../src/create.wsgi:184
 msgid "Unable to unpack archive"
 msgstr "Archiv konnte nicht entpackt werden"
 
-#: ../src/create.wsgi:123
+#: ../src/create.wsgi:197
 msgid "Symlinks are not allowed to be in the archive"
 msgstr "Symlinks dürfen in einem Archiv nicht vorkommen"
 
-#: ../src/create.wsgi:131
+#: ../src/create.wsgi:204
 #, c-format
 msgid "The '%s' file is larger than expected"
 msgstr "Die Datei '%s' ist größer als erwartet"
 
-#: ../src/create.wsgi:135
+#: ../src/create.wsgi:208
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
 msgstr "Die Datei '%s' darf nicht ins Archiv aufgenommen werden"
 
-#: ../src/create.wsgi:147
+#: ../src/create.wsgi:223
+msgid "Interactive tasks were disabled by server administrator"
+msgstr "Interaktive Aufgaben wurde von Serveradministrator deaktiviert"
+
+#: ../src/create.wsgi:232
 #, c-format
 msgid "Required file '%s' is missing"
 msgstr "Die benötigte Datei '%s' kann nicht gefunden werden"
 
-#: ../src/index.wsgi:12
+#: ../src/index.wsgi:20
 msgid "Retrace Server"
 msgstr "Retrace-Server"
 
-#: ../src/index.wsgi:13
+#: ../src/index.wsgi:21
 msgid "Welcome to Retrace Server"
 msgstr "Willkommen beim Retrace-Server"
 
-#: ../src/index.wsgi:15
+#: ../src/index.wsgi:23
+#, fuzzy
+#| msgid ""
+#| "Retrace Server is a service that provides the possibility to analyze "
+#| "coredump and generate backtrace over network. You can find further "
+#| "information at Retrace Server&apos;s wiki:"
 msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
-"information at Retrace Server&apos;s wiki:"
+"information at Retrace Server&apos;s github:"
 msgstr ""
 "Der Retrace-Server ist ein Dienstprogramm, das die Möglichkeit bietet, "
 "Speicherauszüge zu analysieren und Ablaufverfolgungen über das Netzwerk zu "
 "erstellen. Weitere Informationen finden Sie im Retrace-Server-Wiki:"
 
-#: ../src/index.wsgi:21
+#: ../src/index.wsgi:29
 msgid ""
 "Only the secure HTTPS connection is now allowed by the server. HTTP requests "
 "will be denied."
@@ -133,7 +168,7 @@ msgstr ""
 "Der Server erlaubt im Moment nur HTTPS Verbindungen. HTTP Anfragen werden "
 "abgewiesen."
 
-#: ../src/index.wsgi:23
+#: ../src/index.wsgi:31
 msgid ""
 "Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
 "of security reasons."
@@ -141,20 +176,13 @@ msgstr ""
 "HTTP und HTTPS sind erlaubt. Die Verwendung von HTTPS wird aus "
 "Sicherheitsgründen dringend empfohlen"
 
-#: ../src/index.wsgi:24
+#: ../src/index.wsgi:32
 #, c-format
 msgid "The following releases are supported: %s"
 msgstr "Die folgenden Release werden unterstützt: %s"
 
-#: ../src/index.wsgi:26
-#, c-format
-msgid ""
-"At the moment the server is loaded for %d%% (running %d out of %d jobs)."
-msgstr ""
-"Im Moment ist der Server zu %d%% ausgelastet (es werden %d von %d Aufgaben "
-"ausgeführt)."
-
-#: ../src/index.wsgi:27
+#. CONFIG["MaxParallelTasks"], active, CONFIG["MaxParallelTasks"]))
+#: ../src/index.wsgi:36
 #, c-format
 msgid ""
 "Your coredump is only kept on the server while the retrace job is running. "
@@ -175,7 +203,7 @@ msgstr ""
 "Keine potentiell vertraulichen Daten werden länger auf dem Server "
 "gespeichert."
 
-#: ../src/index.wsgi:33
+#: ../src/index.wsgi:43
 msgid ""
 "Your coredump is only used for retrace purposes. Server administrators are "
 "not trying to get your private data from coredumps or backtraces. Using a "
@@ -190,105 +218,90 @@ msgstr ""
 "sind nicht verantwortlich für die Verwendung unsicherer Kommunikationskanäle "
 "(wie HTTP)."
 
-#: ../src/log.wsgi:30
+#: ../src/index.wsgi:34
+#, c-format
+msgid ""
+"At the moment the server is loaded for %d%% (running %d out of %d jobs)."
+msgstr ""
+"Im Moment ist der Server zu %d%% ausgelastet (es werden %d von %d Aufgaben "
+"ausgeführt)."
+
+#: ../src/log.wsgi:38
 msgid "There is no log for the specified task"
 msgstr "Für die angegebene Aufgabe gibt es keinen Log"
 
-#: ../src/stats.wsgi:10
+#: ../src/stats.wsgi:36
 msgid "Architecture"
 msgstr "Architektur"
 
-#: ../src/stats.wsgi:11
+#: ../src/stats.wsgi:37
 msgid "Architectures"
 msgstr "Architekturen"
 
-#: ../src/stats.wsgi:12
+#: ../src/stats.wsgi:38
 msgid "Build-id"
 msgstr "Build-ID"
 
-#: ../src/stats.wsgi:13
+#: ../src/stats.wsgi:39
 msgid "Count"
 msgstr "Anzahl"
 
-#: ../src/stats.wsgi:14
+#: ../src/stats.wsgi:40
 msgid "Denied jobs"
 msgstr "Abgewiesene Aufgaben"
 
-#: ../src/stats.wsgi:15
+#: ../src/stats.wsgi:41
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
-#: ../src/stats.wsgi:16
+#: ../src/stats.wsgi:42
 msgid "First retrace"
 msgstr "Erster Retrace"
 
-#: ../src/stats.wsgi:17
+#: ../src/stats.wsgi:43
 msgid "Global statistics"
 msgstr "Globale Statistik"
 
-#: ../src/stats.wsgi:18
+#: ../src/stats.wsgi:44
 msgid "Missing build-ids"
 msgstr "Fehlende Build-IDs"
 
-#: ../src/stats.wsgi:19
+#: ../src/stats.wsgi:45
 msgid "Name"
 msgstr "Name"
 
-#: ../src/stats.wsgi:20
+#: ../src/stats.wsgi:46
 msgid "Release"
 msgstr "Release"
 
-#: ../src/stats.wsgi:21
+#: ../src/stats.wsgi:47
 msgid "Releases"
 msgstr "Release"
 
-#: ../src/stats.wsgi:22
+#: ../src/stats.wsgi:48
 msgid "Required packages"
 msgstr "Benötigte Pakete"
 
-#: ../src/stats.wsgi:23
+#: ../src/stats.wsgi:49
 msgid "Retraced packages"
 msgstr "Zurückverfolgte Pakete"
 
-#: ../src/stats.wsgi:24
+#: ../src/stats.wsgi:50
 msgid "Retrace Server statistics"
 msgstr "Retrace-Server Statistiken"
 
-#: ../src/stats.wsgi:25
+#: ../src/stats.wsgi:51
 msgid "Shared object name"
 msgstr "Names des geteilten Objekts"
 
-#: ../src/stats.wsgi:26
+#: ../src/stats.wsgi:52
 msgid "Successful"
 msgstr "Erfolgreich"
 
-#: ../src/stats.wsgi:27
+#: ../src/stats.wsgi:53
 msgid "Total"
 msgstr "Insgesamt"
 
-#: ../src/stats.wsgi:28
+#: ../src/stats.wsgi:54
 msgid "Versions"
 msgstr "Versionen"
-
-#~ msgid "X-CoreFileDirectory header has been disabled by server administrator"
-#~ msgstr ""
-#~ "Der X-CoreFileDirectory-Header wurde vom Serveradministrator deaktiviert"
-
-#~ msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-#~ msgstr ""
-#~ "Das Verzeichnis, welches in \"X-CoreFileDirectory\" spezifiziert wird, "
-#~ "existiert nicht"
-
-#~ msgid ""
-#~ "There are %d files in the '%s' directory. Only a single archive is "
-#~ "supported at the moment"
-#~ msgstr ""
-#~ "Es befinden sich %d Dateien im Verzeichnis '%s'. Nur ein einziges Archiv "
-#~ "kann im Moment unterstützt werden"
-
-#~ msgid "You header specifies '%s' type, but the file type does not match"
-#~ msgstr ""
-#~ "Ihr Header legt den Typ %s fest, aber die Dateityp stimmt nicht überein"
-
-#~ msgid "Interactive tasks were disabled by server administrator"
-#~ msgstr "Interaktive Aufgaben wurde von Serveradministrator deaktiviert"

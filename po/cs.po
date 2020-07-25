@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-02 11:31+0100\n"
+"POT-Creation-Date: 2020-05-27 21:44+0200\n"
 "PO-Revision-Date: 2016-09-03 09:24+0000\n"
 "Last-Translator: Zdenek <chmelarz@gmail.com>\n"
 "Language-Team: Czech\n"
@@ -15,117 +15,146 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2\n"
 "X-Generator: Zanata 4.6.2\n"
 
-#: ../src/backtrace.wsgi:11 ../src/create.wsgi:14 ../src/log.wsgi:11
-#: ../src/status.wsgi:11
+#: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
+#: ../src/status.wsgi:19
 msgid "You must use HTTPS"
 msgstr "Musíte použí HTTPS"
 
-#: ../src/backtrace.wsgi:16 ../src/log.wsgi:16 ../src/status.wsgi:16
+#: ../src/backtrace.wsgi:23 ../src/log.wsgi:24 ../src/status.wsgi:24
 msgid "Invalid URL"
 msgstr "Neplatná URL"
 
-#: ../src/backtrace.wsgi:22 ../src/log.wsgi:21 ../src/status.wsgi:22
+#: ../src/backtrace.wsgi:29 ../src/log.wsgi:29 ../src/status.wsgi:30
 msgid "There is no such task"
 msgstr "Žádná taková úolha neexistuje"
 
-#: ../src/backtrace.wsgi:27 ../src/log.wsgi:26 ../src/status.wsgi:27
+#: ../src/backtrace.wsgi:34 ../src/log.wsgi:34 ../src/status.wsgi:35
 msgid "Invalid password"
 msgstr "Neplatné heslo"
 
-#: ../src/backtrace.wsgi:31
+#: ../src/backtrace.wsgi:38
 msgid "There is no backtrace for the specified task"
 msgstr "backtrace pro zadaný úkol neexistuje"
 
-#: ../src/create.wsgi:19 ../src/create.wsgi:70
+#: ../src/create.wsgi:60 ../src/create.wsgi:116
 msgid "Retrace server is fully loaded at the moment"
 msgstr "Retrace server je momentálně plně vytížen"
 
-#: ../src/create.wsgi:23
+#: ../src/create.wsgi:64
 msgid "You must use POST method"
 msgstr "Musíte použít POST metodu"
 
-#: ../src/create.wsgi:27
+#: ../src/create.wsgi:68
 msgid "Specified archive format is not supported"
 msgstr "Formát zvoleného archívu není podporován"
 
-#: ../src/create.wsgi:31
+#: ../src/create.wsgi:72
 msgid "You need to set Content-Length header properly"
 msgstr "Musíte správně vyplnit Content-Length hlavičku"
 
-#: ../src/create.wsgi:35
+#: ../src/create.wsgi:76
 msgid "Specified archive is too large"
 msgstr "Zvolený archív je příliš velký"
 
-#: ../src/create.wsgi:47
+#: ../src/create.wsgi:81
+msgid "X-CoreFileDirectory header has been disabled by server administrator"
+msgstr "X-CoreFileDirectory hlavička byla zakázana administrátorem serveru"
+
+#: ../src/create.wsgi:91
 msgid "Unable to create working directory"
 msgstr "Není možné vytvořit pracovní adresář"
 
-#: ../src/create.wsgi:53
+#: ../src/create.wsgi:97
 msgid "Unable to obtain disk free space"
 msgstr "Není možné zjistit velikost volného místa na disku"
 
-#: ../src/create.wsgi:57 ../src/create.wsgi:99
+#: ../src/create.wsgi:101 ../src/create.wsgi:172
 msgid "There is not enough storage space on the server"
 msgstr "Na serveru není dostatek volného uložného prostoru"
 
-#: ../src/create.wsgi:63
+#: ../src/create.wsgi:109
 msgid "Unable to create new task"
 msgstr "Není možné vytvořit novou úlohu"
 
-#: ../src/create.wsgi:83
+#: ../src/create.wsgi:121
+msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
+msgstr "Adresář specifikovaný v  'X-CoreFileDirectory'  neexistuje"
+
+#: ../src/create.wsgi:127
+#, c-format
+msgid ""
+"There are %d files in the '%s' directory. Only a single archive is supported "
+"at the moment"
+msgstr "%d souborů v adresáři '%s' . Aktuálně podporován pouze jediný archív"
+
+#: ../src/create.wsgi:136
+#, c-format
+msgid "You header specifies '%s' type, but the file type does not match"
+msgstr "Vaše hlavička určuje typ '%s', ale typ souboru neodpovídá"
+
+#: ../src/create.wsgi:154
 msgid "Unable to save archive"
 msgstr "Není možné uložit archív"
 
-#: ../src/create.wsgi:89
+#: ../src/create.wsgi:162
 msgid "Unable to obtain unpacked size"
 msgstr "Není možné získat velikost po rozbalení"
 
-#: ../src/create.wsgi:94
+#: ../src/create.wsgi:167
 msgid "Specified archive's content is too large"
 msgstr "Obsah zvoleného archívu je příliš velký"
 
-#: ../src/create.wsgi:111
+#: ../src/create.wsgi:184
 msgid "Unable to unpack archive"
 msgstr "Není možné rozbalit archív"
 
-#: ../src/create.wsgi:123
+#: ../src/create.wsgi:197
 msgid "Symlinks are not allowed to be in the archive"
 msgstr "Symbolické odkazy nejsou v archívu povoleny"
 
-#: ../src/create.wsgi:131
+#: ../src/create.wsgi:204
 #, c-format
 msgid "The '%s' file is larger than expected"
 msgstr "Soubor '%s' je větší než bylo očekáváno"
 
-#: ../src/create.wsgi:135
+#: ../src/create.wsgi:208
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
 msgstr "Soubor '%s' se nesmí být součástí archívu"
 
-#: ../src/create.wsgi:147
+#: ../src/create.wsgi:223
+msgid "Interactive tasks were disabled by server administrator"
+msgstr "Interaktivní úlohy jsou administrátorem serveru zakázány"
+
+#: ../src/create.wsgi:232
 #, c-format
 msgid "Required file '%s' is missing"
 msgstr "Chybí vyžadovaný soubor '%s'"
 
-#: ../src/index.wsgi:12
+#: ../src/index.wsgi:20
 msgid "Retrace Server"
 msgstr "Retrace Server"
 
-#: ../src/index.wsgi:13
+#: ../src/index.wsgi:21
 msgid "Welcome to Retrace Server"
 msgstr "Vítejte na Retrace Serveru"
 
-#: ../src/index.wsgi:15
+#: ../src/index.wsgi:23
+#, fuzzy
+#| msgid ""
+#| "Retrace Server is a service that provides the possibility to analyze "
+#| "coredump and generate backtrace over network. You can find further "
+#| "information at Retrace Server&apos;s wiki:"
 msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
-"information at Retrace Server&apos;s wiki:"
+"information at Retrace Server&apos;s github:"
 msgstr ""
 "Retrace server je servis poskytující možnost analýzy obrazu paměti a "
 "generace výpisu volání po síti. Další informace lze nalézt na Wiki Retrace "
 "serveru:"
 
-#: ../src/index.wsgi:21
+#: ../src/index.wsgi:29
 msgid ""
 "Only the secure HTTPS connection is now allowed by the server. HTTP requests "
 "will be denied."
@@ -133,7 +162,7 @@ msgstr ""
 "Server nyní povoluje pouze zabezpečené připojení HTTPS. Požadavek HTTP bude "
 "zamítnut."
 
-#: ../src/index.wsgi:23
+#: ../src/index.wsgi:31
 msgid ""
 "Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
 "of security reasons."
@@ -141,18 +170,13 @@ msgstr ""
 "Oba protokoly HTTP a HTTPS jsou povoleny. Z bezpečnostních důvodů je přísně "
 "doporučeno použití HTTPS."
 
-#: ../src/index.wsgi:24
+#: ../src/index.wsgi:32
 #, c-format
 msgid "The following releases are supported: %s"
 msgstr "Následující vydání jsou podporována: %s"
 
-#: ../src/index.wsgi:26
-#, c-format
-msgid ""
-"At the moment the server is loaded for %d%% (running %d out of %d jobs)."
-msgstr "V tomto okamžiku je server vytížen na %d%% (%d z %d běžících úloh)"
-
-#: ../src/index.wsgi:27
+#. CONFIG["MaxParallelTasks"], active, CONFIG["MaxParallelTasks"]))
+#: ../src/index.wsgi:36
 #, c-format
 msgid ""
 "Your coredump is only kept on the server while the retrace job is running. "
@@ -171,7 +195,7 @@ msgstr ""
 "(včetně obrazu paměti) jsou po %d hodinách neaktivity smazány. Není tak "
 "možné, aby byla soukromá data uložena na serveru déle."
 
-#: ../src/index.wsgi:33
+#: ../src/index.wsgi:43
 msgid ""
 "Your coredump is only used for retrace purposes. Server administrators are "
 "not trying to get your private data from coredumps or backtraces. Using a "
@@ -185,100 +209,88 @@ msgstr ""
 "serveru nejsou zodpovědni za problémy spojené s použitím nezabezpečeného "
 "kanálu (jako je HTTP)."
 
-#: ../src/log.wsgi:30
+#: ../src/index.wsgi:34
+#, c-format
+msgid ""
+"At the moment the server is loaded for %d%% (running %d out of %d jobs)."
+msgstr "V tomto okamžiku je server vytížen na %d%% (%d z %d běžících úloh)"
+
+#: ../src/log.wsgi:38
 msgid "There is no log for the specified task"
 msgstr "Pro zadaný úkol neexistuje žádný protokol"
 
-#: ../src/stats.wsgi:10
+#: ../src/stats.wsgi:36
 msgid "Architecture"
 msgstr "Architektura"
 
-#: ../src/stats.wsgi:11
+#: ../src/stats.wsgi:37
 msgid "Architectures"
 msgstr "Architektury"
 
-#: ../src/stats.wsgi:12
+#: ../src/stats.wsgi:38
 msgid "Build-id"
 msgstr "ID Sestavení"
 
-#: ../src/stats.wsgi:13
+#: ../src/stats.wsgi:39
 msgid "Count"
 msgstr "Počet"
 
-#: ../src/stats.wsgi:14
+#: ../src/stats.wsgi:40
 msgid "Denied jobs"
 msgstr "Nepovolené úlohy"
 
-#: ../src/stats.wsgi:15
+#: ../src/stats.wsgi:41
 msgid "Failed"
 msgstr "Neúspěšný"
 
-#: ../src/stats.wsgi:16
+#: ../src/stats.wsgi:42
 msgid "First retrace"
 msgstr "První retrace"
 
-#: ../src/stats.wsgi:17
+#: ../src/stats.wsgi:43
 msgid "Global statistics"
 msgstr "Globální statistiky"
 
-#: ../src/stats.wsgi:18
+#: ../src/stats.wsgi:44
 msgid "Missing build-ids"
 msgstr "Chybějící ID sestavení"
 
-#: ../src/stats.wsgi:19
+#: ../src/stats.wsgi:45
 msgid "Name"
 msgstr "Jméno"
 
-#: ../src/stats.wsgi:20
+#: ../src/stats.wsgi:46
 msgid "Release"
 msgstr "Vydání"
 
-#: ../src/stats.wsgi:21
+#: ../src/stats.wsgi:47
 msgid "Releases"
 msgstr "Vydání"
 
-#: ../src/stats.wsgi:22
+#: ../src/stats.wsgi:48
 msgid "Required packages"
 msgstr "Požadované balíčky"
 
-#: ../src/stats.wsgi:23
+#: ../src/stats.wsgi:49
 msgid "Retraced packages"
 msgstr "Vystopované balíčky"
 
-#: ../src/stats.wsgi:24
+#: ../src/stats.wsgi:50
 msgid "Retrace Server statistics"
 msgstr "Statistiky retrace serveru"
 
-#: ../src/stats.wsgi:25
+#: ../src/stats.wsgi:51
 msgid "Shared object name"
 msgstr "Jméno sdíleného objektu"
 
-#: ../src/stats.wsgi:26
+#: ../src/stats.wsgi:52
 msgid "Successful"
 msgstr "Úspěšný"
 
-#: ../src/stats.wsgi:27
+#: ../src/stats.wsgi:53
 msgid "Total"
 msgstr "Celkový"
 
-#: ../src/stats.wsgi:28
+#: ../src/stats.wsgi:54
 msgid "Versions"
 msgstr "Verze"
-
-#~ msgid "X-CoreFileDirectory header has been disabled by server administrator"
-#~ msgstr "X-CoreFileDirectory hlavička byla zakázana administrátorem serveru"
-
-#~ msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-#~ msgstr "Adresář specifikovaný v  'X-CoreFileDirectory'  neexistuje"
-
-#~ msgid ""
-#~ "There are %d files in the '%s' directory. Only a single archive is "
-#~ "supported at the moment"
-#~ msgstr ""
-#~ "%d souborů v adresáři '%s' . Aktuálně podporován pouze jediný archív"
-
-#~ msgid "You header specifies '%s' type, but the file type does not match"
-#~ msgstr "Vaše hlavička určuje typ '%s', ale typ souboru neodpovídá"
-
-#~ msgid "Interactive tasks were disabled by server administrator"
-#~ msgstr "Interaktivní úlohy jsou administrátorem serveru zakázány"
