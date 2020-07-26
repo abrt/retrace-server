@@ -1491,7 +1491,7 @@ class RetraceTask:
                 vmcores = []
                 for filename in files:
                     fname, fext = filename.parent / filename.stem, filename.suffix
-                    if self.VMCORE_FILE in fname and fext != ".vmem":
+                    if str(self.VMCORE_FILE) in filename.stem and filename.suffix != ".vmem":
                         vmcores.append(filename)
 
                 # pick the largest file
