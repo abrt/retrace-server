@@ -452,13 +452,13 @@ def get_archive_type(path: Union[str, Path]) -> int:
     log_debug("unknown file type, unpacking finished")
     return ARCHIVE_UNKNOWN
 
-def add_snapshot_suffix(filename: str, snapshot: Path) -> str:
+def add_snapshot_suffix(filename: Path, snapshot: Path) -> str:
     """
     Adds a snapshot suffix to the filename.
     """
     suffix = snapshot.suffix
     if suffix in SNAPSHOT_SUFFIXES:
-        return filename + suffix
+        return filename.with_suffix(suffix)
 
     return filename
 
@@ -468,7 +468,7 @@ def rename_with_suffix(frompath: Path, topath: Path) -> Path:
     # check if the file has a snapshot suffix
     # if it does, keep the suffix
     if not suffix:
-        suffix = add_snapshot_suffix(suffix, frompath)
+        suffix = add_snapshot_suffix(Path(suffix), frompath)
 
     if not topath.suffix == suffix:
         topath = topath.with_suffix(suffix)
