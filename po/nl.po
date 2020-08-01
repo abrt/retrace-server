@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2020-01-23 15:13+0000\n"
+"PO-Revision-Date: 2020-07-26 17:28+0000\n"
 "Last-Translator: Geert Warrink <geert.warrink@onsnet.nu>\n"
 "Language-Team: Dutch <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/nl/>\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 3.10.3\n"
+"X-Generator: Weblate 4.1.1\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -144,11 +144,6 @@ msgid "Welcome to Retrace Server"
 msgstr "Welkom bij Retrace Server"
 
 #: ../src/index.wsgi:23
-#, fuzzy
-#| msgid ""
-#| "Retrace Server is a service that provides the possibility to analyze "
-#| "coredump and generate backtrace over network. You can find further "
-#| "information at Retrace Server&apos;s wiki:"
 msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
@@ -156,7 +151,7 @@ msgid ""
 msgstr ""
 "Retrace Server is een service die mogelijkheden biedt voor het analyseren "
 "van een coredump en het genereren van een backtrace via het network. Je kunt "
-"meer informatie vinden op de wiki van Retrace Server:"
+"meer informatie vinden op de github van Retrace Server:"
 
 #: ../src/index.wsgi:29
 msgid ""
