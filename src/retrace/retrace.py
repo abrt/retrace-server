@@ -1328,9 +1328,9 @@ class RetraceTask:
                      crash_cmdline.replace('\r', '; ').replace('\n', '; '))
             log_warn("  %s" % err)
         except TimeoutExpired:
-            raise Exception("WARNING: crash command: '%s' exceeded " + str(t) +
-                            " second timeout - damaged vmcore?" %
-                            crash_cmdline.replace('\r', '; ').replace('\n', '; '))
+            raise Exception("WARNING: crash command: '%s' exceeded %s "
+                            " second timeout - damaged vmcore?" % (
+                            crash_cmdline.replace('\r', '; ').replace('\n', '; '), t))
         except Exception as err:
             log_warn("crash command: '%s' triggered Unknown exception %s" %
                      (crash_cmdline.replace('\r', '; ').replace('\n', '; '), err))
