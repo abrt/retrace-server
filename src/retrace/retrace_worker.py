@@ -47,7 +47,7 @@ sys.path.insert(0, "/usr/share/retrace-server/")
 CONFIG = Config()
 
 
-class RetraceWorker():
+class RetraceWorker:
     def __init__(self, task: RetraceTask):
         self.plugins = Plugins()
         self.task = task
@@ -89,10 +89,14 @@ class RetraceWorker():
             message += "Task directory: %s\n" % task.get_savedir()
 
             if task.has_started_time():
-                message += "Started: %s\n" % datetime.datetime.fromtimestamp(task.get_started_time())
+                started_time = task.get_started_time()
+                assert isinstance(started_time, int)
+                message += "Started: %s\n" % datetime.datetime.fromtimestamp(started_time)
 
             if task.has_finished_time():
-                message += "Finished: %s\n" % datetime.datetime.fromtimestamp(task.get_finished_time())
+                finished_time = task.get_finished_time()
+                assert isinstance(finished_time, int)
+                message += "Finished: %s\n" % datetime.datetime.fromtimestamp(finished_time)
 
             if task.has_md5sum():
                 message += "MD5sum: %s" % task.get_md5sum()
@@ -181,7 +185,8 @@ class RetraceWorker():
             log_error("An unhandled exception occured: %s" % ex)
 
         if not child or child.returncode != 0:
-            log_error("%s exited with %d\n=== OUTPUT ===\n%s" % (" ".join(cmd), child.returncode, output))
+            exit_code = str(child.returncode) if child else 'unknown'
+            log_error("%s exited with %s\n=== OUTPUT ===\n%s" % (" ".join(cmd), exit_code, output))
             self._fail(errorcode)
 
         return output
@@ -214,7 +219,7 @@ class RetraceWorker():
             return custom_arch
 
         # read architecture from coredump
-        arch = guess_arch(str(corepath))
+        arch = guess_arch(corepath)
 
         if arch is None:
             log_error("Unable to determine architecture from coredump")
@@ -244,7 +249,7 @@ class RetraceWorker():
             self._fail()
         return (crash_package, pkgdata)
 
-    def read_release_file(self, crashdir, crash_package):
+    def read_release_file(self, crashdir: Path, crash_package: str) -> Tuple[str, str, str, bool]:
         # read release, distribution and version from release file
         is_rawhide = False
         release_path = None
@@ -844,8 +849,10 @@ class RetraceWorker():
             task.set_status(STATUS_BACKTRACE)
             log_info(STATUS[STATUS_BACKTRACE])
 
-            crash_normal = task.get_crash_cmd().split() + ["-s", vmcore_path, vmlinux]
-            crash_minimal = task.get_crash_cmd().split() + ["--minimal", "-s", vmcore_path, vmlinux]
+            crash_cmd = task.get_crash_cmd()
+            assert isinstance(crash_cmd, str)
+            crash_normal = crash_cmd.split() + ["-s", str(vmcore_path), vmlinux]
+            crash_minimal = crash_cmd.split() + ["--minimal", "-s", str(vmcore_path), vmlinux]
 
         else:
             raise Exception("RetraceEnvironment set to invalid value")
