@@ -1,12 +1,13 @@
 import os
 import sqlite3
 import time
+from typing import Any, Dict, List, Optional, Tuple
 
 from .retrace import CONFIG
 from .util import parse_rpm_name
 
 
-def init_crashstats_db():
+def init_crashstats_db() -> sqlite3.Connection:
     # create the database group-writable and world-readable
     old_umask = os.umask(0o113)
     con = sqlite3.connect(os.path.join(CONFIG["SaveDir"], CONFIG["DBFile"]))
@@ -47,7 +48,7 @@ def init_crashstats_db():
     return con
 
 
-def save_crashstats(stats, con=None):
+def save_crashstats(stats: Dict[str, Any],  con: Optional[sqlite3.Connection] = None) -> int:
     close = False
     if con is None:
         con = init_crashstats_db()
@@ -70,7 +71,8 @@ def save_crashstats(stats, con=None):
     return query.lastrowid
 
 
-def save_crashstats_success(statsid, pre, post, rootsize, con=None):
+def save_crashstats_success(statsid: int, pre: int, post: int, rootsize: int,
+        con: Optional[sqlite3.Connection] = None) -> None:
     close = False
     if con is None:
         con = init_crashstats_db()
@@ -88,7 +90,7 @@ def save_crashstats_success(statsid, pre, post, rootsize, con=None):
         con.close()
 
 
-def save_crashstats_packages(statsid, packages, con=None):
+def save_crashstats_packages(statsid: int, packages: List[str], con: sqlite3.Connection = None) -> None:
     close = False
     if con is None:
         con = init_crashstats_db()
@@ -120,7 +122,8 @@ def save_crashstats_packages(statsid, packages, con=None):
         con.close()
 
 
-def save_crashstats_build_ids(statsid, buildids, con=None):
+def save_crashstats_build_ids(statsid: int, buildids: List[Tuple[str, str]],
+        con: Optional[sqlite3.Connection] = None) -> None:
     close = False
     if con is None:
         con = init_crashstats_db()
