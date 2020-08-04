@@ -11,7 +11,7 @@ import tarfile
 import logging
 import argparse
 import tempfile
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import requests
 from pathlib import Path
@@ -40,10 +40,10 @@ def prepare_tar(args: Dict[str, Any]) -> Path:
     for itm in ["vra", "os_release", "package", "executable"]:
         if itm in args.keys() and args[itm]:
             LOGGER.info("Adding '%s' into tar", format(itm))
-            fl_name = tmpdir / itm
-            with open(fl_name, "w") as fld:
+            fl_path = tmpdir / itm
+            with fl_path.open("w") as fld:
                 fld.write(args[itm])
-            tar_file.add(fl_name, arcname=itm)
+            tar_file.add(str(fl_path), arcname=itm)
 
     LOGGER.info("Adding '%s' as '%s' into tar", corefile, args['task_type'])
     if not corefile.is_file():
@@ -51,7 +51,7 @@ def prepare_tar(args: Dict[str, Any]) -> Path:
         sys.exit(1)
 
     file_name = add_snapshot_suffix(args['task_type'], corefile)
-    tar_file.add(corefile, arcname=file_name)
+    tar_file.add(str(corefile), arcname=file_name)
 
     if args['vmem']:
         vmem = Path(args['vmem'])
@@ -62,7 +62,7 @@ def prepare_tar(args: Dict[str, Any]) -> Path:
             print("'{0}' does not exists".format(vmem))
             sys.exit(1)
 
-        tar_file.add(vmem, arcname=vmem_file)
+        tar_file.add(str(vmem), arcname=vmem_file)
 
     tar_file.close()
     LOGGER.info("Tar file created as '%s'", tar_name)
