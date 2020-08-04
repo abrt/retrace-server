@@ -654,7 +654,7 @@ def move_dir_contents(source: Union[str, Path], dest: Union[str, Path]) -> None:
     shutil.rmtree(source)
 
 
-class KernelVer():
+class KernelVer:
     FLAVOUR = ["debug", "highbank", "hugemem",
                "kirkwood", "largesmp", "PAE", "omap",
                "smp", "tegra", "xen", "xenU"]
@@ -829,36 +829,36 @@ def find_kernel_debuginfo(kernelver: KernelVer) -> Optional[Path]:
 class RetraceTask:
     """Represents Retrace server's task."""
 
-    BACKTRACE_FILE = Path("retrace_backtrace")
-    CASENO_FILE = Path("caseno")
-    BUGZILLANO_FILE = Path("bugzillano")
-    CRASHRC_FILE = Path("crashrc")
-    CRASH_CMD_FILE = Path("crash_cmd")
-    DOWNLOADED_FILE = Path("downloaded")
-    MD5SUM_FILE = Path("md5sum")
-    FINISHED_FILE = Path("finished_time")
-    KERNELVER_FILE = Path("kernelver")
-    LOG_FILE = Path("retrace_log")
-    MANAGED_FILE = Path("managed")
-    RESULTS_DIR = Path("results")
-    MOCK_LOG_DIR = Path("log")
-    NOTES_FILE = Path("notes")
-    NOTIFY_FILE = Path("notify")
-    PASSWORD_FILE = Path("password")
-    PROGRESS_FILE = Path("progress")
-    REMOTE_FILE = Path("remote")
-    STARTED_FILE = Path("started_time")
-    STATUS_FILE = Path("status")
-    TYPE_FILE = Path("type")
-    URL_FILE = Path("url")
-    VMLINUX_FILE = Path("vmlinux")
-    VMCORE_FILE = Path("vmcore")
-    VMEM_FILE = Path("vmcore.vmem")
-    COREDUMP_FILE = Path("coredump")
-    MOCK_DEFAULT_CFG = Path("default.cfg")
-    MOCK_SITE_DEFAULTS_CFG = Path("site-defaults.cfg")
-    MOCK_LOGGING_INI = Path("logging.ini")
-    DOCKERFILE = Path("Dockerfile")
+    BACKTRACE_FILE = "retrace_backtrace"
+    CASENO_FILE = "caseno"
+    BUGZILLANO_FILE = "bugzillano"
+    CRASHRC_FILE = "crashrc"
+    CRASH_CMD_FILE = "crash_cmd"
+    DOWNLOADED_FILE = "downloaded"
+    MD5SUM_FILE = "md5sum"
+    FINISHED_FILE = "finished_time"
+    KERNELVER_FILE = "kernelver"
+    LOG_FILE = "retrace_log"
+    MANAGED_FILE = "managed"
+    RESULTS_DIR = "results"
+    MOCK_LOG_DIR = "log"
+    NOTES_FILE = "notes"
+    NOTIFY_FILE = "notify"
+    PASSWORD_FILE = "password"
+    PROGRESS_FILE = "progress"
+    REMOTE_FILE = "remote"
+    STARTED_FILE = "started_time"
+    STATUS_FILE = "status"
+    TYPE_FILE = "type"
+    URL_FILE = "url"
+    VMLINUX_FILE = "vmlinux"
+    VMCORE_FILE = "vmcore"
+    VMEM_FILE = "vmcore.vmem"
+    COREDUMP_FILE = "coredump"
+    MOCK_DEFAULT_CFG = "default.cfg"
+    MOCK_SITE_DEFAULTS_CFG = "site-defaults.cfg"
+    MOCK_LOGGING_INI = "logging.ini"
+    DOCKERFILE = "Dockerfile"
 
     def __init__(self, taskid: Optional[int] = None):
         """Creates a new task if taskid is None,
@@ -1114,7 +1114,7 @@ class RetraceTask:
         """Reset the age of the task to the current time."""
         os.utime(self._savedir, None)
 
-    def calculate_md5(self, file_name: str, chunk_size: int = 65536):
+    def calculate_md5(self, file_name: Union[str, Path], chunk_size: int = 65536):
         hash_md5 = hashlib.md5()
         with open(file_name, "rb") as f:
             while True:
@@ -1216,7 +1216,7 @@ class RetraceTask:
         KERNELVER_FILE's contents otherwise."""
         return self.get(RetraceTask.KERNELVER_FILE, maxlen=1 << 16)
 
-    def set_kernelver(self, value):
+    def set_kernelver(self, value: KernelVer) -> None:
         """Atomically writes given value into KERNELVER_FILE."""
         self.set_atomic(RetraceTask.KERNELVER_FILE, str(value))
 
@@ -1271,16 +1271,16 @@ class RetraceTask:
         """
         return self.get_crashdir() / self.vmcore_file
 
-    def add_vmcore_suffix(self, vmcore_path, filename):
+    def add_vmcore_suffix(self, vmcore_path: str, filename: Path) -> str:
         """
         Adds the suffix to a new vmcore path and sets a new vmcore name for the task.
         """
         vmcore_path = add_snapshot_suffix(vmcore_path, filename)
-        self.vmcore_file = vmcore_path.name
+        self.vmcore_file = vmcore_path
 
         return vmcore_path
 
-    def find_vmcore_file(self, filepath=""):
+    def find_vmcore_file(self, filepath: Optional[Union[str, Path]] = None) -> str:
         """
         Return for "vmcore" file or vmcore snapshot files "vmcore(.vmss/.vmsn)" in the file path.
         Saves the file name for the task.
@@ -1299,11 +1299,11 @@ class RetraceTask:
         self.vmcore_file = self.VMCORE_FILE
         return self.VMCORE_FILE
 
-    def has_coredump(self):
+    def has_coredump(self) -> bool:
         coredump_path = self._savedir / self.COREDUMP_FILE
         return coredump_path.is_file()
 
-    def download_block(self, data):
+    def download_block(self, data: bytes) -> None:
         self._progress_write_func(data)
         self._progress_current += len(data)
         progress = "%d%% (%s / %s)" % ((100 * self._progress_current) // self._progress_total,
@@ -1349,7 +1349,7 @@ class RetraceTask:
 
         return cmd_output, returncode
 
-    def download_remote(self, unpack: bool = True) -> List[Tuple[Union[str, Path, List[None]], str]]:
+    def download_remote(self, unpack: bool = True) -> List[Tuple[str, str]]:
         """Downloads all remote resources and returns a list of errors."""
         md5sums = []
         downloaded = []
@@ -1394,24 +1394,24 @@ class RetraceTask:
             # download local file
             elif url.startswith("/") or url.startswith("file:///"):
                 if url.startswith("file://"):
-                    url = Path(url[7:])
+                    path = Path(url[7:])
                 else:
-                    url = Path(url)
+                    path = Path(url)
 
-                log_info("Retrieving local file '%s'" % url)
+                log_info("Retrieving local file '%s'" % path)
 
-                if not url.is_file():
-                    errors.append((url, "File not found"))
+                if not path.is_file():
+                    errors.append((str(path), "File not found"))
                     continue
 
-                filename = url.name
+                filename = path.name
                 targetfile = crashdir / filename
 
                 copy = True
-                if get_archive_type(url) == ARCHIVE_UNKNOWN:
+                if get_archive_type(path) == ARCHIVE_UNKNOWN:
                     try:
                         log_debug("Trying hardlink")
-                        os.link(url, targetfile)
+                        os.link(path, targetfile)
                         copy = False
                         log_debug("Succeeded")
                     except OSError:
@@ -1420,9 +1420,9 @@ class RetraceTask:
                 if copy:
                     try:
                         log_debug("Copying")
-                        shutil.copy(url, targetfile)
+                        shutil.copy(path, targetfile)
                     except Exception as ex:
-                        errors.append((url, str(ex)))
+                        errors.append((str(path), str(ex)))
                         continue
 
                 downloaded.append(str(url))
@@ -1459,12 +1459,12 @@ class RetraceTask:
                     try:
                         unpack_vmcore(fullpath)
                     except Exception as ex:
-                        errors.append((fullpath, str(ex)))
+                        errors.append((str(fullpath), str(ex)))
                 if self.get_type() in [TASK_RETRACE, TASK_RETRACE_INTERACTIVE]:
                     try:
                         unpack_coredump(fullpath)
                     except Exception as ex:
-                        errors.append((fullpath, str(ex)))
+                        errors.append((str(fullpath), str(ex)))
                 st = crashdir.stat()
                 if (st.st_mode & stat.S_IRGRP) == 0 or (st.st_mode & stat.S_IXGRP) == 0:
                     try:
@@ -1477,66 +1477,65 @@ class RetraceTask:
 
         if self.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
             vmcore_path = self.get_vmcore_path()
-            for filename in Path(crashdir).iterdir():
-                if filename.is_dir():
+            for file_path in crashdir.iterdir():
+                if file_path.is_dir():
                     move_dir_contents(fullpath, crashdir)
 
             files = list(crashdir.iterdir())
             if not files:
-                errors.append(([], "No files found in the tarball"))
+                errors.append(("", "No files found in the tarball"))
             elif len(files) == 1:
-                if files[0] != self.VMCORE_FILE:
+                if files[0].name != self.VMCORE_FILE:
                     files[0].rename(vmcore_path)
             else:
                 vmcores = []
-                for filename in files:
-                    fname, fext = filename.parent / filename.stem, filename.suffix
-                    if str(self.VMCORE_FILE) in filename.stem and filename.suffix != ".vmem":
-                        vmcores.append(filename)
+                for file_path in files:
+                    if file_path.stem == self.VMCORE_FILE and file_path.suffix != ".vmem":
+                        vmcores.append(file_path)
 
                 # pick the largest file
                 if not vmcores:
                     absfiles = [f for f in files if f.suffix != ".vmem"]
                     files_sizes = [(f.stat().st_size, f) for f in absfiles]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
-                    vmcore_path = self.add_vmcore_suffix(vmcore_path, largest_file)
+                    vmcore_path = vmcore_path.parent / self.add_vmcore_suffix(vmcore_path.name, largest_file)
                     largest_file.rename(vmcore_path)
                 elif len(vmcores) > 1:
                     files_sizes = [(f.stat().st_size, f) for f in vmcores]
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
-                    vmcore_path = self.add_vmcore_suffix(vmcore_path, largest_file)
+                    vmcore_path = vmcore_path.parent / self.add_vmcore_suffix(vmcore_path.name, largest_file)
                     largest_file.rename(vmcore_path)
                 else:
-                    for filename in files:
-                        if filename == vmcores[0] and vmcores[0].name != self.VMCORE_FILE:
-                            vmcore_path = self.add_vmcore_suffix(vmcore_path, filename)
-                            filename.rename(vmcore_path)
+                    for file_path in files:
+                        if file_path == vmcores[0] and vmcores[0].name != self.VMCORE_FILE:
+                            vmcore_path = vmcore_path.parent / self.add_vmcore_suffix(vmcore_path.name, file_path)
+                            file_path.rename(vmcore_path)
 
-            for filename in crashdir.iterdir():
-                suffix = filename.suffix
+            for file_path in crashdir.iterdir():
+                suffix = file_path.suffix
                 # keep vmcore snapshots with suffixes (vmss/vmsn/vmem)
-                if filename.stem == str(self.VMCORE_FILE) and (not suffix or suffix in SNAPSHOT_SUFFIXES):
+                if file_path.stem == self.VMCORE_FILE and (not suffix or suffix in SNAPSHOT_SUFFIXES):
                     continue
 
-                filename.unlink()
+                file_path.unlink()
 
         if self.get_type() in [TASK_RETRACE, TASK_RETRACE_INTERACTIVE]:
             coredump = crashdir / self.COREDUMP_FILE
-            for filename in crashdir.iterdir():
-                if filename.is_dir():
-                    move_dir_contents(filename, crashdir)
+            for file_path in crashdir.iterdir():
+                if file_path.is_dir():
+                    move_dir_contents(file_path, crashdir)
 
             files = list(crashdir.iterdir())
             if not files:
-                errors.append(([], "No files found in the tarball"))
+                errors.append(("", "No files found in the tarball"))
             elif len(files) == 1:
-                if files[0] != self.COREDUMP_FILE:
+                if files[0].name != self.COREDUMP_FILE:
                     files[0].rename(coredump)
             else:
                 coredumps = []
-                for filename in files:
-                    if self.COREDUMP_FILE in filename:
-                        coredumps.append(filename)
+                for file_path in files:
+                    if file_path.name == self.COREDUMP_FILE:
+                        coredumps.append(file_path)
 
                 # pick the largest file
                 if not coredumps:
@@ -1548,16 +1547,15 @@ class RetraceTask:
                     largest_file = sorted(files_sizes, reverse=True)[0][1]
                     largest_file.rename(coredump)
                 else:
-                    for filename in files:
-                        if filename == coredumps[0]:
-                            if coredumps[0] != self.COREDUMP_FILE:
-                                filename.rename(coredump)
+                    for file_path in files:
+                        if file_path == coredumps[0] and coredumps[0].name != self.COREDUMP_FILE:
+                            file_path.rename(coredump)
 
-            for filename in crashdir.iterdir():
-                if filename.name in REQUIRED_FILES[self.get_type()]+["release", "os_release"]:
+            for file_path in crashdir.iterdir():
+                if file_path.name in REQUIRED_FILES[self.get_type()]+["release", "os_release"]:
                     continue
 
-                filename.unlink()
+                file_path.unlink()
 
             if coredump.is_file():
                 oldsize = coredump.stat().st_size
@@ -1916,8 +1914,10 @@ def get_md5_tasks() -> List[RetraceTask]:
         if not task.has_md5sum():
             continue
 
-        md5 = str.split(task.get_md5sum())[0]
-        if not MD5_PARSER.search(md5):
+        md5sum = task.get_md5sum()
+        # Assured by task.has_md5sum() returning True above.
+        assert isinstance(md5sum, str)
+        if not MD5_PARSER.search(md5sum.split()[0]):
             continue
 
         tasks.append(task)
@@ -1946,7 +1946,7 @@ class KernelVMcore:
     def get_path(self) -> Path:
         return self._vmcore_path
 
-    def is_flattened_format(self):
+    def is_flattened_format(self) -> bool:
         """Returns True if vmcore is in makedumpfile flattened format"""
         if self._is_flattened_format is not None:
             return self._is_flattened_format
@@ -1962,7 +1962,7 @@ class KernelVMcore:
                       (self._vmcore_path, e.errno, e.strerror))
         return self._is_flattened_format
 
-    def convert_flattened_format(self):
+    def convert_flattened_format(self) -> bool:
         """Convert a vmcore in makedumpfile flattened format to normal dumpfile format
         Returns True if conversion has been done and was successful"""
         if not self._is_flattened_format:
@@ -2088,7 +2088,7 @@ class KernelVMcore:
     KERNEL_RELEASE_PARSER = re.compile(b'(\d+\.\d+\.\d+)-(\d+\.[^\x00\s]+)')
     #
 
-    def get_kernel_release(self, crash_cmd: List[str] = ["crash"]) -> KernelVer:
+    def get_kernel_release(self, crash_cmd: List[str] = ["crash"]) -> Optional[KernelVer]:
         if self._release is not None:
             return self._release
 
