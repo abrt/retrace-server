@@ -30,9 +30,10 @@ jobs:
 
       - name: Run mypy
         run: |
-          stubgen --output mypy_stubs --package pyfaf
+          stubgen --output mypy_stubs --package createrepo_c --package dnf --package hawkey \
+            --package pyfaf
           MYPYPATH=$(pwd)/mypy_stubs mypy --config-file=mypy.ini build/src
-          MYPYPATH=$(pwd)/mypy_stubs mypy --config-file=mypy.ini --scripts-are-modules \
+          MYPYPATH=$(pwd)/mypy_stubs:$(pwd)/build/src mypy --config-file=mypy.ini --scripts-are-modules \
             build/src/coredump2packages \
             build/src/retrace-server-bugzilla-query \
             build/src/retrace-server-bugzilla-refresh \
