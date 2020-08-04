@@ -1,3 +1,4 @@
+import copy
 import os
 import re
 import errno
@@ -9,7 +10,7 @@ from dnf.subject import Subject
 from hawkey import FORM_NEVRA
 from pathlib import Path
 from subprocess import run, PIPE
-from typing import Dict, Optional, Tuple, Union
+from typing import cast, Callable, Dict, List, Optional, SupportsFloat, Tuple, Union
 
 from .config import Config, DF_BIN, GZIP_BIN, TAR_BIN, XZ_BIN
 
@@ -58,7 +59,7 @@ HANDLE_ARCHIVE = {
 }
 
 
-def lock(lockfile: Path):
+def lock(lockfile: Path) -> bool:
     try:
         fd = os.open(lockfile, os.O_CREAT | os.O_EXCL, 0o600)
     except OSError as ex:
@@ -70,7 +71,7 @@ def lock(lockfile: Path):
     return True
 
 
-def unlock(lockfile: Path):
+def unlock(lockfile: Path) -> bool:
     try:
         if lockfile.stat().st_size == 0:
             lockfile.unlink()
@@ -80,7 +81,7 @@ def unlock(lockfile: Path):
     return True
 
 
-def free_space(path):
+def free_space(path: str) -> Optional[int]:
     lines = run([DF_BIN, "-B", "1", path], stdout=PIPE, encoding='utf-8').stdout.split("\n")
     for line in lines:
         match = DF_OUTPUT_PARSER.match(line)
@@ -90,7 +91,7 @@ def free_space(path):
     return None
 
 
-def ftp_init():
+def ftp_init() -> ftplib.FTP:
     CONFIG = Config()
     if CONFIG["FTPSSL"]:
         ftp = ftplib.FTP_TLS(CONFIG["FTPHost"])
@@ -104,14 +105,14 @@ def ftp_init():
     return ftp
 
 
-def ftp_close(ftp):
+def ftp_close(ftp: ftplib.FTP) -> None:
     try:
         ftp.quit()
     except ftplib.all_errors:
         ftp.close()
 
 
-def ftp_list_dir(ftpdir="/", ftp=None):
+def ftp_list_dir(ftpdir: str = "/", ftp: Optional[ftplib.FTP] = None) -> List[str]:
     close = False
     if ftp is None:
         ftp = ftp_init()
@@ -125,7 +126,7 @@ def ftp_list_dir(ftpdir="/", ftp=None):
     return result
 
 
-def human_readable_size(bytesize):
+def human_readable_size(bytesize: SupportsFloat) -> str:
     size = float(bytesize)
     unit = 0
     while size > 1024.0 and unit < len(UNITS) - 1:
@@ -135,7 +136,7 @@ def human_readable_size(bytesize):
     return "%.2f %s" % (size, UNITS[unit])
 
 
-def parse_http_gettext(lang, charset):
+def parse_http_gettext(lang: str, charset: str) -> Callable[[str], str]:
     result = lambda x: x
     lang_match = INPUT_LANG_PARSER.match(lang)
     charset_match = INPUT_CHARSET_PARSER.match(charset)
@@ -167,7 +168,8 @@ def parse_rpm_name(name: str) -> Dict[str, Union[int, Optional[str]]]:
     return result
 
 
-def response(start_response, status, body="", extra_headers=[]):
+def response(start_response: Callable[[str, List[Tuple[str, str]]], None], status: str,
+        body: Union[bytes, str] = "", extra_headers: List[Tuple[str, str]] = []) -> List[bytes]:
     if isinstance(body, str):
         body = body.encode("utf-8")
 
@@ -175,12 +177,9 @@ def response(start_response, status, body="", extra_headers=[]):
     return [body]
 
 
-def send_email(frm, to, subject, body):
+def send_email(frm: str, to: Union[str, List[str]], subject: str, body: str) -> None:
     if isinstance(to, list):
         to = ",".join(to)
-
-    if not isinstance(to, str):
-        raise Exception("'to' must be either string or a list of strings")
 
     msg = "From: %s\n" \
           "To: %s\n" \
@@ -214,8 +213,8 @@ def splitFilename(filename: str) -> Union[Tuple[None, None, None, None, None], T
     return nevra.name, nevra.version, nevra.release, nevra.epoch, nevra.arch
 
 
-def unpack(archive, mime, targetdir=None):
-    cmd = list(HANDLE_ARCHIVE[mime]["unpack"])
+def unpack(archive: str, mime: str, targetdir: Optional[str] = None) -> int:
+    cmd = copy.copy(cast(List[str], HANDLE_ARCHIVE[mime]["unpack"]))
     cmd.append(archive)
     if targetdir is not None:
         cmd.append("--directory")
@@ -225,8 +224,8 @@ def unpack(archive, mime, targetdir=None):
     return child.returncode
 
 
-def unpacked_size(archive, mime):
-    command, parser = HANDLE_ARCHIVE[mime]["size"]
+def unpacked_size(archive: str, mime: str) -> Optional[int]:
+    command, parser = cast(Tuple[List[str], re.Pattern[str]], HANDLE_ARCHIVE[mime]["size"])
     lines = run(command + [archive], stdout=PIPE, encoding='utf-8').stdout.split("\n")
     for line in lines:
         match = parser.match(line)
