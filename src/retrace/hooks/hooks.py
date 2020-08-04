@@ -73,7 +73,7 @@ class RetraceHook:
 
         return Path(hooks_path)
 
-    def _get_timeout(self, hook, exc=None):
+    def _get_timeout(self, hook: str, exc: Optional[str] = None) -> int:
         timeout = hooks_config.get("main.timeout", HOOK_TIMEOUT)
 
         if f"{hook}.timeout" in hooks_config:
@@ -84,7 +84,7 @@ class RetraceHook:
 
         return int(timeout)
 
-    def _process_script(self, hook, hook_path: Path, exc_path):
+    def _process_script(self, hook: str, hook_path: Path, exc_path: str) -> None:
         exc = Path(exc_path).name
         script = exc_path
 
@@ -95,10 +95,10 @@ class RetraceHook:
         if hook_cmdline:
             script = shlex.quote(f"{script} {hook_cmdline}")
 
-        script = shlex.split(script)
+        cmd = shlex.split(script)
 
         try:
-            child = run(script, shell=True, timeout=hook_timeout, cwd=hook_path,
+            child = run(cmd, shell=True, timeout=hook_timeout, cwd=hook_path,
                         stdout=PIPE, stderr=PIPE, encoding='utf-8')
             child.check_returncode()
         except TimeoutExpired as ex:
