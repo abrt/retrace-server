@@ -8,6 +8,7 @@ import sys
 import re
 import time
 import bugzilla
+from typing import Dict, List, Set
 
 from pathlib import Path
 
@@ -61,7 +62,7 @@ if __name__ == "__main__":
         config_status = CONFIG.get_list("BugzillaStatus")
         query["status"] = list(set(BUGZILLA_STATUS).difference(config_status))
 
-        found_tasks = {}
+        found_tasks: Dict[str, List[str]] = {}
 
         bugs = [x.bug_id for x in bzapi.query(query)]
 
@@ -73,17 +74,14 @@ if __name__ == "__main__":
             cur_bugs = bzapi.query(query)
             bugs = bugs[250:]
             for bug in cur_bugs:
-                found_ids = []
+                found_ids: Set[str] = set()
                 for comment in bug.comments:
                     for i, trigger_word in enumerate(trigger_words):
                         if trigger_word in comment["text"]:
                             m = re.findall(regexes[i], comment["text"])
-                            if m:
-                                for bzid in m:
-                                    if bzid not in found_ids:
-                                        found_ids.append(bzid)
+                            found_ids.update(m)
                 for f in found_ids:
-                    if f in found_tasks.keys():
+                    if f in found_tasks:
                         found_tasks[f].append(str(bug.bug_id))
                     else:
                         found_tasks[f] = [str(bug.bug_id)]
@@ -103,7 +101,7 @@ if __name__ == "__main__":
             existing_tasks.append(taskdir.name)
 
         log.write("------------Existing tasks with found bugzillas-----------\n")
-        for taskid in found_tasks.keys():
+        for taskid in found_tasks:
             if taskid in existing_tasks:
                 log.write("Task {0} has following bugzilla(s): {1}.\n".format(taskid, ", ".join(found_tasks[taskid])))
                 try:
@@ -113,6 +111,7 @@ if __name__ == "__main__":
 
                 if task.has_bugzillano():
                     current = task.get_bugzillano()
+                    assert isinstance(current, list)
                     found = found_tasks[taskid]
                     # only set bugzillano if some found bugzillas aren't in current bugzillano list
                     if not set(found).issubset(current):
@@ -121,7 +120,7 @@ if __name__ == "__main__":
                     task.set_bugzillano(found_tasks[taskid])
 
         log.write("\n\n------------Found tasks in bugzillas that do not exist on local system-----------\n")
-        for taskid in found_tasks.keys():
+        for taskid in found_tasks:
             if taskid not in existing_tasks:
                 log.write("Unknown task {0} has following bugzilla(s): {1}.\n"
                           .format(taskid, ", ".join(found_tasks[taskid])))
