@@ -21,7 +21,7 @@ from types import ModuleType
 from typing import Any, Iterable, Optional
 
 
-class Plugins(object):
+class Plugins:
     class __plugins:
         plugins_read: bool
         PLUGINS: Iterable[ModuleType]
