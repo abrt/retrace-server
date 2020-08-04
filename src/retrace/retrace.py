@@ -860,7 +860,7 @@ class RetraceTask:
     MOCK_LOGGING_INI = "logging.ini"
     DOCKERFILE = "Dockerfile"
 
-    def __init__(self, taskid: Optional[int] = None):
+    def __init__(self, taskid: Optional[Union[int, str]] = None):
         """Creates a new task if taskid is None,
         loads the task with given ID otherwise."""
 
