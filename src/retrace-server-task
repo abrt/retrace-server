@@ -11,6 +11,8 @@ import tarfile
 import logging
 import argparse
 import tempfile
+from typing import Any, Dict, List, Optional, Tuple
+
 import requests
 from pathlib import Path
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -23,12 +25,12 @@ TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
         TASK_VMCORE_INTERACTIVE = range(5)
 
 
-def ticket_check():
+def ticket_check() -> bool:
     """Check if the user has a valid kerberose ticket."""
     return not os.system("klist -s")
 
 
-def prepare_tar(args):
+def prepare_tar(args: Dict[str, Any]) -> Path:
     """Create tar file containg all necessary files."""
     LOGGER.info("Preparing tar")
     corefile = Path(args['COREFILE'])
@@ -67,7 +69,7 @@ def prepare_tar(args):
     return tar_name
 
 
-def check_response(response, kill=True):
+def check_response(response, kill: bool = True) -> bool:
     """Test return code of response.
 
     If @kill is True. then when code differ from 200 exit the whole script.
@@ -80,11 +82,11 @@ def check_response(response, kill=True):
                   .format(response.status_code, response.text))
             sys.exit(1)
         else:
-            return 1
-    return 0
+            return True
+    return False
 
 
-def parse_task_id(response):
+def parse_task_id(response) -> str:
     """Parse Task_ID from manager page."""
     for line in response.text.split("\n"):
         if "<title>Task #" in line:
@@ -92,7 +94,7 @@ def parse_task_id(response):
     return "unknown"
 
 
-def parse_status(response):
+def parse_status(response) -> str:
     """Parse status from manager page."""
     lines = response.text.split("\n")
     for i, line in enumerate(lines):
@@ -101,7 +103,7 @@ def parse_status(response):
     return "unknown"
 
 
-def parse_md5sum(response):
+def parse_md5sum(response) -> str:
     """Parse md5sum from manager page."""
     lines = response.text.split("\n")
     for line in lines:
@@ -110,7 +112,7 @@ def parse_md5sum(response):
     return "Md5sum not calculated. Not yet downloaded or md5sum not requested."
 
 
-def parse_email(response):
+def parse_email(response) -> Optional[str]:
     """Parse email from manager page."""
     key_string = 'Update e-mail(s)'
     lines = response.text.split("\n")
@@ -122,9 +124,10 @@ def parse_email(response):
             if candidate == key_string:
                 return "Email is not set."
             return candidate
+    return None
 
 
-def parse_caseno(response):
+def parse_caseno(response) -> Optional[str]:
     """Parse caseno from manager page."""
     key_string = 'Update case no.'
     lines = response.text.split("\n")
@@ -136,8 +139,9 @@ def parse_caseno(response):
             if candidate == key_string:
                 return "Case number is not set."
             return candidate
+    return None
 
-def parse_bugzillano(response):
+def parse_bugzillano(response) -> Optional[str]:
     """Parse bugzillano from manager page."""
     key_string = 'Update bugzilla no.'
     lines = response.text.split("\n")
@@ -149,8 +153,9 @@ def parse_bugzillano(response):
             if candidate == key_string:
                 return "Bugzilla number is not set."
             return candidate
+    return None
 
-def restart_existing_task(args):
+def restart_existing_task(args: Dict[str, Any]) -> None:
     """Restart exiting task."""
     LOGGER.info("Restarting task from server %s",
                 args['server'] + "/manager/" + args['TASK_ID'])
@@ -169,7 +174,7 @@ def restart_existing_task(args):
     print("Restarted task '{0}'"
           .format(args['TASK_ID']))
 
-def create_new_task(args):
+def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
     """Start new task."""
     if args['task_input'] == "http":
         LOGGER.info("Starting new http task")
@@ -289,7 +294,7 @@ def create_new_task(args):
     return (task_id, None)
 
 
-def get_status(args):
+def get_status(args: Dict[str, Any]) -> str:
     """Get current task's status."""
     if args['password']:
         LOGGER.info("Getting status from http task on server %s",
@@ -317,7 +322,7 @@ def get_status(args):
     return status
 
 
-def get_md5sum(args):
+def get_md5sum(args: Dict[str, Any]) -> bool:
     """Get md5sum of uploaded file."""
     # Only supported for manager tasks
     if args['password']:
@@ -334,13 +339,13 @@ def get_md5sum(args):
 
     if check_response(res, False):
         print("Error: md5sum is only supported for manager and ftp tasks")
-        return 0
+        return False
     md5sum = parse_md5sum(res)
     print(md5sum)
-    return 1
+    return True
 
 
-def get_email(args):
+def get_email(args: Dict[str, Any]) -> bool:
     """Get email of a task."""
     # Only supported for manager tasks
     if args['password']:
@@ -357,13 +362,13 @@ def get_email(args):
 
     if check_response(res, False):
         print("Error: email is only supported for manager and ftp tasks")
-        return 0
+        return False
     email = parse_email(res)
     print(email)
-    return 1
+    return True
 
 
-def get_caseno(args):
+def get_caseno(args: Dict[str, Any]) -> bool:
     """Get case number of a task."""
     # Only supported for manager tasks
     if args['password']:
@@ -380,12 +385,12 @@ def get_caseno(args):
 
     if check_response(res, False):
         print("Error: caseno is only supported for manager and ftp tasks")
-        return 0
+        return False
     caseno = parse_caseno(res)
     print(caseno)
-    return 1
+    return True
 
-def get_bugzillano(args):
+def get_bugzillano(args: Dict[str, Any]) -> bool:
     """Get bugzilla number of a task."""
     # Only supported for manager tasks
     if args['password']:
@@ -402,12 +407,12 @@ def get_bugzillano(args):
 
     if check_response(res, False):
         print("Error: bugzillano is only supported for manager and ftp tasks")
-        return 0
+        return False
     bugzillano = parse_bugzillano(res)
     print(bugzillano)
-    return 1
+    return True
 
-def get_backtrace(args):
+def get_backtrace(args: Dict[str, Any]) -> bool:
     """Get a backtrace of the task."""
     if args['password']:
         server = args['server'] + "/" + args['TASK_ID'] + "/backtrace"
@@ -427,7 +432,7 @@ def get_backtrace(args):
     if check_response(res, False):
         if res.text == "There is no backtrace for the specified task":
             print("No backtrace. Check status if task is running or failed.")
-            return 0
+            return False
         else:
             print("Error: {0}".format(res.text))
             sys.exit(1)
@@ -435,10 +440,10 @@ def get_backtrace(args):
     with open("backtrace", "w") as fld:
         fld.write(res.text)
     print("Backtrace saved into 'backtrace' file")
-    return 1
+    return True
 
 
-def run_batch(args):
+def run_batch(args: Dict[str, Any]) -> None:
     """Run the whole retrace process in one go."""
     task_id, password = create_new_task(args)
     args['password'] = password
@@ -459,7 +464,7 @@ def run_batch(args):
     get_backtrace(args)
 
 
-def update_email(args):
+def update_email(args: Dict[str, Any]) -> None:
     """Update the email address of the task."""
     # Only supported for manager tasks
     if args['password']:
@@ -476,7 +481,7 @@ def update_email(args):
           .format(args['email'], args['TASK_ID']))
 
 
-def update_caseno(args):
+def update_caseno(args: Dict[str, Any]) -> None:
     """Update case number of the task."""
     # Only supported for manager tasks
     if args['password']:
@@ -492,7 +497,7 @@ def update_caseno(args):
     print("Added case number '{0}' to the task '{1}'"
           .format(args['caseno'], args['TASK_ID']))
 
-def update_bugzillano(args):
+def update_bugzillano(args: Dict[str, Any]) -> None:
     """Update bugzilla number of the task."""
     # Only supported for manager tasks
     if args['password']:
