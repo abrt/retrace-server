@@ -4,17 +4,20 @@
 
 import argparse
 import logging
-import os
 import subprocess
-import sys
+from typing import List, Tuple, Union
 
 import dnf
+import dnf.package
 
 
 logger = logging.getLogger(__name__)
+Package = dnf.package.Package
+PackageList = List[Package]
 
 
-def binary_packages_from_debuginfo_package(debuginfo_package, binobj_path):
+def binary_packages_from_debuginfo_package(debuginfo_package: Package, binobj_path: str,
+        dnfbase: dnf.Base) -> PackageList:
     """
     Returns a list of packages corresponding to the provided debuginfo
     package. One of the packages in the list contains the binary
@@ -24,7 +27,7 @@ def binary_packages_from_debuginfo_package(debuginfo_package, binobj_path):
     binary, we know only packages from the same SRPM as the debuginfo
     package.
     """
-    package_list = []
+    package_list: List[dnf.package.Package] = []
     if binobj_path == '-':  # [exe] without binary name
         logger.info("Dnf search for [exe] without binary name, packages with NVR %s:%s-%s.%s...",
                     debuginfo_package.epoch, debuginfo_package.version,
@@ -55,7 +58,7 @@ def binary_packages_from_debuginfo_package(debuginfo_package, binobj_path):
     return package_list
 
 
-def process_unstrip_entry(build_id, binobj_path):
+def process_unstrip_entry(build_id: str, binobj_path: str, dnfbase: dnf.Base) -> Tuple[PackageList, List[str]]:
     """
     Returns a tuple of two items.
 
@@ -70,9 +73,9 @@ def process_unstrip_entry(build_id, binobj_path):
     package names. This item can be used to associate a coredump with
     some crashing package.
     """
-    package_list = []
-    coredump_package_list = []
-    coredump_base_package_list = []
+    package_list: PackageList = []
+    coredump_package_list: List[str] = []
+    coredump_base_package_list: List[str] = []
     # Ask for a known path from debuginfo package.
     debuginfo_paths = [
             "/usr/lib/debug/.build-id/{0}/{1}.debug".format(build_id[:2], build_id[2:]),
@@ -92,7 +95,7 @@ def process_unstrip_entry(build_id, binobj_path):
     for debuginfo_package in debuginfo_package_list:
         logger.info(" - %s", str(debuginfo_package))
         package_list.append(debuginfo_package)
-        binary_packages = binary_packages_from_debuginfo_package(debuginfo_package, binobj_path)
+        binary_packages = binary_packages_from_debuginfo_package(debuginfo_package, binobj_path, dnfbase)
         coredump_base_package_list.append(debuginfo_package.name)
         if len(binary_packages) == 1:
             coredump_package_list.append(str(binary_packages[0]))
@@ -103,7 +106,7 @@ def process_unstrip_entry(build_id, binobj_path):
     return package_list, coredump_base_package_list
 
 
-def process_unstrip_output():
+def process_unstrip_output(unstrip: str, dnfbase: dnf.Base) -> Tuple[PackageList, List[Tuple[str, str]], List[str]]:
     """
     Parse the eu-unstrip output, and search for packages via dnf.
 
@@ -114,12 +117,12 @@ def process_unstrip_output():
     """
     # List of packages found in dnf repositories and matching the
     # coredump.
-    package_list = []
+    package_list: PackageList = []
     # List of pairs (library/executable path, build id) which were not
     # found via dnf.
-    missing_buildid_list = []
+    missing_buildid_list: List[Tuple[str, str]] = []
     # coredump package adepts
-    coredump_package_list = []
+    coredump_package_list: List[str] = []
     first_entry = True
     for line in unstrip.split('\n'):
         parts = line.split()
@@ -138,12 +141,12 @@ def process_unstrip_output():
                 continue
         except Exception:
             continue
-        entry_package_list, entry_coredump_package_list = process_unstrip_entry(build_id, binobj_path)
+        entry_package_list, entry_coredump_package_list = process_unstrip_entry(build_id, binobj_path, dnfbase)
         if first_entry:
             coredump_package_list = entry_coredump_package_list
             first_entry = False
         if len(entry_package_list) == 0:
-            missing_buildid_list.append([binobj_path, build_id])
+            missing_buildid_list.append((binobj_path, build_id))
         else:
             for entry_package in entry_package_list:
                 found = False
@@ -159,7 +162,7 @@ def process_unstrip_output():
 # The package list might contain multiple packages with the same name,
 # but different version. This happens because some binary had the same
 # build id over multiple package releases.
-def find_duplicates(package_list):
+def find_duplicates(package_list: PackageList) -> Union[Tuple[None, None], Tuple[Package, Package]]:
     for p1 in range(0, len(package_list) - 1):
         package1 = package_list[p1]
         for p2 in range(p1 + 1, len(package_list)):
@@ -169,7 +172,8 @@ def find_duplicates(package_list):
     return None, None
 
 
-def count_removals(package_list, base_package_name, epoch, ver, rel, arch):
+def count_removals(package_list: PackageList, base_package_name: str, epoch: str,
+        ver: str, rel: str, arch: str) -> int:
     count = 0
     for package in package_list:
         if package.name != base_package_name:
@@ -198,8 +202,6 @@ def main() -> None:
 
     # Initialize DNF, enable only repositories specified via command line
     # --repos option.
-    stdout = sys.stdout
-    sys.stdout = log
     dnfbase = dnf.Base()
     if args.config:
         dnfbase.conf.read(args.config)
@@ -221,7 +223,6 @@ def main() -> None:
 
     # Fill the sack with repository
     dnfbase.fill_sack(load_system_repo=False)
-    sys.stdout = stdout
 
     # Get eu-unstrip output, which contains build-ids and binary object
     # paths
@@ -233,13 +234,14 @@ def main() -> None:
     if not unstrip:
         exit(1)
 
-    package_list, missing_buildid_list, coredump_package_list = process_unstrip_output()
+    package_list, missing_buildid_list, coredump_package_list = process_unstrip_output(unstrip, dnfbase)
 
     logger.info("Checking for duplicates...")
     while True:
         package1, package2 = find_duplicates(package_list)
         if package1 is None:
             break
+        assert package2 is not None
         p1removals = count_removals(package_list,
                                     package1.name,
                                     package1.epoch,
