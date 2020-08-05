@@ -1,69 +1,13 @@
 #!/usr/bin/python3
-# -*- coding:utf-8;mode:python -*-
 # Gets list of packages necessary for processing of a coredump.
 # Uses eu-unstrip and dnf.
 
-import subprocess
-import dnf
-import sys
 import argparse
 import os
+import subprocess
+import sys
 
-
-parser = argparse.ArgumentParser(description='Get packages for coredump processing.')
-parser.add_argument('--repos', default='*', metavar='WILDCARD',
-                    help='DNF repository wildcard to be enabled')
-parser.add_argument('--config', help='DNF config file')
-parser.add_argument('coredump', help='Coredump')
-parser.add_argument('--log', metavar='FILENAME',
-                    help='Store debug output to a file')
-args = parser.parse_args()
-
-if args.log:
-    log = open(args.log, "w")
-else:
-    log = open(os.devnull, "w")
-
-#
-# Initialize DNF, enable only repositories specified via command line
-# --repos option.
-#
-stdout = sys.stdout
-sys.stdout = log
-dnfbase = dnf.Base()
-if args.config:
-    dnfbase.conf.read(args.config)
-else:
-    dnfbase.conf.read()
-if not dnfbase.conf.cachedir:
-    exit(2)
-dnfbase.read_all_repos()
-log.write("Closing all enabled repositories...\n")
-for repo in dnfbase.repos.iter_enabled():
-    log.write(" - {0}\n".format(repo.name))
-    repo.disable()
-
-log.write("Enabling repositories matching \'{0}\'...\n".format(args.repos))
-for repo in dnfbase.repos.get_matching(args.repos):
-    log.write(" - {0}\n".format(repo.name))
-    repo.enable()
-    repo.skip_if_unavailable = True
-
-# Fill the sack with repository
-dnfbase.fill_sack(load_system_repo=False)
-sys.stdout = stdout
-
-#
-# Get eu-unstrip output, which contains build-ids and binary object
-# paths
-#
-log.write("Running eu-unstrip...\n")
-unstrip_args = ['eu-unstrip', '--core={0}'.format(args.coredump), '-n']
-unstrip_proc = subprocess.run(unstrip_args, stdout=subprocess.PIPE, encoding='utf8')
-unstrip = unstrip_proc.stdout
-log.write("{0}\n".format(unstrip))
-if not unstrip:
-    exit(1)
+import dnf
 
 
 def binary_packages_from_debuginfo_package(debuginfo_package, binobj_path):
@@ -210,13 +154,9 @@ def process_unstrip_output():
     return package_list, missing_buildid_list, coredump_package_list
 
 
-package_list, missing_buildid_list, coredump_package_list = process_unstrip_output()
-
 # The package list might contain multiple packages with the same name,
 # but different version. This happens because some binary had the same
 # build id over multiple package releases.
-
-
 def find_duplicates(package_list):
     for p1 in range(0, len(package_list) - 1):
         package1 = package_list[p1]
@@ -238,85 +178,140 @@ def count_removals(package_list, base_package_name, epoch, ver, rel, arch):
     return count
 
 
-log.write("Checking for duplicates...\n")
-while True:
-    package1, package2 = find_duplicates(package_list)
-    if package1 is None:
-        break
-    p1removals = count_removals(package_list,
-                                package1.name,
-                                package1.epoch,
-                                package1.version,
-                                package1.release,
-                                package1.arch)
-    p2removals = count_removals(package_list,
-                                package2.name,
-                                package2.epoch,
-                                package2.version,
-                                package2.release,
-                                package2.arch)
 
-    log.write(" - {0}".format(package1.name))
-    if package1.name != package2.name:
-        log.write(" {0}\n".format(package2.name))
+def main() -> None:
+    parser = argparse.ArgumentParser(description='Get packages for coredump processing.')
+    parser.add_argument('--repos', default='*', metavar='WILDCARD',
+                        help='DNF repository wildcard to be enabled')
+    parser.add_argument('--config', help='DNF config file')
+    parser.add_argument('coredump', help='Coredump')
+    parser.add_argument('--log', metavar='FILENAME',
+                        help='Store debug output to a file')
+    args = parser.parse_args()
+
+    if args.log:
+        log = open(args.log, "w")
     else:
-        log.write("\n")
-    log.write("   - {0}:{1}-{2}.{3} ({4} dependent packages)\n".format(package1.epoch,
-                                                                       package1.version,
-                                                                       package1.release,
-                                                                       package1.arch,
-                                                                       p1removals))
-    log.write("   - {0}:{1}-{2}.{3} ({4} dependent packages)\n".format(package2.epoch,
-                                                                       package2.version,
-                                                                       package2.release,
-                                                                       package2.arch,
-                                                                       p2removals))
+        log = open(os.devnull, "w")
 
-    removal_candidate = package1
-    if p1removals == p2removals:
-        # Remove older if we can choose
-        if package1.evr_cmp(package2) > 0:
-            removal_candidate = package2
-        log.write("   - decided to remove {0}:{1}-{2}.{3} because it's older\n"
-                  .format(removal_candidate.epoch,
-                          removal_candidate.version,
-                          removal_candidate.release,
-                          removal_candidate.arch))
+    # Initialize DNF, enable only repositories specified via command line
+    # --repos option.
+    stdout = sys.stdout
+    sys.stdout = log
+    dnfbase = dnf.Base()
+    if args.config:
+        dnfbase.conf.read(args.config)
     else:
-        if p1removals > p2removals:
-            removal_candidate = package2
-        log.write("   - decided to remove {0}:{1}-{2}.{3} because has fewer dependencies\n"
-                  .format(removal_candidate.epoch,
-                          removal_candidate.version,
-                          removal_candidate.release,
-                          removal_candidate.arch))
-    # Remove the removal_candidate packages from the package list
-    for package in package_list[:]:
-        if package.name == removal_candidate.name and \
-                0 == package.evr_cmp(removal_candidate):
-            package_list.remove(package)
+        dnfbase.conf.read()
+    if not dnfbase.conf.cachedir:
+        exit(2)
+    dnfbase.read_all_repos()
+    log.write("Closing all enabled repositories...\n")
+    for repo in dnfbase.repos.iter_enabled():
+        log.write(" - {0}\n".format(repo.name))
+        repo.disable()
 
-# Clean coredump_package_list:
-for coredump_package in coredump_package_list[:]:
-    found = False
-    for package in package_list:
-        if str(package) == coredump_package or package.name == coredump_package:
-            found = True
+    log.write("Enabling repositories matching \'{0}\'...\n".format(args.repos))
+    for repo in dnfbase.repos.get_matching(args.repos):
+        log.write(" - {0}\n".format(repo.name))
+        repo.enable()
+        repo.skip_if_unavailable = True
+
+    # Fill the sack with repository
+    dnfbase.fill_sack(load_system_repo=False)
+    sys.stdout = stdout
+
+    # Get eu-unstrip output, which contains build-ids and binary object
+    # paths
+    log.write("Running eu-unstrip...\n")
+    unstrip_args = ['eu-unstrip', '--core={0}'.format(args.coredump), '-n']
+    unstrip_proc = subprocess.run(unstrip_args, stdout=subprocess.PIPE, encoding='utf8')
+    unstrip = unstrip_proc.stdout
+    log.write("{0}\n".format(unstrip))
+    if not unstrip:
+        exit(1)
+
+    package_list, missing_buildid_list, coredump_package_list = process_unstrip_output()
+
+    log.write("Checking for duplicates...\n")
+    while True:
+        package1, package2 = find_duplicates(package_list)
+        if package1 is None:
             break
-    if not found:
-        coredump_package_list.remove(coredump_package)
+        p1removals = count_removals(package_list,
+                                    package1.name,
+                                    package1.epoch,
+                                    package1.version,
+                                    package1.release,
+                                    package1.arch)
+        p2removals = count_removals(package_list,
+                                    package2.name,
+                                    package2.epoch,
+                                    package2.version,
+                                    package2.release,
+                                    package2.arch)
 
-#
-# Print names of found packages first, then a newline separator, and
-# then objects for which the packages were not found.
-#
-if len(coredump_package_list) == 1:
-    print(coredump_package_list[0])
-else:
-    print("-")
-print()
-for package in sorted(package_list):
-    print(str(package))
-print()
-for path, build_id in missing_buildid_list:
-    print("{0} {1}".format(path, build_id))
+        log.write(" - {0}".format(package1.name))
+        if package1.name != package2.name:
+            log.write(" {0}\n".format(package2.name))
+        else:
+            log.write("\n")
+        log.write("   - {0}:{1}-{2}.{3} ({4} dependent packages)\n".format(package1.epoch,
+                                                                        package1.version,
+                                                                        package1.release,
+                                                                        package1.arch,
+                                                                        p1removals))
+        log.write("   - {0}:{1}-{2}.{3} ({4} dependent packages)\n".format(package2.epoch,
+                                                                        package2.version,
+                                                                        package2.release,
+                                                                        package2.arch,
+                                                                        p2removals))
+
+        removal_candidate = package1
+        if p1removals == p2removals:
+            # Remove older if we can choose
+            if package1.evr_cmp(package2) > 0:
+                removal_candidate = package2
+            log.write("   - decided to remove {0}:{1}-{2}.{3} because it's older\n"
+                    .format(removal_candidate.epoch,
+                            removal_candidate.version,
+                            removal_candidate.release,
+                            removal_candidate.arch))
+        else:
+            if p1removals > p2removals:
+                removal_candidate = package2
+            log.write("   - decided to remove {0}:{1}-{2}.{3} because has fewer dependencies\n"
+                    .format(removal_candidate.epoch,
+                            removal_candidate.version,
+                            removal_candidate.release,
+                            removal_candidate.arch))
+        # Remove the removal_candidate packages from the package list
+        for package in package_list[:]:
+            if package.name == removal_candidate.name and \
+                    0 == package.evr_cmp(removal_candidate):
+                package_list.remove(package)
+
+    # Clean coredump_package_list:
+    for coredump_package in coredump_package_list[:]:
+        found = False
+        for package in package_list:
+            if str(package) == coredump_package or package.name == coredump_package:
+                found = True
+                break
+        if not found:
+            coredump_package_list.remove(coredump_package)
+
+    # Print names of found packages first, then a newline separator, and
+    # then objects for which the packages were not found.
+    if len(coredump_package_list) == 1:
+        print(coredump_package_list[0])
+    else:
+        print("-")
+    print()
+
+    for package in sorted(package_list):
+        print(str(package))
+    print()
+
+    for path, build_id in missing_buildid_list:
+        print("{0} {1}".format(path, build_id))
