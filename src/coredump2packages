@@ -3,11 +3,15 @@
 # Uses eu-unstrip and dnf.
 
 import argparse
+import logging
 import os
 import subprocess
 import sys
 
 import dnf
+
+
+logger = logging.getLogger(__name__)
 
 
 def binary_packages_from_debuginfo_package(debuginfo_package, binobj_path):
@@ -22,11 +26,9 @@ def binary_packages_from_debuginfo_package(debuginfo_package, binobj_path):
     """
     package_list = []
     if binobj_path == '-':  # [exe] without binary name
-        log.write("   Dnf search for [exe] without binary name, "
-                  "packages with NVR {0}:{1}-{2}.{3}...\n".format(debuginfo_package.epoch,
-                                                                  debuginfo_package.version,
-                                                                  debuginfo_package.release,
-                                                                  debuginfo_package.arch))
+        logger.info("Dnf search for [exe] without binary name, packages with NVR %s:%s-%s.%s...",
+                    debuginfo_package.epoch, debuginfo_package.version,
+                    debuginfo_package.release, debuginfo_package.arch)
         # Append all packages with the same base package name.
         # Other possibility is to download the debuginfo RPM,
         # unpack it, and get the name of the binary from the
@@ -36,19 +38,19 @@ def binary_packages_from_debuginfo_package(debuginfo_package, binobj_path):
                                                 release=debuginfo_package.release,
                                                 arch=debuginfo_package.arch)
         for package in evra_list:
-            log.write("    - {0}: base name \"{1}\"\n".format(str(package), package.name))
+            logger.info("    - %s: base name '%s'", str(package), package.name)
             if package.name != debuginfo_package.name:
                 continue
             package_list.append(package)
     else:
-        log.write("   Dnf search for {0}...\n".format(binobj_path))
+        logger.info("   Dnf search for %s...", binobj_path)
         binobj_package_list = dnfbase.sack.query().filter(file=binobj_path)
         for binobj_package in binobj_package_list:
-            log.write("    - {0}".format(str(binobj_package)))
+            logger.info("    - %s", str(binobj_package))
             if binobj_package.evr_cmp(debuginfo_package) != 0:
-                log.write(": NVR doesn't match\n")
+                logger.info("    ... NVR doesn't match")
                 continue
-            log.write(": NVR matches\n")
+            logger.info("    ... NVR matches")
             package_list.append(binobj_package)
     return package_list
 
@@ -77,9 +79,9 @@ def process_unstrip_entry(build_id, binobj_path):
             "/usr/lib/.build-id/{0}/{1}".format(build_id[:2], build_id[2:])
     ]
 
-    log.write("Dnf search for debuginfo packages for build-id {0}:\n".format(build_id))
+    logger.info("Dnf search for debuginfo packages for build-id %s:", build_id)
     for di_path in debuginfo_paths:
-        log.write(" - {0}\n".format(di_path))
+        logger.info(" - %s", di_path)
     debuginfo_package_list = dnfbase.sack.query().filter(file=debuginfo_paths)
 
     # A problem here is that some libraries lack debuginfo. Either
@@ -88,7 +90,7 @@ def process_unstrip_entry(build_id, binobj_path):
     # something. The proper solution is to detect such libraries and
     # fix the packages.
     for debuginfo_package in debuginfo_package_list:
-        log.write(" - {0}\n".format(str(debuginfo_package)))
+        logger.info(" - %s", str(debuginfo_package))
         package_list.append(debuginfo_package)
         binary_packages = binary_packages_from_debuginfo_package(debuginfo_package, binobj_path)
         coredump_base_package_list.append(debuginfo_package.name)
@@ -186,13 +188,13 @@ def main() -> None:
     parser.add_argument('--config', help='DNF config file')
     parser.add_argument('coredump', help='Coredump')
     parser.add_argument('--log', metavar='FILENAME',
-                        help='Store debug output to a file')
+                        help='Append debug output to a file')
     args = parser.parse_args()
 
     if args.log:
-        log = open(args.log, "w")
+        logging.basicConfig(filename=args.log, level=logging.INFO)
     else:
-        log = open(os.devnull, "w")
+        logging.disable(logging.CRITICAL)
 
     # Initialize DNF, enable only repositories specified via command line
     # --repos option.
@@ -206,14 +208,14 @@ def main() -> None:
     if not dnfbase.conf.cachedir:
         exit(2)
     dnfbase.read_all_repos()
-    log.write("Closing all enabled repositories...\n")
+    logger.info("Closing all enabled repositories...")
     for repo in dnfbase.repos.iter_enabled():
-        log.write(" - {0}\n".format(repo.name))
+        logger.info(" - %s", repo.name)
         repo.disable()
 
-    log.write("Enabling repositories matching \'{0}\'...\n".format(args.repos))
+    logger.info("Enabling repositories matching '%s'...", args.repos)
     for repo in dnfbase.repos.get_matching(args.repos):
-        log.write(" - {0}\n".format(repo.name))
+        logger.info(" - %s", repo.name)
         repo.enable()
         repo.skip_if_unavailable = True
 
@@ -223,17 +225,17 @@ def main() -> None:
 
     # Get eu-unstrip output, which contains build-ids and binary object
     # paths
-    log.write("Running eu-unstrip...\n")
-    unstrip_args = ['eu-unstrip', '--core={0}'.format(args.coredump), '-n']
+    logger.info("Running eu-unstrip...")
+    unstrip_args = ['eu-unstrip', f'--core={args.coredump}', '-n']
     unstrip_proc = subprocess.run(unstrip_args, stdout=subprocess.PIPE, encoding='utf8')
     unstrip = unstrip_proc.stdout
-    log.write("{0}\n".format(unstrip))
+    logger.info("%s", unstrip)
     if not unstrip:
         exit(1)
 
     package_list, missing_buildid_list, coredump_package_list = process_unstrip_output()
 
-    log.write("Checking for duplicates...\n")
+    logger.info("Checking for duplicates...")
     while True:
         package1, package2 = find_duplicates(package_list)
         if package1 is None:
@@ -251,44 +253,33 @@ def main() -> None:
                                     package2.release,
                                     package2.arch)
 
-        log.write(" - {0}".format(package1.name))
+        logger.info(" - %s", package1.name)
         if package1.name != package2.name:
-            log.write(" {0}\n".format(package2.name))
+            logger.info("   %s", package2.name)
         else:
-            log.write("\n")
-        log.write("   - {0}:{1}-{2}.{3} ({4} dependent packages)\n".format(package1.epoch,
-                                                                        package1.version,
-                                                                        package1.release,
-                                                                        package1.arch,
-                                                                        p1removals))
-        log.write("   - {0}:{1}-{2}.{3} ({4} dependent packages)\n".format(package2.epoch,
-                                                                        package2.version,
-                                                                        package2.release,
-                                                                        package2.arch,
-                                                                        p2removals))
+            logger.info("\n")
+        logger.info("   - %s:%s-%s.%s (%s dependent packages)", package1.epoch,
+                    package1.version, package1.release, package1.arch, p1removals)
+        logger.info("   - %s:%s-%s.%s (%s dependent packages)", package2.epoch,
+                    package2.version, package2.release, package2.arch, p2removals)
 
         removal_candidate = package1
         if p1removals == p2removals:
             # Remove older if we can choose
             if package1.evr_cmp(package2) > 0:
                 removal_candidate = package2
-            log.write("   - decided to remove {0}:{1}-{2}.{3} because it's older\n"
-                    .format(removal_candidate.epoch,
-                            removal_candidate.version,
-                            removal_candidate.release,
-                            removal_candidate.arch))
+            logger.info("   - decided to remove %s:%s-%s.%s because it's older",
+                        removal_candidate.epoch, removal_candidate.version,
+                        removal_candidate.release, removal_candidate.arch)
         else:
             if p1removals > p2removals:
                 removal_candidate = package2
-            log.write("   - decided to remove {0}:{1}-{2}.{3} because has fewer dependencies\n"
-                    .format(removal_candidate.epoch,
-                            removal_candidate.version,
-                            removal_candidate.release,
-                            removal_candidate.arch))
+            logger.info("   - decided to remove %s:%s-%s.%s because has fewer dependencies",
+                        removal_candidate.epoch, removal_candidate.version,
+                        removal_candidate.release, removal_candidate.arch)
         # Remove the removal_candidate packages from the package list
         for package in package_list[:]:
-            if package.name == removal_candidate.name and \
-                    0 == package.evr_cmp(removal_candidate):
+            if package.name == removal_candidate.name and 0 == package.evr_cmp(removal_candidate):
                 package_list.remove(package)
 
     # Clean coredump_package_list:
@@ -314,4 +305,4 @@ def main() -> None:
     print()
 
     for path, build_id in missing_buildid_list:
-        print("{0} {1}".format(path, build_id))
+        print(f"{path} {build_id}")
