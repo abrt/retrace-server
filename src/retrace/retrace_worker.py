@@ -619,7 +619,7 @@ class RetraceWorker():
 
         v2_link = Path(str(v2) + "-link")
         try:
-            v2_link.link_to(v1)
+            os.link(str(v1), str(v2_link))
         except OSError:
             log_warn("Failed to dedup %s and %s - failed to create hard link from %s to %s" % (v1, v2, v2_link, v1))
             return 0
