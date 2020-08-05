@@ -5,7 +5,7 @@ import os
 import pwd
 import sys
 import time
-from typing import List
+from typing import List, Optional
 from pathlib import Path
 from subprocess import list2cmdline
 
@@ -121,12 +121,19 @@ if __name__ == "__main__":
         vmcore = KernelVMcore(vmcore_path)
 
         if task.has_kernelver():
-            kernelver = KernelVer(task.get_kernelver())
+            kv = task.get_kernelver()
+            # Assured by has_kernelver() returning True.
+            assert kv is not None
+            kernelver: Optional[KernelVer] = KernelVer(kv)
         else:
-            kernelver = vmcore.get_kernel_release(task.get_crash_cmd().split())
+            crash_cmd = task.get_crash_cmd()
+            assert crash_cmd is not None
+            kernelver = vmcore.get_kernel_release(crash_cmd.split())
             if kernelver is None:
                 raise Exception("Unable to determine kernel version")
             task.set_kernelver(kernelver)
+
+        assert kernelver is not None
 
         hostarch = os.uname()[4]
         if hostarch in ["i486", "i586", "i686"]:
@@ -151,18 +158,22 @@ if __name__ == "__main__":
                                     task.get_taskid())
 
             if task.has_mock():
-                cfgdir = Path(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
+                cfgdir = os.path.join(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
                 if task.has_crashrc():
-                    cmdline = ["/usr/bin/mock", "--configdir", str(cfgdir),
-                               "shell", "crash -i %s %s %s" % (task.get_crashrc_path(), str(vmcore_path), vmlinux)]
+                    cmdline = ["/usr/bin/mock", "--configdir", cfgdir,
+                               "shell", "crash -i %s %s %s" % (task.get_crashrc_path(), vmcore_path, vmlinux)]
                 else:
-                    cmdline = ["/usr/bin/mock", "--configdir", str(cfgdir),
-                               "shell", "crash %s %s" % (str(vmcore_path), vmlinux)]
+                    cmdline = ["/usr/bin/mock", "--configdir", cfgdir,
+                               "shell", "crash %s %s" % (vmcore_path, vmlinux)]
             else:
+                crash_cmd = task.get_crash_cmd()
+                if crash_cmd is None:
+                    raise Exception("Unable to determine crash command")
                 if task.has_crashrc():
-                    cmdline = task.get_crash_cmd().split() + ["-i", task.get_crashrc_path(), str(vmcore_path), vmlinux]
+                    cmdline = crash_cmd.split() + ["-i", str(task.get_crashrc_path()),
+                            str(vmcore_path), vmlinux]
                 else:
-                    cmdline = task.get_crash_cmd().split() + [str(vmcore_path), vmlinux]
+                    cmdline = crash_cmd.split() + [str(vmcore_path), vmlinux]
 
             print_cmdline(cmdline)
             os.execvp(cmdline[0], cmdline)
