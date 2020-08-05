@@ -1,19 +1,21 @@
 #!/usr/bin/python3
 
-import createrepo_c as cr
-import shutil
 from argparse import ArgumentParser
 from os.path import relpath
 from pathlib import Path
-from pyfaf.storage import getDatabase
+import shutil
+from typing import Generator
+
+import createrepo_c as cr
 from pyfaf.queries import get_packages_by_osrelease
+from pyfaf.storage import Database, getDatabase
 
 faf_names = {'rhel': "Red Hat Enterprise Linux",
              'fedora': 'Fedora',
              'centos': 'CentOS'}
 
 
-def get_pkglist(db, opsys, release, arch):
+def get_pkglist(db: Database, opsys: str, release: str, arch: str) -> Generator[Path, None, None]:
     if opsys in faf_names.keys():
         opsys = faf_names[opsys]
     q = get_packages_by_osrelease(db, opsys, release, arch)
@@ -23,8 +25,7 @@ def get_pkglist(db, opsys, release, arch):
             yield Path(pkg.get_lob_path("package")).resolve()
 
 
-def generate_repo(db, outputdir: Path, opsys, release, arch):
-
+def generate_repo(db: Database, outputdir: Path, opsys: str, release: str, arch: str) -> None:
     repodata_path = outputdir / "repodata"
 
     if repodata_path.exists():
@@ -80,7 +81,7 @@ def generate_repo(db, outputdir: Path, opsys, release, arch):
                      ("other",        oth_xml_path, oth_db),
                      ("primary_db",   pri_db_path,  None),
                      ("filelists_db", fil_db_path,  None),
-                     ("other_db", oth_db_path, None))
+                     ("other_db",     oth_db_path,  None))
 
     for name, path, db_to_update in repomdrecords:
         # Compress sqlite files with bzip2
@@ -102,7 +103,7 @@ def generate_repo(db, outputdir: Path, opsys, release, arch):
     open(repomd_path, "w").write(repomd.xml_dump())
 
 
-if __name__ == "__main__":
+def main() -> None:
     parser = ArgumentParser(description="Generates dnf repo from FAF databse")
     parser.add_argument("OPSYS")
     parser.add_argument("RELEASE")
@@ -113,3 +114,6 @@ if __name__ == "__main__":
     print("Creating repo in '%s'" % (args.outputdir))
 
     generate_repo(getDatabase(), args.outputdir, args.OPSYS, args.RELEASE, args.ARCHITECTURE)
+
+if __name__ == "__main__":
+    main()
