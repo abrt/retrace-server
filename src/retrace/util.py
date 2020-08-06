@@ -10,7 +10,7 @@ from dnf.subject import Subject
 from hawkey import FORM_NEVRA
 from pathlib import Path
 from subprocess import run, PIPE
-from typing import cast, Callable, Dict, List, Optional, SupportsFloat, Tuple, Union
+from typing import cast, Any, Callable, Dict, List, Optional, SupportsFloat, Tuple, Union
 
 from .config import Config, DF_BIN, GZIP_BIN, TAR_BIN, XZ_BIN
 
@@ -151,7 +151,7 @@ def parse_http_gettext(lang: str, charset: str) -> Callable[[str], str]:
     return result
 
 
-def parse_rpm_name(name: str) -> Dict[str, Union[int, Optional[str]]]:
+def parse_rpm_name(name: str) -> Dict[str, Any]:
     result = {
         "epoch": 0,
         "name": None,
