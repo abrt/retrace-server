@@ -3,6 +3,7 @@ import os
 import sys
 import re
 import time
+from typing import Dict, List, Optional
 
 from subprocess import run, PIPE, STDOUT
 from pathlib import Path
@@ -18,7 +19,7 @@ from retrace.config import Config, LSOF_BIN
 CONFIG = Config()
 
 
-def get_process_tree(pid, ps_output):
+def get_process_tree(pid: int, ps_output: List[str]) -> List[int]:
     result = [pid]
 
     parser = re.compile(r"^([0-9]+)[ \t]+(%d).*$" % pid)
@@ -32,10 +33,10 @@ def get_process_tree(pid, ps_output):
     return result
 
 
-def kill_process_and_childs(process_id, ps_output=None):
+def kill_process_and_childs(process_id: int, ps_output: Optional[List[str]] = None) -> bool:
     result = True
 
-    if not ps_output:
+    if ps_output is None:
         ps_output = run_ps()
 
     for pid in get_process_tree(process_id, ps_output):
@@ -47,7 +48,7 @@ def kill_process_and_childs(process_id, ps_output=None):
     return result
 
 
-def check_open_crash_file(task):
+def check_open_crash_file(task: RetraceTask) -> bool:
     """
     Check if vmcore or coredump for given task is used by another process.
     """
@@ -67,7 +68,7 @@ def check_open_crash_file(task):
     return False
 
 
-def check_config():
+def check_config() -> None:
     if CONFIG["DeleteTaskAfter"] > 0 and CONFIG["ArchiveTaskAfter"] > 0:
         winner = "archiving"
         if CONFIG["DeleteTaskAfter"] < CONFIG["ArchiveTaskAfter"]:
@@ -135,7 +136,7 @@ if __name__ == "__main__":
                 task.create_worker().clean_task()
                 task.set_log("Task was killed due to running too long or taking too many resources.\n", True)
 
-        md5_tasks = {}
+        md5_tasks: Dict[str, RetraceTask] = {}
         total_savings = 0
         for task in get_md5_tasks():
             md5 = str.split(task.get_md5sum())[0]
@@ -176,7 +177,7 @@ if __name__ == "__main__":
                                 stdout=PIPE, stderr=STDOUT)
                     stdout = child.stdout
                     if child.returncode:
-                        log += "Error: tar exited with %d: %s\n" % (child.returncode, stdout)
+                        log.write("Error: tar exited with %d: %r\n" % (child.returncode, stdout))
                         try:
                             targetfile.unlink()
                         except OSError:
