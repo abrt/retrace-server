@@ -9,7 +9,7 @@ import shutil
 import stat
 from pathlib import Path
 from subprocess import PIPE, DEVNULL, STDOUT, run
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from retrace.hooks.hooks import RetraceHook
 from .retrace import (ALLOWED_FILES, REPO_PREFIX, REQUIRED_FILES,
@@ -21,6 +21,7 @@ from .retrace import (ALLOWED_FILES, REPO_PREFIX, REQUIRED_FILES,
                       get_supported_releases,
                       guess_arch,
                       is_package_known,
+                      KernelVer,
                       KernelVMcore,
                       log_debug,
                       log_error,
@@ -162,7 +163,10 @@ class RetraceWorker:
 
         self._symlink_log()
 
-        self.stats["duration"] = int(time.time()) - self.stats["starttime"]
+        starttime = self.stats["starttime"]
+        # starttime is assigned a value in start() and never changed.
+        assert starttime is not None
+        self.stats["duration"] = int(time.time()) - starttime
         try:
             save_crashstats(self.stats)
         except Exception as ex:
@@ -230,7 +234,7 @@ class RetraceWorker:
         assert isinstance(arch, str)
         return arch
 
-    def read_package_file(self, crashdir: Path) -> Tuple[str, Dict[int, str]]:
+    def read_package_file(self, crashdir: Path) -> Tuple[str, Dict[str, Any]]:
         # read package file
         try:
             with Path(crashdir, "package").open() as package_file:
@@ -249,7 +253,8 @@ class RetraceWorker:
             self._fail()
         return (crash_package, pkgdata)
 
-    def read_release_file(self, crashdir: Path, crash_package: str) -> Tuple[str, str, str, bool]:
+    def read_release_file(self, crashdir: Path,
+            crash_package: Optional[str] = None) -> Tuple[str, str, str, bool]:
         # read release, distribution and version from release file
         is_rawhide = False
         release_path = None
@@ -295,6 +300,11 @@ class RetraceWorker:
 
         except Exception as ex:
             log_error("Unable to read distribution and version from 'release' file: %s" % ex)
+            if crash_package is None:
+                log_error("Cannot guess distribution and version without package")
+                self._fail()
+            assert crash_package is not None
+
             log_info("Trying to guess distribution and version")
             distribution, version = self.guess_release(crash_package, self.plugins.all())
             if distribution and version:
@@ -302,6 +312,10 @@ class RetraceWorker:
             else:
                 log_error("Failure")
                 self._fail()
+
+        # Checked above.
+        assert distribution is not None
+        assert version is not None
 
         if "rawhide" in release.lower():
             is_rawhide = True
@@ -400,7 +414,7 @@ class RetraceWorker:
         crash_package, pkgdata = self.read_package_file(crashdir)
         self.stats["package"] = pkgdata["name"]
         if pkgdata["epoch"] != 0:
-            self.stats["version"] = "%s:%s-%s" % (pkgdata["epoch"], pkgdata["version"], pkgdata["release"])
+            self.stats["version"] = "%d:%s-%s" % (pkgdata["epoch"], pkgdata["version"], pkgdata["release"])
         else:
             self.stats["version"] = "%s-%s" % (pkgdata["version"], pkgdata["release"])
 
@@ -570,7 +584,10 @@ class RetraceWorker:
         log_info(STATUS[STATUS_STATS])
 
         task.set_finished_time(int(time.time()))
-        self.stats["duration"] = int(time.time()) - self.stats["starttime"]
+        starttime = self.stats["starttime"]
+        # starttime is assigned a value in start() and never changed.
+        assert starttime is not None
+        self.stats["duration"] = int(time.time()) - starttime
         self.stats["status"] = STATUS_SUCCESS
 
         try:
@@ -622,9 +639,9 @@ class RetraceWorker:
                      % (v1, v2, v1_md5, v2_md5))
             return 0
 
-        v2_link = Path(str(v2) + "-link")
+        v2_link = v2.parent / (v2.name + "-link")
         try:
-            os.link(str(v1), str(v2_link))
+            os.link(v1, v2_link)
         except OSError:
             log_warn("Failed to dedup %s and %s - failed to create hard link from %s to %s" % (v1, v2, v2_link, v1))
             return 0
@@ -645,7 +662,7 @@ class RetraceWorker:
 
         return s1.st_size
 
-    def start_vmcore(self, custom_kernelver: Optional[str] = None) -> None:
+    def start_vmcore(self, custom_kernelver: Optional[KernelVer] = None) -> None:
         self.hook.run("start")
 
         task = self.task
@@ -675,8 +692,10 @@ class RetraceWorker:
         if custom_kernelver is not None:
             kernelver = custom_kernelver
         else:
-            kernelver = vmcore.get_kernel_release(task.get_crash_cmd().split())
-            if not kernelver:
+            crash_cmd = task.get_crash_cmd()
+            assert crash_cmd is not None
+            kernelver = vmcore.get_kernel_release(crash_cmd.split())
+            if kernelver is None:
                 raise Exception("Unable to determine kernel version")
 
             log_debug("Determined kernel version: %s" % kernelver)
@@ -778,6 +797,7 @@ class RetraceWorker:
 
             self.hook.run("pre_retrace")
             crash_cmd = task.get_crash_cmd()
+            assert crash_cmd is not None
             crash_normal = ["/usr/bin/mock", "--configdir", str(cfgdir), "--cwd", str(crashdir),
                             "chroot", "--", crash_cmd + " -s %s %s" % (vmcore_path, vmlinux)]
             crash_minimal = ["/usr/bin/mock", "--configdir", str(cfgdir), "--cwd", str(crashdir),
@@ -938,9 +958,9 @@ class RetraceWorker:
         self.notify_email()
         self.hook.run("success")
 
-    def start(self, kernelver: Optional[str] = None, arch: Optional[str] = None) -> None:
+    def start(self, kernelver: Optional[KernelVer] = None, arch: Optional[str] = None) -> None:
         self.hook.run("pre_start")
-        self.stats = {
+        self.stats: Dict[str, Any] = {
             "taskid": self.task.get_taskid(),
             "package": None,
             "version": None,

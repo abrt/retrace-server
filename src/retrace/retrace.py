@@ -1311,7 +1311,7 @@ class RetraceTask:
                                        self._progress_total_str)
         self.set_atomic(RetraceTask.PROGRESS_FILE, progress)
 
-    def run_crash_cmdline(self, crash_start, crash_cmdline):
+    def run_crash_cmdline(self, crash_start: List[str], crash_cmdline: str) -> Tuple[Optional[bytes], int]:
         cmd_output = None
         returncode = 0
         crashdir = self.get_crashdir()
@@ -1335,8 +1335,10 @@ class RetraceTask:
             log_warn("crash command: '%s' triggered Unknown exception %s" %
                      (crash_cmdline.replace('\r', '; ').replace('\n', '; '), err))
             log_warn("  %s" % sys.exc_info()[0])
+
         try:
-            cmd_output.decode('utf-8')
+            if cmd_output is not None:
+                cmd_output.decode('utf-8')
         except UnicodeDecodeError as err:
             log_warn("crash command: '%s' triggered UnicodeDecodeError " %
                      crash_cmdline.replace('\r', '; ').replace('\n', '; '))
@@ -2161,7 +2163,8 @@ class KernelVMcore:
         self._release = result
         return result
 
-    def prepare_debuginfo(self, task: RetraceTask, chroot: Optional[str] = None,
+    def prepare_debuginfo(self, task: RetraceTask,
+            chroot: Optional[Union[str, Path]] = None,
             kernelver: Optional[KernelVer] = None) -> str:
         log_info("Calling prepare_debuginfo ")
         if kernelver is None:
