@@ -68,12 +68,14 @@ class RetraceHook:
 
         return cmdline
 
-    def _get_hookdir(self) -> Path:
+    @staticmethod
+    def _get_hookdir() -> Path:
         hooks_path = hooks_config.get("main.hookdir", HOOK_PATH)
 
         return Path(hooks_path)
 
-    def _get_timeout(self, hook: str, exc: Optional[str] = None) -> int:
+    @staticmethod
+    def _get_timeout(hook: str, exc: Optional[str] = None) -> int:
         timeout = hooks_config.get("main.timeout", HOOK_TIMEOUT)
 
         if f"{hook}.timeout" in hooks_config:

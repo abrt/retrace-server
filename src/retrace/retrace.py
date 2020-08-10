@@ -1120,7 +1120,8 @@ class RetraceTask:
         """Reset the age of the task to the current time."""
         os.utime(self._savedir, None)
 
-    def calculate_md5(self, file_name: Union[str, Path], chunk_size: int = 65536):
+    @staticmethod
+    def calculate_md5(file_name: Union[str, Path], chunk_size: int = 65536):
         hash_md5 = hashlib.md5()
         with open(file_name, "rb") as f:
             while True:
