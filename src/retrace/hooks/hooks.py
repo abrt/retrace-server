@@ -12,23 +12,21 @@ from subprocess import PIPE, CalledProcessError, run, TimeoutExpired
 from retrace.retrace import log_info, log_error, log_debug, RetraceTask
 from .config import HOOK_PATH, HOOK_TIMEOUT, hooks_config
 
-"""
-    Hooks description:
-    pre_start -- When self.start() is called
-    start -- When task type is determined and the main task starts
-    pre_prepare_debuginfo -- Before the preparation of debuginfo packages
-    post_prepare_debuginfo -- After the preparation of debuginfo packages
-    pre_prepare_environment -- Before the preparation of retrace environment
-    post_prepare_environment -- After the preparation of retrace environment
-    pre_retrace -- Before starting of the retracing itself
-    post_retrace -- After retracing is done
-    success -- After retracing success
-    fail -- After retracing fails
-    pre_remove_task -- Before removing task
-    post_remove_task -- After removing task
-    pre_clean_task -- Before cleaning task
-    post_clean_task -- After cleaning task
-"""
+#   Hooks description:
+#   pre_start -- When self.start() is called
+#   start -- When task type is determined and the main task starts
+#   pre_prepare_debuginfo -- Before the preparation of debuginfo packages
+#   post_prepare_debuginfo -- After the preparation of debuginfo packages
+#   pre_prepare_environment -- Before the preparation of retrace environment
+#   post_prepare_environment -- After the preparation of retrace environment
+#   pre_retrace -- Before starting of the retracing itself
+#   post_retrace -- After retracing is done
+#   success -- After retracing success
+#   fail -- After retracing fails
+#   pre_remove_task -- Before removing task
+#   post_remove_task -- After removing task
+#   pre_clean_task -- Before cleaning task
+#   post_clean_task -- After cleaning task
 
 
 def get_executables(path: Path) -> Iterable[Path]:
