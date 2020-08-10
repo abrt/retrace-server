@@ -99,8 +99,7 @@ class RetraceHook:
 
         try:
             child = run(cmd, shell=True, timeout=hook_timeout, cwd=hook_path,
-                        stdout=PIPE, stderr=PIPE, encoding='utf-8')
-            child.check_returncode()
+                        stdout=PIPE, stderr=PIPE, encoding='utf-8', check=True)
         except TimeoutExpired as ex:
             if ex.stdout:
                 log_info(ex.stdout)
