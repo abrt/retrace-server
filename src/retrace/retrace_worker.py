@@ -353,7 +353,7 @@ class RetraceWorker:
                     if line == "":
                         section += 1
                         continue
-                    elif section == 1:
+                    if section == 1:
                         stripped = line.strip()
 
                         # hack - help to depsolver, yum would fail otherwise
@@ -366,8 +366,7 @@ class RetraceWorker:
                            (stripped.startswith("db4-debuginfo") or stripped.startswith("libdb-debuginfo")):
                             if libdb:
                                 continue
-                            else:
-                                libdb = True
+                            libdb = True
 
                         packages.append(stripped)
                     elif section == 2:
