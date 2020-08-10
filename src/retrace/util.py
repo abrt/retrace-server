@@ -6,11 +6,11 @@ import ftplib
 import gettext
 import smtplib
 
-from dnf.subject import Subject
-from hawkey import FORM_NEVRA
 from pathlib import Path
 from subprocess import run, PIPE
 from typing import cast, Any, Callable, Dict, List, Optional, SupportsFloat, Tuple, Union
+from dnf.subject import Subject
+from hawkey import FORM_NEVRA
 
 from .config import Config, DF_BIN, GZIP_BIN, TAR_BIN, XZ_BIN
 
