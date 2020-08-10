@@ -405,7 +405,7 @@ def cache_files_from_debuginfo(debuginfo: Path, basedir: Path, files: List[str])
         raise Exception("Given debuginfo file does not exist")
 
     # prepend absolute path /usr/lib/debug/... with dot, so that cpio can match it
-    for i in range(len(files)):
+    for i, _ in enumerate(files):
         if files[i][0] == "/":
             files[i] = ".%s" % files[i]
 
