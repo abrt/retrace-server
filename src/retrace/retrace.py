@@ -1330,7 +1330,7 @@ class RetraceTask:
         except TimeoutExpired:
             raise Exception("WARNING: crash command: '%s' exceeded %s "
                             " second timeout - damaged vmcore?" % (
-                            crash_cmdline.replace('\r', '; ').replace('\n', '; '), t))
+                                crash_cmdline.replace('\r', '; ').replace('\n', '; '), t))
         except Exception as err:
             log_warn("crash command: '%s' triggered Unknown exception %s" %
                      (crash_cmdline.replace('\r', '; ').replace('\n', '; '), err))
@@ -2164,8 +2164,8 @@ class KernelVMcore:
         return result
 
     def prepare_debuginfo(self, task: RetraceTask,
-            chroot: Optional[Union[str, Path]] = None,
-            kernelver: Optional[KernelVer] = None) -> str:
+                          chroot: Optional[Union[str, Path]] = None,
+                          kernelver: Optional[KernelVer] = None) -> str:
         log_info("Calling prepare_debuginfo ")
         if kernelver is None:
             kernelver = self.get_kernel_release()
