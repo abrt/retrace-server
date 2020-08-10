@@ -162,7 +162,7 @@ def log_debug(msg: str):
 
 
 def log_warn(msg: str):
-    logger.warn(msg)
+    logger.warning(msg)
 
 
 def log_error(msg: str):
