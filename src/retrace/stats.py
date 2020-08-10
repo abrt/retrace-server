@@ -48,7 +48,7 @@ def init_crashstats_db() -> sqlite3.Connection:
     return con
 
 
-def save_crashstats(stats: Dict[str, Any],  con: Optional[sqlite3.Connection] = None) -> int:
+def save_crashstats(stats: Dict[str, Any], con: Optional[sqlite3.Connection] = None) -> int:
     close = False
     if con is None:
         con = init_crashstats_db()
