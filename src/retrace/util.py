@@ -168,8 +168,10 @@ def parse_rpm_name(name: str) -> Dict[str, Any]:
     return result
 
 
-def response(start_response: Callable[[str, List[Tuple[str, str]]], None], status: str,
-        body: Union[bytes, str] = "", extra_headers: List[Tuple[str, str]] = []) -> List[bytes]:
+def response(start_response: Callable[[str, List[Tuple[str, str]]], None],
+             status: str,
+             body: Union[bytes, str] = "",
+             extra_headers: List[Tuple[str, str]] = []) -> List[bytes]:
     if isinstance(body, str):
         body = body.encode("utf-8")
 

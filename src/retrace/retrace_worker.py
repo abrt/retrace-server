@@ -254,7 +254,7 @@ class RetraceWorker:
         return (crash_package, pkgdata)
 
     def read_release_file(self, crashdir: Path,
-            crash_package: Optional[str] = None) -> Tuple[str, str, str, bool]:
+                          crash_package: Optional[str] = None) -> Tuple[str, str, str, bool]:
         # read release, distribution and version from release file
         is_rawhide = False
         release_path = None

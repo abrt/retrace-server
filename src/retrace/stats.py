@@ -72,7 +72,7 @@ def save_crashstats(stats: Dict[str, Any],  con: Optional[sqlite3.Connection] = 
 
 
 def save_crashstats_success(statsid: int, pre: int, post: int, rootsize: int,
-        con: Optional[sqlite3.Connection] = None) -> None:
+                            con: Optional[sqlite3.Connection] = None) -> None:
     close = False
     if con is None:
         con = init_crashstats_db()
@@ -123,7 +123,7 @@ def save_crashstats_packages(statsid: int, packages: List[str], con: sqlite3.Con
 
 
 def save_crashstats_build_ids(statsid: int, buildids: List[Tuple[str, str]],
-        con: Optional[sqlite3.Connection] = None) -> None:
+                              con: Optional[sqlite3.Connection] = None) -> None:
     close = False
     if con is None:
         con = init_crashstats_db()
