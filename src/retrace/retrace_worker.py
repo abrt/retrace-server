@@ -195,7 +195,8 @@ class RetraceWorker:
 
         return output
 
-    def _check_required_file(self, req: str, crashdir: Path) -> bool:
+    @staticmethod
+    def _check_required_file(req: str, crashdir: Path) -> bool:
         path = Path(crashdir, req)
 
         if path.is_file():
