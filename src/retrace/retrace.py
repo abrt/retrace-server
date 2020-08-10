@@ -883,8 +883,7 @@ class RetraceTask:
                     if ex.errno == errno.EEXIST:
                         continue
                     # error - re-raise original exception
-                    else:
-                        raise ex
+                    raise ex
                 # directory created
                 else:
                     self._taskid = taskid
@@ -1901,8 +1900,7 @@ def get_md5_tasks() -> List[RetraceTask]:
 
         if not task.has_status():
             continue
-        else:
-            status = task.get_status()
+        status = task.get_status()
 
         if status not in (STATUS_SUCCESS, STATUS_FAIL):
             continue
