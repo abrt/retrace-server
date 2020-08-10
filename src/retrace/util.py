@@ -82,7 +82,8 @@ def unlock(lockfile: Path) -> bool:
 
 
 def free_space(path: str) -> Optional[int]:
-    lines = run([DF_BIN, "-B", "1", path], stdout=PIPE, encoding='utf-8').stdout.split("\n")
+    lines = run([DF_BIN, "-B", "1", path],
+                stdout=PIPE, encoding='utf-8', check=False).stdout.split("\n")
     for line in lines:
         match = DF_OUTPUT_PARSER.match(line)
         if match:
@@ -222,13 +223,13 @@ def unpack(archive: str, mime: str, targetdir: Optional[str] = None) -> int:
         cmd.append("--directory")
         cmd.append(targetdir)
 
-    child = run(cmd)
+    child = run(cmd, check=False)
     return child.returncode
 
 
 def unpacked_size(archive: str, mime: str) -> Optional[int]:
     command, parser = cast(Tuple[List[str], re.Pattern[str]], HANDLE_ARCHIVE[mime]["size"])
-    lines = run(command + [archive], stdout=PIPE, encoding='utf-8').stdout.split("\n")
+    lines = run(command + [archive], stdout=PIPE, encoding='utf-8', check=False).stdout.split("\n")
     for line in lines:
         match = parser.match(line)
         if match:

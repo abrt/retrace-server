@@ -182,7 +182,7 @@ class RetraceWorker:
     def _retrace_run(self, errorcode: int, cmd: List[str]) -> str:
         "Runs cmd using subprocess.Popen and kills script with errorcode on failure"
         try:
-            child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8')
+            child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8', check=False)
             output = child.stdout
         except Exception as ex:
             child = None
@@ -345,7 +345,7 @@ class RetraceWorker:
                 child = run(["coredump2packages", str(crashdir / "coredump"),
                              "--repos=%s" % repoid, "--config=%s" % dnfcfgpath,
                              "--log=%s" % Path(self.task.get_savedir(), "c2p_log")],
-                            stdout=PIPE, stderr=PIPE, encoding='utf-8')
+                            stdout=PIPE, stderr=PIPE, encoding='utf-8', check=False)
                 section = 0
                 lines = child.stdout.split("\n")
                 libdb = False
@@ -779,7 +779,7 @@ class RetraceWorker:
                 os.umask(old_umask)
 
             child = run(["/usr/bin/mock", "--configdir", str(cfgdir), "init"],
-                        stdout=PIPE, stderr=PIPE, encoding='utf-8')
+                        stdout=PIPE, stderr=PIPE, encoding='utf-8', check=False)
             stderr = child.stderr
             if child.returncode:
                 raise Exception("mock exited with %d:\n%s" % (child.returncode, stderr))
@@ -839,14 +839,14 @@ class RetraceWorker:
                          str(savedir / RetraceTask.DOCKERFILE),
                          "--tag",
                          "retrace-image:%s" % img_cont_id],
-                        stdout=DEVNULL, stderr=DEVNULL)
+                        stdout=DEVNULL, stderr=DEVNULL, check=False)
             if child.returncode:
                 raise Exception("Unable to build podman container")
 
             vmlinux = vmcore.prepare_debuginfo(task, kernelver=kernelver)
             child = run(["/usr/bin/podman", "run", "--detach", "-it", "--rm",
                          "retrace-image:%s" % img_cont_id],
-                        stdout=PIPE, stderr=PIPE, encoding='utf-8')
+                        stdout=PIPE, stderr=PIPE, encoding='utf-8', check=False)
             if child.stderr:
                 log_error(child.stderr)
                 raise Exception("Unable to run podman container")
