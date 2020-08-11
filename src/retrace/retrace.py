@@ -1105,7 +1105,7 @@ class RetraceTask:
         """Returns whether the task is running. Reads /proc if readproc=True
         otherwise just reads the STATUS_FILE."""
         if readproc:
-            for pid, taskid, ppid in get_running_tasks():
+            for _, taskid, _ in get_running_tasks():
                 if taskid == self._taskid:
                     return True
 
