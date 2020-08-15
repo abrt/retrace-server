@@ -1,18 +1,19 @@
-# Göran Uddeborg <goeran@uddeborg.se>, 2016. #zanata
+# Göran Uddeborg <goeran@uddeborg.se>, 2016. #zanata, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2016-10-10 03:37+0000\n"
+"PO-Revision-Date: 2020-08-12 20:27+0000\n"
 "Last-Translator: Göran Uddeborg <goeran@uddeborg.se>\n"
-"Language-Team: Swedish\n"
+"Language-Team: Swedish <https://translate.fedoraproject.org/projects/abrt/"
+"retrace-server/sv/>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.1.1\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -85,7 +86,7 @@ msgid ""
 "There are %d files in the '%s' directory. Only a single archive is supported "
 "at the moment"
 msgstr ""
-"Det finns %d filer i katalogen ”%s”.  Endast ett ensamt arkiv stödjs för "
+"Det finns %d filer i katalogen ”%s”. Endast ett ensamt arkiv stödjs för "
 "närvarande"
 
 #: ../src/create.wsgi:136
@@ -141,26 +142,21 @@ msgid "Welcome to Retrace Server"
 msgstr "Välkommen till Spårningsservern"
 
 #: ../src/index.wsgi:23
-#, fuzzy
-#| msgid ""
-#| "Retrace Server is a service that provides the possibility to analyze "
-#| "coredump and generate backtrace over network. You can find further "
-#| "information at Retrace Server&apos;s wiki:"
 msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s github:"
 msgstr ""
 "Spårningsservern är en tjänst som ger möjligheten att analysera en "
-"minnesdump och generera ett stackspår över nätverket.  Du kan hitta mer "
-"information på Spårningsserverns wiki:"
+"minnesdump och generera ett stackspår över nätverket. Du kan hitta mer "
+"information på Spårningsserverns github:"
 
 #: ../src/index.wsgi:29
 msgid ""
 "Only the secure HTTPS connection is now allowed by the server. HTTP requests "
 "will be denied."
 msgstr ""
-"Endast en säker HTTPS-anslutning tillåts nu av servern.  HTTP-begäranden "
+"Endast en säker HTTPS-anslutning tillåts nu av servern. HTTP-begäranden "
 "kommer att avvisas."
 
 #: ../src/index.wsgi:31
@@ -168,7 +164,7 @@ msgid ""
 "Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
 "of security reasons."
 msgstr ""
-"Både HTTP och HTTPS är tillåtna.  Att använda HTTPS rekommenderas starkt av "
+"Både HTTP och HTTPS är tillåtna. Att använda HTTPS rekommenderas starkt av "
 "säkerhetsskäl."
 
 #: ../src/index.wsgi:32
@@ -188,12 +184,12 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
-"Din minnesdump sparas bara på servern medan spårjobbet kör.  När jobbet är "
-"klart behåller servern spårningsloggen och stackspåret.  All annan data "
-"(inklusive minnesdumpen) raderas.  Spårningsloggen och stackspåret är endast "
+"Din minnesdump sparas bara på servern medan spårjobbet kör. När jobbet är "
+"klart behåller servern spårningsloggen och stackspåret. All annan data ("
+"inklusive minnesdumpen) raderas. Spårningsloggen och stackspåret är endast "
 "tillgängliga via unika uppgifts-ID och lösenord, alltså får ingen (utom "
-"författaren) se det.  All kraschinformation (inklusive stackspåret) raderas "
-"efter %d timmars inaktivitet.  Ingen eventuell personlig information sparas "
+"författaren) se det. All kraschinformation (inklusive stackspåret) raderas "
+"efter %d timmars inaktivitet. Ingen eventuell personlig information sparas "
 "på servern längre."
 
 #: ../src/index.wsgi:43
@@ -204,10 +200,10 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
-"Din minnesdump används bara för spårningssyften.  Serveradministratörerna "
+"Din minnesdump används bara för spårningssyften. Serveradministratörerna "
 "försöker inte få tag i din privata information från minnesdumpar eller "
-"stackspår.  Att använda en säker kommunikationskanal (HTTPS) rekommenderas "
-"starkt.  Serveradministratörer är inte ansvariga för problem kopplade till "
+"stackspår. Att använda en säker kommunikationskanal (HTTPS) rekommenderas "
+"starkt. Serveradministratörer är inte ansvariga för problem kopplade till "
 "användningen av en osäker kanal (såsom HTTP)."
 
 #: ../src/index.wsgi:34
