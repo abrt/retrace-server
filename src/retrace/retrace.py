@@ -1403,7 +1403,7 @@ class RetraceTask:
             # download local file
             elif url.startswith("/") or url.startswith("file:///"):
                 if url.startswith("file://"):
-                    path = Path(url[7:])
+                    path = Path(urllib.parse.unquote(url[7:]))
                 else:
                     path = Path(url)
 
