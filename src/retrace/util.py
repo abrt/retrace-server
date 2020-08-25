@@ -228,7 +228,7 @@ def unpack(archive: str, mime: str, targetdir: Optional[str] = None) -> int:
 
 
 def unpacked_size(archive: str, mime: str) -> Optional[int]:
-    command, parser = cast(Tuple[List[str], re.Pattern[str]], HANDLE_ARCHIVE[mime]["size"])
+    command, parser = HANDLE_ARCHIVE[mime]["size"]
     lines = run(command + [archive], stdout=PIPE, encoding='utf-8', check=False).stdout.split("\n")
     for line in lines:
         match = parser.match(line)
