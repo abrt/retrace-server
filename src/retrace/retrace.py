@@ -1078,7 +1078,7 @@ class RetraceTask:
             return None
 
         filename = self._get_file_path(key)
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding='utf-8', errors='replace') as f:
             result = f.read(maxlen)
 
         return result
