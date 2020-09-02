@@ -413,7 +413,7 @@ class RetraceWorker:
 
         crash_package, pkgdata = self.read_package_file(crashdir)
         self.stats["package"] = pkgdata["name"]
-        if pkgdata["epoch"] != 0:
+        if pkgdata["epoch"] is not None and pkgdata["epoch"] != 0:
             self.stats["version"] = "%d:%s-%s" % (pkgdata["epoch"], pkgdata["version"], pkgdata["release"])
         else:
             self.stats["version"] = "%s-%s" % (pkgdata["version"], pkgdata["release"])
