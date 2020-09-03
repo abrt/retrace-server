@@ -1,19 +1,21 @@
 # feonsu <feonsu@gmail.com>, 2016. #zanata
 # Matej Marusak <mmarusak@redhat.com>, 2019. #zanata
+# Ondrej Sulek <feonsu@gmail.com>, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2019-10-24 03:24+0000\n"
-"Last-Translator: Matej Marusak <mmarusak@redhat.com>\n"
-"Language-Team: Slovak\n"
+"PO-Revision-Date: 2020-09-01 08:29+0000\n"
+"Last-Translator: Ondrej Sulek <feonsu@gmail.com>\n"
+"Language-Team: Slovak <https://translate.fedoraproject.org/projects/abrt/"
+"retrace-server/sk/>\n"
 "Language: sk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2\n"
-"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: Weblate 4.2.1\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -142,19 +144,14 @@ msgid "Welcome to Retrace Server"
 msgstr "Vitajte v Retrace Serveri"
 
 #: ../src/index.wsgi:23
-#, fuzzy
-#| msgid ""
-#| "Retrace Server is a service that provides the possibility to analyze "
-#| "coredump and generate backtrace over network. You can find further "
-#| "information at Retrace Server&apos;s wiki:"
 msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s github:"
 msgstr ""
 "Retrace server je služba, ktorá poskytuje možnosť analyzovať coredumpy a "
-"generovať backtrace cez sieť. Viac informácií nájdete na wiki Retrace "
-"Servera: "
+"generovať backtrace cez sieť. Viac informácií nájdete na githube Retrace "
+"Servera:"
 
 #: ../src/index.wsgi:29
 msgid ""
