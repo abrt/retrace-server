@@ -51,7 +51,7 @@ def redirect_stderr(path):
         finally:
             sys.stderr = _stderr
 
-def sync_using_dnf(targetid, repourl, globaldnfcfg="", localdnfcfg=""):
+def sync_using_dnf(targetid: str, repourl: str, globaldnfcfg: str = "", localdnfcfg: str = "") -> int:
     dnftmp = tempfile.NamedTemporaryFile(mode="w", delete=False,
                                          prefix="repo", suffix=".conf")
     dnftmp.write(globaldnfcfg)
@@ -236,7 +236,7 @@ if __name__ == "__main__":
         log_error("Unknown distribution: '%s'" % distribution)
         sys.exit(1)
 
-    targetid = Path("%s-%s-%s" % (distribution, version, arch))
+    targetid = "%s-%s-%s" % (distribution, version, arch)
     lockfile = Path("/tmp/retrace-reposync-lock-%s" % targetid)
 
     if lockfile.is_file():
