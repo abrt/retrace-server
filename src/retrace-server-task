@@ -21,6 +21,7 @@ from requests_gssapi import HTTPSPNEGOAuth, DISABLED
 from retrace.retrace import add_snapshot_suffix
 
 
+FALLBACK_SERVER = 'https://retrace.fedoraproject.org'
 TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
     TASK_VMCORE_INTERACTIVE = range(5)
 
@@ -674,18 +675,27 @@ if __name__ == "__main__":
                 LOGGER.info("Defaulting to http task")
                 ARGS['task_input'] = 'http'
 
-    # default to local server if no assigned
+    # Default to localhost if no server was specified.
     if not ARGS['server']:
         ARGS['server'] = "https://" + socket.gethostname()
-        try:
-            if requests.get(ARGS['server'],
-                            verify=(not ARGS['no_verify']),
-                            auth=ARGS['kerberos']).status_code != 200:
-                raise requests.exceptions.ConnectionError
-        except requests.exceptions.RequestException:
-            LOGGER.info("Local server '%s' is not available", ARGS['server'])
-            ARGS['server'] = 'https://retrace.fedoraproject.org'
-        LOGGER.info("Trying server '%s'", ARGS['server'])
+
+    # Check that we are able to connect to the server.
+    LOGGER.info("Trying to connect to ‘%s’...", ARGS['server'])
+    try:
+        req = requests.get(ARGS['server'],
+                           verify=(not ARGS['no_verify']),
+                           auth=ARGS['kerberos'])
+        if req.status_code == 401:
+            print("Authentication failed for ‘{}’".format(ARGS['server']))
+            print("If the server requires Kerberos authentication, please use"
+                  " the ‘kinit’ command to obtain a valid ticket first.")
+            sys.exit(1)
+        if req.status_code != 200:
+            raise requests.exceptions.ConnectionError
+    except requests.exceptions.RequestException:
+        LOGGER.info("Could not connect to server ‘%s’. Falling back to ‘%s’",
+                    ARGS['server'], FALLBACK_SERVER)
+        ARGS['server'] = FALLBACK_SERVER
 
     # HACK - kernelver is better to use than vra
     ARGS['vra'] = ARGS.get('kernelver')
