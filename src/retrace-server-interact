@@ -180,8 +180,10 @@ if __name__ == "__main__":
 
         if args.action == "shell":
             if task.has_mock():
-                cmdline = ["/usr/bin/mock", "--configdir",
-                           str(Path(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())), "shell"]
+                cmdline = ["/usr/bin/mock",
+                           "--configdir",
+                           os.path.join(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid()),
+                           "shell"]
 
                 print_cmdline(cmdline)
                 os.execvp(cmdline[0], cmdline)
