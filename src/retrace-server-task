@@ -22,7 +22,7 @@ from retrace.retrace import add_snapshot_suffix
 
 
 TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
-        TASK_VMCORE_INTERACTIVE = range(5)
+    TASK_VMCORE_INTERACTIVE = range(5)
 
 
 def ticket_check() -> bool:
@@ -99,7 +99,7 @@ def parse_status(response) -> str:
     lines = response.text.split("\n")
     for i, line in enumerate(lines):
         if "<th>Status:</th>" in line:
-            return lines[i+1].strip()[4:-5]
+            return lines[i + 1].strip()[4:-5]
     return "unknown"
 
 
@@ -108,7 +108,7 @@ def parse_md5sum(response) -> str:
     lines = response.text.split("\n")
     for line in lines:
         if "<th>Md5sum:</th>" in line:
-            return line[line.find("<td>")+4:]
+            return line[line.find("<td>") + 4:]
     return "Md5sum not calculated. Not yet downloaded or md5sum not requested."
 
 
@@ -118,7 +118,7 @@ def parse_email(response) -> Optional[str]:
     lines = response.text.split("\n")
     for line in lines:
         if key_string in line:
-            first = line.find("value=")+7
+            first = line.find("value=") + 7
             last = line.find('"', first)
             candidate = line[first:last]
             if candidate == key_string:
@@ -133,7 +133,7 @@ def parse_caseno(response) -> Optional[str]:
     lines = response.text.split("\n")
     for line in lines:
         if key_string in line:
-            first = line.find("value=")+7
+            first = line.find("value=") + 7
             last = line.find('"', first)
             candidate = line[first:last]
             if candidate == key_string:
@@ -147,7 +147,7 @@ def parse_bugzillano(response) -> Optional[str]:
     lines = response.text.split("\n")
     for line in lines:
         if key_string in line:
-            first = line.find("value=")+7
+            first = line.find("value=") + 7
             last = line.find('"', first)
             candidate = line[first:last]
             if candidate == key_string:
@@ -189,7 +189,8 @@ def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
             task_type = TASK_VMCORE
 
         if args['vmem'] and task_type not in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
-            LOGGER.warning("Ignoring: %s, option is only viable with vmcores.", args['vmem'])
+            LOGGER.warning("Ignoring: %s, option is only viable with vmcores.",
+                           args['vmem'])
             args['vmem'] = None
 
         LOGGER.info("Task_type: %s", task_type)
@@ -204,10 +205,10 @@ def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
                    'Connection': 'close'}
 
         req = requests.Request('POST',
-                               args['server']+"/create",
+                               args['server'] + "/create",
                                headers=headers)
 
-        LOGGER.info("Connecting to %s", args['server']+"/create")
+        LOGGER.info("Connecting to %s", args['server'] + "/create")
 
         prepped = req.prepare()
         with open(tar_name, 'rb') as fld:
