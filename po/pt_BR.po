@@ -1,12 +1,13 @@
 # Daniel Lara <danniel@fedoraproject.org>, 2016. #zanata
 # Fábio Rodrigues Ribeiro <farribeiro@gmail.com>, 2020.
+# Arthur Nunes Corrêa <arthurnunes@tutanota.com>, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2020-09-04 23:29+0000\n"
-"Last-Translator: Fábio Rodrigues Ribeiro <farribeiro@gmail.com>\n"
+"PO-Revision-Date: 2020-09-29 02:29+0000\n"
+"Last-Translator: Arthur Nunes Corrêa <arthurnunes@tutanota.com>\n"
 "Language-Team: Portuguese (Brazil) <https://translate.fedoraproject.org/"
 "projects/abrt/retrace-server/pt_BR/>\n"
 "Language: pt_BR\n"
@@ -87,14 +88,13 @@ msgid ""
 "There are %d files in the '%s' directory. Only a single archive is supported "
 "at the moment"
 msgstr ""
-"Existem %d arquivos no '%s' diretório. É suportado apenas um arquivo no "
+"Existem %d arquivos no diretório '%s'. Só um arquivo é suportado por vez no "
 "momento"
 
 #: ../src/create.wsgi:136
 #, c-format
 msgid "You header specifies '%s' type, but the file type does not match"
-msgstr ""
-"Seu cabeçalho especifica '%s' tipo, mas o tipo de arquivo não corresponde"
+msgstr "Seu cabeçalho especifica o tipo '%s', mas esse não é o tipo do arquivo"
 
 #: ../src/create.wsgi:154
 msgid "Unable to save archive"
@@ -114,7 +114,7 @@ msgstr "Impossível descompactar arquivo"
 
 #: ../src/create.wsgi:197
 msgid "Symlinks are not allowed to be in the archive"
-msgstr "Links simbólicos não são permitidos para estar no arquivo"
+msgstr "Links simbólicos não são permitidos no arquivo"
 
 #: ../src/create.wsgi:204
 #, c-format
@@ -128,7 +128,8 @@ msgstr "Arquivo '%s' não é permitido estar no aquivo"
 
 #: ../src/create.wsgi:223
 msgid "Interactive tasks were disabled by server administrator"
-msgstr "Tarefas interativas foram desabilitadas pelo administrador do servidor"
+msgstr ""
+"As tarefas interativas foram desabilitadas pelo administrador do servidor"
 
 #: ../src/create.wsgi:232
 #, c-format
@@ -144,19 +145,14 @@ msgid "Welcome to Retrace Server"
 msgstr "Bem-vindo ao Servidor Retrace"
 
 #: ../src/index.wsgi:23
-#, fuzzy
-#| msgid ""
-#| "Retrace Server is a service that provides the possibility to analyze "
-#| "coredump and generate backtrace over network. You can find further "
-#| "information at Retrace Server&apos;s wiki:"
 msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s github:"
 msgstr ""
-"Servidor Retrace é um serviço que fornece a possibilidade de analisar o "
+"O Servidor Retrace é um serviço que fornece a possibilidade de analisar o "
 "despejo de memória e gerar backtrace sobre a rede. Você pode encontrar "
-"informações adicionais no wiki do Servidor Retrace:"
+"informações adicionais no github do Servidor Retrace:"
 
 #: ../src/index.wsgi:29
 msgid ""
@@ -253,7 +249,7 @@ msgstr "Falhou"
 
 #: ../src/stats.wsgi:42
 msgid "First retrace"
-msgstr "primeiro retrace"
+msgstr "Primeiro retrace"
 
 #: ../src/stats.wsgi:43
 msgid "Global statistics"
@@ -261,7 +257,7 @@ msgstr "Estatísticas globais"
 
 #: ../src/stats.wsgi:44
 msgid "Missing build-ids"
-msgstr "Id das compilações ausentes"
+msgstr "IDs de compilação ausentes"
 
 #: ../src/stats.wsgi:45
 msgid "Name"
@@ -281,11 +277,11 @@ msgstr "Pacotes exigidos"
 
 #: ../src/stats.wsgi:49
 msgid "Retraced packages"
-msgstr "Pacote retraçado"
+msgstr "Pacotes retraçados"
 
 #: ../src/stats.wsgi:50
 msgid "Retrace Server statistics"
-msgstr "Estatísticas do Servidor retraçada"
+msgstr "Estatísticas do Servidor Retrace"
 
 #: ../src/stats.wsgi:51
 msgid "Shared object name"
@@ -293,7 +289,7 @@ msgstr "Nome do objeto compartilhado"
 
 #: ../src/stats.wsgi:52
 msgid "Successful"
-msgstr "Bem sucessido"
+msgstr "Realizado com sucesso"
 
 #: ../src/stats.wsgi:53
 msgid "Total"
