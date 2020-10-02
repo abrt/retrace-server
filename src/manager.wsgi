@@ -302,9 +302,9 @@ def application(environ, start_response):
         debug = "debug" in POST
         kernelver = None
         arch = None
-        if "vra" in POST and POST["vra"]:
+        if "kernelver" in POST and POST["kernelver"]:
             try:
-                kernelver = KernelVer(POST["vra"])
+                kernelver = KernelVer(POST["kernelver"])
                 if kernelver.arch is None:
                     raise Exception
             except Exception as ex:
@@ -328,19 +328,19 @@ def application(environ, start_response):
         if "debug" in POST and POST["debug"] == "on":
             qs_base.append("debug=debug")
 
-        if "vra" in POST:
-            vra = POST["vra"]
+        if "kernelver" in POST:
+            kernelver = POST["kernelver"]
 
-            if vra.strip():
+            if kernelver.strip():
                 try:
-                    kver = KernelVer(vra)
+                    kver = KernelVer(kernelver)
                     if kver.arch is None:
                         raise Exception
                 except:
                     return response(start_response, "403 Forbidden",
                                     _("Please use VRA format for kernel version (e.g. 2.6.32-287.el6.x86_64)"))
 
-                qs_base.append("kernelver=%s" % urllib.parse.quote(vra))
+                qs_base.append("kernelver=%s" % urllib.parse.quote(kernelver))
 
         try:
             task = RetraceTask()
