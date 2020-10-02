@@ -38,7 +38,7 @@ def prepare_tar(args: Dict[str, Any]) -> Path:
     tmpdir = Path(tempfile.mkdtemp())
     tar_name = tmpdir / "archive.tar.gz"
     tar_file = tarfile.open(tar_name, "w:gz")
-    for itm in ["vra", "os_release", "package", "executable"]:
+    for itm in ["kernelver", "os_release", "package", "executable"]:
         if itm in args.keys() and args[itm]:
             LOGGER.info("Adding '%s' into tar", format(itm))
             fl_path = tmpdir / itm
@@ -162,7 +162,7 @@ def restart_existing_task(args: Dict[str, Any]) -> None:
                 args['server'] + "/manager/" + args['TASK_ID'])
     server = args['server'] + "/manager/" + args['TASK_ID'] + "/restart"
     payload = {}
-    for itm in ["vra", "debug", "caseno", "bugzillano"]:
+    for itm in ["kernelver", "debug", "caseno", "bugzillano"]:
         if itm in args.keys():
             payload[itm] = args[itm]
     if args['email']:
@@ -248,7 +248,7 @@ def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
             payload.update({"custom_vmem_url": args['vmem']})
 
         payload['md5sum'] = 'off' if args['no_md5'] else 'on'
-        for itm in ["debug", "vra", "task_type", "os_release", "package", "executable"]:
+        for itm in ["debug", "kernelver", "task_type", "os_release", "package", "executable"]:
             if itm in args.keys():
                 payload[itm] = args[itm]
 
@@ -263,7 +263,7 @@ def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
         LOGGER.info("Starting new ftp task")
         server = args['server'] + "/manager/"
         payload = {'md5sum': 'off' if args['no_md5'] else 'on'}
-        for itm in ["debug", "vra", "task_type", "os_release", "package", "executable"]:
+        for itm in ["debug", "kernelver", "task_type", "os_release", "package", "executable"]:
             if itm in args.keys():
                 payload[itm] = args[itm]
 
@@ -708,9 +708,6 @@ if __name__ == "__main__":
         LOGGER.info("Could not connect to server ‘%s’. Falling back to ‘%s’",
                     ARGS['server'], FALLBACK_SERVER)
         ARGS['server'] = FALLBACK_SERVER
-
-    # HACK - kernelver is better to use than vra
-    ARGS['vra'] = ARGS.get('kernelver')
 
     if ARGS['task_action'] == "create":
         create_new_task(ARGS)
