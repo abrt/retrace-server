@@ -6,6 +6,7 @@ import time
 import urllib
 from webob import Request
 from pathlib import Path
+from typing import Any, Dict
 
 from retrace.retrace import (STATUS, STATUS_DOWNLOADING, STATUS_FAIL,
                              STATUS_SUCCESS, TASK_DEBUG, TASK_RETRACE, TASK_RETRACE_INTERACTIVE,
@@ -51,6 +52,25 @@ def get_status_for_task_manager(task, _=lambda x: x):
         status += " %s" % task.get(RetraceTask.PROGRESS_FILE)
 
     return status
+
+def parse_start_options(task: RetraceTask, options: Dict[str, Any]):
+    if "caseno" in options and options["caseno"]:
+        try:
+            task.set_caseno(int(options["caseno"]))
+        except:
+            # caseno is invalid number - do nothing, it can be set later
+            pass
+
+    if "bugzillano" in options and options["bugzillano"]:
+        try:
+            bugzillano = list(filter(int, set(n.strip() for n in options["bugzillano"].replace(";", ",").split(","))))
+            task.set_bugzillano(bugzillano)
+        except Exception:
+            # bugzillano is invalid number - do nothing, it can be set later
+            pass
+
+    if "notify" in options and options["notify"]:
+        task.set_notify([email for email in set(n.strip() for n in options["notify"].replace(";", ",").split(",")) if email])
 
 def application(environ, start_response):
     request = Request(environ)
@@ -141,25 +161,10 @@ def application(environ, start_response):
             if "vmem-check" in GET:
                 task.add_remote("FTP %s" % GET["custom_vmem_url"])
 
-            if "caseno" in GET and GET["caseno"]:
-                try:
-                    task.set_caseno(int(GET["caseno"]))
-                except:
-                    # caseno is invalid number - do nothing, it can be set later
-                    pass
-
-            if "bugzillano" in GET and GET["bugzillano"]:
-                try:
-                    bugzillano = list(filter(int, set(n.strip() for n in GET["bugzillano"].
-                                                      replace(";", ",").split(","))))
-                    task.set_bugzillano(bugzillano)
-                except Exception:
-                    # bugzillano is invalid number - do nothing, it can be set later
-                    pass
-
         if not task.get_managed():
             return response(start_response, "403 Forbidden", _("Task does not belong to task manager"))
 
+        parse_start_options(task, GET)
         debug = "debug" in GET
         kernelver = None
         arch = None
@@ -174,10 +179,6 @@ def application(environ, start_response):
 
             arch = kernelver.arch
             kernelver = str(kernelver)
-
-        if "notify" in GET and GET["notify"]:
-            task.set_notify([email for email in set(n.strip() for n in GET["notify"].
-                                                    replace(";", ",").split(",")) if email])
 
         if "md5sum" in GET:
             task.set_md5sum("Enabled")
@@ -297,6 +298,7 @@ def application(environ, start_response):
             return response(start_response, "403 Forbidden",
                                 _("Task is still running, cannot restart"))
 
+        parse_start_options(task, POST)
         debug = "debug" in POST
         kernelver = None
         arch = None

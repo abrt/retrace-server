@@ -162,9 +162,11 @@ def restart_existing_task(args: Dict[str, Any]) -> None:
                 args['server'] + "/manager/" + args['TASK_ID'])
     server = args['server'] + "/manager/" + args['TASK_ID'] + "/restart"
     payload = {}
-    for itm in ["vra", "debug"]:
+    for itm in ["vra", "debug", "caseno", "bugzillano"]:
         if itm in args.keys():
             payload[itm] = args[itm]
+    if args['email']:
+        payload['notify'] = args['email']
     res = requests.post(server,
                         data=payload,
                         verify=(not args['no_verify']),
@@ -630,12 +632,18 @@ if __name__ == "__main__":
     TMP = TASK_PARSER.add_parser('restart')
     TMP.add_argument("TASK_ID",
                      help="ID of existing task")
-    TMP.add_argument("-s", "--server",
-                     help="URL for retrace-server")
     TMP.add_argument("-n", "--no-verify", action="store_true",
                      help="Do not verify certificate")
+    TMP.add_argument("-s", "--server",
+                     help="URL for retrace-server")
     TMP.add_argument("-v", "--verbose", action="store_const",
                      default=logging.WARNING, const=logging.DEBUG)
+    TMP.add_argument("-bz", "--bugzillano",
+                     help="Set bugzilla number of the task.")
+    TMP.add_argument("-c", "--caseno",
+                     help="Set case number of the task.")
+    TMP.add_argument("-e", "--email",
+                     help="Set email to the task.")
     TMP.add_argument("-r", "--kernelver",
                      help="Version of kernel in vmcore")
 

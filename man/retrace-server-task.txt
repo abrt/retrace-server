@@ -15,6 +15,7 @@ SYNOPSIS
 
 'retrace-server-task' restart [-h] [-s SERVER] [-n] [-v]
                               [-r KERNELVER]
+                              [-e EMAIL] [-c CASENO] [-bz BUGZILLANO]
                               TASK_ID
 
 'retrace-server-task' get [-h] [-p PASSWORD] [-s SERVER] [-n] [-v]
@@ -128,8 +129,20 @@ CREATE OR BATCH OPTIONS
 RESTART OPTIONS
 ---------------
 
--k KERNELVER, --kernelver KERNELVER::
-   Force the kernel version in the COREFILE to KERNELVER.
+-bz BUGZILLANO, --bugzillano BUGZILLANO::
+   Write the bugzillano field in the task to BUGZILLANO.
+   Available only for manager and ftp task.
+
+-c CASENO, --caseno CASENO::
+   Write the caseno field in the task to CASENO.
+   Available only for manager and ftp task.
+
+-e EMAIL, --email EMAIL::
+   Write the email field in the task to EMAIL.
+   Available only for manager and ftp task.
+
+-r KERNELVER, --kernelver KERNELVER::
+   Force the kernel version in the task to KERNELVER.
    Only valid for kernel cores.
 
 GET OPTIONS
