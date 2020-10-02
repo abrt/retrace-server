@@ -7,23 +7,25 @@ retrace-server-task - Create a task, get and set fields on an existing task
 
 SYNOPSIS
 --------
-'retrace-server-task' create [-h] [-u | -k] [-t | -m | -f] [-i] [-d]
-                             [-s SERVER] [-n] [-v] [--vmem VMEM] [-r KERNELVER]
+'retrace-server-task' create [-h] [-n] [-s SERVER] [-v]
+                             [-u | -k] [-t | -m | -f] [-i] [-d]
+                             [-bz BUGZILLANO] [-c CASENO] [-e EMAIL]
                              [-o OS_RELEASE] [-p PACKAGE] [-x EXECUTABLE]
-                             [-e EMAIL] [-c CASENO] [-bz BUGZILLANO]
+                             [-r KERNELVER]
+                             [--vmem VMEM]
                              COREFILE
 
-'retrace-server-task' restart [-h] [-s SERVER] [-n] [-v]
+'retrace-server-task' restart [-h] [-n] [-s SERVER] [-v]
+                              [-bz BUGZILLANO] [-c CASENO] [-e EMAIL]
                               [-r KERNELVER]
-                              [-e EMAIL] [-c CASENO] [-bz BUGZILLANO]
                               TASK_ID
 
-'retrace-server-task' get [-h] [-p PASSWORD] [-s SERVER] [-n] [-v]
-                          [-t | -b | -m | -e | -c | -bz]
+'retrace-server-task' get [-h] [-n] [-p PASSWORD] [-s SERVER] [-v]
+                          [-b | -bz | -c | -e | -m | -t]
                           TASK_ID
 
-'retrace-server-task' set [-h] [-p PASSWORD] [-s SERVER] [-n] [-v]
-                          [-c CASENO] [-e EMAIL] [-bz BUGZILLANO]
+'retrace-server-task' set [-h] [-n] [-p PASSWORD] [-s SERVER] [-v]
+                          [-bz BUGZILLANO] [-c CASENO] [-e EMAIL]
                           TASK_ID
 
 DESCRIPTION
@@ -69,22 +71,38 @@ COMMON OPTIONS
 -h, --help::
    Display help and exit.
 
+-n, --no-verify::
+   Do not verify certificate. (off by default)
+
+-p, --password PASSWORD::
+   Password of the task (only for http tasks)
+
 -s, --server SERVER::
    URL for Retrace server. If not specified local server is tried and if not
    available https://retrace.fedoraproject.org/ is used.
-
--n, --no-verify::
-   Do not verify certificate. (off by default)
 
 -v, --verbose::
    Be verbose.  Note this also turns on debug logging for create, batch or
    restart operations.
 
--p, --password PASSWORD::
-   Password of the task (only for http tasks)
-
 CREATE OR BATCH OPTIONS
 -----------------------
+
+-bz BUGZILLANO, --bugzillano BUGZILLANO::
+   Write the bugzillano field in the task to BUGZILLANO.
+   Available only for manager and ftp task.
+
+-c CASENO, --caseno CASENO::
+   Write the caseno field in the task to CASENO.
+   Available only for manager and ftp task.
+
+-e EMAIL, --email EMAIL::
+   Write the email field in the task to EMAIL.
+   Available only for manager and ftp task.
+
+-d, --no-md5::
+   Do not calculate md5sum on the task.
+   Available only for manager and ftp task.
 
 -u, --userspace_core::
    The COREFILE specified is userspace core.
@@ -111,7 +129,7 @@ CREATE OR BATCH OPTIONS
    Virtual memory file VMEM needed for retracing kernel vmcore snapshots.
    Only valid for kernel cores.
 
--k KERNELVER, --kernelver KERNELVER::
+-r KERNELVER, --kernelver KERNELVER::
    Force the kernel version in the COREFILE to KERNELVER.
    Only valid for kernel cores.
 
@@ -167,6 +185,10 @@ GET OPTIONS
 -m, --md5sum::
    Return the md5sum field in the task to the terminal.
    Available only for manager and ftp task.
+
+-t, --status::
+   Return the status field in the task to the terminal.
+   If no option is given, this field is selected as default.
 
 SET OPTIONS
 -----------
