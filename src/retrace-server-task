@@ -248,7 +248,7 @@ def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
             payload.update({"custom_vmem_url": args['vmem']})
 
         payload['md5sum'] = 'off' if args['no_md5'] else 'on'
-        for itm in ["vra", "task_type", "os_release", "package", "executable"]:
+        for itm in ["debug", "vra", "task_type", "os_release", "package", "executable"]:
             if itm in args.keys():
                 payload[itm] = args[itm]
 
@@ -263,7 +263,7 @@ def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
         LOGGER.info("Starting new ftp task")
         server = args['server'] + "/manager/"
         payload = {'md5sum': 'off' if args['no_md5'] else 'on'}
-        for itm in ["vra", "task_type", "os_release", "package", "executable"]:
+        for itm in ["debug", "vra", "task_type", "os_release", "package", "executable"]:
             if itm in args.keys():
                 payload[itm] = args[itm]
 
@@ -656,6 +656,10 @@ if __name__ == "__main__":
     # create logger
     logging.basicConfig(level=ARGS['verbose'])
     LOGGER = logging.getLogger()
+
+    # If verbose was given, turn on debug for task commands
+    if ARGS['verbose'] != logging.WARNING:
+        ARGS['debug'] = "on"
 
     # check kerberos
     if ticket_check():

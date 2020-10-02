@@ -77,7 +77,8 @@ COMMON OPTIONS
    Do not verify certificate. (off by default)
 
 -v, --verbose::
-   Be verbose
+   Be verbose.  Note this also turns on debug logging for create, batch or
+   restart operations.
 
 -p, --password PASSWORD::
    Password of the task (only for http tasks)
