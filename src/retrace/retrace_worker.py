@@ -667,7 +667,11 @@ class RetraceWorker:
 
         task = self.task
         crashdir = task.get_crashdir()
+        task.find_vmcore_file()
+        if not task.get_vmcore_path().is_file():
+            raise Exception("Vmcore file not found at %s" % task.get_vmcore_path())
         vmcore_path = task.get_vmcore_path()
+        log_debug("Task vmcore path: %s" % task.get_vmcore_path())
 
         try:
             self.stats["coresize"] = vmcore_path.stat().st_size
