@@ -69,7 +69,7 @@ def sync_using_dnf(targetid: str, repourl: str, globaldnfcfg: str = "", localdnf
 
     tmpdir.mkdir(parents=True, exist_ok=True)
 
-    with redirect_stderr(Path(CONFIG["LogDir"]) / "reposync_dnf.log") as (old_stderr, new_stderr):
+    with redirect_stderr(Path(CONFIG["LogDir"], "reposync_dnf.log")) as (old_stderr, new_stderr):
         # BEGIN DNF
         dnfbase = dnf.Base()
         dnfbase.conf.read(filename=dnftmp.name)
@@ -253,7 +253,7 @@ if __name__ == "__main__":
         null = DEVNULL
 
     try:
-        targetdir = CONFIG["RepoDir"] / targetid
+        targetdir = Path(CONFIG["RepoDir"], targetid)
         pkgdir = targetdir / "Packages"
 
         if not pkgdir.is_dir():
