@@ -6,7 +6,7 @@ import time
 import urllib
 from webob import Request
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from retrace.retrace import (STATUS, STATUS_DOWNLOADING, STATUS_FAIL,
                              STATUS_SUCCESS, TASK_DEBUG, TASK_RETRACE, TASK_RETRACE_INTERACTIVE,
@@ -28,7 +28,7 @@ FTP_SUPPORTED_EXTENSIONS = [".tar.gz", ".tgz", ".tarz", ".tar.bz2", ".tar.xz",
                             ".tar", ".gz", ".bz2", ".xz", ".Z", ".zip"]
 
 
-MANAGER_URL_PARSER = re.compile(r"^(.*/manager)(/(([^/]+)(/(__custom__|start|restart|backtrace|savenotes|caseno|"
+MANAGER_URL_PARSER = re.compile(r"^(.*/manager)(/(([^/]+)(/(__custom__|start|restart|restart_confirm|backtrace|savenotes|caseno|"
                                 r"bugzillano|notify|delete(/(sure/?)?)?|results/([^/]+)/?)?)?)?)?$")
 
 LONG_TYPES = {TASK_RETRACE: "Coredump retrace",
@@ -71,6 +71,53 @@ def parse_start_options(task: RetraceTask, options: Dict[str, Any]):
 
     if "notify" in options and options["notify"]:
         task.set_notify([email for email in set(n.strip() for n in options["notify"].replace(";", ",").split(",")) if email])
+def get_current_kernelver(task: RetraceTask) -> str:
+    if task and task.has_kernelver():
+        return "value=\"%s\" " % task.get_kernelver()
+    else:
+        ""
+
+def get_start_content_kernelver(task: Optional[RetraceTask] = None) -> str:
+    return "      Kernel version (empty to autodetect): <input name=\"kernelver\" " \
+           "type=\"text\" id=\"kernelver\" %s/> e.g. <code>2.6.32-287.el6.x86_64</code><br />" % get_current_kernelver(task)
+
+def get_current_caseno(task: RetraceTask) -> str:
+    if task and task.has_caseno():
+        return "value=\"%d\" " % task.get_caseno()
+    else:
+        return ""
+
+def get_start_content_caseno(task: Optional[RetraceTask] = None) -> str:
+    return "      Case no.: <input name=\"caseno\" type=\"text\" id=\"caseno\" %s/><br />" % get_current_caseno(task)
+
+def get_current_bugzillano(task: RetraceTask) -> str:
+    if task and task.has_bugzillano():
+        return "value=\"%s\"" % ", ".join(task.get_bugzillano())
+    else:
+        return ""
+
+def get_start_content_bugzillano(task: Optional[RetraceTask] = None) -> str:
+    return "      Bugzilla no.: <input name=\"bugzillano\" type=\"text\" id=\"bugzillano\" %s/><br />" % get_current_bugzillano(task)
+
+def get_current_notify(task: RetraceTask) -> str:
+    if task and task.has_notify():
+        return "value=\"%s\"" % ", ".join(task.get_notify())
+    else:
+        return ""
+
+def get_start_content_notify(task: Optional[RetraceTask] = None) -> str:
+    return "      E-mail notification: <input name=\"notify\" type=\"text\" id=\"notify\" %s/><br />" % get_current_notify(task)
+
+def get_start_content_verbose() -> str:
+    return "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" checked=\"checked\" />" \
+           "Be more verbose in case of error<br />" \
+
+def get_start_content_calc_md5() -> str:
+    md5sum_enabled = ""
+    if CONFIG["CalculateMd5"]:
+        md5sum_enabled = "checked=\"checked\""
+    return "      <input type=\"checkbox\" name=\"md5sum\" id=\"md5sum\" %s />" \
+           "Calculate md5 checksum for all downloaded resources<br />" % md5sum_enabled
 
 def application(environ, start_response):
     request = Request(environ)
@@ -288,6 +335,62 @@ def application(environ, start_response):
 
         return response(start_response, "302 Found", "", [("Location", match.group(1))])
 
+    elif match.group(6) and match.group(6) == "restart_confirm":
+        try:
+            task = RetraceTask(filename)
+        except:
+            return response(start_response, "404 Not Found", _("There is no such task"))
+
+        with open("/usr/share/retrace-server/managertask.xhtml", "r") as f:
+            output = f.read(1 << 20) # 1MB
+
+        title = "%s #%s - %s" % (_("Task"), task.get_taskid(), _("Retrace Server Task Manager"))
+        taskno = "%s #%s" % (_("Task"), task.get_taskid())
+        tasktype = _(LONG_TYPES[task.get_type()])
+        status = get_status_for_task_manager(task, _=_)
+        baseurl = request.path_url.replace('restart_confirm','')
+        startcontent = "    <form method=\"post\" action=\"%s/restart\">" % baseurl.rstrip("/") + \
+                       get_start_content_kernelver(task) + get_start_content_caseno(task) + \
+                       get_start_content_bugzillano(task) + get_start_content_notify(task) + \
+                       get_start_content_verbose() + \
+                       "      <input type=\"submit\" value=\"%s\" id=\"start\" class=\"button\" />" \
+                       "    </form>" % _("Restart task")
+        start = "<tr>" \
+                "  <td colspan=\"2\">" \
+                "%s" \
+                "  </td>" \
+                "</tr>" % startcontent
+        back = "<tr><td colspan=\"2\"><a href=\"%s\">%s</a></td></tr>" % (match.group(1), _("Back to task manager"))
+        md5sum = ""
+        if task.has_md5sum():
+            md5sum = "<tr><th>Md5sum:</th><td>%s</td></tr>" % task.get_md5sum()
+
+        output = output.replace("{title}", title)
+        output = output.replace("{taskno}", taskno)
+        output = output.replace("{str_type}", _("Type:"))
+        output = output.replace("{type}", tasktype)
+        output = output.replace("{str_status}", _("Status:"))
+        output = output.replace("{status}", status)
+        output = output.replace("{start}", start)
+        output = output.replace("{back}", back)
+        output = output.replace("{backtrace}", "")
+        output = output.replace("{backtracewindow}", "")
+        output = output.replace("{caseno}", "")
+        output = output.replace("{bugzillano}", "")
+        output = output.replace("{notify}", "")
+        output = output.replace("{delete}", "")
+        output = output.replace("{delete_yesno}", "")
+        output = output.replace("{restart}", "")
+        output = output.replace("{interactive}", "")
+        output = output.replace("{results}", "")
+        output = output.replace("{notes}", "")
+        output = output.replace("{md5sum}", md5sum)
+        output = output.replace("{unknownext}", "")
+        output = output.replace("{downloaded}", "")
+        output = output.replace("{starttime}", "")
+        output = output.replace("{finishtime}", "")
+        return response(start_response, "200 OK", output, [("Content-Type", "text/html")])
+
     elif match.group(6) and match.group(6) == "restart":
         POST = request.POST
         try:
@@ -400,22 +503,12 @@ def application(environ, start_response):
         if not ftptask and task.has_status():
             status = get_status_for_task_manager(task, _=_)
         else:
-            md5sum_enabled = ""
-            if CONFIG["CalculateMd5"]:
-                md5sum_enabled = "checked=\"checked\""
-
-            startcontent = "    <form method=\"get\" action=\"%s/start\">" \
-                           "      Kernel version (empty to autodetect): <input name=\"kernelver\" " \
-                           "type=\"text\" id=\"kernelver\" /> e.g. <code>2.6.32-287.el6.x86_64</code><br />" \
-                           "      Case no.: <input name=\"caseno\" type=\"text\" id=\"caseno\" /><br />" \
-                           "      Bugzilla no.: <input name=\"bugzillano\" type=\"text\" id=\"bugzillano\" /><br />" \
-                           "      E-mail notification: <input name=\"notify\" type=\"text\" id=\"notify\" /><br />" \
-                           "      <input type=\"checkbox\" name=\"debug\" id=\"debug\" checked=\"checked\" />" \
-                           "Be more verbose in case of error<br />" \
-                           "      <input type=\"checkbox\" name=\"md5sum\" id=\"md5sum\" %s />" \
-                           "Calculate md5 checksum for all downloaded resources<br />" \
+            startcontent = "    <form method=\"get\" action=\"%s/start\">" % request.path_url.rstrip("/") + \
+                           get_start_content_kernelver() + get_start_content_caseno() + \
+                           get_start_content_bugzillano() + get_start_content_notify() + \
+                           get_start_content_verbose() + get_start_content_calc_md5() + \
                            "      <input type=\"submit\" value=\"%s\" id=\"start\" class=\"button\" />" \
-                           "    </form>" % (request.path_url.rstrip("/"), md5sum_enabled, _("Start task"))
+                           "    </form>" % _("Start task")
 
             if ftptask:
                 status = _("On remote FTP server")
@@ -462,6 +555,12 @@ def application(environ, start_response):
         else:
             delete = "<tr><td colspan=\"2\"><a href=\"%s/delete\">%s</a></td></tr>" \
                      % (request.path_url.rstrip("/"), _("Delete task"))
+
+        if ftptask or task.is_running(readproc=True):
+            restart = ""
+        else:
+            restart = "<tr><td colspan=\"2\"><a href=\"%s/restart_confirm\">%s</a></td></tr>" \
+                     % (request.path_url.rstrip("/"), _("Restart task"))
 
         if ftptask:
             # ToDo: determine?
@@ -527,10 +626,6 @@ def application(environ, start_response):
 
         caseno = ""
         if not ftptask:
-            currentcaseno = ""
-            if task.has_caseno():
-                currentcaseno = "value=\"%d\" " % task.get_caseno()
-
             caseno = "<tr>" \
                      "  <th>Case no.:</th>" \
                      "  <td>" \
@@ -539,14 +634,10 @@ def application(environ, start_response):
                      "      <input type=\"submit\" value=\"Update case no.\" class=\"button\" />" \
                      "    </form>" \
                      "  </td>" \
-                     "</tr>" % (request.path_url.rstrip("/"), currentcaseno)
+                     "</tr>" % (request.path_url.rstrip("/"), get_current_caseno(task))
 
         bugzillano = ""
         if not ftptask:
-            currentbugzillano = ""
-            if task.has_bugzillano():
-                currentbugzillano = "value=\"%s\"" % ", ".join(task.get_bugzillano())
-
             bugzillano = "<tr>" \
                      "  <th>Bugzilla no.:</th>" \
                      "  <td>" \
@@ -555,7 +646,7 @@ def application(environ, start_response):
                      "      <input type=\"submit\" value=\"Update bugzilla no.\" class=\"button\" />" \
                      "    </form>" \
                      "  </td>" \
-                     "</tr>" % (request.path_url.rstrip("/"), currentbugzillano)
+                     "</tr>" % (request.path_url.rstrip("/"), get_current_bugzillano(task))
 
         back = "<tr><td colspan=\"2\"><a href=\"%s\">%s</a></td></tr>" % (match.group(1), _("Back to task manager"))
 
@@ -576,10 +667,6 @@ def application(environ, start_response):
 
         notify = ""
         if not ftptask:
-            currentnotify = ""
-            if task.has_notify():
-                currentnotify = "value=\"%s\"" % ", ".join(task.get_notify())
-
             notify = "<tr>" \
                      "  <th>E-mail notification:</th>" \
                      "  <td>" \
@@ -588,7 +675,7 @@ def application(environ, start_response):
                      "      <input type=\"submit\" value=\"Update e-mail(s)\" class=\"button\" />" \
                      "    </form>" \
                      "  </td>" \
-                     "</tr>" % (request.path_url.rstrip("/"), currentnotify)
+                     "</tr>" % (request.path_url.rstrip("/"), get_current_notify(task))
 
         output = output.replace("{title}", title)
         output = output.replace("{taskno}", taskno)
@@ -605,6 +692,7 @@ def application(environ, start_response):
         output = output.replace("{notify}", notify)
         output = output.replace("{delete}", delete)
         output = output.replace("{delete_yesno}", delete_yesno)
+        output = output.replace("{restart}", restart)
         output = output.replace("{interactive}", interactive)
         output = output.replace("{results}", results)
         output = output.replace("{notes}", notes)
