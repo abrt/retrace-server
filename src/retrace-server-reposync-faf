@@ -94,7 +94,7 @@ def generate_repo(db: Database, outputdir: Path, opsys: str, release: str, arch:
         record = cr.RepomdRecord(name, str(path))
         record.fill(cr.SHA256)
         record.rename_file()
-        if (db_to_update):
+        if db_to_update:
             db_to_update.dbinfo_update(record.checksum)
             db_to_update.close()
         repomd.set_record(record)
