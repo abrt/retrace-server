@@ -59,7 +59,7 @@ def check_open_crash_file(task: RetraceTask) -> bool:
     else:
         return False
 
-    lsof = run([LSOF_BIN, "+wt", crash_path], stdout=PIPE, encoding='utf-8')
+    lsof = run([LSOF_BIN, "+wt", crash_path], stdout=PIPE, check=False, encoding='utf-8')
     pids = lsof.stdout
 
     if pids:
@@ -174,7 +174,7 @@ if __name__ == "__main__":
                     targetfile = dropdir / ("%s-%s.tar.gz" % (filepath.name, time.strftime("%Y%m%d%H%M%S")))
 
                     child = run(["tar", "czf", str(targetfile), str(task.get_savedir())],
-                                stdout=PIPE, stderr=STDOUT)
+                                stdout=PIPE, stderr=STDOUT, check=False)
                     stdout = child.stdout
                     if child.returncode:
                         log.write("Error: tar exited with %d: %r\n" % (child.returncode, stdout))
