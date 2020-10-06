@@ -730,4 +730,3 @@ if __name__ == "__main__":
 
     if ARGS['task_action'] == "restart":
         restart_existing_task(ARGS)
-
