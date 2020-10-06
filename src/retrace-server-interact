@@ -23,9 +23,9 @@ CONFIG = Config()
 
 ACTIONS = ["shell", "gdb", "crash", "printdir", "delete", "set-success", "set-fail"]
 
-def print_cmdline(cmdline: List[str]):
+def print_cmdline(cmd_line: List[str]):
     sys.stderr.write("If you want to execute the command manually, you can run\n")
-    sys.stderr.write("$ %s\n\n" % list2cmdline(cmdline))
+    sys.stderr.write("$ %s\n\n" % list2cmdline(cmd_line))
 
 if __name__ == "__main__":
     groups = [grp.getgrgid(g).gr_name for g in os.getgroups()]
