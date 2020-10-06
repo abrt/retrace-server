@@ -171,7 +171,7 @@ if __name__ == "__main__":
                     raise Exception("Unable to determine crash command")
                 if task.has_crashrc():
                     cmdline = crash_cmd.split() + ["-i", str(task.get_crashrc_path()),
-                            str(vmcore_path), vmlinux]
+                                                   str(vmcore_path), vmlinux]
                 else:
                     cmdline = crash_cmd.split() + [str(vmcore_path), vmlinux]
 
