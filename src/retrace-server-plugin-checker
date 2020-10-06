@@ -47,7 +47,7 @@ def main() -> None:
                 try:
                     urllib.request.urlopen(mirror_path)
                     path_ok = True
-                except Exception as ex:
+                except Exception:
                     pass
             elif p.startswith("rsync:"):
                 rsync = run(['rsync', '--list-only', mirror_path], stdout=DEVNULL, stderr=DEVNULL, check=False)
