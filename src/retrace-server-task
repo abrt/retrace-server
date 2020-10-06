@@ -233,7 +233,7 @@ def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
         print("Task password: {0}".format(task_password))
         return (task_id, task_password)
 
-    elif args['task_input'] == "manager":
+    if args['task_input'] == "manager":
         args['COREFILE'] = Path(args['COREFILE']).resolve().as_uri()
         if args['vmem']:
             args['vmem'] = Path(args['vmem']).resolve().as_uri()
@@ -435,9 +435,9 @@ def get_backtrace(args: Dict[str, Any]) -> bool:
         if res.text == "There is no backtrace for the specified task":
             print("No backtrace. Check status if task is running or failed.")
             return False
-        else:
-            print("Error: {0}".format(res.text))
-            sys.exit(1)
+
+        print("Error: {0}".format(res.text))
+        sys.exit(1)
 
     with open("backtrace", "w") as fld:
         fld.write(res.text)
