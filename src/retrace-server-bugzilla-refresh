@@ -5,9 +5,10 @@ retrace-server-cleanup tool.
 """
 
 import time
-import bugzilla
 
 from pathlib import Path
+
+import bugzilla
 
 from retrace.retrace import RetraceTask
 from retrace.config import Config
