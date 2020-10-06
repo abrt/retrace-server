@@ -19,16 +19,16 @@ from retrace.config import Config, LSOF_BIN
 CONFIG = Config()
 
 
-def get_process_tree(pid: int, ps_output: List[str]) -> List[int]:
-    result = [pid]
+def get_process_tree(process_id: int, ps_output: List[str]) -> List[int]:
+    result = [process_id]
 
-    parser = re.compile(r"^([0-9]+)[ \t]+(%d).*$" % pid)
+    parser = re.compile(r"^([0-9]+)[ \t]+(%d).*$" % process_id)
 
     for line in ps_output:
         match = parser.match(line)
         if match:
-            pid = int(match.group(1))
-            result.extend(get_process_tree(pid, ps_output))
+            process_id = int(match.group(1))
+            result.extend(get_process_tree(process_id, ps_output))
 
     return result
 
@@ -39,23 +39,23 @@ def kill_process_and_childs(process_id: int, ps_output: Optional[List[str]] = No
     if ps_output is None:
         ps_output = run_ps()
 
-    for pid in get_process_tree(process_id, ps_output):
+    for proc_id in get_process_tree(process_id, ps_output):
         try:
-            os.kill(pid, 9)
+            os.kill(proc_id, 9)
         except OSError:
             result = False
 
     return result
 
 
-def check_open_crash_file(task: RetraceTask) -> bool:
+def check_open_crash_file(retrace_task: RetraceTask) -> bool:
     """
     Check if vmcore or coredump for given task is used by another process.
     """
-    if task.has_vmcore():
-        crash_path = task.get_vmcore_path()
-    elif task.has_coredump():
-        crash_path = task.get_crashdir() / task.COREDUMP_FILE
+    if retrace_task.has_vmcore():
+        crash_path = retrace_task.get_vmcore_path()
+    elif retrace_task.has_coredump():
+        crash_path = retrace_task.get_crashdir() / retrace_task.COREDUMP_FILE
     else:
         return False
 
@@ -101,8 +101,8 @@ if __name__ == "__main__":
         log.write(time.strftime("[%Y-%m-%d %H:%M:%S] Running cleanup\n"))
 
         # kill tasks running > 1 hour
-        ps_output = run_ps()
-        running_tasks = get_running_tasks(ps_output)
+        ps_out = run_ps()
+        running_tasks = get_running_tasks(ps_out)
         for pid, taskid, runtime in running_tasks:
             # do not kill tasks started from task manager
             if CONFIG["AllowTaskManager"]:
@@ -116,7 +116,7 @@ if __name__ == "__main__":
             # ToDo: 5 = mm:ss, >5 = hh:mm:ss
             if len(runtime) > 5:
                 log.write("Killing task %d running for %s\n" % (taskid, runtime))
-                kill_process_and_childs(pid, ps_output)
+                kill_process_and_childs(pid, ps_out)
 
         # kill orphaned tasks
         running_tasks = get_running_tasks()
