@@ -205,13 +205,13 @@ def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
                    'X-Task-Type': str(task_type),
                    'Connection': 'close'}
 
-        req = requests.Request('POST',
-                               args['server'] + "/create",
-                               headers=headers)
+        request = requests.Request('POST',
+                                   args['server'] + "/create",
+                                   headers=headers)
 
         LOGGER.info("Connecting to %s", args['server'] + "/create")
 
-        prepped = req.prepare()
+        prepped = request.prepare()
         with open(tar_name, 'rb') as fld:
             prepped.body = fld.read(tar_size)
 
