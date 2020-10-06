@@ -2,6 +2,7 @@
 # Gets list of packages necessary for processing of a coredump.
 # Uses eu-unstrip and dnf.
 
+import sys
 import argparse
 import logging
 import subprocess
@@ -208,7 +209,7 @@ def main() -> None:
     else:
         dnfbase.conf.read()
     if not dnfbase.conf.cachedir:
-        exit(2)
+        sys.exit(2)
     dnfbase.read_all_repos()
     logger.info("Closing all enabled repositories...")
     for repo in dnfbase.repos.iter_enabled():
@@ -232,7 +233,7 @@ def main() -> None:
     unstrip = unstrip_proc.stdout
     logger.info("%s", unstrip)
     if not unstrip:
-        exit(1)
+        sys.exit(1)
 
     package_list, missing_buildid_list, coredump_package_list = process_unstrip_output(unstrip, dnfbase)
 
