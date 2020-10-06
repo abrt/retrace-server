@@ -7,10 +7,11 @@ to a log and for tasks found in the comments set bugzillano field with bugzilla 
 import sys
 import re
 import time
-import bugzilla
-from typing import Dict, List, Set
 
+from typing import Dict, List, Set
 from pathlib import Path
+
+import bugzilla
 
 from retrace.retrace import BUGZILLA_STATUS, RetraceTask
 from retrace.config import Config
