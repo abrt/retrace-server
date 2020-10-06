@@ -62,7 +62,7 @@ def main() -> None:
                 if args.first_valid and path_ok:
                     print(mirror_path)
                     break
-                elif args.only_valid and path_ok:
+                if args.only_valid and path_ok:
                     print(mirror_path)
                 elif args.only_invalid and not path_ok:
                     print(mirror_path)
