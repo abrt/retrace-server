@@ -15,7 +15,6 @@ import rpm
 import dnf
 
 from functools import cmp_to_key
-from pathlib import Path
 from subprocess import run, DEVNULL, PIPE
 
 from retrace.retrace import (get_canon_arch,
