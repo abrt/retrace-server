@@ -282,7 +282,7 @@ def main() -> None:
                         removal_candidate.release, removal_candidate.arch)
         # Remove the removal_candidate packages from the package list
         for package in package_list[:]:
-            if package.name == removal_candidate.name and 0 == package.evr_cmp(removal_candidate):
+            if package.name == removal_candidate.name and package.evr_cmp(removal_candidate) == 0:
                 package_list.remove(package)
 
     # Clean coredump_package_list:
