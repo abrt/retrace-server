@@ -204,7 +204,7 @@ if __name__ == "__main__":
 
         cmd_line = ["retrace-server-reposync-faf", distribution, version, arch,
                     "--outputdir", targetdir]
-        child = run(cmd_line, stdout=PIPE, stderr=PIPE, encoding="utf-8")
+        child = run(cmd_line, stdout=PIPE, stderr=PIPE, encoding="utf-8", check=False)
         if child.returncode:
             log_error("Could not create faf repo")
             log_debug(child.stdout)
@@ -300,7 +300,8 @@ if __name__ == "__main__":
                             log_info("Trying another mirror")
                             continue
 
-                    retcode = run(["rsync", "-t"] + files + [pkgdir], stdout=null, stderr=null).returncode
+                    retcode = run(["rsync", "-t"] + files + [pkgdir],
+                                  stdout=null, stderr=null, check=False).returncode
 
                 if retcode == 0:
                     log_info("Download succeeded")
@@ -323,7 +324,7 @@ if __name__ == "__main__":
         if CONFIG["UseCreaterepoUpdate"]:
             cmd.append("--update")
 
-        retcode = run(cmd, stdout=null, stderr=null).returncode
+        retcode = run(cmd, stdout=null, stderr=null, check=False).returncode
     finally:
         unlock(lockfile)
 
