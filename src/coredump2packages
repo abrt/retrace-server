@@ -136,7 +136,7 @@ def process_unstrip_output(unstrip: str, dnfbase: dnf.Base) -> Tuple[PackageList
         try:
             # if FILE (parts[2]) is not present on local filesystem
             # eu-unstrip uses FILE as MODULENAME (parts[4])
-            if (binobj_path == '-' or binobj_path == '.') and parts[4] != '[exe]':
+            if (binobj_path in ('-', '.')) and parts[4] != '[exe]':
                 binobj_path = parts[4]
             if binobj_path[0] != '/' and parts[4] != '[exe]':
                 continue
