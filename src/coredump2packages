@@ -229,7 +229,7 @@ def main() -> None:
     # paths
     logger.info("Running eu-unstrip...")
     unstrip_args = ['eu-unstrip', f'--core={args.coredump}', '-n']
-    unstrip_proc = subprocess.run(unstrip_args, stdout=subprocess.PIPE, encoding='utf8')
+    unstrip_proc = subprocess.run(unstrip_args, stdout=subprocess.PIPE, check=False, encoding='utf8')
     unstrip = unstrip_proc.stdout
     logger.info("%s", unstrip)
     if not unstrip:
