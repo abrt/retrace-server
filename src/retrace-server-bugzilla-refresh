@@ -4,6 +4,7 @@ Refresh tasks that have bugzilla bugs in an open state to prevent them from gett
 retrace-server-cleanup tool.
 """
 
+import sys
 import time
 
 from pathlib import Path
@@ -31,7 +32,7 @@ if __name__ == "__main__":
             bzapi = bugzilla.Bugzilla(url=bz_url, cookiefile=None, tokenfile=None)
         except (bugzilla.BugzillaError, ValueError) as e:
             log.write("Exception: {0}".format(e))
-            exit(1)
+            sys.exit(1)
 
         if not bzapi.logged_in and bz_creds:
             bzapi.readconfig(bz_creds)
