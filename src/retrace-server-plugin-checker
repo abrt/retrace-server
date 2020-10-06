@@ -50,7 +50,7 @@ def main() -> None:
                 except Exception as ex:
                     pass
             elif p.startswith("rsync:"):
-                rsync = run(['rsync', '--list-only', mirror_path], stdout=DEVNULL, stderr=DEVNULL)
+                rsync = run(['rsync', '--list-only', mirror_path], stdout=DEVNULL, stderr=DEVNULL, check=False)
                 path_ok = not rsync.returncode
             else:
                 path_ok = os.path.exists(mirror_path)
