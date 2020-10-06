@@ -17,7 +17,7 @@ PackageList = List[Package]
 
 
 def binary_packages_from_debuginfo_package(debuginfo_package: Package, binobj_path: str,
-        dnfbase: dnf.Base) -> PackageList:
+                                           dnfbase: dnf.Base) -> PackageList:
     """
     Returns a list of packages corresponding to the provided debuginfo
     package. One of the packages in the list contains the binary
@@ -78,8 +78,8 @@ def process_unstrip_entry(build_id: str, binobj_path: str, dnfbase: dnf.Base) ->
     coredump_base_package_list: List[str] = []
     # Ask for a known path from debuginfo package.
     debuginfo_paths = [
-            "/usr/lib/debug/.build-id/{0}/{1}.debug".format(build_id[:2], build_id[2:]),
-            "/usr/lib/.build-id/{0}/{1}".format(build_id[:2], build_id[2:])
+        "/usr/lib/debug/.build-id/{0}/{1}.debug".format(build_id[:2], build_id[2:]),
+        "/usr/lib/.build-id/{0}/{1}".format(build_id[:2], build_id[2:])
     ]
 
     logger.info("Dnf search for debuginfo packages for build-id %s:", build_id)
@@ -173,7 +173,7 @@ def find_duplicates(package_list: PackageList) -> Union[Tuple[None, None], Tuple
 
 
 def count_removals(package_list: PackageList, base_package_name: str, epoch: str,
-        ver: str, rel: str, arch: str) -> int:
+                   ver: str, rel: str, arch: str) -> int:
     count = 0
     for package in package_list:
         if package.name != base_package_name:
