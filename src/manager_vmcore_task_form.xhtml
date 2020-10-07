@@ -1,13 +1,10 @@
 <div id="vmcore-wrapper">
-    <h2>vmcore</h2>
+    <h2>Create vmcore task (kernel memory dump)</h2>
     <form method="post" action="{create_custom_url}" id="custom">
-        <div id="middle">
             <span class="formsubhead">Kernel version:</span>
             <input type="text" name="kernelver" />
             <span>(e.g. 2.6.32-287.el6.x86_64, empty to autodetect)</span>
-        </div>
 
-        <div id="middle">
             <div>
                 <input type="checkbox" id="memory-check" name="vmem-check" class="checkbox" />
                 <span class="formsubhead"> Include memory file for vmcore snapshot</span>
@@ -22,26 +19,20 @@
                 <input type="checkbox" {md5_enabled} name="md5sum" class="checkbox" />
                 <span class="formsubhead"> Calculate md5 checksum for all downloaded resources</span>
             </div>
-        </div>
 
-        <div id="middle">
             <div>
                 <span class="formhead">Custom core location:</span>
+                <span>(Any URL that wget can download or a local path, e.g. file:///foo/bar or just /foo/bar)</span>
                 <input type="text" name="custom_url" class="url" />
                 <input type="hidden" name="task_type" value="vmcore">
             </div>
 
             <div id="memory-box">
                 <span class="formhead">Custom memory location:</span>
+                <span>(Any URL that wget can download or a local path, e.g. file:///foo/bar or just /foo/bar)</span>
                 <input type="text" name="custom_vmem_url" class="url" />
             </div>
-
-            <div class="center">
-                Any URL that wget can download or a local path (file:///foo/bar or just /foo/bar)
-            </div>
-
             <input type="submit" value="Create vmcore task" class="submit" />
-        </div>
     </form>
 
     <script type="text/javascript">

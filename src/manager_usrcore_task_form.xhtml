@@ -1,7 +1,6 @@
 <div id="usrcore-wrapper">
-    <h2>userspace core</h2>
+    <h2>Create coredump task (userspace memory dump)</h2>
     <form method="post" action="{create_custom_url}" id="custom">
-        <div id="middle">
             <div>
                 <span class="formsubhead">Package:</span>
                 <input type="text" name="package" />
@@ -22,19 +21,19 @@
 
             <p id="custom">All of these three fields override contents of package, executable and os_release files contained in the coredump archive.<br />
             If you're uploading you have just the bare (compressed) coredump, you must specify these.</p>
-        </div>
-        <div id="middle">
-            <input type="checkbox" checked="checked" name="debug" class="checkbox" /><span class="formsubhead"> Be more verbose in case of error</span><br/>
-            <input type="checkbox" {md5_enabled} name="md5sum" class="checkbox" /><span class="formsubhead"> Calculate md5 checksum for all downloaded resources</span>
-        </div>
-        <div id="middle">
-            <span class="formhead">Custom core location:</span>
-            <input type="text" name="custom_url" class="url" />
-            <input type="hidden" name="task_type" value="coredump">
-
-            <div class="center">Any URL that wget can download or a local path (file:///foo/bar or just /foo/bar)</div>
+            <div>
+                <input type="checkbox" checked="checked" name="debug" class="checkbox" /><span class="formsubhead"> Be more verbose in case of error</span><br/>
+            </div>
+            <div>
+                <input type="checkbox" {md5_enabled} name="md5sum" class="checkbox" /><span class="formsubhead"> Calculate md5 checksum for all downloaded resources</span>
+            </div>
+            <div>
+                <span class="formhead">Custom core location:</span>
+                <span>(Any URL that wget can download or a local path, e.g. file:///foo/bar or just /foo/bar)</span>
+                <input type="text" name="custom_url" class="url" />
+                <input type="hidden" name="task_type" value="coredump">
+            </div>
 
             <input type="submit" value="Create coredump task" class="submit" />
-        </div>
     </form>
 </div>

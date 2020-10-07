@@ -6,12 +6,12 @@
         <title>{title}</title>
         <style type="text/css">
             #left {
-                width: 36%;
+                width: 63%;
                 float: left;
             }
 
             #right {
-                width: 63%;
+                width: 36%;
                 float: right;
             }
 
@@ -27,15 +27,9 @@
                 margin-bottom: 20px;
             }
 
-            #filter {
-                width: 100%;
-                text-align: center;
-                margin-bottom: 30px;
-            }
-
             #custom {
                 width: 100%;
-                text-align: center;
+                text-align: left;
                 margin: 0 auto;
             }
 
@@ -60,11 +54,21 @@
             }
 
             #vmcore-wrapper {
-                margin-bottom: 30px;
+                width: 60%;
+                float: left;
+                text-align: left;
+                border: 1px solid black;
+                padding: 4px;
+                margin: 4px;
             }
 
             #usrcore-wrapper {
-                margin-bottom: 30px;
+                width: 60%;
+                float: left;
+                text-align: left;
+                border: 1px solid black;
+                padding: 4px;
+                margin: 4px;
             }
 
             #memory-box {
@@ -196,24 +200,9 @@
     </head>
     <body>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-        {ftpscript}
-        <h1>{sitename}</h1>
-        <form method="get" id="filter">
-            <input type="text" name="filter" />
-            <input type="submit" value="Filter" class="submit" />
-        </form>
         {vmcore_task_form}
         {usrcore_task_form}
         <div id="main">
-            <div id="left">
-                <div id="available">
-                    <table>
-                        <tr>
-                            <th class="tablename">{available_str}</th>
-                        </tr>
-                    </table>
-                </div>
-            </div>
             <div id="right">
                 <div id="running">
                     <table>
@@ -231,6 +220,15 @@
                         {running}
                     </table>
                 </div>
+                <div id="available">
+                    <table>
+                        <tr>
+                            <th class="tablename">{available_str}</th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div id="left">
                 <div id="finished">
                     <table>
                         <tr>
