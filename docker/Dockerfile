@@ -1,13 +1,12 @@
 FROM fedora:32
 USER root
-RUN dnf --assumeyes install git-core make tito
-COPY . /src
-WORKDIR /src
-RUN \
-    dnf --assumeyes builddep --spec retrace-server.spec && \
+RUN dnf --assumeyes install git-core make tito && \
+    git clone --quiet https://github.com/abrt/retrace-server.git /src && \
+    dnf --assumeyes builddep --spec /src/retrace-server.spec && \
     useradd --no-create-home builder && \
-    chown --recursive --quiet builder. .
+    chown --recursive --quiet builder:builder /src
 USER builder
+WORKDIR /src
 RUN tito build --output=rpm --rpm --test
 
 FROM fedora:32 as build
