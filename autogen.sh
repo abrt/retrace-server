@@ -11,7 +11,7 @@ Usage:
 Options:
 
   sysdeps              prints out all dependencies
-    --install-dnf      install all dependencies ('sudo dnf install \$DEPS')
+    --install          install all dependencies ('sudo dnf install \$DEPS')
 
 EOH
 }
