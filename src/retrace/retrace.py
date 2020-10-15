@@ -1857,13 +1857,18 @@ class RetraceTask:
 
     def reset(self):
         """Remove all generated files and only keep the raw crash data"""
+        # Delete logs if there are any.
+        logs_dir = self._savedir / RetraceTask.MOCK_LOG_DIR
+        if logs_dir.is_dir():
+            shutil.rmtree(logs_dir)
+
+        # Delete the remaining files.
         for filename in [RetraceTask.BACKTRACE_FILE, RetraceTask.CRASHRC_FILE,
                          RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
                          RetraceTask.PROGRESS_FILE, RetraceTask.STARTED_FILE,
                          RetraceTask.STATUS_FILE, RetraceTask.MOCK_DEFAULT_CFG,
                          RetraceTask.MOCK_SITE_DEFAULTS_CFG, RetraceTask.MOCK_LOGGING_INI,
-                         RetraceTask.CRASH_CMD_FILE, RetraceTask.MOCK_LOG_DIR,
-                         RetraceTask.VMLINUX_FILE]:
+                         RetraceTask.CRASH_CMD_FILE, RetraceTask.VMLINUX_FILE]:
             try:
                 (self._savedir / filename).unlink()
             except OSError as ex:
