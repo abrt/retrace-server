@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import os
 import sys
+from typing import List
 
 from pathlib import Path
 from webob import Request
@@ -32,7 +33,7 @@ CONFIG = Config()
 BUFSIZE = 1 << 20  # 1 MB
 
 
-def check_required_file(filelist, required):
+def check_required_file(filelist: List[str], required: str) -> bool:
     if required in filelist:
         return True
 
@@ -225,8 +226,9 @@ def application(environ, start_response):
     else:
         task.set_type(TASK_RETRACE)
 
+    present_files = [f.name for f in files]
     for required_file in REQUIRED_FILES[task.get_type()]:
-        if not check_required_file(files, required_file):
+        if not check_required_file(present_files, required_file):
             task.remove()
             return response(start_response, "403 Forbidden",
                             _("Required file '%s' is missing") % required_file)
