@@ -5,7 +5,7 @@ import time
 import urllib
 from webob import Request
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from retrace.retrace import (STATUS, STATUS_DOWNLOADING, STATUS_FAIL,
                              STATUS_SUCCESS, TASK_DEBUG, TASK_RETRACE, TASK_RETRACE_INTERACTIVE,
@@ -117,6 +117,68 @@ def get_start_content_calc_md5() -> str:
         md5sum_enabled = "checked=\"checked\""
     return "      <input type=\"checkbox\" name=\"md5sum\" id=\"md5sum\" %s />" \
            "Calculate md5 checksum for all downloaded resources<br />" % md5sum_enabled
+
+def get_available_table(rows: List) -> str:
+    if len(rows) <= 0:
+        return ""
+    table_str = "<div id=\"available\"> " \
+                "  <table> " \
+                "    <tr> " \
+                "       <th colspan=\"1\" class=\"tablename\">Available tasks</th> " \
+                "    </tr>" \
+                "    <tr>"  \
+                "       <th class=\"taskid\">Task ID</th> " \
+                "    </tr> "
+    for r in rows:
+        table_str += r
+    table_str += "      </th> "\
+                 "    </tr> " \
+                 "  </table> " \
+                 "</div>"
+    return table_str
+
+def get_running_table(rows: List) -> str:
+    if len(rows) <= 0:
+        return ""
+    table_str = "<div id=\"running\"> " \
+                "   <table> " \
+                "       <tr>" \
+                "           <th colspan=\"6\" class=\"tablename\">Running tasks</th> " \
+                "       </tr>" \
+                "       <tr>"  \
+                "           <th class=\"taskid\">Task ID</th> " \
+                "           <th class=\"caseno\">Case no.</th>" \
+                "           <th class=\"bugzillano\">Bugzilla no.</th>" \
+                "           <th>File(s)</th> " \
+                "           <th class=\"timestamp\">Started</th>" \
+                "           <th class=\"status\">Status</th>" \
+                "       </tr> "
+    for r in rows:
+        table_str += r
+    table_str += "   </table>" \
+                 "</div>"
+    return table_str
+
+def get_finished_table(rows: List) -> str:
+    if len(rows) <= 0:
+        return ""
+    table_str = "<div id=\"finished\"> " \
+                "   <table> " \
+                "       <tr>" \
+                "           <th colspan=\"5\" class=\"tablename\">Finished tasks</th> " \
+                "       </tr>" \
+                "       <tr>"  \
+                "           <th class=\"taskid\">Task ID</th> " \
+                "           <th class=\"caseno\">Case no.</th>" \
+                "           <th class=\"bugzillano\">Bugzilla no.</th>" \
+                "           <th>File(s)</th> " \
+                "           <th class=\"timestamp\">Finished</th>" \
+                "       </tr> "
+    for r in rows:
+        table_str += r
+    table_str += "   </table>" \
+                 "</div>"
+    return table_str
 
 def application(environ, start_response):
     request = Request(environ)
@@ -854,9 +916,6 @@ def application(environ, start_response):
     finished = [f[1] for f in sorted(finished, key=lambda x: x[0], reverse=True)]
     running = [r[1] for r in sorted(running, key=lambda x: x[0], reverse=True)]
 
-    available_str = _("Available tasks")
-    running_str = _("Running tasks")
-    finished_str = _("Finished tasks")
     taskid_str = _("Task ID")
     caseno_str = _("Case no.")
     bugzillano_str = _("Bugzilla no.")
@@ -903,21 +962,10 @@ def application(environ, start_response):
     output = output.replace("{usrcore_task_form}", usrcore_form)
 
     output = output.replace("{title}", title)
-    output = output.replace("{available_str}", available_str)
-    output = output.replace("{running_str}", running_str)
-    output = output.replace("{finished_str}", finished_str)
-    output = output.replace("{taskid_str}", taskid_str)
-    output = output.replace("{caseno_str}", caseno_str)
-    output = output.replace("{bugzillano_str}", bugzillano_str)
-    output = output.replace("{files_str}", files_str)
-    output = output.replace("{starttime_str}", starttime_str)
-    output = output.replace("{finishtime_str}", finishtime_str)
-    output = output.replace("{status_str}", status_str)
+    output = output.replace("{available_table}", get_available_table(available))
+    output = output.replace("{running_table}", get_running_table(running))
+    output = output.replace("{finished_table}", get_finished_table(finished))
     output = output.replace("{create_custom_url}", custom_url)
-    # spaces to keep the XML nicely aligned
-    output = output.replace("{running}", "\n            ".join(running))
-    output = output.replace("{finished}", "\n            ".join(finished))
     output = output.replace("{md5_enabled}", md5_enabled)
-
 
     return response(start_response, "200 OK", output, [("Content-Type", "text/html")])
