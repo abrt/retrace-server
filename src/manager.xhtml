@@ -15,6 +15,11 @@
                 float: right;
             }
 
+            #task_tables {
+                width: 100%;
+                float: left;
+            }
+
             #available {
 
             }
@@ -203,47 +208,10 @@
         {vmcore_task_form}
         {usrcore_task_form}
         <div id="main">
-            <div id="right">
-                <div id="running">
-                    <table>
-                        <tr>
-                            <th colspan="6" class="tablename">{running_str}</th>
-                        </tr>
-                        <tr>
-                            <th class="taskid">{taskid_str}</th>
-                            <th class="caseno">{caseno_str}</th>
-                            <th class="bugzillano">{bugzillano_str}</th>
-                            <th>{files_str}</th>
-                            <th class="timestamp">{starttime_str}</th>
-                            <th class="status">{status_str}</th>
-                        </tr>
-                        {running}
-                    </table>
-                </div>
-                <div id="available">
-                    <table>
-                        <tr>
-                            <th class="tablename">{available_str}</th>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-            <div id="left">
-                <div id="finished">
-                    <table>
-                        <tr>
-                            <th colspan="5" class="tablename">{finished_str}</th>
-                        </tr>
-                        <tr>
-                            <th class="taskid">{taskid_str}</th>
-                            <th class="caseno">{caseno_str}</th>
-                            <th class="bugzillano">{bugzillano_str}</th>
-                            <th>{files_str}</th>
-                            <th class="timestamp">{finishtime_str}</th>
-                        </tr>
-                        {finished}
-                    </table>
-                </div>
+            <div id="task_tables">
+                {available_table}
+                {running_table}
+                {finished_table}
             </div>
         </div>
     </body>
