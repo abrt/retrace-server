@@ -13,6 +13,23 @@ CONFIG = Config()
 MANAGER_URL_PARSER = re.compile(r"^(.*/manager)(/(([^/]+)(/(__custom__|start|backtrace|savenotes|"
                                 r"caseno|notify|delete(/(sure/?)?)?|results/([^/]+)/?)?)?)?)?$")
 tableheader = """
+<head>
+<style>
+table {
+  width: 100%;
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+table td {
+  border: 1px solid black;
+  padding: 2px 4px;
+}
+table th {
+  background-color: #ccc;
+}
+</style>
+</head>
+<body>
           <table>
             <tr>
               <th class="tablename">FTP files</th>
@@ -20,6 +37,7 @@ tableheader = """
 """
 tablefooter = """
           </table>
+</body>
 """
 
 def async_ftp_list_dir(filterexp):
@@ -50,6 +68,7 @@ def application(environ, start_response):
         filterexp = get["filterexp"][0]
 
     output = ""
+    output += "<h2><a href=\"manager\">%s</a></h2>" % "Back to task manager"
     output += tableheader
     output += async_ftp_list_dir(filterexp)
     output += tablefooter

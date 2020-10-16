@@ -929,25 +929,6 @@ def application(environ, start_response):
     if CONFIG["CalculateMd5"]:
         md5_enabled = 'checked="checked"'
 
-    if CONFIG["UseFTPTasks"]:
-        starturl = "ftp"
-        qs = {}
-        if filterexp:
-            qs["filterexp"] = filterexp
-
-        qs_text = urllib.parse.urlencode(qs)
-
-        if qs_text:
-            starturl = "\"%s?%s\"" % (starturl, qs_text)
-        else:
-            starturl = "\"" + starturl + "\""
-
-        ftpcallback = ftpcallback.replace("<URL>", "url: %s," %(starturl))
-        output = output.replace("{ftpscript}", ftpcallback)
-    else:
-        output = output.replace("{ftpscript}", "")
-        available_str = _("FTP files")
-
     custom_url = "%s/__custom__" % match.group(1)
 
     vmcore_form = ""

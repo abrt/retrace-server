@@ -58,6 +58,15 @@
                 margin-left: 0;
             }
 
+            #ftp-wrapper {
+                width: 60%;
+                float: left;
+                text-align: left;
+                border: 1px solid black;
+                padding: 4px;
+                margin: 4px;
+            }
+
             #vmcore-wrapper {
                 width: 60%;
                 float: left;
@@ -205,6 +214,9 @@
     </head>
     <body>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <div id="ftp-wrapper">
+            <h2><a href="ftp">List FTP files (create vmcore task from FTP)</a></h2>
+        </div>
         {vmcore_task_form}
         {usrcore_task_form}
         <div id="main">
