@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import fnmatch
 import re
 import urllib
