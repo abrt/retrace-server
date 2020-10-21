@@ -13,9 +13,9 @@ WORKDIR '/retrace-server'
 # Change owner of /retrace-server, clean git and install dependences
 RUN chown -R --silent retrace /retrace-server && \
     chmod -R --silent g=u /retrace-server && \
-    dnf -y install rpm-build sudo git make vim &&  \
+    dnf -y install git meson rpm-build sudo tito vim &&  \
     git clean -dfx && \
-    eval dnf -y --setopt=strict=0 --setopt=tsflags=nodocs install $(./autogen.sh sysdeps)
+    dnf --assumeyes builddep --spec /retrace-server/retrace-server.spec
 
 # Build as non root
 USER retrace
@@ -23,15 +23,13 @@ USER retrace
 ENV HOME /retrace-server
 
 # Build retrace-server
-RUN ./autogen.sh && \
-    ./configure && \
-    make rpm
+RUN tito build --output=rpm --rpm --test
 
 #And continue as root
 USER 0
 
 # Update FAF
-RUN rpm -Uvh noarch/retrace-server-* && \
+RUN rpm -Uvh /retrace-server/rpm/noarch/retrace-server-*.rpm && \
     /usr/libexec/fix-permissions /retrace-server && \
     /usr/libexec/fix-permissions /var/log/retrace-server && \
     /usr/libexec/fix-permissions /var/spool/retrace-server && \
