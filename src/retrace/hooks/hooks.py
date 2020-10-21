@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import itertools
 import multiprocessing as mp
 import os
