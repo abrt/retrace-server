@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Test retrace-server before make install.
 
 run: python run_test.py [--coredump="/path/to/the/coredump"
