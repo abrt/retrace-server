@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 from retrace.retrace import get_active_tasks, get_supported_releases
 from retrace.config import Config
 from retrace.stats import save_crashstats_reportfull

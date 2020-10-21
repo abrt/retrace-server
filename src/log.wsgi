@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 from webob import Request
 from retrace.retrace import RetraceTask
 from retrace.config import Config

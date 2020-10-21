@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 from webob import Request
 
 from retrace.retrace import (get_active_tasks,
