@@ -21,19 +21,20 @@ import shutil
 
 from pathlib import Path
 from subprocess import DEVNULL, PIPE, run
+from typing import List, Tuple
 
-from retrace.retrace import *
+from retrace.retrace import RetraceTask, TASK_RETRACE, TASK_RETRACE_INTERACTIVE
 from retrace.retrace_worker import RetraceWorker
 from retrace.config import Config
 
-def fatal_error(*args, **kwargs):
+def fatal_error(*args, **kwargs) -> None:
     print(*args, file=sys.stderr, **kwargs)
     sys.exit(1)
 
-def error(*args, **kwargs):
+def error(*args, **kwargs) -> None:
     print(*args, file=sys.stderr, **kwargs)
 
-def create_repo(packages, releaseid, version):
+def create_repo(packages: List[str], releaseid: str, version: str):
     """Create repo with packages passed in arg packages."""
     print("Creating repo")
 
@@ -42,29 +43,33 @@ def create_repo(packages, releaseid, version):
     repo_path = Path(conf["RepoDir"], releaseid)
     if not repo_path.is_dir():
         repo_path.mkdir()
-    needed_packages =\
-                  ["abrt-addon-ccpp", "shadow-utils", "gdb", "rpm"] + packages
+    needed_packages = ["abrt-addon-ccpp", "shadow-utils", "gdb", "rpm"] + packages
 
-    cmd = 'dnf --releasever={0} --enablerepo=\*debuginfo\* -y\
-           --installroot={1} download --resolve --destdir {2} {3}'\
-          .format(version, repo_path, repo_path, " ".join(needed_packages))
+    cmd = ['dnf',
+           f'--releasever={version}',
+           '--enablerepo=\\*debuginfo\\*',
+           '--assumeyes',
+           f'--installroot={repo_path}',
+           'download',
+           '--resolve',
+           f'--destdir={repo_path}']
+    cmd.extend(needed_packages)
 
     c = run(cmd, shell=True, stdout=PIPE, stderr=PIPE, encoding='utf-8')
-    stdout, stderr = c.stdout, c.stderr
-    #NOTE if error-msg states: "Failed to synchronize cache for repo"
-        #easiest thing is to go /etc/yum.repos.d/failed_repo and comment
-        #line "skip_if_unavailable=False"
+    # NOTE: If error-msg states: "Failed to synchronize cache for repo"
+    # easiest thing is to go /etc/yum.repos.d/failed_repo and comment
+    # out the line "skip_if_unavailable=False"
     if c.returncode != 0:
-        fatal_error("Command has failed:\n", stderr)
+        fatal_error("Command has failed:\n", c.stderr)
 
     # create repo from downloaded packages
-    createrepo_cmd = ["createrepo", repo_path]
+    createrepo_cmd = ["createrepo", str(repo_path)]
     child = run(createrepo_cmd, stdout=DEVNULL, stderr=PIPE, encoding='utf-8')
     if child.returncode:
         error("ERROR: during creating repo this errors occurred:", child.stderr)
 
 
-def delete_repo(releaseid):
+def delete_repo(releaseid: str):
     """Remove repo.
 
     Note: deletes repo even though, if was not created by this script
@@ -76,14 +81,14 @@ def delete_repo(releaseid):
         shutil.rmtree(repo_path)
 
 
-def generate_coredump():
+def generate_coredump() -> Tuple[Path, str, str]:
     """Generate coredump.
 
     This is done by calling gcore on this script.
     """
     print("Creating coredump")
     # use gcore on this process
-    gcore_cmd = ['gcore', '-o', "/var/tmp/coredump", str(os.getpid())]
+    gcore_cmd = ['gcore', '-o', '/var/tmp/coredump', str(os.getpid())]
     child = run(gcore_cmd, stdout=PIPE, stderr=PIPE, encoding='utf-8')
     stdout = child.stdout
     if child.returncode:
@@ -92,7 +97,7 @@ def generate_coredump():
     # get only second-to-last line form output - there is filename mentioned
     lastline = stdout.splitlines()[-2]
     # get the last word, that should be coredump path
-    corepath = Path(lastline[lastline.rfind(" ")+1:])
+    corepath = Path(lastline[lastline.rfind(" ") + 1:])
     if str(corepath.parent) != "/var/tmp":
         fatal_error("Corefile was not generated")
 
@@ -102,20 +107,25 @@ def generate_coredump():
 
     # find in which package is python
     exe_link = os.readlink('/proc/self/exe')
-    rpm_cmdline = 'rpm -qf '+exe_link
-    child = run(rpm_cmdline, shell=True, stdout=PIPE, stderr=DEVNULL, encoding='utf-8')
-    package = child.stdout
+    rpm_cmdline = ['rpm', '-qf', exe_link]
+    child = run(rpm_cmdline, stdout=PIPE, stderr=DEVNULL, check=False,
+                encoding='utf-8')
     if child.returncode:
         fatal_error("rpm for python was not found")
+    package = child.stdout
     package = package[:package.rfind(".")]
     return (corepath, package, sys.executable)
 
 
-def create_local_config(change_repo_dir):
+def create_local_config(change_repo_dir: bool):
     """Create local config file, change what is needed and edit env var."""
     # create local copy of set configuration file
     # read current configuration file
-    config_path = Path(os.environ.get('RETRACE_SERVER_CONFIG_PATH'))
+    config_path_env = os.environ.get('RETRACE_SERVER_CONFIG_PATH')
+    if not config_path_env:
+        fatal_error("Environment variable 'RETRACE_SERVER_CONFIG_PATH' not set. Cannot continue.")
+
+    config_path = Path(config_path_env)
     new_conf_path = '/var/tmp/retrace-server.conf'
 
     with config_path.open() as org_file:
@@ -150,8 +160,8 @@ def create_local_config(change_repo_dir):
 parser = argparse.ArgumentParser(description="Run test for retrace-server.")
 parser.add_argument("--coredump", help="path to the coredump, if not \
                                        specified, will be generated")
-parser.add_argument("--release", help="os_release,\
-                                      default=Fedora release 24 (Twenty Four)")
+parser.add_argument("--release", help="os_release",
+                    default="Fedora release 24 (Twenty Four)")
 parser.add_argument("--executable", help="path to the executable")
 parser.add_argument("--package", help="name of package")
 parser.add_argument("--delete_repo", help="remove repo after bt generation",
@@ -164,7 +174,7 @@ parser.add_argument("--interactive", help="run as interactive task, that means\
 args = parser.parse_args()
 
 # set default values
-os_release = args.release if args.release else "Fedora release 24 (Twenty Four)"
+os_release = args.release
 dont_create_repo_arg = args.dont_create_repo
 delete_repo_arg = args.delete_repo
 
@@ -185,8 +195,7 @@ else:
 
 # create task
 task = RetraceTask()
-print("Task ID: "),
-print(task.get_taskid())
+print("Task ID:", task.get_taskid())
 
 if args.interactive:
     task.set_type(TASK_RETRACE_INTERACTIVE)
@@ -215,15 +224,13 @@ if not dont_create_repo_arg:
     # find missing packages
     packages, missing_unparsed = worker.read_packages(crashdir, releaseid,
                                                       package, distribution)
-    #find what provides missing parts
-    missing = []
+    # find what provides missing parts
     cmd = ["rpm", "-qf"]
     for part in missing_unparsed:
         cmd.append(part[0])
     child = run(cmd, stdout=PIPE, stderr=DEVNULL, encoding='utf-8')
-    missing = child.stdout
     # create unique list
-    missing = [] if not missing else list(set(missing.split("\n")))
+    missing = [] if not child.stdout else list(set(child.stdout.split("\n")))
     # add crash package
     missing.append(package)
     # add all packages, that were found but not marked as missing
@@ -233,7 +240,7 @@ if not dont_create_repo_arg:
     create_repo(missing, releaseid, version)
 
 # instead of task.start() (a few missing lines, should be added?)
-cmdline = ["retrace-server-worker", "%d" % task.get_taskid(), "--foreground"]
+cmdline = ["retrace-server-worker", str(task.get_taskid()), "--foreground"]
 run(cmdline)
 
 # check if backtrace was generated
@@ -242,7 +249,7 @@ if not task.has_backtrace():
 
 else:
     print("Backtrace is ready")
-    with Path("../backtrace").open("w") as backtrace_file:
+    with open("../backtrace", "w") as backtrace_file:
         bt = task.get_backtrace()
         backtrace_file.write(bt)
 
