@@ -44,6 +44,7 @@ subdir('doc')
 subdir('man')
 subdir('po')
 subdir('src')
+subdir('test')
 
 # This will, naturally, fail if the build directory is outside the git repo,
 # since Tito does not provide a way to specify the working directory or the spec

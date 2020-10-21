@@ -15,6 +15,8 @@ BuildArch: noarch
 
 BuildRequires: asciidoc
 BuildRequires: gettext
+# /usr/bin/gcore from the gdb package is used in tests.
+BuildRequires: gdb
 BuildRequires: gzip
 BuildRequires: lsof
 BuildRequires: lsof
