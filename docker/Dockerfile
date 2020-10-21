@@ -1,6 +1,6 @@
 FROM fedora:32
 USER root
-RUN dnf --assumeyes install git-core make tito && \
+RUN dnf --assumeyes install git-core tito && \
     git clone --quiet https://github.com/abrt/retrace-server.git /src && \
     dnf --assumeyes builddep --spec /src/retrace-server.spec && \
     useradd --no-create-home builder && \
@@ -11,9 +11,9 @@ RUN tito build --output=rpm --rpm --test
 
 FROM fedora:32 as build
 USER root
-COPY --from=0 /src/rpm/noarch/retrace-server*.rpm rpm/
+COPY --from=0 /src/rpm/noarch/retrace-server-*.rpm rpm/
 RUN \
-    dnf --assumeyes install mod_ssl uwsgi rpm/retrace-server*.rpm && \
+    dnf --assumeyes install mod_ssl uwsgi rpm/retrace-server-*.rpm && \
     dnf clean all
 
 FROM build
