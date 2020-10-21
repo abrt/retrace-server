@@ -2,32 +2,16 @@
 [Deploying Testing Retrace Server](DEPLOYING.md#deploying-testing-retrace-server)**
 
 # Deploying Retrace Server
-1. Install dependencies
+1. Build from source and install
 
-    First you should install all dependent packages.
+    retrace server uses [Tito](https://github.com/rpm-software-management/tito) to
+    manage the build process. Tito and [Meson](https://mesonbuild.com/) are the main
+    prerequisites for starting the build. The following command buids an RPM package
+    from the most recent revision of the source code and installs it immediately:
 
-    Dependencies can be listed by:
+        $ tito build --test --rpm --install
 
-        $ ./autogen.sh sysdeps
-
-    or installed by:
-
-        $ ./autogen.sh sysdeps --install
-
-    The dependency installer gets the data from [the rpm spec file](retrace-server.spec.in)
-
-2. Build from source
-
-    When you have all dependencies installed you can now build a rpm package by these commands:
-
-        $ ./autogen.sh
-        $ make rpm
-
-    Now in the `noarch` folder you can find a rpm package. You can install it by:
-
-        $ rpm -ivh noarch/retrace-server-*.rpm
-
-3. Deploy
+2. Deploy
 
     After installing the retrace server, before having a functional retrace server you need
     do a few things:
@@ -86,7 +70,7 @@
         when updating from an older version of retrace-server.
 
 
-4. Test your server
+3. Test your server
 
     There are two ways how to test if your server is running:
 
@@ -118,15 +102,11 @@ can retrace one or two coredumps. In this section a simple tutorial is written
 how to deploy such a server. Each point corresponds with point from section
 [Deploying Retrace Server](DEPLOYING.md#deploying-retrace-server).
 
-1. Install dependencies
+1. Build from source and install
 
     There is no change when deploying real and testing retrace server.
 
-2. Build from source
-
-    There is no change when deploying real and testing retrace server.
-
-3. Deploy
+2. Deploy
 
     1. Add repositories
 
@@ -201,7 +181,7 @@ how to deploy such a server. Each point corresponds with point from section
         There is no change when deploying real and testing retrace server.
 
 
-4. Test your server
+3. Test your server
 
     You should be able to test your server the same way as when server deployed
     normally. Only difference would be, that you cannot update just any coredump.
@@ -210,7 +190,7 @@ how to deploy such a server. Each point corresponds with point from section
     to go. And do not forget, your release is now called `Local release 25 (Twenty five)`.
 
 
-##Most often problems mainly when testing retrace server deployed
+## Frequent problems when testing a retrace server deployment
 
 * Submitting coredump via manager from local folder and retrace server cannot find it
 
