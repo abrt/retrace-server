@@ -270,7 +270,7 @@ class RetraceWorker:
                 executable = exec_file.read(ALLOWED_FILES["executable"])
 
             if executable.startswith(rootdir):
-                with exec_path.open() as exec_file:
+                with exec_path.open('w') as exec_file:
                     exec_file.write(executable[len(rootdir):])
 
             rel_path = crashdir / "os_release_in_rootdir"
