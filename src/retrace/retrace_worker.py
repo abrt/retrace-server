@@ -560,7 +560,7 @@ class RetraceWorker:
         try:
             backtrace, exploitable = run_gdb(task.get_savedir(), self.plugin, repopath, task.get_taskid())
         except Exception as ex:
-            log_error(str(ex))
+            log_error("Could not run GDB: %s" % ex)
             self._fail()
 
         task.set_backtrace(backtrace)
@@ -1012,9 +1012,9 @@ class RetraceWorker:
             elif tasktype in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
                 self.start_vmcore(custom_kernelver=kernelver)
             else:
-                raise Exception("Unsupported task type")
+                raise Exception("Unsupported task type '%s'" % tasktype)
         except Exception as ex:
-            log_error(str(ex))
+            log_error("Task failed: %s" % ex)
             self._fail()
 
     def clean_task(self) -> None:
