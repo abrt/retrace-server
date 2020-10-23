@@ -537,7 +537,7 @@ class RetraceWorker:
                     dockerfile.write('    mkdir -p /var/spool/abrt/crash\n')
                     dockerfile.write('COPY --chown=retrace gdb.sh /var/spool/abrt/\n')
                     dockerfile.write('COPY --chown=retrace %s /var/spool/abrt/crash/\n'
-                                     % RetraceTask.COREDUMP_FILE)
+                                     % corepath.relative_to(savedir))
                     dockerfile.write('COPY podman_repo.repo /etc/yum.repos.d/\n')
                     dockerfile.write('RUN ')
                     if CONFIG["RequireGPGCheck"]:
