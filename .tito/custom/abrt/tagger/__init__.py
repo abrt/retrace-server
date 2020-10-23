@@ -9,7 +9,9 @@ class MesonVersionTagger(VersionTagger):
         run_command('git add -- meson.build')
 
     def _tag_release(self):
+        self._make_changelog()
         new_version = self._bump_version()
         self._check_tag_does_not_exist(self._get_new_tag(new_version))
         self._set_meson_project_version(new_version)
+        self._update_changelog(new_version)
         self._update_package_metadata(new_version)
