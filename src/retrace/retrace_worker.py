@@ -400,8 +400,9 @@ class RetraceWorker:
         self.hook.run("start")
 
         task = self.task
+        savedir = task.get_savedir()
         crashdir = task.get_crashdir()
-        corepath = crashdir / "coredump"
+        corepath = crashdir / RetraceTask.COREDUMP_FILE
 
         try:
             self.stats["coresize"] = corepath.stat().st_size
@@ -443,12 +444,12 @@ class RetraceWorker:
         self.hook.run("post_prepare_debuginfo")
         self.hook.run("pre_prepare_environment")
 
-        repopath = str(Path(CONFIG["RepoDir"], releaseid))
+        repopath = os.path.join(CONFIG["RepoDir"], releaseid)
 
         if CONFIG["RetraceEnvironment"] == "mock":
         # create mock config file
             try:
-                with (task.get_savedir() / RetraceTask.MOCK_DEFAULT_CFG).open("w") as mockcfg:
+                with (savedir / RetraceTask.MOCK_DEFAULT_CFG).open("w") as mockcfg:
                     mockcfg.write("config_opts['root'] = '%d'\n" % task.get_taskid())
                     mockcfg.write("config_opts['target_arch'] = '%s'\n" % arch)
                     mockcfg.write("config_opts['chroot_setup_cmd'] = '")
@@ -491,9 +492,9 @@ class RetraceWorker:
                     mockcfg.write("\"\"\"\n")
 
                 # symlink defaults from /etc/mock
-                (task.get_savedir() / RetraceTask.MOCK_SITE_DEFAULTS_CFG).symlink_to(
+                (savedir / RetraceTask.MOCK_SITE_DEFAULTS_CFG).symlink_to(
                     "/etc/mock/site-defaults.cfg")
-                (task.get_savedir() / RetraceTask.MOCK_LOGGING_INI).symlink_to("/etc/mock/logging.ini")
+                (savedir / RetraceTask.MOCK_LOGGING_INI).symlink_to("/etc/mock/logging.ini")
             except Exception as ex:
                 log_error("Unable to create mock config file: %s" % ex)
                 self._fail()
@@ -504,13 +505,13 @@ class RetraceWorker:
 
         if CONFIG["RetraceEnvironment"] == "mock":
             self._retrace_run(25, ["/usr/bin/mock", "init", "--resultdir",
-                                   str(task.get_savedir() / "log"), "--configdir",
-                                   str(task.get_savedir())])
+                                   str(savedir / "log"), "--configdir",
+                                   str(savedir)])
 
             self.hook.run("post_prepare_environment")
             self.hook.run("pre_retrace")
 
-            self._retrace_run(27, ["/usr/bin/mock", "--configdir", str(task.get_savedir()), "chroot",
+            self._retrace_run(27, ["/usr/bin/mock", "--configdir", str(savedir), "chroot",
                                    "--", "chgrp -R mock /var/spool/abrt/crash"])
 
         # generate backtrace
@@ -519,7 +520,7 @@ class RetraceWorker:
 
         if CONFIG["RetraceEnvironment"] == "podman":
             try:
-                with (task.get_savedir() / "podman_repo.repo").open("w") as podman_repo:
+                with (savedir / "podman_repo.repo").open("w") as podman_repo:
                     podman_repo.write("[podman-%s]\n" % distribution)
                     podman_repo.write("name=podman-%s\n" % releaseid)
                     podman_repo.write("baseurl=file://%s/\n" % repopath)
@@ -530,7 +531,7 @@ class RetraceWorker:
                 self._fail()
 
             try:
-                with (task.get_savedir() / RetraceTask.DOCKERFILE).open("w") as dockerfile:
+                with (savedir / RetraceTask.DOCKERFILE).open("w") as dockerfile:
                     dockerfile.write('FROM %s:%s\n\n' % (distribution, version))
                     dockerfile.write('RUN useradd -l retrace && \\ \n')
                     dockerfile.write('    mkdir -p /var/spool/abrt/crash\n')
@@ -558,7 +559,7 @@ class RetraceWorker:
             self.hook.run("pre_retrace")
 
         try:
-            backtrace, exploitable = run_gdb(task.get_savedir(), self.plugin, repopath, task.get_taskid())
+            backtrace, exploitable = run_gdb(savedir, self.plugin, repopath, task.get_taskid())
         except Exception as ex:
             log_error("Could not run GDB: %s" % ex)
             self._fail()
