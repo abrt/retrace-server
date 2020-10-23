@@ -1,6 +1,6 @@
 Summary: Application for remote coredump analysis
 Name: retrace-server
-Version: 1.22.1
+Version: 1.22.2
 Release: 1%{?dist}
 License: GPLv2+
 URL: https://github.com/abrt/retrace-server
@@ -203,6 +203,11 @@ exit 0
 %license COPYING
 
 %changelog
+* Fri Oct 23 2020 Matěj Grabovský <mgrabovs@redhat.com> 1.22.2-1
+- Fix path to coredump in generated dockerfile when using Podman backend
+- Fix "not writable" error when retracing coredumps
+- Improve log messages
+
 * Wed Oct 21 2020 Matěj Grabovský <mgrabovs@redhat.com> 1.22.0-1
 - Add support for virtual memory files for vmcores
 - Add option to restart an existing task in retrace-server-task and on task manager page
