@@ -48,7 +48,9 @@ def binary_packages_from_debuginfo_package(debuginfo_package: Package, binobj_pa
             package_list.append(package)
     else:
         logger.info("   Dnf search for %s...", binobj_path)
-        binobj_package_list = dnfbase.sack.query().filter(file=binobj_path)
+        binobj_package_list = (dnfbase.sack.query()
+                               .filter(file=binobj_path,
+                                       arch=debuginfo_package.arch))
         for binobj_package in binobj_package_list:
             logger.info("    - %s", str(binobj_package))
             if binobj_package.evr_cmp(debuginfo_package) != 0:
