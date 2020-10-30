@@ -309,3 +309,9 @@ def main() -> None:
 
     for path, build_id in missing_buildid_list:
         print(f"{path} {build_id}")
+
+
+if __name__ == '__main__':
+    main()
+else:
+    raise NotImplementedError
