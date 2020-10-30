@@ -1,6 +1,6 @@
 Summary: Application for remote coredump analysis
 Name: retrace-server
-Version: 1.22.2
+Version: 1.22.3
 Release: 1%{?dist}
 License: GPLv2+
 URL: https://github.com/abrt/retrace-server
@@ -203,6 +203,9 @@ exit 0
 %license COPYING
 
 %changelog
+* Fri Oct 30 2020 Matěj Grabovský <mgrabovs@redhat.com> 1.22.3-1
+- Fix coredump2packages script to run properly
+
 * Fri Oct 23 2020 Matěj Grabovský <mgrabovs@redhat.com> 1.22.2-1
 - Fix path to coredump in generated dockerfile when using Podman backend
 - Fix "not writable" error when retracing coredumps
