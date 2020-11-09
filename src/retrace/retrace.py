@@ -295,8 +295,10 @@ def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
                     stdout=PIPE, stderr=DEVNULL, encoding='utf-8', check=False)
 
     elif CONFIG["RetraceEnvironment"] == "podman":
-        podman_build_call = ["/usr/bin/podman", "build", "--file",
-                             savedir / RetraceTask.DOCKERFILE,
+        podman_build_call = ["/usr/bin/podman", "build",
+                             "--quiet",
+                             "--force-rm",
+                             "--file", savedir / RetraceTask.DOCKERFILE,
                              "--volume=%s:%s:ro" % (repopath, repopath)]
 
         if CONFIG["RequireGPGCheck"]:
