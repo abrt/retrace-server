@@ -309,17 +309,20 @@ def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
             log_debug("Using FAF repository")
             podman_build_call.append("--volume=%s:%s" % (faf_link_dir, faf_link_dir))
 
-        img_cont_id = str(taskid)
-
-        podman_build_call.extend(["--tag", "retrace-image:%s" % img_cont_id])
+        image_tag = "retrace-image:%d" % taskid
+        podman_build_call.extend(["--tag", image_tag])
 
         child = run(podman_build_call, stdout=DEVNULL, stderr=DEVNULL, check=False)
         if child.returncode:
             raise Exception("Unable to build podman container")
 
-        child = run(["/usr/bin/podman", "run", "-it", "--name=%s" % img_cont_id,
-                     "--rm", "retrace-image:%s" % img_cont_id], stdout=PIPE, encoding='utf-8',
-                    check=False)
+        child = run(["/usr/bin/podman", "run",
+                     "--interactive",
+                     "--tty",
+                     "--rm",
+                     "--name=%d" % taskid,
+                     image_tag],
+                    stderr=DEVNULL, stdout=PIPE, encoding="utf-8", check=False)
     elif CONFIG["RetraceEnvironment"] == "native":
         raise Exception("RetraceEnvironment == native not implemented for gdb")
     else:
@@ -1831,9 +1834,11 @@ class RetraceTask:
                 stdout=DEVNULL, check=False)
 
         if CONFIG["RetraceEnvironment"] == "podman":
-            img_cont_id = str(self._taskid)
-            run(["/usr/bin/podman", "rmi", "retrace-image:%s" % img_cont_id],
-                stdout=DEVNULL, check=False)
+            image_tag = "retrace-image:%d" % self.get_taskid()
+            child = run(["/usr/bin/podman", "rmi", image_tag],
+                        stderr=DEVNULL, stdout=DEVNULL, check=False)
+            if child.returncode:
+                log_warn("Podman image %s not removed" % image_tag)
 
         for f in Path(self._savedir).iterdir():
             if f.name not in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
