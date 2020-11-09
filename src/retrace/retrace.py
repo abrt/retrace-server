@@ -318,7 +318,6 @@ def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
 
         child = run(["/usr/bin/podman", "run",
                      "--interactive",
-                     "--tty",
                      "--rm",
                      "--name=%d" % taskid,
                      image_tag],
