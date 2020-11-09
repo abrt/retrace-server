@@ -232,7 +232,7 @@ def get_supported_releases() -> List[str]:
     return result
 
 
-def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: Optional[int] = None):
+def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
     # exception is caught on the higher level
     savedir = Path(savedir)
     exec_file = open(savedir / "crash" / "executable", "r")
