@@ -1,19 +1,21 @@
 # Davide Giunchi <davide@giunchi.net>, 2017. #zanata
 # Luca Ciavatta <luca.ciavatta@gmail.com>, 2017. #zanata
+# Tommaso Cammelli <tomm.cammelli@outlook.it>, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2017-04-14 04:51+0000\n"
-"Last-Translator: Davide Giunchi <davide@giunchi.net>\n"
-"Language-Team: Italian\n"
+"PO-Revision-Date: 2020-11-05 17:35+0000\n"
+"Last-Translator: Tommaso Cammelli <tomm.cammelli@outlook.it>\n"
+"Language-Team: Italian <https://translate.fedoraproject.org/projects/abrt/"
+"retrace-server/it/>\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.3.2-dev\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -34,9 +36,8 @@ msgid "Invalid password"
 msgstr "Passoword non valida"
 
 #: ../src/backtrace.wsgi:38
-#, fuzzy
 msgid "There is no backtrace for the specified task"
-msgstr "Non è presente alcun backtrace per il compito specificato."
+msgstr "Non è presente alcun backtrace per il compito specificato"
 
 #: ../src/create.wsgi:60 ../src/create.wsgi:116
 msgid "Retrace server is fully loaded at the moment"
@@ -73,9 +74,8 @@ msgid "Unable to obtain disk free space"
 msgstr "Impossibile ottenere spazio libero su disco"
 
 #: ../src/create.wsgi:101 ../src/create.wsgi:172
-#, fuzzy
 msgid "There is not enough storage space on the server"
-msgstr "Spazio insufficiente nello storage sul server"
+msgstr "Spazio di archiviazione insufficiente sul server"
 
 #: ../src/create.wsgi:109
 msgid "Unable to create new task"
@@ -270,9 +270,8 @@ msgid "Name"
 msgstr "Nome"
 
 #: ../src/stats.wsgi:46
-#, fuzzy
 msgid "Release"
-msgstr "Rilascio"
+msgstr "Versione"
 
 #: ../src/stats.wsgi:47
 msgid "Releases"
