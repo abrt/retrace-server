@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 from argparse import ArgumentParser
-from os.path import relpath
-from pathlib import Path
+import os
+from os.path import abspath, join, relpath
 import shutil
 from typing import Generator
 
@@ -15,32 +15,33 @@ faf_names = {'rhel': "Red Hat Enterprise Linux",
              'centos': 'CentOS'}
 
 
-def get_pkglist(db: Database, opsys: str, release: str, arch: str) -> Generator[Path, None, None]:
+def get_pkglist(db: Database, opsys: str, release: str, arch: str) -> Generator[str, None, None]:
     if opsys in faf_names.keys():
         opsys = faf_names[opsys]
     q = get_packages_by_osrelease(db, opsys, release, arch)
     for pkg in q:
         if pkg.has_lob("package"):
             print("Adding package: %s-%s-%s" % (pkg.name, pkg.build.version, pkg.build.release))
-            yield Path(pkg.get_lob_path("package")).resolve()
+            yield abspath(pkg.get_lob_path("package"))
 
 
-def generate_repo(db: Database, outputdir: Path, opsys: str, release: str, arch: str) -> None:
-    repodata_path = outputdir / "repodata"
+def generate_repo(db: Database, outputdir: str, opsys: str, release: str,
+                  arch: str) -> None:
+    repodata_path = join(outputdir, "repodata")
 
-    if repodata_path.exists():
+    if os.path.exists(repodata_path):
         shutil.rmtree(repodata_path)
 
-    repodata_path.mkdir(parents=True)
+    os.makedirs(repodata_path)
 
     # Prepare metadata files
-    repomd_path = repodata_path / "repomd.xml"
-    pri_xml_path = repodata_path / "primary.xml.gz"
-    fil_xml_path = repodata_path / "filelists.xml.gz"
-    oth_xml_path = repodata_path / "other.xml.gz"
-    pri_db_path = repodata_path / "primary.sqlite"
-    fil_db_path = repodata_path / "filelists.sqlite"
-    oth_db_path = repodata_path / "other.sqlite"
+    repomd_path = join(repodata_path, "repomd.xml")
+    pri_xml_path = join(repodata_path, "primary.xml.gz")
+    fil_xml_path = join(repodata_path, "filelists.xml.gz")
+    oth_xml_path = join(repodata_path, "other.xml.gz")
+    pri_db_path = join(repodata_path, "primary.sqlite")
+    fil_db_path = join(repodata_path, "filelists.sqlite")
+    oth_db_path = join(repodata_path, "other.sqlite")
 
     pri_xml = cr.PrimaryXmlFile(pri_xml_path)
     fil_xml = cr.FilelistsXmlFile(fil_xml_path)
@@ -60,7 +61,7 @@ def generate_repo(db: Database, outputdir: Path, opsys: str, release: str, arch:
     # Process all packages
     for filename in pkg_list:
         pkg = cr.package_from_rpm(filename)
-        pkg.location_href = Path(relpath(filename, outputdir))
+        pkg.location_href = relpath(filename, outputdir)
         pri_xml.add_pkg(pkg)
         fil_xml.add_pkg(pkg)
         oth_xml.add_pkg(pkg)
@@ -86,13 +87,13 @@ def generate_repo(db: Database, outputdir: Path, opsys: str, release: str, arch:
 
     for name, path, db_to_update in repomdrecords:
         # Compress sqlite files with bzip2
-        if path.suffix == '.sqlite':
+        if path.endswith('.sqlite'):
             new_path = '%s.bz2' % path
             cr.compress_file(path, new_path, cr.BZ2)
-            path.unlink()
-            path = Path(new_path)
+            os.remove(path)
+            path = new_path
 
-        record = cr.RepomdRecord(name, str(path))
+        record = cr.RepomdRecord(name, path)
         record.fill(cr.SHA256)
         record.rename_file()
         if db_to_update:
@@ -101,7 +102,8 @@ def generate_repo(db: Database, outputdir: Path, opsys: str, release: str, arch:
         repomd.set_record(record)
 
     # Write repomd.xml
-    open(repomd_path, "w").write(repomd.xml_dump())
+    with open(repomd_path, "w") as repomd_file:
+        repomd_file.write(repomd.xml_dump())
 
 
 def main() -> None:
@@ -109,7 +111,7 @@ def main() -> None:
     parser.add_argument("OPSYS")
     parser.add_argument("RELEASE")
     parser.add_argument("ARCHITECTURE")
-    parser.add_argument("--outputdir", default=Path.cwd())
+    parser.add_argument("--outputdir", default=os.getcwd())
     args = parser.parse_args()
 
     print("Creating repo in '%s'" % (args.outputdir))
