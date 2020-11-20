@@ -21,6 +21,7 @@ versionlist = [
     "fc30",
     "fc31",
     "fc32",
+    "fc33",
 ]
 
 # Find more details about Fedora Mirroring at:
