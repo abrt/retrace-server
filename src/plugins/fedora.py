@@ -10,15 +10,6 @@ gpg_keys = [
     "/usr/share/distribution-gpg-keys/fedora/RPM-GPG-KEY-fedora-{release}-primary",
 ]
 versionlist = [
-    "fc22",
-    "fc23",
-    "fc24",
-    "fc25",
-    "fc26",
-    "fc27",
-    "fc28",
-    "fc29",
-    "fc30",
     "fc31",
     "fc32",
     "fc33",
