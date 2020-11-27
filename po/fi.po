@@ -1,18 +1,20 @@
 # Toni Rantala <trantalafilo@gmail.com>, 2017. #zanata
+# Ricky Tigg <ricky.tigg@gmail.com>, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2017-04-17 02:27+0000\n"
-"Last-Translator: Toni Rantala <trantalafilo@gmail.com>\n"
-"Language-Team: Finnish\n"
+"PO-Revision-Date: 2020-11-20 14:35+0000\n"
+"Last-Translator: Ricky Tigg <ricky.tigg@gmail.com>\n"
+"Language-Team: Finnish <https://translate.fedoraproject.org/projects/abrt/"
+"retrace-server/fi/>\n"
 "Language: fi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.3.2\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -25,7 +27,7 @@ msgstr "Epäkelpo URL"
 
 #: ../src/backtrace.wsgi:29 ../src/log.wsgi:29 ../src/status.wsgi:30
 msgid "There is no such task"
-msgstr ""
+msgstr "Tällaista tehtävää ei ole"
 
 #: ../src/backtrace.wsgi:34 ../src/log.wsgi:34 ../src/status.wsgi:35
 msgid "Invalid password"
@@ -33,31 +35,33 @@ msgstr "Väärä salasana"
 
 #: ../src/backtrace.wsgi:38
 msgid "There is no backtrace for the specified task"
-msgstr ""
+msgstr "Määritetylle tehtävälle ei ole jäljitysjälkeä"
 
 #: ../src/create.wsgi:60 ../src/create.wsgi:116
 msgid "Retrace server is fully loaded at the moment"
-msgstr ""
+msgstr "Jäljityspalvelin on tällä hetkellä täysin ladattu"
 
 #: ../src/create.wsgi:64
 msgid "You must use POST method"
-msgstr ""
+msgstr "Sinun on käytettävä POST-menetelmää"
 
 #: ../src/create.wsgi:68
 msgid "Specified archive format is not supported"
-msgstr ""
+msgstr "Määritettyä arkistomuotoa ei tueta"
 
 #: ../src/create.wsgi:72
 msgid "You need to set Content-Length header properly"
-msgstr ""
+msgstr "Sinun on määritettävä Content-Length:n otsikko oikein"
 
 #: ../src/create.wsgi:76
 msgid "Specified archive is too large"
-msgstr ""
+msgstr "Määritetty arkisto on liian suuri"
 
 #: ../src/create.wsgi:81
 msgid "X-CoreFileDirectory header has been disabled by server administrator"
 msgstr ""
+"Palvelimen järjestelmänvalvoja on poistanut X-CoreFileDirectory:n otsikon "
+"käytöstä"
 
 #: ../src/create.wsgi:91
 msgid "Unable to create working directory"
@@ -65,7 +69,7 @@ msgstr "Hakemistoa ei voitu luoda"
 
 #: ../src/create.wsgi:97
 msgid "Unable to obtain disk free space"
-msgstr ""
+msgstr "Vapaata levytilaa ei saada"
 
 #: ../src/create.wsgi:101 ../src/create.wsgi:172
 msgid "There is not enough storage space on the server"
@@ -73,11 +77,11 @@ msgstr "Palvelimella ei ole tarpeeksi vapaata tilaa"
 
 #: ../src/create.wsgi:109
 msgid "Unable to create new task"
-msgstr ""
+msgstr "Uuden tehtävän luominen epäonnistui"
 
 #: ../src/create.wsgi:121
 msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr ""
+msgstr "X-CoreFileDirector:ssa määritettyä hakemistoa ei ole olemassa"
 
 #: ../src/create.wsgi:127
 #, c-format
@@ -85,11 +89,12 @@ msgid ""
 "There are %d files in the '%s' directory. Only a single archive is supported "
 "at the moment"
 msgstr ""
+"%d tiedostoa on hakemistossa '%s'. Tällä hetkellä tuetaan vain yhtä arkistoa"
 
 #: ../src/create.wsgi:136
 #, c-format
 msgid "You header specifies '%s' type, but the file type does not match"
-msgstr ""
+msgstr "Otsikko määrittelee tyypin '%s', mutta tiedostotyyppi ei täsmää"
 
 #: ../src/create.wsgi:154
 msgid "Unable to save archive"
@@ -97,11 +102,11 @@ msgstr "Arkistoa ei voitu tallentaa"
 
 #: ../src/create.wsgi:162
 msgid "Unable to obtain unpacked size"
-msgstr ""
+msgstr "Pakkaamattoman koon saaminen epäonnistui"
 
 #: ../src/create.wsgi:167
 msgid "Specified archive's content is too large"
-msgstr ""
+msgstr "Määritetyn arkiston sisältö on liian suuri"
 
 #: ../src/create.wsgi:184
 msgid "Unable to unpack archive"
@@ -114,7 +119,7 @@ msgstr "Symbolisetlinkit eivät ole sallittuja arkistossa"
 #: ../src/create.wsgi:204
 #, c-format
 msgid "The '%s' file is larger than expected"
-msgstr "Tiedosto  '%s' on suurempi kuin odotettin"
+msgstr "Tiedosto '%s' on suurempi kuin odotettin"
 
 #: ../src/create.wsgi:208
 #, c-format
@@ -124,11 +129,12 @@ msgstr "Tiedosto '%s' ei ole sallittu arkistossa"
 #: ../src/create.wsgi:223
 msgid "Interactive tasks were disabled by server administrator"
 msgstr ""
+"Palvelimen järjestelmänvalvoja poisti vuorovaikutteiset tehtävät käytöstä"
 
 #: ../src/create.wsgi:232
 #, c-format
 msgid "Required file '%s' is missing"
-msgstr "Vaadittua tiedostoa  '%s' ei löydy"
+msgstr "Vaadittua tiedostoa '%s' ei löydy"
 
 #: ../src/index.wsgi:20
 msgid "Retrace Server"
@@ -144,6 +150,9 @@ msgid ""
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s github:"
 msgstr ""
+"Retrace Server on palvelu, joka tarjoaa mahdollisuuden analysoida ytimen "
+"pinoa ja luoda jäljitysjälki verkon kautta. Löydät lisätietoja Retrace "
+"Server :sta ja sovelluksista Git Hub:sta:"
 
 #: ../src/index.wsgi:29
 msgid ""
@@ -177,6 +186,14 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
+"Ytimen pinon tietosi pidetään palvelimella vain, kun seurantatyö on "
+"käynnissä. Kun työ on valmis, palvelin pitää jäljityslokia ja "
+"jäljitysjälkiä. Kaikki muut tiedot (Ytimen pinon mukaan lukien) poistetaan. "
+"Jäljityslokiin ja jäljitysjälkeen pääsee vain yksilöllisellä tehtävän "
+"tunnuksella ja salasanalla, joten kukaan (lukuun ottamatta tekijää) ei saa "
+"tarkastella niitä. Kaikki kaatumistiedot (mukaan lukien jälkitiedot) "
+"poistetaan %d tunnin käyttämättömyyden jälkeen. Palvelimella ei "
+"mahdollisesti enää ole yksityisiä tietoja."
 
 #: ../src/index.wsgi:43
 msgid ""
@@ -186,16 +203,21 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
+"Ytimen pinoasi käytetään vain jäljitystarkoituksiin. Palvelimen "
+"järjestelmänvalvojat eivät yritä saada yksityisiä tietojasi Ytimen pinojen-"
+"tai jäljitysjäljen tiedoista. Suojatun tietoliikennekanavan (HTTPS) käyttöä "
+"on ehdottomasti suositeltavaa. Palvelimen järjestelmänvalvojat eivät ole "
+"vastuussa epävarman kanavan (kuten HTTP) käyttöön liittyvistä ongelmista."
 
 #: ../src/index.wsgi:34
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
-msgstr ""
+msgstr "Tällä hetkellä palvelimella on ladattuna %d%% (käynnissä %d %d työstä)."
 
 #: ../src/log.wsgi:38
 msgid "There is no log for the specified task"
-msgstr ""
+msgstr "Määritetylle tehtävälle ei ole lokia"
 
 #: ../src/stats.wsgi:36
 msgid "Architecture"
@@ -215,7 +237,7 @@ msgstr "Luku"
 
 #: ../src/stats.wsgi:40
 msgid "Denied jobs"
-msgstr ""
+msgstr "Evätyt työt"
 
 #: ../src/stats.wsgi:41
 msgid "Failed"
@@ -223,11 +245,11 @@ msgstr "Epäonistui"
 
 #: ../src/stats.wsgi:42
 msgid "First retrace"
-msgstr ""
+msgstr "Ensimmäinen jäljitys"
 
 #: ../src/stats.wsgi:43
 msgid "Global statistics"
-msgstr ""
+msgstr "Yleiset tilastot"
 
 #: ../src/stats.wsgi:44
 msgid "Missing build-ids"
@@ -251,15 +273,15 @@ msgstr "Vaadittavat paketit"
 
 #: ../src/stats.wsgi:49
 msgid "Retraced packages"
-msgstr ""
+msgstr "Jäljitetyt paketit"
 
 #: ../src/stats.wsgi:50
 msgid "Retrace Server statistics"
-msgstr ""
+msgstr "Retrace Server:n tilastot"
 
 #: ../src/stats.wsgi:51
 msgid "Shared object name"
-msgstr ""
+msgstr "Jaetun objektin nimi"
 
 #: ../src/stats.wsgi:52
 msgid "Successful"
