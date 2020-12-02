@@ -58,6 +58,7 @@ Requires(post): /sbin/install-info
 %endif
 Requires(post): /usr/bin/crontab
 Recommends: podman
+Recommends: logrotate
 
 Obsoletes: abrt-retrace-server < 2.0.3
 Provides: abrt-retrace-server = 2.0.3
@@ -171,6 +172,7 @@ exit 0
 %config(noreplace) %{_sysconfdir}/%{name}/hooks/start.conf
 %config(noreplace) %{_sysconfdir}/%{name}/hooks/success.conf
 %config(noreplace) %{_sysconfdir}/%{name}/hooks/task.conf
+%dir %{_sysconfdir}/logrotate.d
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}/kernel
