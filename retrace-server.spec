@@ -171,7 +171,7 @@ exit 0
 %config(noreplace) %{_sysconfdir}/%{name}/hooks/start.conf
 %config(noreplace) %{_sysconfdir}/%{name}/hooks/success.conf
 %config(noreplace) %{_sysconfdir}/%{name}/hooks/task.conf
-%config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
+%config(noreplace) %attr(0644, retrace, retrace) %{_sysconfdir}/logrotate.d/%{name}
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}/kernel
 %dir %attr(0755,retrace,retrace) %{_localstatedir}/cache/%{name}/download
