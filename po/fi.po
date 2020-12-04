@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2020-11-20 14:35+0000\n"
+"PO-Revision-Date: 2020-11-28 12:35+0000\n"
 "Last-Translator: Ricky Tigg <ricky.tigg@gmail.com>\n"
 "Language-Team: Finnish <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/fi/>\n"
@@ -81,7 +81,7 @@ msgstr "Uuden tehtävän luominen epäonnistui"
 
 #: ../src/create.wsgi:121
 msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr "X-CoreFileDirector:ssa määritettyä hakemistoa ei ole olemassa"
+msgstr "'X-CoreFileDirectory':ssa määritettyä hakemistoa ei ole olemassa"
 
 #: ../src/create.wsgi:127
 #, c-format
