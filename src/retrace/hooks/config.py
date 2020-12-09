@@ -2,6 +2,8 @@ import configparser
 from pathlib import Path
 from typing import Dict, List
 
+from retrace.retrace import log_warn
+
 MAIN_CONFIG_PATH = Path("/etc/retrace-server/")
 MAIN_HOOK_CONFIG_FILE = Path("retrace-server-hooks.conf")
 MAIN_HOOK_CONFIGS_PATH = Path("/etc/retrace-server/hooks")
@@ -12,7 +14,12 @@ HOOK_TIMEOUT = 300
 
 
 def get_config_files(directory: Path) -> List[Path]:
-    return [fname for fname in directory.iterdir() if fname.suffix == '.conf']
+    if not directory.is_dir():
+        log_warn(f'Configuration directory {directory} does not exist')
+        return []
+
+    return [fname for fname in directory.iterdir()
+            if fname.suffix == '.conf']
 
 
 def load_config_files(config_files: List[Path]) -> Dict[str, str]:
