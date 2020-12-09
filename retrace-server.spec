@@ -25,6 +25,15 @@ BuildRequires: texinfo
 BuildRequires: xmlto
 BuildRequires: xz
 
+# These packages are moreover required for the tests.
+BuildRequires: createrepo_c
+BuildRequires: dnf
+BuildRequires: dnf-plugins-core
+BuildRequires: gdb
+BuildRequires: podman
+BuildRequires: python3-magic
+BuildRequires: rpm
+
 Requires: rsync
 Requires: mock >= 1.4.7
 Requires: xz
