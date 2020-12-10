@@ -1,7 +1,20 @@
+createrepo = find_program('createrepo')
 dnf = find_program('dnf')
 gcore = find_program('gcore')
-podman = find_program('podman')
 rpm = find_program('rpm')
+
+configuration = configuration_data()
+
+configuration.set('CREATEREPO_BIN', createrepo.path())
+configuration.set('DNF_BIN', dnf.path())
+configuration.set('GCORE_BIN', gcore.path())
+configuration.set('RPM_BIN', rpm.path())
+
+configure_file(
+  configuration: configuration,
+  input: 'run_test.py.in',
+  output: 'run_test.py'
+)
 
 # TODO: build_root() is deprecated since Meson 0.56.0. Port to
 # project_build_root() once the version lands in all supported
@@ -27,9 +40,11 @@ test_env.set('RETRACE_SERVER_PLUGIN_DIR',
 )
 test_env.set('RETRACE_SERVER_TESTING', '1')
 
+run_test_py = join_paths(build_dir, 'test', 'run_test.py')
+
 test('basic test',
   python_installation,
-  args: [files('run_test.py'), '--delete-repo'],
+  args: [run_test_py, '--delete-repo'],
   env: test_env,
   timeout: 300 # 5 minutes
 )

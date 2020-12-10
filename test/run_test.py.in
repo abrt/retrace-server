@@ -26,6 +26,11 @@ from retrace.retrace import RetraceTask, TASK_RETRACE, TASK_RETRACE_INTERACTIVE
 from retrace.retrace_worker import RetraceWorker
 from retrace.config import Config
 
+CREATEREPO_BIN = '@CREATEREPO_BIN@'
+DNF_BIN = '@DNF_BIN@'
+GCORE_BIN = '@GCORE_BIN@'
+RPM_BIN = '@RPM_BIN@'
+
 def fatal_error(*args, **kwargs) -> None:
     print(*args, file=sys.stderr, **kwargs)
     sys.exit(1)
@@ -45,7 +50,7 @@ def create_repo(packages: List[str], releaseid: str, version: str):
 
     needed_packages = ["abrt-addon-ccpp", "shadow-utils", "gdb", "rpm"] + packages
 
-    cmd = ['dnf',
+    cmd = [DNF_BIN,
            f'--releasever={version}',
            '--assumeyes',
            '--skip-broken',
@@ -57,7 +62,6 @@ def create_repo(packages: List[str], releaseid: str, version: str):
     cmd.extend(needed_packages)
 
     print('Running DNF to install missing packages')
-    print(' '.join(cmd))
 
     c = run(cmd, stdout=DEVNULL, stderr=PIPE, encoding='utf-8')
     # NOTE: If error-msg states: "Failed to synchronize cache for repo"
@@ -67,7 +71,7 @@ def create_repo(packages: List[str], releaseid: str, version: str):
         fatal_error("Package download via DNF failed:\n", c.stderr)
 
     # create repo from downloaded packages
-    createrepo_cmd = ["/usr/bin/createrepo", str(repo_path)]
+    createrepo_cmd = [CREATEREPO_BIN, str(repo_path)]
     child = run(createrepo_cmd, stdout=DEVNULL, stderr=PIPE, encoding='utf-8')
     if child.returncode:
         error("ERROR: during creating repo this errors occurred:", child.stderr)
@@ -92,7 +96,7 @@ def generate_coredump() -> Tuple[Path, str, str]:
     """
     print("Creating coredump")
     # use gcore on this process
-    gcore_cmd = ['/usr/bin/gcore', '-o', '/var/tmp/coredump', str(os.getpid())]
+    gcore_cmd = [GCORE_BIN, '-o', '/var/tmp/coredump', str(os.getpid())]
     child = run(gcore_cmd, stdout=PIPE, stderr=PIPE, encoding='utf-8')
     stdout = child.stdout
     if child.returncode:
@@ -111,7 +115,7 @@ def generate_coredump() -> Tuple[Path, str, str]:
 
     # find in which package is python
     exe_link = os.readlink('/proc/self/exe')
-    rpm_cmdline = ['/usr/bin/rpm', '-qf', exe_link]
+    rpm_cmdline = [RPM_BIN, '-qf', exe_link]
     child = run(rpm_cmdline, stdout=PIPE, stderr=DEVNULL, check=False,
                 encoding='utf-8')
     if child.returncode:
@@ -206,7 +210,7 @@ else:
     task.set_type(TASK_RETRACE)
 task.set("custom_package", package)
 task.set("custom_executable", executable)
-task.set("custom_os_release", 'Fedora release 32 (Thirty Two)')
+# task.set("custom_os_release", 'Fedora release 32 (Thirty Two)')
 
 crashdir = task.get_savedir() / "crash"
 crashdir.mkdir()
@@ -230,7 +234,7 @@ if not dont_create_repo_arg:
 
     # find what provides missing parts
     print("Running RPM to find missing packages")
-    cmd = ["/usr/bin/rpm", "-qf"]
+    cmd = [RPM_BIN, "-qf"]
     for part in missing_unparsed:
         cmd.append(part[0])
 
