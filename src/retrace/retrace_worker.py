@@ -31,7 +31,7 @@ from .retrace import (ALLOWED_FILES, REPO_PREFIX, REQUIRED_FILES,
                       run_gdb,
                       RetraceTask,
                       RetraceWorkerError)
-from .config import Config
+from .config import Config, PODMAN_BIN
 from .plugins import Plugins
 from .stats import (init_crashstats_db,
                     save_crashstats,
@@ -839,7 +839,7 @@ class RetraceWorker:
 
             img_cont_id = str(task.get_taskid())
 
-            child = run(["/usr/bin/podman",
+            child = run([PODMAN_BIN,
                          "build",
                          "--file",
                          str(savedir / RetraceTask.DOCKERFILE),
@@ -850,16 +850,16 @@ class RetraceWorker:
                 raise Exception("Unable to build podman container")
 
             vmlinux = vmcore.prepare_debuginfo(task, kernelver=kernelver)
-            child = run(["/usr/bin/podman", "run", "--detach", "-it", "--rm",
+            child = run([PODMAN_BIN, "run", "--detach", "-it", "--rm",
                          "retrace-image:%s" % img_cont_id],
                         stdout=PIPE, stderr=PIPE, encoding='utf-8', check=False)
             if child.stderr:
                 log_error(child.stderr)
                 raise Exception("Unable to run podman container")
 
-            crash_normal = ["/usr/bin/podman", "exec", img_cont_id, task.get_crash_cmd()
+            crash_normal = [PODMAN_BIN, "exec", img_cont_id, task.get_crash_cmd()
                             + " -s /var/spool/abrt/crash/%s %s" % (vmcore_file, vmlinux)]
-            crash_minimal = ["/usr/bin/podman", "exec", img_cont_id, task.get_crash_cmd()
+            crash_minimal = [PODMAN_BIN, "exec", img_cont_id, task.get_crash_cmd()
                              + " -s --minimal /var/spool/abrt/crash/%s %s" % (vmcore_file, vmlinux)]
 
         elif CONFIG["RetraceEnvironment"] == "native":
