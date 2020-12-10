@@ -17,7 +17,7 @@ from subprocess import PIPE, STDOUT, DEVNULL, TimeoutExpired, run
 from typing import Dict, List, Optional, Set, Tuple, Union
 import magic
 
-from .config import Config
+from .config import Config, PODMAN_BIN
 from .util import (ARCHIVE_7Z,
                    ARCHIVE_BZ2,
                    ARCHIVE_GZ,
@@ -295,7 +295,7 @@ def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
                     stdout=PIPE, stderr=DEVNULL, encoding='utf-8', check=False)
 
     elif CONFIG["RetraceEnvironment"] == "podman":
-        podman_build_call = ["/usr/bin/podman", "build",
+        podman_build_call = [PODMAN_BIN, "build",
                              "--quiet",
                              "--force-rm",
                              "--file", savedir / RetraceTask.DOCKERFILE,
@@ -316,7 +316,7 @@ def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
         if child.returncode:
             raise Exception("Unable to build podman container")
 
-        child = run(["/usr/bin/podman", "run",
+        child = run([PODMAN_BIN, "run",
                      "--interactive",
                      "--rm",
                      "--name=%d" % taskid,
@@ -1834,7 +1834,7 @@ class RetraceTask:
 
         if CONFIG["RetraceEnvironment"] == "podman":
             image_tag = "retrace-image:%d" % self.get_taskid()
-            child = run(["/usr/bin/podman", "rmi", image_tag],
+            child = run([PODMAN_BIN, "rmi", image_tag],
                         stderr=DEVNULL, stdout=DEVNULL, check=False)
             if child.returncode:
                 log_warn("Podman image %s not removed" % image_tag)

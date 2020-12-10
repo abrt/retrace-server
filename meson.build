@@ -25,6 +25,10 @@ makeinfo = find_program('makeinfo',
   required: get_option('docs'),
   disabler: true,
 )
+podman = find_program('podman',
+  required: false,
+  disabler: true,
+)
 tar = find_program('tar')
 tito = find_program('tito',
   required: false,
