@@ -203,7 +203,7 @@ def splitFilename(filename: str) -> Union[Tuple[None, None, None, None, None], T
         foo-1.0-1.i386.rpm returns foo, 1.0, 1, i386
     """
 
-    if filename[-4:] == '.rpm':
+    if filename.endswith('.rpm'):
         filename = filename[:-4]
 
     subject = Subject(filename)
