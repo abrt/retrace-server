@@ -82,8 +82,9 @@ REPODIR_NAME_PARSER = re.compile(r"^[^\-]+\-[^\-]+\-[^\-]+$")
 
 KO_DEBUG_PARSER = re.compile(r"^.*/([a-zA-Z0-9_\-]+)\.ko\.debug$")
 
-WORKER_RUNNING_PARSER = re.compile(r"^[ \t]*([0-9]+)[ \t]+[0-9]+[ \t]+([^ ^\t]+)[ \t]"
-                                   r"+.*retrace-server-worker ([0-9]+)( .*)?$")
+WORKER_RUNNING_PARSER = re.compile(r"^\s*(\d+)\s+\d+\s+(\S+)\s+"
+                                   r".*retrace-server-worker (\d+)( .*)?$",
+                                   re.ASCII)
 
 MD5_PARSER = re.compile(r"[a-fA-F0-9]{32}")
 
