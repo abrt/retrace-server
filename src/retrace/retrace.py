@@ -82,7 +82,7 @@ REPODIR_NAME_PARSER = re.compile(r"^[^\-]+\-[^\-]+\-[^\-]+$")
 
 KO_DEBUG_PARSER = re.compile(r"^.*/([a-zA-Z0-9_\-]+)\.ko\.debug$")
 
-WORKER_RUNNING_PARSER = re.compile(r"^\s*(\d+)\s+\d+\s+(\S+)\s+"
+WORKER_RUNNING_PARSER = re.compile(r"^\s*(\d+)\s+\d+\s+(\d+)\s+"
                                    r".*retrace-server-worker (\d+)( .*)?$",
                                    re.ASCII)
 
@@ -592,13 +592,13 @@ def unpack_coredump(path: Path) -> None:
 
 
 def run_ps() -> List[str]:
-    lines = run(["ps", "-eo", "pid,ppid,etime,cmd"],
-                stdout=PIPE, encoding='utf-8', check=False).stdout.splitlines()
+    lines = run(["ps", "-eo", "pid,ppid,etimes,cmd"],
+                stdout=PIPE, encoding="utf-8", check=False).stdout.splitlines()
 
     return lines
 
 
-def get_running_tasks(ps_output: Optional[List[str]] = None) -> List[Tuple[int, int, str]]:
+def get_running_tasks(ps_output: Optional[List[str]] = None) -> List[Tuple[int, int, int]]:
     if ps_output is None:
         ps_output = run_ps()
 
@@ -607,7 +607,10 @@ def get_running_tasks(ps_output: Optional[List[str]] = None) -> List[Tuple[int, 
     for line in ps_output:
         match = WORKER_RUNNING_PARSER.match(line)
         if match:
-            result.append((int(match.group(1)), int(match.group(3)), match.group(2)))
+            pid = int(match.group(1))
+            elapsed = int(match.group(2))
+            taskid = int(match.group(3))
+            result.append((pid, taskid, elapsed))
 
     return result
 

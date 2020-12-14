@@ -113,15 +113,14 @@ if __name__ == "__main__":
                 except Exception:
                     log.write("RetraceTask with taskid %d does not exist\n" % taskid)
 
-            # ToDo: 5 = mm:ss, >5 = hh:mm:ss
-            if len(runtime) > 5:
-                log.write("Killing task %d running for %s\n" % (taskid, runtime))
+            if runtime > 60 * 60:  # 1 hour
+                log.write("Killing task %d running for %ss\n" % (taskid, runtime))
                 kill_process_and_childs(pid, ps_out)
 
         # kill orphaned tasks
         running_tasks = get_running_tasks()
         running_ids = []
-        for pid, taskid, runtime in running_tasks:
+        for _, taskid, _ in running_tasks:
             running_ids.append(taskid)
 
         for taskid in get_active_tasks():
