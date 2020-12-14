@@ -1106,11 +1106,9 @@ class RetraceTask:
         """Returns whether the task is running. Reads /proc if readproc=True
         otherwise just reads the STATUS_FILE."""
         if readproc:
-            for _, taskid, _ in get_running_tasks():
-                if taskid == self._taskid:
-                    return True
+            return any(taskid == self._taskid
+                       for _, taskid, _ in get_running_tasks())
 
-            return False
         return self.has_status() and self.get_status() not in [STATUS_SUCCESS, STATUS_FAIL]
 
     def get_age(self) -> int:
