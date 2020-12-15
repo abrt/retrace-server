@@ -119,10 +119,7 @@ if __name__ == "__main__":
                 kill_process_and_childs(pid, ps_out)
 
         # kill orphaned tasks
-        running_tasks = get_running_tasks()
-        running_ids = []
-        for _, taskid, _ in running_tasks:
-            running_ids.append(taskid)
+        running_ids = [taskid for _, taskid, _ in get_running_tasks()]
 
         for taskid in get_active_tasks():
             if taskid not in running_ids:
