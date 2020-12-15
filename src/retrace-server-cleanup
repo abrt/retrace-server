@@ -3,10 +3,10 @@ import os
 import sys
 import re
 import time
-from typing import Dict, List, Optional
-
-from subprocess import run, PIPE, STDOUT
+from datetime import timedelta
 from pathlib import Path
+from subprocess import run, PIPE, STDOUT
+from typing import Dict, List, Optional
 
 from retrace.retrace import (STATUS_FAIL,
                              get_active_tasks,
@@ -114,7 +114,8 @@ if __name__ == "__main__":
                     log.write("RetraceTask with taskid %d does not exist\n" % taskid)
 
             if runtime > 60 * 60:  # 1 hour
-                log.write("Killing task %d running for %ss\n" % (taskid, runtime))
+                elapsed = timedelta(seconds=runtime)
+                log.write("Killing task %d running for %s\n" % (taskid, elapsed))
                 kill_process_and_childs(pid, ps_out)
 
         # kill orphaned tasks
