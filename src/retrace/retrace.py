@@ -1838,7 +1838,11 @@ class RetraceTask:
             if child.returncode:
                 log_warn("Podman image %s not removed" % image_tag)
 
-        for f in Path(self._savedir).iterdir():
+        savedir = Path(self._savedir)
+        if not savedir.is_dir():
+            return
+
+        for f in savedir.iterdir():
             if f.name not in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
                               RetraceTask.BACKTRACE_FILE, RetraceTask.DOWNLOADED_FILE,
                               RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
