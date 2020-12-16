@@ -23,7 +23,7 @@ CONFIG = Config()
 def get_process_tree(process_id: int, ps_output: List[str]) -> List[int]:
     result = [process_id]
 
-    parser = re.compile(r"^([0-9]+)[ \t]+(%d).*$" % process_id)
+    parser = re.compile(r"^\s*(\d+)\s+%d\s" % process_id, re.ASCII)
 
     for line in ps_output:
         match = parser.match(line)
