@@ -19,15 +19,15 @@ GETTEXT_DOMAIN = "retrace-server"
 DF_OUTPUT_PARSER = re.compile(r"^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
 
 # architecture (i386, x86_64, armv7hl, mips4kec)
-INPUT_ARCH_PARSER = re.compile(r"^[a-zA-Z0-9_]+$")
+INPUT_ARCH_PARSER = re.compile(r"^[\w\d_]+$")
 # characters, numbers, dash (utf-8, iso-8859-2 etc.)
-INPUT_CHARSET_PARSER = re.compile(r"^([a-zA-Z0-9\-]+)(,.*)?$")
+INPUT_CHARSET_PARSER = re.compile(r"^([\w\d-]+)(,.*)?$")
 # en_GB, sk-SK, cs, fr etc.
 INPUT_LANG_PARSER = re.compile(r"^([a-z]{2}([_\-][A-Z]{2})?)(,.*)?$")
 # characters allowed by Fedora Naming Guidelines
-INPUT_PACKAGE_PARSER = re.compile(r"^([1-9][0-9]*:)?[a-zA-Z0-9\-\.\_\+\~]+$")
+INPUT_PACKAGE_PARSER = re.compile(r"^[\w\d_.+-]+([1-9][0-9]*:)?[\w\d.+~-]+$")
 # name-version-arch (fedora-16-x86_64, rhel-6.2-i386, opensuse-12.1-x86_64)
-INPUT_RELEASEID_PARSER = re.compile(r"^[a-zA-Z0-9]+\-[0-9a-zA-Z\.]+\-[a-zA-Z0-9_]+$")
+INPUT_RELEASEID_PARSER = re.compile(r"^[\w\d]+-[\w\d.]+-[\w\d_]+$")
 
 UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB"]
 URL_PARSER = re.compile(r"^/([0-9]+)/?")
