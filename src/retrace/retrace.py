@@ -295,6 +295,11 @@ def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
                     # redirect GDB's stderr, ignore mock's stderr
                     stdout=PIPE, stderr=DEVNULL, encoding='utf-8', check=False)
 
+        if child.returncode:
+            raise Exception("Running GDB failed")
+
+        backtrace = child.stdout.strip()
+
     elif CONFIG["RetraceEnvironment"] == "podman":
         podman_build_call = [PODMAN_BIN, "build",
                              "--quiet",
@@ -313,25 +318,42 @@ def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
         image_tag = "retrace-image:%d" % taskid
         podman_build_call.extend(["--tag", image_tag])
 
-        child = run(podman_build_call, stdout=DEVNULL, stderr=DEVNULL, check=False)
-        if child.returncode:
-            raise Exception("Unable to build podman container")
+        try:
+            child = run(podman_build_call, stdout=DEVNULL, stderr=DEVNULL, check=False,
+                        timeout=15 * 60)
+        except TimeoutExpired:
+            raise Exception("Unable to build Podman container (timeout)")
 
-        child = run([PODMAN_BIN, "run",
-                     "--interactive",
-                     "--rm",
-                     "--name=%d" % taskid,
-                     image_tag],
-                    stderr=DEVNULL, stdout=PIPE, encoding="utf-8", check=False)
+        if child.returncode:
+            raise Exception("Unable to build Podman container")
+
+        try:
+            child = run([PODMAN_BIN, "run",
+                         "--interactive",
+                         "--rm",
+                         "--name=%d" % taskid,
+                         image_tag],
+                        stderr=DEVNULL, stdout=PIPE, encoding="utf-8", check=False,
+                        timeout=5 * 60)
+        except TimeoutExpired as ex:
+            if ex.stdout:
+                # GDB timed out but it generated some output. Let's assume
+                # it was the backtrace and see what happens.
+                log_warn("GDB timed out but generated some output")
+                backtrace = ex.stdout.strip()
+            else:
+                raise Exception("GDB timed out with no output")
+        else:
+            if child.returncode:
+                # GDB finished in time but with a failure code.
+                raise Exception("Running GDB failed")
+
+            backtrace = child.stdout.strip()
+
     elif CONFIG["RetraceEnvironment"] == "native":
         raise Exception("RetraceEnvironment == native not implemented for gdb")
     else:
         raise Exception("RetraceEnvironment set to invalid value")
-
-    if child.returncode:
-        raise Exception("Running GDB failed")
-
-    backtrace = child.stdout.strip()
 
     exploitable = None
     if EXPLOITABLE_SEPARATOR in backtrace:
@@ -1833,10 +1855,11 @@ class RetraceTask:
 
         if CONFIG["RetraceEnvironment"] == "podman":
             image_tag = "retrace-image:%d" % self.get_taskid()
-            child = run([PODMAN_BIN, "rmi", image_tag],
-                        stderr=DEVNULL, stdout=DEVNULL, check=False)
-            if child.returncode:
-                log_warn("Podman image %s not removed" % image_tag)
+
+            # Try to remove the image. Ignore return code since the image might
+            # not exist anymore.
+            run([PODMAN_BIN, "rmi", image_tag],
+                stderr=DEVNULL, stdout=DEVNULL, check=False, timeout=60)
 
         savedir = Path(self._savedir)
         if not savedir.is_dir():
