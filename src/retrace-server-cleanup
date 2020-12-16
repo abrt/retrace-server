@@ -5,6 +5,7 @@ import re
 import time
 from datetime import timedelta
 from pathlib import Path
+from signal import SIGKILL
 from subprocess import run, PIPE, STDOUT
 from typing import Dict, List, Optional
 
@@ -41,7 +42,7 @@ def kill_process_and_childs(process_id: int, ps_output: Optional[List[str]] = No
 
     for proc_id in get_process_tree(process_id, ps_output):
         try:
-            os.kill(proc_id, 9)
+            os.kill(proc_id, SIGKILL)
         except OSError:
             result = False
 
