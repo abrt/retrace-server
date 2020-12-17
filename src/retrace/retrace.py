@@ -349,10 +349,7 @@ def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
 
 
 def remove_epoch(nvr: str) -> str:
-    pos = nvr.find(":")
-    if pos > 0:
-        return nvr[pos + 1:]
-    return nvr
+    return re.sub("[1-9][0-9]*:", "", nvr)
 
 
 def is_package_known(package_nvr: str, arch: str, releaseid: Optional[str] = None):
