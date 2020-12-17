@@ -358,7 +358,7 @@ def is_package_known(package_nvr: str, arch: str, releaseid: Optional[str] = Non
         from pyfaf.queries import get_package_by_nevra
 
         db = getDatabase()
-        (n, v, r, e, _a) = splitFilename(package_nvr+".mockarch.rpm")
+        (n, v, r, e, _a) = splitFilename(f"{package_nvr}.mockarch.rpm")
         for derived_archs in ARCH_MAP.values():
             if arch not in derived_archs:
                 continue
@@ -368,10 +368,7 @@ def is_package_known(package_nvr: str, arch: str, releaseid: Optional[str] = Non
                     return True
         # Try with noarch
         p = get_package_by_nevra(db, n, e or 0, v, r, "noarch")
-        if p is not None:
-            return True
-
-        return False
+        return p is not None
 
     if releaseid is None:
         releases = get_supported_releases()
@@ -381,20 +378,23 @@ def is_package_known(package_nvr: str, arch: str, releaseid: Optional[str] = Non
     candidates = []
     package_nvr = remove_epoch(package_nvr)
     repodir = Path(CONFIG["RepoDir"])
+
     for release in releases:
+        repopath = repodir / release
+
         for derived_archs in ARCH_MAP.values():
             if arch not in derived_archs:
                 continue
 
             for a in derived_archs:
-                candidates.append(Path(repodir, release, "Packages", "%s.%s.rpm" % (package_nvr, a)))
-                candidates.append(Path(repodir, release, "%s.%s.rpm" % (package_nvr, a)))
+                candidates.append(repopath / "Packages" / f"{package_nvr}.{a}.rpm")
+                candidates.append(repopath / f"{package_nvr}.{a}.rpm")
             break
         else:
-            candidates.append(Path(repodir, release, "Packages", "%s.%s.rpm" % (package_nvr, arch)))
-            candidates.append(Path(repodir, release, "%s.%s.rpm" % (package_nvr, arch)))
+            candidates.append(repopath / "Packages" / f"{package_nvr}.{arch}.rpm")
+            candidates.append(repopath / f"{package_nvr}.{arch}.rpm")
 
-    return any([f.is_file() for f in candidates])
+    return any(f.is_file() for f in candidates)
 
 
 def cache_files_from_debuginfo(debuginfo: Path, basedir: Path, files: List[str]) -> None:
