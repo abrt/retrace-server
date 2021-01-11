@@ -29,7 +29,7 @@ test_env = environment()
 test_env.set('PYTHONPATH',
   join_paths(build_dir, 'src')
 )
-test_env.append('PATH',
+test_env.prepend('PATH',
   join_paths(build_dir, 'src')
 )
 test_env.set('RETRACE_SERVER_CONFIG_PATH',
