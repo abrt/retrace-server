@@ -23,6 +23,7 @@ from .retrace import (ALLOWED_FILES, REPO_PREFIX, REQUIRED_FILES,
                       is_package_known,
                       KernelVer,
                       KernelVMcore,
+                      log_exception,
                       log_debug,
                       log_error,
                       log_info,
@@ -1016,6 +1017,7 @@ class RetraceWorker:
                 raise Exception("Unsupported task type '%s'" % tasktype)
         except Exception as ex:
             log_error("Task failed: %s" % ex)
+            log_exception("Backtrace: %s" % ex)
             self._fail()
 
     def clean_task(self) -> None:
