@@ -1514,7 +1514,7 @@ class RetraceTask:
             vmcore_path = self.get_vmcore_path()
             for file_path in crashdir.iterdir():
                 if file_path.is_dir():
-                    move_dir_contents(fullpath, crashdir)
+                    move_dir_contents(file_path, crashdir)
 
             files = list(crashdir.iterdir())
             if not files:
