@@ -169,6 +169,8 @@ def log_warn(msg: str):
 def log_error(msg: str):
     logger.error(msg)
 
+def log_exception(msg: str):
+    logger.debug(msg, exc_info=True)
 
 def get_canon_arch(arch: str) -> str:
     for canon_arch, derived_archs in ARCH_MAP.items():
