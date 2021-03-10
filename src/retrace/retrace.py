@@ -1216,7 +1216,11 @@ class RetraceTask:
         if result is None:
             return None
 
-        return int(result)
+        try:
+            return int(result)
+        except ValueError as ex:
+            log_warn('Could not read task #%d status: %s' % (self.get_taskid(), ex))
+            return None
 
     def set_status(self, statuscode: int) -> None:
         """Atomically writes given statuscode into STATUS_FILE."""
