@@ -1,6 +1,6 @@
 Summary: Application for remote coredump analysis
 Name: retrace-server
-Version: 1.22.4
+Version: 1.23.0
 Release: 1%{?dist}
 License: GPLv2+
 URL: https://github.com/abrt/retrace-server
@@ -216,6 +216,22 @@ exit 0
 %license COPYING
 
 %changelog
+* Wed Mar 10 2021 Matěj Grabovský <mgrabovs@redhat.com> 1.23.0-1
+- Add Fedora 34 to version list for stats
+- Be more careful when reading task status
+- Add backtrace to log when a task fails with error (plambri@redhat.com)
+- Fix "file not found" when archive contains directories (plambri@redhat.com)
+- Add timeout to Podman commands
+- Fix stripping of epoch number
+- Improve regexes for parsing problem data
+- Make path to Podman executable configurable at build time
+- Warn if config directory does not exist
+- Repair test and add a Meson script for testing
+- Update build prerequisites for tests in spec file
+- Recommend logrotate in spec file
+- Code style improvements
+- Update translations
+
 * Tue Nov 24 2020 Matěj Grabovský <mgrabovs@redhat.com> 1.22.4-1
 - Make retrace-server-reposync-faf work again
 - Update list of Fedora versions shown on stats page: remove releases before 31
