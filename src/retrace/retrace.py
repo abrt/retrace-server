@@ -364,7 +364,7 @@ def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
     if not backtrace:
         raise Exception("An unusable backtrace has been generated")
 
-    python_labels = PYTHON_LABEL_START+'\n'+PYTHON_LABEL_END+'\n'
+    python_labels = "{}\n{}\n".format(PYTHON_LABEL_START, PYTHON_LABEL_END)
     if python_labels in backtrace:
         backtrace = backtrace.replace(python_labels, "")
 
@@ -867,6 +867,7 @@ class RetraceTask:
 
     BACKTRACE_FILE = "retrace_backtrace"
     CASENO_FILE = "caseno"
+    C2P_LOG_FILE = "c2p"
     BUGZILLANO_FILE = "bugzillano"
     CRASHRC_FILE = "crashrc"
     CRASH_CMD_FILE = "crash_cmd"
@@ -1081,7 +1082,8 @@ class RetraceTask:
             self.chgrp(key)
             self.chmod(key)
 
-    def set_atomic(self, key: Union[str, Path], value: Union[str, bytes], mode: str = "w") -> None:
+    def set_atomic(self, key: Union[str, Path], value: Union[str, bytes],
+                   mode: str = "w") -> None:
         if mode not in ["w", "a", "wb"]:
             raise ValueError("mode must be 'w', 'a', or 'wb'")
 
@@ -1867,31 +1869,31 @@ class RetraceTask:
             run([PODMAN_BIN, "rmi", image_tag],
                 stderr=DEVNULL, stdout=DEVNULL, check=False, timeout=60)
 
-        savedir = Path(self._savedir)
-        if not savedir.is_dir():
+        if not self._savedir.is_dir():
             return
 
-        for f in savedir.iterdir():
-            if f.name not in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
-                              RetraceTask.BACKTRACE_FILE, RetraceTask.DOWNLOADED_FILE,
-                              RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
-                              RetraceTask.MANAGED_FILE, RetraceTask.NOTES_FILE,
-                              RetraceTask.NOTIFY_FILE, RetraceTask.PASSWORD_FILE,
-                              RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
-                              RetraceTask.TYPE_FILE, RetraceTask.RESULTS_DIR,
-                              RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
-                              RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
-                              RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE]:
+        for f in self._savedir.iterdir():
+            if f.name in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
+                          RetraceTask.BACKTRACE_FILE, RetraceTask.DOWNLOADED_FILE,
+                          RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
+                          RetraceTask.MANAGED_FILE, RetraceTask.NOTES_FILE,
+                          RetraceTask.NOTIFY_FILE, RetraceTask.PASSWORD_FILE,
+                          RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
+                          RetraceTask.TYPE_FILE, RetraceTask.RESULTS_DIR,
+                          RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
+                          RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
+                          RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE]:
+                continue
 
-                try:
-                    if f.is_dir():
-                        shutil.rmtree(f)
-                    else:
-                        f.unlink()
-                except OSError:
-                    # clean as much as possible
-                    # ToDo advanced handling
-                    pass
+            try:
+                if f.is_dir():
+                    shutil.rmtree(f)
+                else:
+                    f.unlink()
+            except OSError:
+                # clean as much as possible
+                # ToDo advanced handling
+                pass
 
     def reset(self):
         """Remove all generated files and only keep the raw crash data"""
