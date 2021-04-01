@@ -344,9 +344,11 @@ class RetraceWorker:
                     dnfcfg.write("baseurl=file://%s/%s/\n" % (CONFIG["RepoDir"], releaseid))
                     dnfcfg.write("failovermethod=priority\n")
 
-                child = run(["coredump2packages", str(crashdir / "coredump"),
-                             "--repos=%s" % repoid, "--config=%s" % dnfcfgpath,
-                             "--log=%s" % Path(self.task.get_savedir(), "c2p_log")],
+                child = run(["coredump2packages",
+                             str(crashdir / "coredump"),
+                             "--repos=%s" % repoid,
+                             "--config=%s" % dnfcfgpath,
+                             "--log=%s" % (self.task.get_savedir() / "c2p_log")],
                             stdout=PIPE, stderr=PIPE, encoding='utf-8', check=False)
                 section = 0
                 lines = child.stdout.split("\n")
