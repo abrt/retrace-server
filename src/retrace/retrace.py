@@ -13,7 +13,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 from signal import getsignal, signal, SIG_DFL, SIGPIPE
-from subprocess import PIPE, STDOUT, DEVNULL, TimeoutExpired, run
+from subprocess import DEVNULL, PIPE, STDOUT, TimeoutExpired, run
 from typing import Dict, List, Optional, Set, Tuple, Union
 import magic
 
@@ -306,7 +306,7 @@ def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
         podman_build_call = [PODMAN_BIN, "build",
                              "--quiet",
                              "--force-rm",
-                             "--file", savedir / RetraceTask.DOCKERFILE,
+                             "--file", str(savedir / RetraceTask.DOCKERFILE),
                              "--volume=%s:%s:ro" % (repopath, repopath)]
 
         if CONFIG["RequireGPGCheck"]:
