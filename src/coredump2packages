@@ -9,11 +9,10 @@ import subprocess
 from typing import List, Tuple, Union
 
 import dnf
-import dnf.package
+from dnf.package import Package
 
 
-logger = logging.getLogger(__name__)
-Package = dnf.package.Package
+logger = logging.getLogger('coredump2packages')
 PackageList = List[Package]
 
 
@@ -28,8 +27,8 @@ def binary_packages_from_debuginfo_package(debuginfo_package: Package, binobj_pa
     binary, we know only packages from the same SRPM as the debuginfo
     package.
     """
-    package_list: List[dnf.package.Package] = []
-    if binobj_path == '-':  # [exe] without binary name
+    package_list: List[Package] = []
+    if binobj_path == "-":  # [exe] without binary name
         logger.info("Dnf search for [exe] without binary name, packages with NVR %s:%s-%s.%s...",
                     debuginfo_package.epoch, debuginfo_package.version,
                     debuginfo_package.release, debuginfo_package.arch)
@@ -109,7 +108,8 @@ def process_unstrip_entry(build_id: str, binobj_path: str, dnfbase: dnf.Base) ->
     return package_list, coredump_base_package_list
 
 
-def process_unstrip_output(unstrip: str, dnfbase: dnf.Base) -> Tuple[PackageList, List[Tuple[str, str]], List[str]]:
+def process_unstrip_output(unstrip: str, dnfbase: dnf.Base) \
+        -> Tuple[PackageList, List[Tuple[str, str]], List[str]]:
     """
     Parse the eu-unstrip output, and search for packages via dnf.
 
@@ -126,24 +126,34 @@ def process_unstrip_output(unstrip: str, dnfbase: dnf.Base) -> Tuple[PackageList
     missing_buildid_list: List[Tuple[str, str]] = []
     # coredump package adepts
     coredump_package_list: List[str] = []
+
     first_entry = True
-    for line in unstrip.split('\n'):
+    for line in unstrip.split("\n"):
         parts = line.split()
         if not parts or len(parts) < 3:
             continue
-        build_id = parts[1].split('@')[0]
+
+        # A line of the command output consists of the following five
+        # whitespace-separated fields:
+        #   0 address+size
+        #   1 buildid
+        #   2 file
+        #   3 debug_file
+        #   4 module_name
+        build_id = parts[1].split("@")[0]
         binobj_path = parts[2]
         # try/except to handle malformed eu-unstrip output
         # e.g. for X.org cores
         try:
             # if FILE (parts[2]) is not present on local filesystem
             # eu-unstrip uses FILE as MODULENAME (parts[4])
-            if (binobj_path in ('-', '.')) and parts[4] != '[exe]':
+            if binobj_path in ("-", ".") and parts[4] != "[exe]":
                 binobj_path = parts[4]
-            if binobj_path[0] != '/' and parts[4] != '[exe]':
+            if binobj_path[0] != "/" and parts[4] != "[exe]":
                 continue
         except Exception:
             continue
+
         entry_package_list, entry_coredump_package_list = process_unstrip_entry(build_id, binobj_path, dnfbase)
         if first_entry:
             coredump_package_list = entry_coredump_package_list
@@ -159,6 +169,7 @@ def process_unstrip_output(unstrip: str, dnfbase: dnf.Base) -> Tuple[PackageList
                         break
                 if not found:
                     package_list.append(entry_package)
+
     return package_list, missing_buildid_list, coredump_package_list
 
 
@@ -166,10 +177,8 @@ def process_unstrip_output(unstrip: str, dnfbase: dnf.Base) -> Tuple[PackageList
 # but different version. This happens because some binary had the same
 # build id over multiple package releases.
 def find_duplicates(package_list: PackageList) -> Union[Tuple[None, None], Tuple[Package, Package]]:
-    for p1 in range(0, len(package_list) - 1):
-        package1 = package_list[p1]
-        for p2 in range(p1 + 1, len(package_list)):
-            package2 = package_list[p2]
+    for i, package1 in enumerate(package_list[:-1]):
+        for package2 in package_list[i + 1:]:
             if package1.name == package2.name and package1.arch == package2.arch:
                 return package1, package2
     return None, None
@@ -189,13 +198,13 @@ def count_removals(package_list: PackageList, base_package_name: str, epoch: str
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description='Get packages for coredump processing.')
-    parser.add_argument('--repos', default='*', metavar='WILDCARD',
-                        help='DNF repository wildcard to be enabled')
-    parser.add_argument('--config', help='DNF config file')
-    parser.add_argument('coredump', help='Coredump')
-    parser.add_argument('--log', metavar='FILENAME',
-                        help='Append debug output to a file')
+    parser = argparse.ArgumentParser(description="Get packages for coredump processing.")
+    parser.add_argument("--repos", default="*", metavar="WILDCARD",
+                        help="DNF repository wildcard to be enabled")
+    parser.add_argument("--config", help="DNF config file")
+    parser.add_argument("coredump", help="Coredump")
+    parser.add_argument("--log", metavar="FILENAME",
+                        help="Append debug output to a file")
     args = parser.parse_args()
 
     if args.log:
@@ -230,8 +239,8 @@ def main() -> None:
     # Get eu-unstrip output, which contains build-ids and binary object
     # paths
     logger.info("Running eu-unstrip...")
-    unstrip_args = ['eu-unstrip', f'--core={args.coredump}', '-n']
-    unstrip_proc = subprocess.run(unstrip_args, stdout=subprocess.PIPE, check=False, encoding='utf8')
+    unstrip_args = ["eu-unstrip", f"--core={args.coredump}", "-n"]
+    unstrip_proc = subprocess.run(unstrip_args, stdout=subprocess.PIPE, check=False, encoding="utf8")
     unstrip = unstrip_proc.stdout
     logger.info("%s", unstrip)
     if not unstrip:
@@ -313,7 +322,7 @@ def main() -> None:
         print(f"{path} {build_id}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
 else:
     raise NotImplementedError
