@@ -1,27 +1,34 @@
 #!/usr/bin/python3
 
 from argparse import ArgumentParser
+import logging
 import os
 from os.path import abspath, join, relpath
 import shutil
+import sys
 from typing import Generator
 
 import createrepo_c as cr
 from pyfaf.queries import get_packages_by_osrelease
 from pyfaf.storage import Database, getDatabase
 
-faf_names = {'rhel': "Red Hat Enterprise Linux",
-             'fedora': 'Fedora',
-             'centos': 'CentOS'}
+faf_names = {"rhel": "Red Hat Enterprise Linux",
+             "fedora": "Fedora",
+             "centos": "CentOS"}
+
+logging.basicConfig(format="[%(asctime)s] %(levelname)s: %(message)s",
+                    datefmt="%F %T", level=logging.INFO)
+logger = logging.getLogger("r-s-reposync-faf")
 
 
-def get_pkglist(db: Database, opsys: str, release: str, arch: str) -> Generator[str, None, None]:
+def get_pkglist(db: Database, opsys: str, release: str, arch: str) -> \
+        Generator[str, None, None]:
     if opsys in faf_names.keys():
         opsys = faf_names[opsys]
-    q = get_packages_by_osrelease(db, opsys, release, arch)
-    for pkg in q:
+
+    for pkg in get_packages_by_osrelease(db, opsys, release, arch):
         if pkg.has_lob("package"):
-            print("Adding package: %s-%s-%s" % (pkg.name, pkg.build.version, pkg.build.release))
+            logger.info("Adding package: %s", pkg.nevra())
             yield abspath(pkg.get_lob_path("package"))
 
 
@@ -78,45 +85,63 @@ def generate_repo(db: Database, outputdir: str, opsys: str, release: str,
 
     # Add records into the repomd.xml
     #pylint: disable=bad-whitespace
-    repomdrecords = (("primary",      pri_xml_path, pri_db),
-                     ("filelists",    fil_xml_path, fil_db),
-                     ("other",        oth_xml_path, oth_db),
-                     ("primary_db",   pri_db_path,  None),
-                     ("filelists_db", fil_db_path,  None),
-                     ("other_db",     oth_db_path,  None))
+    repomd_records = (("primary",      pri_xml_path, pri_db),
+                      ("filelists",    fil_xml_path, fil_db),
+                      ("other",        oth_xml_path, oth_db),
+                      ("primary_db",   pri_db_path,  None),
+                      ("filelists_db", fil_db_path,  None),
+                      ("other_db",     oth_db_path,  None))
 
-    for name, path, db_to_update in repomdrecords:
+    for name, path, db_to_update in repomd_records:
+        logger.info("Postprocessing database ‘%s’", name)
+
         # Compress sqlite files with bzip2
         if path.endswith('.sqlite'):
             new_path = '%s.bz2' % path
+            logger.info("Compressing %s...", path)
             cr.compress_file(path, new_path, cr.BZ2)
             os.remove(path)
             path = new_path
+            logger.info("Done")
 
         record = cr.RepomdRecord(name, path)
         record.fill(cr.SHA256)
         record.rename_file()
         if db_to_update:
+            logger.info("Updating related database")
             db_to_update.dbinfo_update(record.checksum)
             db_to_update.close()
         repomd.set_record(record)
+
+        logger.info("Postprocessing ‘%s’ finished", name)
 
     # Write repomd.xml
     with open(repomd_path, "w") as repomd_file:
         repomd_file.write(repomd.xml_dump())
 
+    logger.info("Repository metadata written to %s", repomd_path)
+
 
 def main() -> None:
-    parser = ArgumentParser(description="Generates dnf repo from FAF databse")
+    parser = ArgumentParser(description="Generate a DNF repository from FAF package "
+                                        "database")
     parser.add_argument("OPSYS")
     parser.add_argument("RELEASE")
     parser.add_argument("ARCHITECTURE")
     parser.add_argument("--outputdir", default=os.getcwd())
     args = parser.parse_args()
 
-    print("Creating repo in '%s'" % (args.outputdir))
+    logger.info("Creating DNF repository in ‘%s’", args.outputdir)
 
-    generate_repo(getDatabase(), args.outputdir, args.OPSYS, args.RELEASE, args.ARCHITECTURE)
+    try:
+        generate_repo(getDatabase(), args.outputdir, args.OPSYS, args.RELEASE,
+                      args.ARCHITECTURE)
+    except Exception as ex:
+        logger.error("Could not create repository: %s", ex)
+        sys.exit(1)
+
+    logger.info("Repository created successfully")
+
 
 if __name__ == "__main__":
     main()
