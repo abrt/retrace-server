@@ -1,3 +1,4 @@
+subdir('backends')
 subdir('hooks')
 
 configuration = configuration_data()
