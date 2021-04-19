@@ -14,7 +14,7 @@ import urllib.request
 from pathlib import Path
 from signal import getsignal, signal, SIG_DFL, SIGPIPE
 from subprocess import DEVNULL, PIPE, STDOUT, TimeoutExpired, run
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Set, Tuple, Union
 import magic
 
 from .config import Config, PODMAN_BIN, PS_BIN
@@ -140,17 +140,6 @@ PYTHON_LABEL_END = "----------PYTHON--END---------"
 
 RETRACE_GPG_KEYS = "/usr/share/distribution-gpg-keys/"
 
-
-class RetraceError(Exception):
-    pass
-
-
-class RetraceWorkerError(RetraceError):
-    def __init__(self, message: str = None, errorcode: int = 1):
-        super(RetraceWorkerError, self).__init__(message)
-        self.errorcode = errorcode
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -169,8 +158,126 @@ def log_warn(msg: str):
 def log_error(msg: str):
     logger.error(msg)
 
+
 def log_exception(msg: str):
     logger.debug(msg, exc_info=True)
+
+
+class KernelVer:
+    FLAVOUR = ["debug", "highbank", "hugemem",
+               "kirkwood", "largesmp", "PAE", "omap",
+               "smp", "tegra", "xen", "xenU"]
+
+    ARCH = ARCHITECTURES
+
+    _arch: Optional[str]
+
+    @property
+    def arch(self) -> Optional[str]:
+        if self._arch is None:
+            return None
+        return get_canon_arch(self._arch)
+
+    @arch.setter
+    def arch(self, value: str) -> None:
+        self._arch = value
+
+    def __init__(self, kernelver_str: str) -> None:
+        log_debug("Parsing kernel version '%s'" % kernelver_str)
+        self.kernelver_str = kernelver_str
+        self.flavour = None
+        for kf in KernelVer.FLAVOUR:
+            if kernelver_str.endswith(".%s" % kf):
+                self.flavour = kf
+                kernelver_str = kernelver_str[:-len(kf) - 1]
+                break
+
+        self._arch = None
+        for ka in KernelVer.ARCH:
+            if kernelver_str.endswith(".%s" % ka):
+                self._arch = ka
+                kernelver_str = kernelver_str[:-len(ka) - 1]
+                break
+
+        self.version, self.release = kernelver_str.split("-", 1)
+
+        if self.flavour is None:
+            for kf in KernelVer.FLAVOUR:
+                if self.release.endswith(kf):
+                    self.flavour = kf
+                    self.release = self.release[:-len(kf)]
+                    break
+
+        self.rt = "rt" in self.release
+
+        log_debug("Version: '%s'; Release: '%s'; Arch: '%s'; Flavour: '%s'; Realtime: %s"
+                  % (self.version, self.release, self._arch, self.flavour, self.rt))
+
+    def __str__(self) -> str:
+        result = "%s-%s" % (self.version, self.release)
+
+        if self._arch:
+            result = "%s.%s" % (result, self._arch)
+
+        if self.flavour:
+            result = "%s.%s" % (result, self.flavour)
+
+        return result
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
+    def package_name_base(self, debug: bool = False) -> str:
+        base = "kernel"
+        if self.rt:
+            base = "%s-rt" % base
+
+        if self.flavour and not (debug and ".EL" in self.release):
+            base = "%s-%s" % (base, self.flavour)
+
+        if debug:
+            base = "%s-debuginfo" % base
+
+        return base
+
+    def package_name(self, debug: bool = False) -> str:
+        if self._arch is None:
+            raise Exception("Architecture is required for building package name")
+
+        base = self.package_name_base(debug)
+
+        return "%s-%s-%s.%s.rpm" % (base, self.version, self.release, self._arch)
+
+    def needs_arch(self) -> bool:
+        return self._arch is None
+
+
+class Release:
+    is_rawhide = False
+
+    def __init__(self, distribution: str, version: str, arch: Optional[str] = None,
+                 name: Optional[str] = None) -> None:
+        self.distribution = distribution
+        self.version = version
+        self.arch = arch
+        self.name = name
+
+    def __str__(self) -> str:
+        if self.arch is None:
+            return f"{self.distribution}-{self.version}"
+
+        return f"{self.distribution}-{self.version}-{self.arch}"
+
+
+class RetraceError(Exception):
+    pass
+
+
+class RetraceWorkerError(RetraceError):
+    def __init__(self, message: str = None, errorcode: int = 1):
+        super().__init__(message)
+        self.errorcode = errorcode
+
 
 def get_canon_arch(arch: str) -> str:
     for canon_arch, derived_archs in ARCH_MAP.items():
@@ -181,7 +288,8 @@ def get_canon_arch(arch: str) -> str:
 
 
 def guess_arch(coredump_path: Path) -> Optional[str]:
-    output = run(["file", str(coredump_path)], stdout=PIPE, encoding='utf-8', check=False).stdout
+    output = run(["file", str(coredump_path)], stdout=PIPE, encoding='utf-8',
+                 check=False).stdout
     match = CORE_ARCH_PARSER.search(output)
     if match:
         if match.group(1) == "80386":
@@ -205,7 +313,8 @@ def guess_arch(coredump_path: Path) -> Optional[str]:
 
     result = None
     lines = run(["strings", str(coredump_path)],
-                stdout=PIPE, stderr=STDOUT, encoding='utf-8', check=False).stdout.splitlines()
+                stdout=PIPE, stderr=STDOUT, encoding='utf-8',
+                check=False).stdout.splitlines()
     for line in lines:
         for canon_arch, derived_archs in ARCH_MAP.items():
             if any(arch in line for arch in derived_archs):
@@ -235,12 +344,11 @@ def get_supported_releases() -> List[str]:
     return result
 
 
-def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
-    # exception is caught on the higher level
-    savedir = Path(savedir)
-    exec_file = open(savedir / "crash" / "executable", "r")
-    executable = exec_file.read(ALLOWED_FILES["executable"])
-    exec_file.close()
+def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
+            packages: Iterable[str], corepath: Path, release: Release) \
+        -> Tuple[str, str]:
+    with (savedir / "crash" / "executable").open("r") as exec_file:
+        executable = exec_file.read(ALLOWED_FILES["executable"])
 
     if '"' in executable or "'" in executable:
         raise Exception("Executable contains forbidden characters")
@@ -248,38 +356,20 @@ def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
     if CONFIG["RetraceEnvironment"] == "mock":
         output = run(["/usr/bin/mock", "chroot", "--configdir", savedir,
                       "--", "ls '%s'" % executable],
-                     stdout=PIPE, stderr=DEVNULL, encoding='utf-8', check=False).stdout
+                     stdout=PIPE, stderr=DEVNULL, encoding='utf-8',
+                     check=False).stdout
         if output.strip() != executable:
             raise Exception("The appropriate package set could not be installed")
 
         child = run(["/usr/bin/mock", "chroot", "--configdir", savedir,
-                     "--", "/bin/chmod a+r '%s'" % executable], stdout=DEVNULL, check=False)
+                     "--", "/bin/chmod a+r '%s'" % executable],
+                    stdout=DEVNULL, check=False)
         if child.returncode:
             raise Exception("Unable to chmod the executable")
 
-    batfile = savedir / "gdb.sh"
-    with batfile.open(mode="w") as gdbfile:
-        gdbfile.write("#!/usr/bin/sh\n\n%s -batch "
-                      "-ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' \\\n"
-                      "                    -ex 'file %s' \\\n"
-                      "                    -ex 'core-file /var/spool/abrt/crash/coredump' \\\n"
-                      "                    -ex 'echo %s\\n' \\\n"
-                      "                    -ex 'py-bt' \\\n"
-                      "                    -ex 'py-list' \\\n"
-                      "                    -ex 'py-locals' \\\n"
-                      "                    -ex 'echo %s\\n' \\\n"
-                      "                    -ex 'thread apply all -ascending backtrace full 2048' \\\n"
-                      "                    -ex 'info sharedlib' \\\n"
-                      "                    -ex 'print (char*)__abort_msg' \\\n"
-                      "                    -ex 'print (char*)__glib_assert_msg' \\\n"
-                      "                    -ex 'info registers' \\\n"
-                      "                    -ex 'disassemble' \\\n"
-                      "                    -ex 'echo %s\\n' \\\n"
-                      "                    -ex 'abrt-exploitable'"
-                      % (plugin.gdb_executable, executable, PYTHON_LABEL_START,
-                         PYTHON_LABEL_END, EXPLOITABLE_SEPARATOR))
-
     if CONFIG["RetraceEnvironment"] == "mock":
+        batfile = savedir / "gdb.sh"
+
         child = run(["/usr/bin/mock", "--configdir", savedir, "--copyin",
                      batfile, "/var/spool/abrt/gdb.sh"],
                     stdout=DEVNULL, stderr=DEVNULL, check=False)
@@ -295,7 +385,7 @@ def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
         child = run(["/usr/bin/mock", "chroot", "--configdir", savedir,
                      "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh' 2>&1"],
                     # redirect GDB's stderr, ignore mock's stderr
-                    stdout=PIPE, stderr=DEVNULL, encoding='utf-8', check=False)
+                    stdout=PIPE, stderr=DEVNULL, encoding="utf-8", check=False)
 
         if child.returncode:
             raise Exception("Running GDB failed")
@@ -303,55 +393,46 @@ def run_gdb(savedir: Union[str, Path], plugin, repopath: str, taskid: int):
         backtrace = child.stdout.strip()
 
     elif CONFIG["RetraceEnvironment"] == "podman":
-        podman_build_call = [PODMAN_BIN, "build",
-                             "--quiet",
-                             "--force-rm",
-                             "--file", str(savedir / RetraceTask.DOCKERFILE),
-                             "--volume=%s:%s:ro" % (repopath, repopath)]
+        from .backends.podman import LocalPodmanBackend
 
-        if CONFIG["RequireGPGCheck"]:
-            podman_build_call.append("--volume=%s:%s:ro" % (RETRACE_GPG_KEYS, RETRACE_GPG_KEYS))
+        backend = LocalPodmanBackend(retrace_config=CONFIG)
 
-        if CONFIG["UseFafPackages"]:
-            faf_link_dir = CONFIG["FafLinkDir"]
-            log_debug("Using FAF repository")
-            podman_build_call.append("--volume=%s:%s" % (faf_link_dir, faf_link_dir))
+        # Start container from prepared release-specific image.
+        with backend.start_container(image_tag, taskid, repopath) as container:
+            # Copy coredump from crash directory to container.
+            container.copy_to(corepath, "/var/spool/abrt/crash/")
 
-        image_tag = "retrace-image:%d" % taskid
-        podman_build_call.extend(["--tag", image_tag])
+            # Make retrace user the owner of the coredump.
+            container.exec(["chown", "retrace:",
+                            f"/var/spool/abrt/crash/{corepath.name}"])
 
-        try:
-            child = run(podman_build_call, stdout=DEVNULL, stderr=DEVNULL, check=False,
-                        timeout=15 * 60)
-        except TimeoutExpired:
-            raise Exception("Unable to build Podman container (timeout)")
+            # Install packages required for retracing the coredump.
+            dnf_call = ["dnf", "install",
+                        "--assumeyes",
+                        "--skip-broken",
+                        "--allowerasing",
+                        "--setopt=tsflags=nodocs",
+                        f"--releasever={release.version}",
+                        f"--repo=retrace-{release.distribution}"]
+            dnf_call.extend(packages)
 
-        if child.returncode:
-            raise Exception("Unable to build Podman container")
+            child = container.exec(dnf_call)
 
-        try:
-            child = run([PODMAN_BIN, "run",
-                         "--interactive",
-                         "--rm",
-                         "--name=%d" % taskid,
-                         image_tag],
-                        stderr=DEVNULL, stdout=PIPE, encoding="utf-8", check=False,
-                        timeout=5 * 60)
-        except TimeoutExpired as ex:
-            if ex.stdout:
-                # GDB timed out but it generated some output. Let's assume
-                # it was the backtrace and see what happens.
-                log_warn("GDB timed out but generated some output")
-                backtrace = ex.stdout.strip()
-            else:
-                raise Exception("GDB timed out with no output")
-        else:
             if child.returncode:
-                # GDB finished in time but with a failure code.
-                raise Exception("Running GDB failed")
+                raise RetraceError("Could not install required packages inside "
+                                   f"container: {child.stderr}")
+
+            log_info("Required packages installed")
+
+            # Run GDB inside container and collect output.
+            child = container.exec(["/var/spool/abrt/gdb.sh", executable],
+                                   user="retrace")
+
+            if child.returncode:
+                raise RetraceError(f"GDB failed inside container: {child.stdout}")
 
             backtrace = child.stdout.strip()
-
+            log_info("Backtrace generated")
     elif CONFIG["RetraceEnvironment"] == "native":
         raise Exception("RetraceEnvironment == native not implemented for gdb")
     else:
@@ -687,95 +768,6 @@ def move_dir_contents(source: Union[str, Path], dest: Union[str, Path]) -> None:
 # except?
 
     shutil.rmtree(source)
-
-
-class KernelVer:
-    FLAVOUR = ["debug", "highbank", "hugemem",
-               "kirkwood", "largesmp", "PAE", "omap",
-               "smp", "tegra", "xen", "xenU"]
-
-    ARCH = ARCHITECTURES
-
-    _arch: Optional[str]
-
-    @property
-    def arch(self) -> Optional[str]:
-        if self._arch is None:
-            return None
-        return get_canon_arch(self._arch)
-
-    @arch.setter
-    def arch(self, value: str) -> None:
-        self._arch = value
-
-    def __init__(self, kernelver_str: str) -> None:
-        log_debug("Parsing kernel version '%s'" % kernelver_str)
-        self.kernelver_str = kernelver_str
-        self.flavour = None
-        for kf in KernelVer.FLAVOUR:
-            if kernelver_str.endswith(".%s" % kf):
-                self.flavour = kf
-                kernelver_str = kernelver_str[:-len(kf) - 1]
-                break
-
-        self._arch = None
-        for ka in KernelVer.ARCH:
-            if kernelver_str.endswith(".%s" % ka):
-                self._arch = ka
-                kernelver_str = kernelver_str[:-len(ka) - 1]
-                break
-
-        self.version, self.release = kernelver_str.split("-", 1)
-
-        if self.flavour is None:
-            for kf in KernelVer.FLAVOUR:
-                if self.release.endswith(kf):
-                    self.flavour = kf
-                    self.release = self.release[:-len(kf)]
-                    break
-
-        self.rt = "rt" in self.release
-
-        log_debug("Version: '%s'; Release: '%s'; Arch: '%s'; Flavour: '%s'; Realtime: %s"
-                  % (self.version, self.release, self._arch, self.flavour, self.rt))
-
-    def __str__(self) -> str:
-        result = "%s-%s" % (self.version, self.release)
-
-        if self._arch:
-            result = "%s.%s" % (result, self._arch)
-
-        if self.flavour:
-            result = "%s.%s" % (result, self.flavour)
-
-        return result
-
-    def __repr__(self) -> str:
-        return self.__str__()
-
-    def package_name_base(self, debug: bool = False) -> str:
-        base = "kernel"
-        if self.rt:
-            base = "%s-rt" % base
-
-        if self.flavour and not (debug and ".EL" in self.release):
-            base = "%s-%s" % (base, self.flavour)
-
-        if debug:
-            base = "%s-debuginfo" % base
-
-        return base
-
-    def package_name(self, debug: bool = False) -> str:
-        if self._arch is None:
-            raise Exception("Architecture is required for building package name")
-
-        base = self.package_name_base(debug)
-
-        return "%s-%s-%s.%s.rpm" % (base, self.version, self.release, self._arch)
-
-    def needs_arch(self) -> bool:
-        return self._arch is None
 
 
 def find_kernel_debuginfo(kernelver: KernelVer) -> Optional[Path]:
@@ -1594,8 +1586,12 @@ class RetraceTask:
                         if file_path == coredumps[0] and coredumps[0].name != self.COREDUMP_FILE:
                             file_path.rename(coredump)
 
+            required_files = REQUIRED_FILES[self.get_type()]
+            required_files.append("release")
+            required_files.append("os_release")
+
             for file_path in crashdir.iterdir():
-                if file_path.name in REQUIRED_FILES[self.get_type()]+["release", "os_release"]:
+                if file_path.name in required_files:
                     continue
 
                 file_path.unlink()

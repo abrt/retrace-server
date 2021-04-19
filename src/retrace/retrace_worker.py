@@ -9,10 +9,12 @@ import shutil
 import stat
 from pathlib import Path
 from subprocess import PIPE, DEVNULL, STDOUT, run
+from tempfile import TemporaryDirectory
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from retrace.hooks.hooks import RetraceHook
-from .retrace import (ALLOWED_FILES, REPO_PREFIX, REQUIRED_FILES,
+from .retrace import (ALLOWED_FILES, EXPLOITABLE_SEPARATOR, PYTHON_LABEL_END,
+                      PYTHON_LABEL_START, REPO_PREFIX, REQUIRED_FILES,
                       STATUS, STATUS_ANALYZE, STATUS_BACKTRACE, STATUS_CLEANUP,
                       STATUS_FAIL, STATUS_INIT, STATUS_STATS, STATUS_SUCCESS,
                       TASK_DEBUG, TASK_RETRACE, TASK_RETRACE_INTERACTIVE, TASK_VMCORE,
@@ -30,6 +32,7 @@ from .retrace import (ALLOWED_FILES, REPO_PREFIX, REQUIRED_FILES,
                       log_warn,
                       logger,
                       run_gdb,
+                      Release,
                       RetraceTask,
                       RetraceWorkerError)
 from .config import Config, PODMAN_BIN
@@ -255,10 +258,9 @@ class RetraceWorker:
             self._fail()
         return (crash_package, pkgdata)
 
-    def read_release_file(self, crashdir: Path,
-                          crash_package: Optional[str] = None) -> Tuple[str, str, str, bool]:
+    def read_release_file(self, crashdir: Path, arch: str,
+                          crash_package: Optional[str] = None) -> Release:
         # read release, distribution and version from release file
-        is_rawhide = False
         release_path = None
         rootdir = None
         rootdir_path = crashdir / "rootdir"
@@ -283,14 +285,14 @@ class RetraceWorker:
             if not release_path.is_file():
                 release_path = crashdir / "release"
 
-        release = "Unknown Release"
+        release_name = "Unknown Release"
         try:
             with release_path.open() as release_file:
-                release = release_file.read(ALLOWED_FILES["os_release"])
+                release_name = release_file.read(ALLOWED_FILES["os_release"])
 
             version = distribution = None
             for plugin in self.plugins.all():
-                match = plugin.abrtparser.match(release)
+                match = plugin.abrtparser.match(release_name)
                 if match:
                     version = match.group(1)
                     distribution = plugin.distribution
@@ -298,7 +300,7 @@ class RetraceWorker:
                     break
 
             if not version or not distribution:
-                raise Exception("Unknown release '%s'" % release)
+                raise Exception("Unknown release '%s'" % release_name)
 
         except Exception as ex:
             log_error("Unable to read distribution and version from 'release' file: %s" % ex)
@@ -319,10 +321,12 @@ class RetraceWorker:
         assert distribution is not None
         assert version is not None
 
-        if "rawhide" in release.lower():
-            is_rawhide = True
+        release = Release(distribution, version, arch, release_name)
 
-        return (release, distribution, version, is_rawhide)
+        if "rawhide" in release_name.lower():
+            release.is_rawhide = True
+
+        return release
 
     def read_packages(self, crashdir: Path, releaseid: str, crash_package: str,
                       distribution: str) -> Tuple[List[str], List[Tuple[str, str]]]:
@@ -346,8 +350,8 @@ class RetraceWorker:
 
                 child = run(["coredump2packages",
                              str(crashdir / "coredump"),
-                             "--repos=%s" % repoid,
-                             "--config=%s" % dnfcfgpath,
+                             f"--repos={repoid}",
+                             f"--config={dnfcfgpath}",
                              "--log=%s" % (self.task.get_savedir() / "c2p_log")],
                             stdout=PIPE, stderr=PIPE, encoding='utf-8', check=False)
                 section = 0
@@ -392,12 +396,122 @@ class RetraceWorker:
         final_result = ""
 
         for key in self.plugin.gpg_keys:
-            final_result += "%s%s " % (scheme, key.format(release=version))
+            gpg_key = key.format(release=version)
+            final_result += f"{scheme}{gpg_key} "
 
         if pre_rawhide_version and self.plugin.gpg_keys:
-            final_result += "%s%s " % (scheme, self.plugin.gpg_keys[0].format(release=pre_rawhide_version))
+            gpg_key = self.plugin.gpg_keys[0].format(release=pre_rawhide_version)
+            final_result += f"{scheme}{gpg_key} "
 
         return final_result
+
+    def ensure_image_exists(self, release: Release, repopath: str, gpg_keys: str) \
+            -> str:
+        """
+        Ensure that a container image exists for retracing coredumps
+        from the specified release. The image comes preinstalled with
+        GDB and abrt-addon-ccpp and a script to run GDB and collects
+        its output.
+
+        Return the tag of the container image.
+        """
+
+        image_tag = f"localhost/retrace-image:{release}"
+
+        # Check if the image exists first.
+        child = run([PODMAN_BIN, "image", "inspect", image_tag],
+                    stdout=DEVNULL, stderr=DEVNULL, check=False)
+
+        if child.returncode == 0:
+            log_info(f"Corresponding container image {image_tag} exists")
+            return image_tag
+
+        # Since the image does not exist, create the Containerfile and
+        # other required files in a temporary directory, and run Podman
+        # to build and tag the image.
+        with TemporaryDirectory() as tempdir_path:
+            log_info(f"Created directory {tempdir_path} to build image for "
+                     f"retracing {release}")
+            tempdir = Path(tempdir_path)
+
+            # Create the DNF repository file.
+            with (tempdir / "retrace-podman.repo").open("w") as repofile:
+                repofile.write(f"[retrace-{release.distribution}]\n"
+                               f"name=Retrace Server repository for {release}\n"
+                               f"baseurl=file://{repopath}/\n"
+                               f"gpgcheck={CONFIG['RequireGPGCheck']}\n"
+                               f"gpgkey={gpg_keys}\n")
+
+            # Create batch script for running GDB commands.
+            with (tempdir / "gdb.sh").open("w") as gdbfile:
+                gdb_exec = self.plugin.gdb_executable
+                gdbfile.write("#!/bin/sh\n"
+                              f"{gdb_exec} -batch \\\n"
+                              "  -ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' \\\n"
+                              "  -ex 'file '$1 \\\n"
+                              "  -ex 'core-file /var/spool/abrt/crash/coredump' \\\n"
+                              f"  -ex 'echo {PYTHON_LABEL_START}\\n' \\\n"
+                              "  -ex 'py-bt' \\\n"
+                              "  -ex 'py-list' \\\n"
+                              "  -ex 'py-locals' \\\n"
+                              f"  -ex 'echo {PYTHON_LABEL_END}\\n' \\\n"
+                              "  -ex 'thread apply all -ascending backtrace full 2048' \\\n"
+                              "  -ex 'info sharedlib' \\\n"
+                              "  -ex 'print (char*)__abort_msg' \\\n"
+                              "  -ex 'print (char*)__glib_assert_msg' \\\n"
+                              "  -ex 'info registers' \\\n"
+                              "  -ex 'disassemble' \\\n"
+                              f"  -ex 'echo {EXPLOITABLE_SEPARATOR}\\n' \\\n"
+                              "  -ex 'abrt-exploitable'")
+
+            os.chmod(tempdir / "gdb.sh", 0o755)
+
+            # Create Containerfile with instructions for building the image.
+            with (tempdir / "Containerfile").open("w") as cntfile:
+                rpm_import_command = "true"
+                if CONFIG["RequireGPGCheck"]:
+                    rpm_import_command = f"rpm --import {gpg_keys}"
+
+                dnf_flags = " ".join(["--assumeyes",
+                                      "--setopt=tsflags=nodocs",
+                                      f"--releasever={release.version}",
+                                      f"--repo=retrace-{release.distribution}"])
+
+                cntfile.write(f"FROM {release.distribution}:{release.version}\n\n"
+                              f"RUN useradd --no-create-home --no-log-init retrace && \\\n"
+                              f"    mkdir --parent /var/spool/abrt/crash/\n"
+                              "COPY retrace-podman.repo /etc/yum.repos.d/\n"
+                              "COPY --chown=retrace gdb.sh /var/spool/abrt/\n\n"
+                              f"RUN {rpm_import_command} && \\\n"
+                              f"    dnf {dnf_flags} \\\n"
+                              f"        install abrt-addon-ccpp {self.plugin.gdb_package} && \\\n"
+                              f"    dnf clean all")
+
+            # Build the image.
+            build_call = [PODMAN_BIN, "build",
+                          "--quiet",
+                          "--force-rm",
+                          "--file", str(tempdir / "Containerfile"),
+                          "--volume", f"{repopath}:{repopath}:ro",
+                          "--tag", image_tag]
+
+            if CONFIG["RequireGPGCheck"]:
+                build_call.append("--volume={0}:{0}:ro".format(RETRACE_GPG_KEYS))
+
+            if CONFIG["UseFafPackages"]:
+                log_debug("Using FAF repository")
+                build_call.append("--volume={0}:{0}:ro".format(CONFIG["FafLinkDir"]))
+
+            child = run(build_call, stdout=sys.stderr, stderr=PIPE, encoding='utf-8',
+                        check=False)
+
+            if child.returncode:
+                raise Exception("Could not build container image. Podman exited "
+                                f"with code {child.returncode}: {child.stderr}")
+
+        log_info(f"Container image {image_tag} successfully created")
+
+        return image_tag
 
     def start_retrace(self, custom_arch: Optional[str] = None) -> bool:
         self.hook.run("start")
@@ -423,34 +537,35 @@ class RetraceWorker:
             self.stats["version"] = "%s-%s" % (pkgdata["version"], pkgdata["release"])
 
         pre_rawhide_version = None
-        release, distribution, version, is_rawhide = self.read_release_file(crashdir, crash_package)
+        release = self.read_release_file(crashdir, arch, crash_package)
 
-        if is_rawhide:
+        if release.is_rawhide:
             # some packages might not be signed by rawhide key yet
             # but with a key of previous release
             pre_rawhide_version = int(version) - 1
-            version = "rawhide"
+            release.version = "rawhide"
 
-        releaseid = "%s-%s-%s" % (distribution, version, arch)
+        releaseid = str(release)
         if releaseid not in get_supported_releases():
-            log_error("Release '%s' is not supported" % releaseid)
+            log_error("Release ‘%s’ is not supported" % releaseid)
             self._fail()
 
         if not is_package_known(crash_package, arch, releaseid):
-            log_error("Package '%s.%s' was not recognized.\nIs it a part of "
-                      "official %s repositories?" % (crash_package, arch, release))
+            log_error("Package ‘%s.%s’ was not recognized.\nIs it a part of "
+                      "official %s repositories?" % (crash_package, arch, release.name))
             self._fail()
         self.hook.run("pre_prepare_debuginfo")
 
-        packages, missing = self.read_packages(crashdir, releaseid, crash_package, distribution)
+        packages, missing = self.read_packages(crashdir, releaseid, crash_package, release.distribution)
 
         self.hook.run("post_prepare_debuginfo")
         self.hook.run("pre_prepare_environment")
 
         repopath = os.path.join(CONFIG["RepoDir"], releaseid)
+        gpg_keys_string = self.construct_gpg_keys(release.version, pre_rawhide_version)
 
         if CONFIG["RetraceEnvironment"] == "mock":
-        # create mock config file
+            # create mock config file
             try:
                 with (savedir / RetraceTask.MOCK_DEFAULT_CFG).open("w") as mockcfg:
                     mockcfg.write("config_opts['root'] = '%d'\n" % task.get_taskid())
@@ -458,7 +573,7 @@ class RetraceWorker:
                     mockcfg.write("config_opts['chroot_setup_cmd'] = '")
                     mockcfg.write(" install %s abrt-addon-ccpp shadow-utils %s rpm'\n" % (" ".join(packages),
                                                                                           self.plugin.gdb_package))
-                    mockcfg.write("config_opts['releasever'] = '%s'\n" % version)
+                    mockcfg.write("config_opts['releasever'] = '%s'\n" % release.version)
                     mockcfg.write("config_opts['package_manager'] = 'dnf'\n")
                     mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
                     mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
@@ -487,10 +602,10 @@ class RetraceWorker:
                     mockcfg.write("\n")
                     mockcfg.write("#repos\n")
                     mockcfg.write("\n")
-                    mockcfg.write("[%s]\n" % distribution)
+                    mockcfg.write("[%s]\n" % release.distribution)
                     mockcfg.write("name=%s\n" % releaseid)
                     mockcfg.write("baseurl=file://%s/\n" % repopath)
-                    mockcfg.write("gpgkey=%s\n" % self.construct_gpg_keys(version, pre_rawhide_version))
+                    mockcfg.write("gpgkey=%s\n" % gpg_keys_string)
                     mockcfg.write("failovermethod=priority\n")
                     mockcfg.write("\"\"\"\n")
 
@@ -516,53 +631,23 @@ class RetraceWorker:
 
             self._retrace_run(27, ["/usr/bin/mock", "--configdir", str(savedir), "chroot",
                                    "--", "chgrp -R mock /var/spool/abrt/crash"])
+        elif CONFIG["RetraceEnvironment"] == "podman":
+            try:
+                image_tag = self.ensure_image_exists(release, repopath, gpg_keys_string)
+            except Exception as ex:
+                log_error("Could not ensure container image exists: %s" % ex)
+                raise
+
+            self.hook.run("post_prepare_environment")
+            self.hook.run("pre_retrace")
 
         # generate backtrace
         task.set_status(STATUS_BACKTRACE)
         log_info(STATUS[STATUS_BACKTRACE])
 
-        if CONFIG["RetraceEnvironment"] == "podman":
-            try:
-                with (savedir / "podman_repo.repo").open("w") as podman_repo:
-                    podman_repo.write("[podman-%s]\n" % distribution)
-                    podman_repo.write("name=podman-%s\n" % releaseid)
-                    podman_repo.write("baseurl=file://%s/\n" % repopath)
-                    podman_repo.write("gpgcheck=%s" % CONFIG["RequireGPGCheck"])
-                    podman_repo.write("gpgkey=%s" % self.construct_gpg_keys(version, pre_rawhide_version))
-            except Exception as ex:
-                log_error("Unable to create podman repo file: %s" % ex)
-                self._fail()
-
-            try:
-                with (savedir / RetraceTask.DOCKERFILE).open("w") as dockerfile:
-                    dockerfile.write('FROM %s:%s\n\n' % (distribution, version))
-                    dockerfile.write('RUN useradd -l retrace && \\ \n')
-                    dockerfile.write('    mkdir -p /var/spool/abrt/crash\n')
-                    dockerfile.write('COPY --chown=retrace gdb.sh /var/spool/abrt/\n')
-                    dockerfile.write('COPY --chown=retrace %s /var/spool/abrt/crash/\n'
-                                     % corepath.relative_to(savedir))
-                    dockerfile.write('COPY podman_repo.repo /etc/yum.repos.d/\n')
-                    dockerfile.write('RUN ')
-                    if CONFIG["RequireGPGCheck"]:
-                        dockerfile.write('rpm --import %s && \\ \n'
-                                         % self.construct_gpg_keys(version, pre_rawhide_version, scheme=""))
-                    dockerfile.write('dnf --assumeyes --skip-broken --allowerasing --setopt=tsflags=nodocs ')
-                    dockerfile.write('--releasever=%s ' % version)
-                    dockerfile.write('--repo="podman-%s" ' % distribution)
-                    dockerfile.write('install abrt-addon-ccpp %s %s && \\ \n'
-                                     % (" \\ \n".join(packages), self.plugin.gdb_package))
-                    dockerfile.write('dnf clean all\n\n')
-                    dockerfile.write('USER retrace\n')
-                    dockerfile.write('ENTRYPOINT ["bash", "/var/spool/abrt/gdb.sh"]')
-            except Exception as ex:
-                log_error("Unable to create Dockerfile: %s" % ex)
-                self._fail()
-
-            self.hook.run("post_prepare_environment")
-            self.hook.run("pre_retrace")
-
         try:
-            backtrace, exploitable = run_gdb(savedir, self.plugin, repopath, task.get_taskid())
+            backtrace, exploitable = run_gdb(savedir, repopath, task.get_taskid(),
+                                             image_tag, packages, corepath, release)
         except Exception as ex:
             log_error("Could not run GDB: %s" % ex)
             self._fail()
@@ -597,7 +682,8 @@ class RetraceWorker:
         try:
             con = init_crashstats_db()
             statsid = save_crashstats(self.stats, con)
-            save_crashstats_success(statsid, self.prerunning, len(get_active_tasks()), rootsize, con)
+            save_crashstats_success(statsid, self.prerunning, len(get_active_tasks()),
+                                    rootsize, con)
             save_crashstats_packages(statsid, packages[1:], con)
             if missing:
                 save_crashstats_build_ids(statsid, missing, con)
@@ -812,28 +898,27 @@ class RetraceWorker:
                              "chroot", "--", crash_cmd + " -s --minimal %s %s" % (vmcore_path, vmlinux)]
 
         elif CONFIG["RetraceEnvironment"] == "podman":
-
             savedir = task.get_savedir()
             crashdir = task.get_crashdir()
             vmcore_file = vmcore_path.name
-            release, distribution, version, _ = self.read_release_file(crashdir, None)
+            release = self.read_release_file(crashdir, kernelver.arch)
             try:
                 with (savedir / RetraceTask.DOCKERFILE).open("w") as dockerfile:
-                    dockerfile.write('FROM %s:%s\n\n' % (distribution, version))
+                    dockerfile.write(f'FROM {release.distribution}:{release.version}\n\n')
                     dockerfile.write('RUN mkdir -p /var/spool/abrt/crash\n\n')
-                    dockerfile.write('RUN dnf ' \
-                                     '--releasever=%s ' \
-                                     '--assumeyes ' \
-                                     '--skip-broken ' \
-                                     'install bash coreutils cpio crash findutils rpm ' \
-                                     'shadow-utils && dnf clean all\n' % kernelver_str)
-                    dockerfile.write('RUN dnf ' \
-                                     '--assumeyes ' \
-                                     '--enablerepo=*debuginfo* ' \
+                    dockerfile.write('RUN dnf '
+                                     f'--releasever={kernelver_str} '
+                                     '--assumeyes '
+                                     '--skip-broken '
+                                     'install bash coreutils cpio crash findutils rpm '
+                                     'shadow-utils && dnf clean all\n')
+                    dockerfile.write('RUN dnf '
+                                     '--assumeyes '
+                                     '--enablerepo=*debuginfo* '
                                      'install kernel-debuginfo\n\n')
-                    dockerfile.write('COPY %s /var/spool/abrt/crash/\n\n' % vmcore_file)
+                    dockerfile.write(f'COPY {vmcore_file} /var/spool/abrt/crash/\n\n')
                     dockerfile.write('RUN useradd -m retrace\n')
-                    dockerfile.write('RUN chown retrace /var/spool/abrt/%s\n' % vmcore_file)
+                    dockerfile.write(f'RUN chown retrace /var/spool/abrt/{vmcore_file}\n')
                     dockerfile.write('USER retrace\n\n')
                     dockerfile.write('CMD ["/usr/bin/bash"]')
             except Exception as ex:
@@ -844,13 +929,11 @@ class RetraceWorker:
 
             child = run([PODMAN_BIN,
                          "build",
-                         "--file",
-                         str(savedir / RetraceTask.DOCKERFILE),
-                         "--tag",
-                         "retrace-image:%s" % img_cont_id],
-                        stdout=DEVNULL, stderr=DEVNULL, check=False)
+                         "--file={}".format(savedir / RetraceTask.DOCKERFILE),
+                         f"--tag=retrace-image:{img_cont_id}"],
+                        stdout=PIPE, stderr=STDOUT, check=False)
             if child.returncode:
-                raise Exception("Unable to build podman container")
+                raise Exception(f"Unable to build podman container: {child.stdout}")
 
             vmlinux = vmcore.prepare_debuginfo(task, kernelver=kernelver)
             child = run([PODMAN_BIN, "run", "--detach", "-it", "--rm",
