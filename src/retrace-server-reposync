@@ -2,9 +2,9 @@
 import argparse
 import contextlib
 import errno
-import os
-import logging
 import grp
+import logging
+import os
 import pwd
 import shutil
 import sys
@@ -12,7 +12,8 @@ import tempfile
 
 from functools import cmp_to_key
 from pathlib import Path
-from subprocess import run, DEVNULL, PIPE
+from subprocess import run, DEVNULL, STDOUT
+from typing import Iterator, TextIO
 
 import rpm
 import dnf
@@ -27,9 +28,6 @@ from retrace.config import Config
 from retrace.plugins import Plugins
 from retrace.util import lock, unlock, parse_rpm_name
 
-sys.path.insert(0, "/usr/share/retrace-server")
-
-
 CONFIG = Config()
 plugins = Plugins()
 
@@ -40,17 +38,19 @@ BUFSIZE = 1 << 22 # 4 MB
 
 
 @contextlib.contextmanager
-def redirect_stderr(path):
-    with Path(path).open(mode="a") as dnflog:
+def redirect_stderr(path: Path) -> Iterator[TextIO]:
+    with path.open(mode="a") as dnflog:
         _stderr = sys.stderr
         sys.stderr = dnflog
 
         try:
-            yield (_stderr, dnflog)
+            yield _stderr
         finally:
             sys.stderr = _stderr
 
-def sync_using_dnf(target_id: str, repo_url: str, global_dnf_cfg: str = "", local_dnf_cfg: str = "") -> int:
+
+def sync_using_dnf(target_id: str, repo_url: str, global_dnf_cfg: str = "",
+                   local_dnf_cfg: str = "") -> int:
     dnftmp = tempfile.NamedTemporaryFile(mode="w", delete=False,
                                          prefix="repo", suffix=".conf")
     dnftmp.write(global_dnf_cfg)
@@ -68,7 +68,7 @@ def sync_using_dnf(target_id: str, repo_url: str, global_dnf_cfg: str = "", loca
 
     cachedir.mkdir(parents=True, exist_ok=True)
 
-    with redirect_stderr(Path(CONFIG["LogDir"], "reposync_dnf.log")) as (old_stderr, _):
+    with redirect_stderr(Path(CONFIG["LogDir"], "reposync_dnf.log")) as old_stderr:
         # BEGIN DNF
         dnfbase = dnf.Base()
         dnfbase.conf.read(filename=dnftmp.name)
@@ -90,7 +90,7 @@ def sync_using_dnf(target_id: str, repo_url: str, global_dnf_cfg: str = "", loca
         for pkg in dnfbase.sack.query():
             rpmname = Path(pkg.location).name
             pkgpath = Path(pkg_dir) / rpmname
-            if not pkgpath.is_file() or pkgpath.stat().st_size() != pkg.size:
+            if not pkgpath.is_file() or pkgpath.stat().st_size != pkg.size:
                 log_info("%s will be downloaded" % rpmname)
                 download.append(pkg)
             else:
@@ -131,7 +131,8 @@ def sync_using_dnf(target_id: str, repo_url: str, global_dnf_cfg: str = "", loca
 
     return 0
 
-def vercmp(ver1, ver2):
+
+def vercmp(ver1: str, ver2: str) -> int:
     # ToDo: Involve epoch?
     ver, rel = ver1.split("-", 1)
     first = (None, ver, rel)
@@ -140,7 +141,8 @@ def vercmp(ver1, ver2):
 
     return rpm.labelCompare(first, second)
 
-def clean_rawhide_repo(release):
+
+def clean_rawhide_repo(release: str) -> None:
     packages = {}
     pkg_dir = Path(CONFIG["RepoDir"], release, "Packages")
     for f in pkg_dir.iterdir():
@@ -173,6 +175,7 @@ def clean_rawhide_repo(release):
                         log_info("Removing %s" % filename)
                         (pkg_dir / filename).unlink()
 
+
 if __name__ == "__main__":
     # parse arguments
     argparser = argparse.ArgumentParser(description="Retrace Server repository downloader")
@@ -191,23 +194,25 @@ if __name__ == "__main__":
     version = args.version
     arch = get_canon_arch(args.architecture)
 
-
     if CONFIG["UseFafPackages"]:
-        log_info("Creating repo from faf")
-        targetid = Path("%s-%s-%s" % (distribution, version, arch))
-        targetdir = CONFIG["RepoDir"] / targetid
+        log_info("Creating repository from faf database")
+        releaseid = f"{distribution}-{version}-{arch}"
+        targetdir = CONFIG["RepoDir"] / releaseid
 
         if not targetdir.is_dir():
             targetdir.mkdir(parents=True)
 
         cmd_line = ["retrace-server-reposync-faf", distribution, version, arch,
                     "--outputdir", targetdir]
-        child = run(cmd_line, stdout=PIPE, stderr=PIPE, encoding="utf-8", check=False)
+        child = run(cmd_line, stdout=sys.stderr, stderr=STDOUT, encoding="utf-8",
+                    check=False)
+
         if child.returncode:
-            log_error("Could not create faf repo")
+            log_error("Could not create repository")
             log_debug(child.stdout)
             log_debug(child.stderr)
             sys.exit(child.returncode)
+
         sys.exit(0)
 
     # drop privilegies if possible
@@ -233,11 +238,11 @@ if __name__ == "__main__":
         log_error("Unknown distribution: '%s'" % distribution)
         sys.exit(1)
 
-    targetid = "%s-%s-%s" % (distribution, version, arch)
-    lockfile = Path("/tmp/retrace-reposync-lock-%s" % targetid)
+    releaseid = f"{distribution}-{version}-{arch}"
+    lockfile = Path(f"/tmp/retrace-reposync-lock-{releaseid}")
 
     if lockfile.is_file():
-        log_error("Another process with repository download is running")
+        log_error(f"Repository for {releaseid} is already being created by a different process")
         sys.exit(2)
 
     # set lock
@@ -250,7 +255,7 @@ if __name__ == "__main__":
         null = DEVNULL
 
     try:
-        targetdir = Path(CONFIG["RepoDir"], targetid)
+        targetdir = Path(CONFIG["RepoDir"], releaseid)
         pkgdir = targetdir / "Packages"
 
         if not pkgdir.is_dir():
@@ -272,7 +277,10 @@ if __name__ == "__main__":
             localdnfcfg = ""
             if isinstance(repo, tuple):
                 repo, localdnfcfg = repo
-                localdnfcfg = localdnfcfg.replace("$ARCH", arch).replace("$VER", version)
+                localdnfcfg = (
+                    localdnfcfg.replace("$ARCH", arch)
+                               .replace("$VER", version)
+                )
 
             for mirror in repo:
                 repourl = mirror.replace("$ARCH", arch).replace("$VER", version)
@@ -283,7 +291,7 @@ if __name__ == "__main__":
                 if repourl.startswith("http://") or \
                    repourl.startswith("https://") or \
                    repourl.startswith("ftp://"):
-                    retcode = sync_using_dnf(targetid, repourl, globaldnfcfg, localdnfcfg)
+                    retcode = sync_using_dnf(releaseid, repourl, globaldnfcfg, localdnfcfg)
                 else:
                     if repourl.startswith("rsync://"):
                         files = [repourl]
@@ -312,7 +320,7 @@ if __name__ == "__main__":
 
         if version.lower() == "rawhide":
             log_info("Cleaning rawhide repo...")
-            clean_rawhide_repo(targetid)
+            clean_rawhide_repo(releaseid)
 
         # run createrepo
         log_info("Running createrepo on '%s'..." % targetdir)
