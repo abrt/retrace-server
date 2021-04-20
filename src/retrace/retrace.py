@@ -2124,7 +2124,7 @@ class KernelVMcore:
     # OSRELEASE=2.6.18-406.el5
     # NOTE: We can get "OSRELEASE=%" so we disallow the '%' character
     # after the '='
-    OSRELEASE_VAR_PARSER = re.compile(b"OSRELEASE=([^%][^\x00\s]+)")
+    OSRELEASE_VAR_PARSER = re.compile(b"OSRELEASE=([^%][^\x00\\s]+)")
     #
     # 2. Look for "Linux version" string.  Note that this was taken from
     # CAS 'fingerprint' database code.  For more info, see
@@ -2133,11 +2133,12 @@ class KernelVMcore:
     # For exmaple:
     # Linux version 3.10.0-693.11.1.el7.x86_64 (mockbuild@x86-041.build.eng.bos.redhat.com)
     # (gcc version 4.8.5 20150623 (Red Hat 4.8.5-16) (GCC) ) #1 SMP Fri Oct 27 05:39:05 EDT 2017
-    LINUX_VERSION_PARSER = re.compile(b'Linux\sversion\s(\S+)\s+(.*20\d{1,2}|#1\s.*20\d{1,2})')
+    LINUX_VERSION_PARSER = re.compile(br"Linux\sversion\s(\S+)\s+(.*20\d{1,2}|"
+                                      br"#1\s.*20\d{1,2})")
     #
     # 3. Look for the actual kernel release. For example:
     # 2.6.32-209.el6.x86_64 | 2.6.18-197.el5
-    KERNEL_RELEASE_PARSER = re.compile(b'(\d+\.\d+\.\d+)-(\d+\.[^\x00\s]+)')
+    KERNEL_RELEASE_PARSER = re.compile(b"(\\d+\\.\\d+\\.\\d+)-(\\d+\\.[^\x00\\s]+)")
     #
 
     def get_kernel_release(self, crash_cmd: List[str] = ["crash"]) -> Optional[KernelVer]:
