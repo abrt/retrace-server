@@ -9,6 +9,7 @@
 #    before first reading from GLOBAL with default path.
 # Note:all modules share one instance, therefore only one load is needed.
 import os
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import configparser
 
@@ -19,15 +20,20 @@ PODMAN_BIN = "@PODMAN_BIN@"
 TAR_BIN = "@TAR_BIN@"
 XZ_BIN = "@XZ_BIN@"
 
+Getter = Union[Callable[[str, str], int],
+               Callable[[str, str], bool],
+               Callable[[str, str], float],
+               Callable[[str, str], List[str]],
+               Callable[[str, str], str]]
 
-class Config(object):
+
+class Config:
     class __config:
-        def __init__(self):
-            self.conf_file_read = False
+        _conf_file_read = False
 
-        ARCH_HOSTS = {}
+        ARCH_HOSTS: Dict[str, str] = {}
 
-        GLOBAL = {
+        GLOBAL: Dict[str, Any] = {
             "TaskIdLength": 9,
             "TaskPassLength": 32,
             "MaxParallelTasks": 10,
@@ -85,21 +91,28 @@ class Config(object):
             "KernelDebuggerPath": "/usr/bin/crash",
         }
 
-        def __getitem__(self, key):
-            if not self.conf_file_read:
+        def __getitem__(self, key: str) -> Any:
+            if not self._conf_file_read:
                 self.load()
+
             return self.GLOBAL[key]
 
-        def load(self, filepath="/etc/retrace-server/retrace-server.conf"):
-            self.conf_file_read = True
-            # if environment variable set, use rather that
-            env_config_path = os.environ.get('RETRACE_SERVER_CONFIG_PATH')
+        def load(self, filepath: str = "/etc/retrace-server/retrace-server.conf") \
+                -> None:
+            self._conf_file_read = True
+
+            # Prefer environment variable over argument if set.
+            env_config_path = os.environ.get("RETRACE_SERVER_CONFIG_PATH")
             if env_config_path:
                 filepath = env_config_path
+
             parser = configparser.ConfigParser()
             parser.read(filepath)
+
             for key in self.GLOBAL.keys():
                 vartype = type(self.GLOBAL[key])
+                get: Optional[Getter] = None
+
                 if vartype is int:
                     get = parser.getint
                 elif vartype is bool:
@@ -107,9 +120,12 @@ class Config(object):
                 elif vartype is float:
                     get = parser.getfloat
                 elif vartype is list:
-                    get = lambda sect, key: parser.get(sect, key).split()
+                    def get(section, key):
+                        return parser.get(section, key).split()
                 else:
                     get = parser.get
+
+                assert get is not None
 
                 try:
                     self.GLOBAL[key] = get("retrace", key)
@@ -122,21 +138,23 @@ class Config(object):
                     if host:
                         self.ARCH_HOSTS[arch] = host
 
-        def get_arch_hosts(self):
+        def get_arch_hosts(self) -> Dict[str, str]:
             return self.ARCH_HOSTS
 
-        def get_list(self, key, sep=","):
-            return [val.strip() for val in self.GLOBAL[key].split(sep) if val.strip()]
+        def get_list(self, key: str, sep: str = ",") -> List[str]:
+            values = self.GLOBAL.get(key, "").split(sep)
+            return [val.strip() for val in values if val.strip()]
 
-    instance = None
+    _instance: Optional[__config] = None
 
     def __new__(cls):
-        if not Config.instance:
-            Config.instance = Config.__config()
-        return Config.instance
+        if Config._instance is None:
+            Config._instance = Config.__config()
 
-    def __getattr__(self, name):
-        return getattr(self.instance, name)
+        return Config._instance
 
-    def __setattr__(self, name, value):
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._instance, name)
+
+    def __setattr__(self, name: str, value: Any) -> None:
         pass
