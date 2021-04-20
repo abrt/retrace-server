@@ -197,7 +197,7 @@ if __name__ == "__main__":
     if CONFIG["UseFafPackages"]:
         log_info("Creating repository from faf database")
         releaseid = f"{distribution}-{version}-{arch}"
-        targetdir = CONFIG["RepoDir"] / releaseid
+        targetdir = Path(CONFIG["RepoDir"], releaseid)
 
         if not targetdir.is_dir():
             targetdir.mkdir(parents=True)
