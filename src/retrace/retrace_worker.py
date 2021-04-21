@@ -930,14 +930,20 @@ class RetraceWorker:
                          "build",
                          "--file={}".format(savedir / RetraceTask.DOCKERFILE),
                          f"--tag=retrace-image:{img_cont_id}"],
-                        stdout=PIPE, stderr=STDOUT, check=False)
+                        stdout=PIPE, stderr=STDOUT, encoding="utf-8", check=False)
             if child.returncode:
                 raise Exception(f"Unable to build podman container: {child.stdout}")
 
             vmlinux = vmcore.prepare_debuginfo(task, kernelver=kernelver)
-            child = run([PODMAN_BIN, "run", "--detach", "-it", "--rm",
-                         "retrace-image:%s" % img_cont_id],
-                        stdout=PIPE, stderr=PIPE, encoding='utf-8', check=False)
+            child = run([PODMAN_BIN, "run",
+                         "--quiet",
+                         "--detach",
+                         "--interactive",
+                         "--tty",
+                         "--sdnotify=ignore",
+                         "--rm",
+                         f"retrace-image:{img_cont_id}"],
+                        stdout=PIPE, stderr=PIPE, encoding="utf-8", check=False)
             if child.stderr:
                 log_error(child.stderr)
                 raise Exception("Unable to run podman container")
