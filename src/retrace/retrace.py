@@ -17,7 +17,7 @@ from subprocess import PIPE, STDOUT, DEVNULL, TimeoutExpired, run
 from typing import Dict, List, Optional, Set, Tuple, Union
 import magic
 
-from .config import Config, PODMAN_BIN
+from .config import Config, PODMAN_BIN, PS_BIN
 from .util import (ARCHIVE_7Z,
                    ARCHIVE_BZ2,
                    ARCHIVE_GZ,
@@ -616,7 +616,7 @@ def unpack_coredump(path: Path) -> None:
 
 
 def run_ps() -> List[str]:
-    lines = run(["ps", "-eo", "pid,ppid,etimes,cmd"],
+    lines = run([PS_BIN, "-eo", "pid,ppid,etimes,cmd"],
                 stdout=PIPE, encoding="utf-8", check=False).stdout.splitlines()
 
     return lines

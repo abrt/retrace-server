@@ -83,7 +83,7 @@ def unlock(lockfile: Path) -> bool:
 
 def free_space(path: str) -> Optional[int]:
     lines = run([DF_BIN, "-B", "1", path],
-                stdout=PIPE, encoding='utf-8', check=False).stdout.split("\n")
+                stdout=PIPE, encoding="utf-8", check=False).stdout.split("\n")
     for line in lines:
         match = DF_OUTPUT_PARSER.match(line)
         if match:

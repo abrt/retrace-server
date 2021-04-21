@@ -6,6 +6,7 @@ configuration.set('DF_BIN', df.path())
 configuration.set('GZIP_BIN', gzip.path())
 configuration.set('LSOF_BIN', lsof.path())
 configuration.set('PODMAN_BIN', podman.path())
+configuration.set('PS_BIN', ps.path())
 configuration.set('TAR_BIN', tar.path())
 configuration.set('XZ_BIN', xz.path())
 
