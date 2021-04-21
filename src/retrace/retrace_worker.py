@@ -73,7 +73,6 @@ class RetraceWorker:
         if self.logging_handler is not None:
             logger.removeHandler(self.logging_handler)
 
-
     def notify_email(self) -> None:
         task = self.task
         if not CONFIG["EmailNotify"] or not task.has_notify():
@@ -542,7 +541,7 @@ class RetraceWorker:
         if release.is_rawhide:
             # some packages might not be signed by rawhide key yet
             # but with a key of previous release
-            pre_rawhide_version = int(version) - 1
+            pre_rawhide_version = int(release.version) - 1
             release.version = "rawhide"
 
         releaseid = str(release)
