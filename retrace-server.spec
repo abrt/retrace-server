@@ -21,6 +21,8 @@ BuildRequires: gzip
 BuildRequires: lsof
 BuildRequires: lsof
 BuildRequires: meson
+# /usr/bin/ps from procps-ng is used to monitor running workers.
+BuildRequires: procps-ng
 BuildRequires: python3-devel
 BuildRequires: tar
 BuildRequires: texinfo
@@ -48,6 +50,8 @@ Requires: lzop
 Requires: lsof
 Requires: elfutils
 Requires: createrepo_c
+# /usr/bin/ps from procps-ng is used to monitor running workers.
+Requires: procps-ng
 Requires: python3-createrepo_c
 Requires: python3-mod_wsgi
 Requires: python3-webob
