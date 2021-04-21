@@ -34,6 +34,7 @@ install_data([
     'index.wsgi',
     'log.wsgi',
     'manager.wsgi',
+    'metrics.wsgi',
     'ftp.wsgi',
     'settings.wsgi',
     'start.wsgi',
