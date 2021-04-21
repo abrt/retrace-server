@@ -898,15 +898,24 @@ class RetraceWorker:
 
         elif CONFIG["RetraceEnvironment"] == "podman":
             savedir = task.get_savedir()
-            crashdir = task.get_crashdir()
             vmcore_file = vmcore_path.name
-            release = self.read_release_file(crashdir, kernelver.arch)
+
+            # Guess OS release from kernel release.
+            distribution, version = self.guess_release(kernelver.release,
+                                                       self.plugins.all())
+            if distribution is None:
+                raise Exception("Could not guess OS release from kernel release "
+                                f"‘{kernelver.release}’")
+
+            assert distribution is not None
+            assert version is not None
+
             try:
                 with (savedir / RetraceTask.DOCKERFILE).open("w") as dockerfile:
-                    dockerfile.write(f'FROM {release.distribution}:{release.version}\n\n')
+                    dockerfile.write(f'FROM {distribution}:{version}\n\n')
                     dockerfile.write('RUN mkdir -p /var/spool/abrt/crash\n\n')
                     dockerfile.write('RUN dnf '
-                                     f'--releasever={kernelver_str} '
+                                     f'--releasever={version} '
                                      '--assumeyes '
                                      '--skip-broken '
                                      'install bash coreutils cpio crash findutils rpm '
