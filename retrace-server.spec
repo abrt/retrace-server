@@ -14,11 +14,10 @@ Source0: https://github.com/abrt/%{name}/archive/%{version}/%{name}-%{version}.t
 BuildArch: noarch
 
 BuildRequires: asciidoc
+# /usr/bin/df from coreutils is used to calculate free disk space.
+BuildRequires: coreutils
 BuildRequires: gettext
-# /usr/bin/gcore from the gdb package is used in tests.
-BuildRequires: gdb
 BuildRequires: gzip
-BuildRequires: lsof
 BuildRequires: lsof
 BuildRequires: meson
 # /usr/bin/ps from procps-ng is used to monitor running workers.
@@ -38,6 +37,8 @@ BuildRequires: podman
 BuildRequires: python3-magic
 BuildRequires: rpm
 
+# /usr/bin/df from coreutils is used to calculate free disk space.
+Requires: coreutils
 Requires: rsync
 Requires: mock >= 1.4.7
 Requires: xz
