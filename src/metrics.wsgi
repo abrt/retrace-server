@@ -92,6 +92,10 @@ def application(environ, start_response):
         return response(start_response, "403 Forbidden",
                         _("You must use HTTPS"))
 
+    if not CONFIG["AllowMetrics"]:
+        return response(start_response, "403 Forbidden",
+                        _("Metrics are not enabled for this server"))
+
     # Pull together all the required data.
     db = init_crashstats_db()
     stats = get_stats(db)
