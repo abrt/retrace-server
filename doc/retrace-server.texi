@@ -41,6 +41,7 @@ backtrace generation service over a network using HTTP protocol.
 * Security::
 * Interactive Debugging::
 * Task Manager::
+* Metrics::
 * FAF integration::
 * Configuration::
 * Future work::
@@ -872,6 +873,37 @@ file and the contents are the actual value. All results are accessible
 from the task manager.
 
 
+@node Metrics
+@chapter Metrics
+
+Retrace Server provides the option to expose basic metrics regarding
+retrace tasks in a machine-readable format as an HTTP endpoint. This allows
+easy integration with monitoring services such as
+@uref{https://prometheus.io/, Prometheus}.
+
+The endpoint is disabled by default, although the statistics are collected
+automatically for every task task regardless of this setting. To enable the
+metrics endpoint, set the @var{AllowMetrics} configuration variable to 1.
+The metrics are then avaiable at the URL
+@indicateurl{https://yourserver/metrics} which can be used as a data source
+in Prometheus.
+
+The following metrics are exposed at the moment:
+
+@itemize
+@item
+Free disk space on volume where task data are located (see the
+@var{SaveDir} configuration option).
+@item
+Number of retrace workers currently running.
+@item
+Total number of retrace jobs denied because of exceeded server capacity
+(see the @var{MaxParallelTasks} configuration option).
+@item
+Total number of retrace tasks finished by result -- failed or successful.
+@end itemize
+
+
 @node FAF integration
 @chapter FAF integration
 
@@ -924,7 +956,11 @@ Default 0.
 This is a security risk and should not be used on public systems.
 See the Interactive tasks chapter for more information. Default 0.
 @item
-@command{AllowTaskManager} boolean; whether to allow managing tasks
+@var{AllowMetrics} boolean; expose basic metrics for monitoring
+tasks and server health via a Prometheus server. See the @ref{Metrics}
+chapter for more information. Default 0.
+@item
+@var{AllowTaskManager} boolean; whether to allow managing tasks
 by task manager. See the Task Manager chapter for more information.
 Default 0.
 @item
