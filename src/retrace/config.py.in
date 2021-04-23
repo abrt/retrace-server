@@ -48,6 +48,7 @@ class Config(object):
             "AllowAPIDelete": False,
             "AllowExternalDir": False,
             "AllowInteractive": False,
+            "AllowMetrics": False,
             "AllowTaskManager": False,
             "AllowVMCoreTask": False,
             "AllowUsrCoreTask": False,
