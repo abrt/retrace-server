@@ -148,10 +148,10 @@ and password, and server sends the log in response.
 @end enumerate
 
 The HTTP interface application is a set of scripts written in Python,
-using the @uref{http://www.python.org/dev/peps/pep-0333/, Python Web
+using the @uref{https://www.python.org/dev/peps/pep-0333/, Python Web
 Server Gateway Interface} (WSGI) to interact with a web server. The only
 supported and tested configuration is the Apache HTTPD Server with
-@uref{http://code.google.com/p/modwsgi/, mod_wsgi}.
+@uref{https://modwsgi.readthedocs.io/en/master/, mod_wsgi}.
 
 Only secure (HTTPS) communication is allowed for communicating with a
 public instance of retrace server, because coredumps and backtraces are
@@ -181,7 +181,7 @@ The xz compression file format is well suited for public server setup
 (slow network), as it provides good compression ratio, which is
 important for compressing large coredumps, and it provides reasonable
 compress/decompress speed and memory consumption. See @ref{Traffic and
-load estimation} for the measurements. The @uref{http://tukaani.org/xz/,
+load estimation} for the measurements. The @uref{https://tukaani.org/xz/,
 XZ Utils} implementation with the compression level 2 is used to
 compress the data.
 
@@ -359,10 +359,10 @@ header is set to @samp{text/plain}.
 @section Limiting traffic
 
 The maximum number of simultaneously running tasks is limited to 5 by
-the server. The limit is changeable by the @var{MaxParallelTasks} option
-in the server configuration file. If a new request comes when the server
-is fully occupied, the server returns the @code{503 Service Unavailable}
-HTTP error code.
+the server. The limit is changeable by the @command{MaxParallelTasks}
+option in the server configuration file. If a new request comes when the
+server is fully occupied, the server returns the @code{503 Service
+Unavailable} HTTP error code.
 
 The archive extraction, chroot preparation, and gdb analysis is
 mostly limited by the hard drive size and speed.
@@ -443,7 +443,7 @@ binaries. The system installed by @command{mock} for the purpose of
 retracing doesn't use @command{prelink}, so the binaries differ between
 the system of origin and the mock environment. It has been tested that
 this is not an issue, but in the case some issue
-@uref{http://sourceware.org/ml/gdb/2009-05/msg00175.html, occurs}
+@uref{https://sourceware.org/ml/gdb/2009-05/msg00175.html, occurs}
 (GDB fails to work with a binary even if it's the right one), a bug
 should be filed on @code{prelink}, as its operation should not affect
 the area GDB operates on.
@@ -882,8 +882,8 @@ indexed in FAF's database.
 
 To take advantage of this functionality, you must set up FAF on the same
 machine with the relevant package repositories. Please refer to FAF's
-documentation. Then enable @var{UseFafPackages} option in Retrace
-Server's configuration.
+documentation. Then enable @var{UseFafPackages} option in Retrace Server's
+configuration.
 
 Now FAF's package database is used for the following:
 @itemize
@@ -909,18 +909,18 @@ The following options can be specified in the configuration file
 
 @itemize
 @item
-@command{RequireHTTPS} boolean; whether to deny non-HTTPS. Default 1.
+@var{RequireHTTPS} boolean; whether to deny non-HTTPS. Default 1.
 @item
-@command{RequireGPGCheck} boolean; whether to use GPG check on
+@var{RequireGPGCheck} boolean; whether to use GPG check on
 the packages installed into chroot (does not apply for rawhide
 or vmcores chroot).
 Default 1.
 @item
-@command{AllowApiDelete} boolean; whether to allow task deleting by
+@var{AllowApiDelete} boolean; whether to allow task deleting by
 a HTTP request to @file{https://someserver/<task_id>/delete}.
 Default 0.
 @item
-@command{AllowInteractive} boolean; whether to allow interactive tasks.
+@var{AllowInteractive} boolean; whether to allow interactive tasks.
 This is a security risk and should not be used on public systems.
 See the Interactive tasks chapter for more information. Default 0.
 @item
@@ -928,86 +928,86 @@ See the Interactive tasks chapter for more information. Default 0.
 by task manager. See the Task Manager chapter for more information.
 Default 0.
 @item
-@command{MaxParallelTasks} integer; how many tasks may be running
+@var{MaxParallelTasks} integer; how many tasks may be running
 at a time. All new tasks are denied while the number of running
 tasks is not less than the limit. Default 5.
 @item
-@command{MaxPackedSize} integer; maximum size of the uploaded archive
+@var{MaxPackedSize} integer; maximum size of the uploaded archive
 (in megabytes). Default 50 (needs to be increased for vmcores).
 @item
-@command{MaxUnpackedSize} integer; maximum size of the archive content
+@var{MaxUnpackedSize} integer; maximum size of the archive content
 (in megabytes). This is a protection against sparse etc. which can
 unpack a small archive into a huge file. Default 1024.
 @item
-@command{MinStorageLeft} integer; the amount of storage space that
+@var{MinStorageLeft} integer; the amount of storage space that
 needs to be kept free on the @file{/var/spool/retrace-server}
 filesystem (in megabytes). Default 1024.
 @item
-@command{DeleteTaskAfter} integer; time (in hours) after which
+@var{DeleteTaskAfter} integer; time (in hours) after which
 the task is considered "old" and should be deleted (next run of
-@command{retrace-server-cleanup} deletes it). Any value less or
+@var{retrace-server-cleanup} deletes it). Any value less or
 equal to zero means disabled. Default 120.
 @item
-@command{ArchiveTaskAfter} integer; similar to
-@command{DeleteTaskAfter}, but the task is archived to @command{DropDir}
+@var{ArchiveTaskAfter} integer; similar to
+@var{DeleteTaskAfter}, but the task is archived to @var{DropDir}
 (see below) before deleting. Default 0.
 @item
-@command{DBFile} string; the name of file used to save statistics.
+@var{DBFile} string; the name of file used to save statistics.
 Default @file{stats.db}.
 @item
-@command{LogDir} string; the directory used to save global logs.
+@var{LogDir} string; the directory used to save global logs.
 Per-task logs are saved to task directories. Default
 @file{/var/log/retrace-server}.
 @item
-@command{RepoDir} string; the directory where local repositories
+@var{RepoDir} string; the directory where local repositories
 are saved and searched. For vmcores, this directory also contains
 cached vmlinux files and needs to be writable for retrace user
 (thus can not be mounted read-only!). Needs to be synchronized
 manually to the content of @file{/etc/yum.repos.d/retarce-*.repo},
 which hardcodes the default. Default @file{/var/cache/retrace-server}.
 @item
-@command{SaveDir} string; the directory where task directories are
+@var{SaveDir} string; the directory where task directories are
 created. Default @file{/var/spool/retrace-server}.
 @item
-@command{DropDir} string; directory, where old tasks are archived
+@var{DropDir} string; directory, where old tasks are archived
 before deleting. No effect if archiving is disabled. Default
 @file{/srv/retrace/archive}.
 @item
-@command{UseCreateRepoUpdate} boolean; whether to call
+@var{UseCreateRepoUpdate} boolean; whether to call
 @command{createrepo} with @command{--update} option when creating
 the local repository. This is much faster, but consumes a lot
 of memory (several gigabytes on a standard Fedora repo). Default 0.
 @item
-@command{KeepRawhideLatest} integer; how many latest packages from
+@var{KeepRawhideLatest} integer; how many latest packages from
 rawhide distribution to keep. All older packages are deleted.
 Default 3.
 @item
-@command{KernelChrootRepo} string; repository used to install chroot
+@var{KernelChrootRepo} string; repository used to install chroot
 for cross-arch vmcore analysis. @var{$ARCH} is a wildcard for
 the required architecture. The repository must contain @file{bash},
 @file{coreutils}, @file{cpio}, @file{crash} and @file{shadow-utils}
 packages and their dependencies. Default
-@file{http://dl.fedoraproject.org/pub/fedora/linux/releases/16/Everything/$ARCH/os/}
+@file{https://dl.fedoraproject.org/pub/fedora/linux/releases/16/Everything/$ARCH/os/}
 @item
-@command{KojiRoot} string; the directory pointing to the root of
+@var{KojiRoot} string; the directory pointing to the root of
 Koji directory structure. This is used when looking for kernel
 debuginfo when processing vmcores. Default @file{/mnt/koji}.
 @item
-@command{UseFTPTasks} boolean; whether to download tasks from remote FTP.
+@var{UseFTPTasks} boolean; whether to download tasks from remote FTP.
 No effect if task manager is disabled. Default 0.
 @item
-@command{FTPSSL} boolean; whether to use SSL with the FTP connection.
+@var{FTPSSL} boolean; whether to use SSL with the FTP connection.
 Default 0,
 @item
-@command{FTPHost} string; FTP host. Default empty.
+@var{FTPHost} string; FTP host. Default empty.
 @item
-@command{FTPUser} string; FTP user. Default empty.
+@var{FTPUser} string; FTP user. Default empty.
 @item
-@command{FTPPass} string; FTP password. Default empty.
+@var{FTPPass} string; FTP password. Default empty.
 @item
-@command{FTPDir} string; FTP directory containing tasks. Default @file{/}.
+@var{FTPDir} string; FTP directory containing tasks. Default @file{/}.
 @item
-@command{UseFafPackages} boolean; experimental; whether to use FAF's
+@var{UseFafPackages} boolean; experimental; whether to use FAF's
 package database for getting debuginfos. @xref{FAF integration}.
 Default 0.
 
@@ -1034,7 +1034,7 @@ Use GDB builds with various target architectures: gdb-i386, gdb-ppc64,
 gdb-s390.
 @item
 Run
-@uref{http://wiki.qemu.org/download/qemu-doc.html#QEMU-User-space-emulator,
+@uref{https://wiki.qemu.org/download/qemu-doc.html#QEMU-User-space-emulator,
 QEMU user space emulation} on the server
 @item
 Run @code{retrace-server-worker} on a machine with right
@@ -1068,8 +1068,8 @@ be enabled in a public instance.
 The SELinux policy needs to be updated because of recent changes.
 
 @section Do not refuse new tasks on a fully loaded server
-Consider using @uref{http://git.fedorahosted.org/git/?p=kobo.git, kobo}
-for task management and worker handling (master/slaves arch).
+Consider using a worker pool for task management and worker handling
+(a controller--worker architecture).
 
 @section Support synchronous operation
 Client sends a coredump, and keeps receiving the server response
