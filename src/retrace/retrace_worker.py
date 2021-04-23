@@ -932,12 +932,12 @@ class RetraceWorker:
                 log_error("Unable to create Containerfile: %s" % ex)
                 self._fail()
 
-            img_cont_id = str(task.get_taskid())
+            taskid = task.get_taskid()
 
             child = run([PODMAN_BIN,
                          "build",
                          "--file={}".format(savedir / RetraceTask.CONTAINERFILE),
-                         f"--tag=retrace-image:{img_cont_id}"],
+                         f"--tag=retrace-image:{taskid}"],
                         stdout=PIPE, stderr=STDOUT, encoding="utf-8", check=False)
             if child.returncode:
                 raise Exception(f"Unable to build podman container: {child.stdout}")
@@ -950,18 +950,19 @@ class RetraceWorker:
                          "--tty",
                          "--sdnotify=ignore",
                          "--rm",
-                         f"retrace-image:{img_cont_id}"],
+                         f"--name=retrace-{taskid}",
+                         f"retrace-image:{taskid}"],
                         stdout=PIPE, stderr=PIPE, encoding="utf-8", check=False)
             if child.stderr:
                 log_error(child.stderr)
                 raise Exception("Unable to run podman container")
 
-            crash_normal = [PODMAN_BIN, "exec", img_cont_id,
+            crash_normal = [PODMAN_BIN, "exec", f"retrace-{taskid}",
                             task.get_crash_cmd(),
                             "-s",
                             f"/var/spool/abrt/crash/{vmcore_path.name}",
                             vmlinux]
-            crash_minimal = [PODMAN_BIN, "exec", img_cont_id,
+            crash_minimal = [PODMAN_BIN, "exec", f"retrace-{taskid}",
                              task.get_crash_cmd(),
                              "-s",
                              "--minimal",
@@ -1011,6 +1012,10 @@ class RetraceWorker:
 
         # Generate the kernel log and run other crash commands
         kernellog, ret = task.run_crash_cmdline(crash_minimal, "log\nquit\n")
+
+        if CONFIG["RetraceEnvironment"] == "podman":
+            # TODO: Remove container and image.
+            pass
 
         task.set_backtrace(kernellog, "wb")
         # If crash sys command exited with non-zero status,
