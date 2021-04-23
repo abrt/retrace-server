@@ -910,33 +910,33 @@ class RetraceWorker:
             assert version is not None
 
             try:
-                with (savedir / RetraceTask.DOCKERFILE).open("w") as dockerfile:
-                    dockerfile.write(f"FROM {distribution}:{version}\n\n")
-                    dockerfile.write("RUN dnf "
-                                     f"--releasever={version} "
-                                     "--assumeyes "
-                                     "--skip-broken "
-                                     "install bash coreutils cpio crash findutils rpm "
-                                     "shadow-utils && dnf clean all\n")
-                    dockerfile.write("RUN dnf "
-                                     "--assumeyes "
-                                     "--enablerepo=*debuginfo* "
-                                     "install kernel-debuginfo\n\n")
-                    dockerfile.write("RUN useradd --no-create-home --no-log-init retrace\n")
-                    dockerfile.write("RUN mkdir --parents /var/spool/abrt/crash\n\n")
-                    dockerfile.write("COPY --chown=retrace crash/{} /var/spool/abrt/crash/\n\n"
-                                     .format(vmcore_path.name))
-                    dockerfile.write("USER retrace\n\n")
-                    dockerfile.write("CMD ["/usr/bin/bash"]")
+                with (savedir / RetraceTask.CONTAINERFILE).open("w") as cntfile:
+                    cntfile.write(f"FROM {distribution}:{version}\n\n")
+                    cntfile.write("RUN dnf "
+                                  f"--releasever={version} "
+                                  "--assumeyes "
+                                  "--skip-broken "
+                                  "install bash coreutils cpio crash findutils rpm "
+                                  "shadow-utils && dnf clean all\n")
+                    cntfile.write("RUN dnf "
+                                  "--assumeyes "
+                                  "--enablerepo=*debuginfo* "
+                                  "install kernel-debuginfo\n\n")
+                    cntfile.write("RUN useradd --no-create-home --no-log-init retrace\n")
+                    cntfile.write("RUN mkdir --parents /var/spool/abrt/crash\n\n")
+                    cntfile.write("COPY --chown=retrace crash/{} /var/spool/abrt/crash/\n\n"
+                                  .format(vmcore_path.name))
+                    cntfile.write("USER retrace\n\n")
+                    cntfile.write("CMD [\"/usr/bin/bash\"]")
             except Exception as ex:
-                log_error("Unable to create Dockerfile: %s" % ex)
+                log_error("Unable to create Containerfile: %s" % ex)
                 self._fail()
 
             img_cont_id = str(task.get_taskid())
 
             child = run([PODMAN_BIN,
                          "build",
-                         "--file={}".format(savedir / RetraceTask.DOCKERFILE),
+                         "--file={}".format(savedir / RetraceTask.CONTAINERFILE),
                          f"--tag=retrace-image:{img_cont_id}"],
                         stdout=PIPE, stderr=STDOUT, encoding="utf-8", check=False)
             if child.returncode:
