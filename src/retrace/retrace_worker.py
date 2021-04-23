@@ -478,7 +478,7 @@ class RetraceWorker:
 
                 cntfile.write(f"FROM {release.distribution}:{release.version}\n\n"
                               f"RUN useradd --no-create-home --no-log-init retrace && \\\n"
-                              f"    mkdir --parent /var/spool/abrt/crash/\n"
+                              f"    mkdir --parents /var/spool/abrt/crash/\n"
                               "COPY retrace-podman.repo /etc/yum.repos.d/\n"
                               "COPY --chown=retrace gdb.sh /var/spool/abrt/\n\n"
                               f"RUN {rpm_import_command} && \\\n"
@@ -898,7 +898,6 @@ class RetraceWorker:
 
         elif CONFIG["RetraceEnvironment"] == "podman":
             savedir = task.get_savedir()
-            vmcore_file = vmcore_path.name
 
             # Guess OS release from kernel release.
             distribution, version = self.guess_release(kernelver.release,
@@ -912,23 +911,23 @@ class RetraceWorker:
 
             try:
                 with (savedir / RetraceTask.DOCKERFILE).open("w") as dockerfile:
-                    dockerfile.write(f'FROM {distribution}:{version}\n\n')
-                    dockerfile.write('RUN mkdir -p /var/spool/abrt/crash\n\n')
-                    dockerfile.write('RUN dnf '
-                                     f'--releasever={version} '
-                                     '--assumeyes '
-                                     '--skip-broken '
-                                     'install bash coreutils cpio crash findutils rpm '
-                                     'shadow-utils && dnf clean all\n')
-                    dockerfile.write('RUN dnf '
-                                     '--assumeyes '
-                                     '--enablerepo=*debuginfo* '
-                                     'install kernel-debuginfo\n\n')
-                    dockerfile.write(f'COPY {vmcore_file} /var/spool/abrt/crash/\n\n')
-                    dockerfile.write('RUN useradd -m retrace\n')
-                    dockerfile.write(f'RUN chown retrace /var/spool/abrt/{vmcore_file}\n')
-                    dockerfile.write('USER retrace\n\n')
-                    dockerfile.write('CMD ["/usr/bin/bash"]')
+                    dockerfile.write(f"FROM {distribution}:{version}\n\n")
+                    dockerfile.write("RUN dnf "
+                                     f"--releasever={version} "
+                                     "--assumeyes "
+                                     "--skip-broken "
+                                     "install bash coreutils cpio crash findutils rpm "
+                                     "shadow-utils && dnf clean all\n")
+                    dockerfile.write("RUN dnf "
+                                     "--assumeyes "
+                                     "--enablerepo=*debuginfo* "
+                                     "install kernel-debuginfo\n\n")
+                    dockerfile.write("RUN useradd --no-create-home --no-log-init retrace\n")
+                    dockerfile.write("RUN mkdir --parents /var/spool/abrt/crash\n\n")
+                    dockerfile.write("COPY --chown=retrace crash/{} /var/spool/abrt/crash/\n\n"
+                                     .format(vmcore_path.name))
+                    dockerfile.write("USER retrace\n\n")
+                    dockerfile.write("CMD ["/usr/bin/bash"]")
             except Exception as ex:
                 log_error("Unable to create Dockerfile: %s" % ex)
                 self._fail()
@@ -957,11 +956,17 @@ class RetraceWorker:
                 log_error(child.stderr)
                 raise Exception("Unable to run podman container")
 
-            crash_normal = [PODMAN_BIN, "exec", img_cont_id, task.get_crash_cmd()
-                            + " -s /var/spool/abrt/crash/%s %s" % (vmcore_file, vmlinux)]
-            crash_minimal = [PODMAN_BIN, "exec", img_cont_id, task.get_crash_cmd()
-                             + " -s --minimal /var/spool/abrt/crash/%s %s" % (vmcore_file, vmlinux)]
-
+            crash_normal = [PODMAN_BIN, "exec", img_cont_id,
+                            task.get_crash_cmd(),
+                            "-s",
+                            f"/var/spool/abrt/crash/{vmcore_path.name}",
+                            vmlinux]
+            crash_minimal = [PODMAN_BIN, "exec", img_cont_id,
+                             task.get_crash_cmd(),
+                             "-s",
+                             "--minimal",
+                             f"/var/spool/abrt/crash/{vmcore_path.name}",
+                             vmlinux]
         elif CONFIG["RetraceEnvironment"] == "native":
             try:
                 self.hook.run("pre_prepare_debuginfo")
