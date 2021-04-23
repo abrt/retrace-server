@@ -887,7 +887,7 @@ class RetraceTask:
     MOCK_DEFAULT_CFG = "default.cfg"
     MOCK_SITE_DEFAULTS_CFG = "site-defaults.cfg"
     MOCK_LOGGING_INI = "logging.ini"
-    DOCKERFILE = "Dockerfile"
+    CONTAINERFILE = "Containerfile"
 
     def __init__(self, taskid: Optional[Union[int, str]] = None):
         """Creates a new task if taskid is None,
@@ -1879,7 +1879,7 @@ class RetraceTask:
                           RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
                           RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
                           RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE,
-                          RetraceTask.DOCKERFILE, RetraceTask.C2P_LOG_FILE]:
+                          RetraceTask.CONTAINERFILE, RetraceTask.C2P_LOG_FILE]:
                 continue
 
             try:
