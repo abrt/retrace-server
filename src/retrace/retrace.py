@@ -1878,8 +1878,7 @@ class RetraceTask:
                           RetraceTask.TYPE_FILE, RetraceTask.RESULTS_DIR,
                           RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
                           RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
-                          RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE,
-                          RetraceTask.CONTAINERFILE, RetraceTask.C2P_LOG_FILE]:
+                          RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE]:
                 continue
 
             try:
