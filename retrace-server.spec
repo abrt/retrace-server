@@ -1,3 +1,7 @@
+#retrace uid/gid reserved in setup, rhbz #706012
+%define retrace_gid_uid 174
+%define retrace_home %{_sharedstatedir}/retrace
+
 Summary: Application for remote coredump analysis
 Name: retrace-server
 Version: 1.23.0
@@ -68,6 +72,7 @@ Requires(preun): /sbin/install-info
 Requires(post): /sbin/install-info
 %endif
 Requires(post): /usr/bin/crontab
+Requires(post): /usr/bin/systemctl
 Recommends: podman
 Recommends: logrotate
 
@@ -131,10 +136,8 @@ rm -f %{buildroot}%{_infodir}/dir
 %{find_lang} %{name}
 
 %pre
-#retrace uid/gid reserved in setup, rhbz #706012
-%define retrace_gid_uid 174
 getent group retrace > /dev/null || groupadd -f -g %{retrace_gid_uid} --system retrace
-getent passwd retrace > /dev/null || useradd --system -g retrace -u %{retrace_gid_uid} -d %{_sharedstatedir}/retrace -s /sbin/nologin retrace
+getent passwd retrace > /dev/null || useradd --system -g retrace -u %{retrace_gid_uid} -d %{retrace_home} -s /sbin/nologin retrace
 exit 0
 
 %post
@@ -143,16 +146,28 @@ exit 0
 %endif
 /usr/sbin/usermod -a -G mock retrace 2> /dev/null || :
 
+# Migrate old home directory during an upgrade (i.e. $1 == 2) -- if retrace's home
+# is /usr/share/retrace change it to /var/lib/retrace.
+if [ "$1" = 2 -a "$(getent passwd retrace | cut -d: -f6)" = "%{_datadir}/%{name}" ]
+then
+    # Make sure to restart the Apache HTTP Server if it's enabled and
+    # running during the upgrade.
+    /usr/bin/systemctl is-active --quiet httpd.service ; httpd_active=$?
+    [ "$httpd_active" = 0 ] && /usr/bin/systemctl stop httpd.service
+    /usr/sbin/usermod --home %{retrace_home} retrace 2> /dev/null || :
+    [ "$httpd_active" = 0 ] && /usr/bin/systemctl start httpd.service
+fi
+
 if [ "$1" = 1 ]
 then
 #add disabled crontab entries to retrace's crontab
     %define retrace_crontab_entry0 "# 0 * * * * /usr/bin/retrace-server-cleanup >> /var/log/retrace-server/cleanup_error.log 2>&1"
-    %define retrace_crontab_entry1 "#0 0,12 * * * /usr/bin/retrace-server-reposync fedora 15 i386 >> /var/log/retrace-server/reposync_error.log 2>&1"
-    %define retrace_crontab_entry2 "#0 2,14 * * * /usr/bin/retrace-server-reposync fedora 15 x86_64 >> /var/log/retrace-server/reposync_error.log 2>&1"
-    %define retrace_crontab_entry3 "#0 4,16 * * * /usr/bin/retrace-server-reposync fedora 16 i386 >> /var/log/retrace-server/reposync_error.log 2>&1"
-    %define retrace_crontab_entry4 "#0 6,18 * * * /usr/bin/retrace-server-reposync fedora 16 x86_64 >> /var/log/retrace-server/reposync_error.log 2>&1"
-    %define retrace_crontab_entry5 "#0 8,20 * * * /usr/bin/retrace-server-reposync fedora rawhide i386 >> /var/log/retrace-server/reposync_error.log 2>&1"
-    %define retrace_crontab_entry6 "#0 10,22 * * * /usr/bin/retrace-server-reposync fedora rawhide x86_64 >> /var/log/retrace-server/reposync_error.log 2>&1"
+    %define retrace_crontab_entry1 "# 0 0,12 * * * /usr/bin/retrace-server-reposync fedora 15 i386 >> /var/log/retrace-server/reposync_error.log 2>&1"
+    %define retrace_crontab_entry2 "# 0 2,14 * * * /usr/bin/retrace-server-reposync fedora 15 x86_64 >> /var/log/retrace-server/reposync_error.log 2>&1"
+    %define retrace_crontab_entry3 "# 0 4,16 * * * /usr/bin/retrace-server-reposync fedora 16 i386 >> /var/log/retrace-server/reposync_error.log 2>&1"
+    %define retrace_crontab_entry4 "# 0 6,18 * * * /usr/bin/retrace-server-reposync fedora 16 x86_64 >> /var/log/retrace-server/reposync_error.log 2>&1"
+    %define retrace_crontab_entry5 "# 0 8,20 * * * /usr/bin/retrace-server-reposync fedora rawhide i386 >> /var/log/retrace-server/reposync_error.log 2>&1"
+    %define retrace_crontab_entry6 "# 0 10,22 * * * /usr/bin/retrace-server-reposync fedora rawhide x86_64 >> /var/log/retrace-server/reposync_error.log 2>&1"
 
     (crontab -u retrace -l 2> /dev/null; echo %{retrace_crontab_entry0}; \
      echo %{retrace_crontab_entry1}; echo %{retrace_crontab_entry2}; \
