@@ -78,8 +78,9 @@ Requires(post): /sbin/install-info
 %endif
 Requires(post): /usr/bin/crontab
 Requires(post): /usr/bin/systemctl
-Recommends: podman
+Recommends: httpd
 Recommends: logrotate
+Recommends: podman
 
 Obsoletes: abrt-retrace-server < 2.0.3
 Provides: abrt-retrace-server = 2.0.3
