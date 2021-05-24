@@ -4,7 +4,7 @@
 
 Summary: Application for remote coredump analysis
 Name: retrace-server
-Version: 1.23.0
+Version: 1.24.0
 Release: 1%{?dist}
 License: GPLv2+
 URL: https://github.com/abrt/retrace-server
@@ -237,6 +237,18 @@ exit 0
 %license COPYING
 
 %changelog
+* Mon May 24 2021 Matěj Grabovský <mgrabovs@redhat.com> 1.24.0-1
+- Major refactoring of Podman backend code
+- Recommend httpd dependency
+- Add missing dependency on coreutils
+- Migrate old home directory in post scriptlet
+- Do not clean up c2p_log and Containerfile after task is finished
+- New metrics HTTP endpoint for Prometheus
+- Guess OS release from kernelver in vmcore tasks
+- Rename Dockerfile to Containerfile
+- Documentation updates
+- Code style improvements
+
 * Wed Mar 10 2021 Matěj Grabovský <mgrabovs@redhat.com> 1.23.0-1
 - Add Fedora 34 to version list for stats
 - Be more careful when reading task status
