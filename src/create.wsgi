@@ -97,7 +97,7 @@ def application(environ, start_response):
         return response(start_response, "500 Internal Server Error",
                         _("Unable to obtain disk free space"))
 
-    if space - request.content_length < CONFIG["MinStorageLeft"] * 1048576:
+    if space - request.content_length < CONFIG["MinStorageLeft"] * 1024 * 1024:
         return response(start_response, "507 Insufficient Storage",
                         _("There is not enough storage space on the server"))
 
