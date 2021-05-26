@@ -84,7 +84,6 @@ def generate_repo(db: Database, outputdir: str, opsys: str, release: str,
     repomd = cr.Repomd()
 
     # Add records into the repomd.xml
-    #pylint: disable=bad-whitespace
     repomd_records = (("primary",      pri_xml_path, pri_db),
                       ("filelists",    fil_xml_path, fil_db),
                       ("other",        oth_xml_path, oth_db),
