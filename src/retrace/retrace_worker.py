@@ -10,6 +10,7 @@ import stat
 from pathlib import Path
 from subprocess import PIPE, DEVNULL, STDOUT, run
 from tempfile import TemporaryDirectory
+from types import ModuleType
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from retrace.hooks.hooks import RetraceHook
@@ -58,6 +59,9 @@ class RetraceWorker:
         self.task = task
         self.logging_handler: Optional[logging.FileHandler] = None
         self.hook = RetraceHook(task)
+        self.plugin: Optional[ModuleType] = None
+        self.stats: Dict[str, Any] = {}
+        self.prerunning: int = 0
 
     def begin_logging(self) -> None:
         if self.logging_handler is None:
@@ -1075,7 +1079,7 @@ class RetraceWorker:
 
     def start(self, kernelver: Optional[KernelVer] = None, arch: Optional[str] = None) -> None:
         self.hook.run("pre_start")
-        self.stats: Dict[str, Any] = {
+        self.stats = {
             "taskid": self.task.get_taskid(),
             "package": None,
             "version": None,

@@ -1,7 +1,9 @@
 #!/usr/bin/python3
-import sys
 import os
 import pwd
+import sys
+from typing import Optional
+
 from retrace.argparser import ArgumentParser
 from retrace.retrace import (log_debug,
                              log_error,
@@ -69,7 +71,7 @@ if __name__ == "__main__":
         except Exception as ex:
             log_warn("Failed to detach from process group: %s" % str(ex))
 
-    kernelver = None
+    kernelver: Optional[KernelVer] = None
     if cmdline.kernelver is not None:
         try:
             kernelver = KernelVer(cmdline.kernelver)
