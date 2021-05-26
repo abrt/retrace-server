@@ -18,20 +18,22 @@ import sys
 from importlib import import_module
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Iterable, Optional
+from typing import Any, List, Optional
 
 
 class Plugins:
-    class __plugins:
+    _instance: Optional[ModuleType] = None
+
+    class _Plugins:
         plugins_read: bool
-        PLUGINS: Iterable[ModuleType]
+        plugin_list: List[ModuleType]
 
         def __init__(self) -> None:
-            self.PLUGINS = []
+            self.plugin_list = []
             self.plugins_read = False
 
         def load(self, plugin_dir: Path = Path("/usr/share/retrace-server/plugins")) -> None:
-            self.PLUGINS = []
+            self.plugin_list = []
             self.plugins_read = True
             # if environment variable set, use rather that
             env_plugin_dir = os.environ.get('RETRACE_SERVER_PLUGIN_DIR')
@@ -53,22 +55,20 @@ class Plugins:
                     except Exception:
                         continue
                     if "distribution" in this.__dict__ and "repos" in this.__dict__:
-                        self.PLUGINS.append(this)
+                        self.plugin_list.append(this)
 
-        def all(self) -> Iterable[ModuleType]:
+        def all(self) -> List[ModuleType]:
             if not self.plugins_read:
                 self.load()
-            return self.PLUGINS
-
-    instance: Optional[ModuleType] = None
+            return self.plugin_list
 
     def __new__(cls,):
-        if not Plugins.instance:
-            Plugins.instance = Plugins.__plugins()
-        return Plugins.instance
+        if not Plugins._instance:
+            Plugins._instance = Plugins._Plugins()
+        return Plugins._instance
 
     def __getattr__(self, name: str) -> Any:
-        return getattr(self.instance, name)
+        return getattr(self._instance, name)
 
     def __setattr__(self, name: str, value: Any) -> None:
-        setattr(self.instance, name, value)
+        setattr(self._instance, name, value)
