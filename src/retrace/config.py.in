@@ -111,7 +111,7 @@ class Config:
             parser = configparser.ConfigParser()
             parser.read(filepath)
 
-            for key in self.GLOBAL.keys():
+            for key in self.GLOBAL:
                 vartype = type(self.GLOBAL[key])
                 get: Optional[Getter] = None
 
