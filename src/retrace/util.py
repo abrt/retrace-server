@@ -176,7 +176,11 @@ def response(start_response: Callable[[str, List[Tuple[str, str]]], None],
     if isinstance(body, str):
         body = body.encode("utf-8")
 
-    start_response(status, [("Content-Type", "text/plain"), ("Content-Length", "%d" % len(body))] + extra_headers)
+    headers = [("Content-Type", "text/plain"),
+               ("Content-Length", "%d" % len(body))]
+    headers.extend(extra_headers)
+
+    start_response(status, headers)
     return [body]
 
 
@@ -184,11 +188,11 @@ def send_email(frm: str, to: Union[str, List[str]], subject: str, body: str) -> 
     if isinstance(to, list):
         to = ",".join(to)
 
-    msg = "From: %s\n" \
-          "To: %s\n" \
-          "Subject: %s\n" \
-          "\n" \
-          "%s" % (frm, to, subject, body)
+    msg = (f"From: {frm}\n"
+           f"To: {to}\n"
+           f"Subject: {subject}\n"
+           f"\n"
+           f"{body}")
 
     smtp = smtplib.SMTP("localhost")
     smtp.sendmail(frm, to, msg)

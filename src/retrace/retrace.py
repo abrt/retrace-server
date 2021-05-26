@@ -901,7 +901,7 @@ class RetraceTask:
             oldmask = os.umask(0o007)
             self._taskid = None
             generator = random.SystemRandom()
-            for i in range(50):
+            for _ in range(50):
                 taskid = generator.randint(pow(10, CONFIG["TaskIdLength"] - 1),
                                            pow(10, CONFIG["TaskIdLength"]) - 1)
                 taskdir = Path(CONFIG["SaveDir"], "%d" % taskid)
@@ -924,7 +924,7 @@ class RetraceTask:
 
             pwdfilepath = self._savedir / RetraceTask.PASSWORD_FILE
             with open(pwdfilepath, "w") as pwdfile:
-                for i in range(CONFIG["TaskPassLength"]):
+                for _ in range(CONFIG["TaskPassLength"]):
                     pwdfile.write(generator.choice(TASKPASS_ALPHABET))
 
             cmd = "crash"
