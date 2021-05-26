@@ -14,7 +14,7 @@ class PodmanContainer:
 
     def copy_to(self, src: Union[str, Path], dst: Union[str, Path]) -> None:
         proc = run([PODMAN_BIN, "cp", str(src), f"{self.id}:{dst}"],
-                   stdout=DEVNULL, stderr=PIPE, encoding="utf-8")
+                   stdout=DEVNULL, stderr=PIPE, encoding="utf-8", check=False)
 
         if proc.returncode:
             raise RetraceError(
@@ -30,7 +30,7 @@ class PodmanContainer:
         args.append(self.id)
         args.extend(cmd)
 
-        return run(args, stderr=STDOUT, stdout=PIPE, encoding="utf-8")
+        return run(args, stderr=STDOUT, stdout=PIPE, encoding="utf-8", check=False)
 
     @property
     def short_id(self) -> str:
@@ -38,7 +38,7 @@ class PodmanContainer:
 
     def stop_and_remove(self) -> None:
         proc = run([PODMAN_BIN, "rm", "--force", self.id],
-                   stderr=PIPE, stdout=DEVNULL, encoding="utf-8")
+                   stderr=PIPE, stdout=DEVNULL, encoding="utf-8", check=False)
 
         if proc.returncode:
             raise RetraceError(f"Could not stop container {self.short_id}: {proc.stderr}")
@@ -50,6 +50,7 @@ class PodmanContainer:
 
     def __exit__(self, exc_type, exc_value, exc_traceback) -> None:
         self.stop_and_remove()
+
 
 class LocalPodmanBackend:
     def __init__(self, retrace_config: Config):
