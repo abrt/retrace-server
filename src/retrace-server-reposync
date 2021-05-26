@@ -13,7 +13,8 @@ import tempfile
 from functools import cmp_to_key
 from pathlib import Path
 from subprocess import run, DEVNULL, STDOUT
-from typing import Iterator, TextIO
+from types import ModuleType
+from typing import Iterator, Optional, TextIO
 
 import rpm
 import dnf
@@ -228,7 +229,7 @@ if __name__ == "__main__":
         sys.exit(6)
 
     # load plugin
-    plugin = None
+    plugin: Optional[ModuleType] = None
     for iplugin in plugins.all():
         if iplugin.distribution == distribution:
             plugin = iplugin
@@ -250,7 +251,7 @@ if __name__ == "__main__":
         log_error("Unable to set lock")
         sys.exit(3)
 
-    null = None
+    null: Optional[int] = None
     if args.verbose < 2:
         null = DEVNULL
 
