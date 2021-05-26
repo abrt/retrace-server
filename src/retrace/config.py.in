@@ -29,7 +29,7 @@ Getter = Union[Callable[[str, str], int],
 
 
 class Config:
-    class __config:
+    class _Config:
         _conf_file_read = False
 
         ARCH_HOSTS: Dict[str, str] = {}
@@ -147,11 +147,11 @@ class Config:
             values = self.GLOBAL.get(key, "").split(sep)
             return [val.strip() for val in values if val.strip()]
 
-    _instance: Optional[__config] = None
+    _instance: Optional[_Config] = None
 
     def __new__(cls):
         if Config._instance is None:
-            Config._instance = Config.__config()
+            Config._instance = Config._Config()
 
         return Config._instance
 
