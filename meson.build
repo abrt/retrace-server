@@ -29,6 +29,10 @@ podman = find_program('podman',
   required: false,
   disabler: true,
 )
+pytest = find_program('pytest',
+  required: false,
+  disabler: true,
+)
 ps = find_program('ps')
 tar = find_program('tar')
 tito = find_program('tito',
