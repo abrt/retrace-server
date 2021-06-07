@@ -98,6 +98,9 @@ generation service over a network using HTTP protocol.
     %{nil}
 %meson_build
 
+%check
+%meson_test
+
 %install
 %meson_install
 

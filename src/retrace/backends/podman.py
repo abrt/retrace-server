@@ -8,6 +8,7 @@ from retrace.retrace import (log_debug,
                              RetraceError)
 from retrace.config import Config, PODMAN_BIN
 
+
 class PodmanContainer:
     def __init__(self, container_id: str) -> None:
         self.id = container_id
@@ -34,7 +35,7 @@ class PodmanContainer:
 
     @property
     def short_id(self) -> str:
-        return self.id[1:7]
+        return self.id[:7]
 
     def stop_and_remove(self) -> None:
         proc = run([PODMAN_BIN, "rm", "--force", self.id],
