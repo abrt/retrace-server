@@ -46,7 +46,7 @@ class PodmanContainer:
 
         log_info(f"Container {self.short_id} stopped and removed")
 
-    def __enter__(self) -> 'PodmanContainer':
+    def __enter__(self) -> "PodmanContainer":
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback) -> None:
