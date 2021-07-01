@@ -27,7 +27,7 @@ def application(environ, start_response):
 
     try:
         task = RetraceTask(int(match.group(1)))
-    except:
+    except Exception:
         return response(start_response, "404 Not Found",
                         _("There is no such task"))
 
@@ -38,7 +38,7 @@ def application(environ, start_response):
 
     try:
         task.remove()
-    except:
+    except Exception:
         return response(start_response, "500 Internal Server Error",
                         _("An error occured while deleting task data"))
 
