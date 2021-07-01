@@ -28,9 +28,13 @@ def main() -> None:
 
     try:
         plugin = __import__(args.PLUGIN)
-    except:
+    except Exception as ex:
         print("Plugin could not be loaded. Use --plugin-dir if in another location.")
+        print(f"Encountered error: {ex}")
         sys.exit(1)
+    except KeyboardInterrupt:
+        print("Interrupted")
+        sys.exit(0)
 
 
     verbose = not(args.first_valid or args.only_valid or args.only_invalid)

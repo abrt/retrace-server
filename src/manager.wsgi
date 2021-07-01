@@ -40,7 +40,7 @@ LONG_TYPES = {TASK_RETRACE: "Coredump retrace",
 def is_local_task(taskid):
     try:
         RetraceTask(taskid)
-    except:
+    except Exception:
         return False
 
     return True
@@ -56,7 +56,7 @@ def parse_start_options(task: RetraceTask, options: Dict[str, Any]):
     if "caseno" in options and options["caseno"]:
         try:
             task.set_caseno(int(options["caseno"]))
-        except:
+        except Exception:
             # caseno is invalid number - do nothing, it can be set later
             pass
 
@@ -218,7 +218,7 @@ def application(environ, start_response):
     if match.group(6) and match.group(6).startswith("results") and match.group(9):
         try:
             task = RetraceTask(filename)
-        except:
+        except Exception:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
         if not task.has_results(match.group(9)):
@@ -232,7 +232,7 @@ def application(environ, start_response):
         ftptask = False
         try:
             task = RetraceTask(filename)
-        except:
+        except Exception:
             if CONFIG["UseFTPTasks"]:
                 ftp = ftp_init()
                 files = ftp_list_dir(CONFIG["FTPDir"], ftp)
@@ -242,7 +242,7 @@ def application(environ, start_response):
 
                 try:
                     size = ftp.size(filename)
-                except:
+                except Exception:
                     size = 0
 
                 ftp_close(ftp)
@@ -263,7 +263,7 @@ def application(environ, start_response):
                 task.set_type(TASK_VMCORE_INTERACTIVE)
                 task.add_remote("FTP %s" % filename)
                 task.set_url("%s/%d" % (match.group(1), task.get_taskid()))
-            except:
+            except Exception:
                 return response(start_response, "500 Internal Server Error", _("Unable to create a new task"))
 
             if "vmem-check" in GET:
@@ -303,7 +303,7 @@ def application(environ, start_response):
         POST = request.POST
         try:
             task = RetraceTask(filename)
-        except:
+        except Exception:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
         if "notes" in POST and POST["notes"]:
@@ -315,7 +315,7 @@ def application(environ, start_response):
         POST = request.POST
         try:
             task = RetraceTask(filename)
-        except:
+        except Exception:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
         if "notify" in POST and POST["notify"]:
@@ -328,7 +328,7 @@ def application(environ, start_response):
         POST = request.POST
         try:
             task = RetraceTask(filename)
-        except:
+        except Exception:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
         if "caseno" in POST:
@@ -368,7 +368,7 @@ def application(environ, start_response):
     elif match.group(6) and match.group(6) == "backtrace":
         try:
             task = RetraceTask(filename)
-        except:
+        except Exception:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
         if not task.get_managed():
@@ -383,7 +383,7 @@ def application(environ, start_response):
          match.group(8) and match.group(8).startswith("sure"):
         try:
             task = RetraceTask(filename)
-        except:
+        except Exception:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
         if not task.get_managed():
@@ -399,7 +399,7 @@ def application(environ, start_response):
     elif match.group(6) and match.group(6) == "restart_confirm":
         try:
             task = RetraceTask(filename)
-        except:
+        except Exception:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
         with open("/usr/share/retrace-server/managertask.xhtml", "r") as f:
@@ -456,7 +456,7 @@ def application(environ, start_response):
         POST = request.POST
         try:
             task = RetraceTask(filename)
-        except:
+        except Exception:
             return response(start_response, "404 Not Found", _("There is no such task"))
         if not task.has_finished_time() or (task.get_status() != STATUS_SUCCESS and task.get_status() != STATUS_FAIL):
             return response(start_response, "403 Forbidden",
@@ -500,7 +500,7 @@ def application(environ, start_response):
                     kver = KernelVer(kernelver)
                     if kver.arch is None:
                         raise Exception
-                except:
+                except Exception:
                     return response(start_response, "403 Forbidden",
                                     _("Please use VRA format for kernel version (e.g. 2.6.32-287.el6.x86_64)"))
 
@@ -540,7 +540,7 @@ def application(environ, start_response):
         filesize = None
         try:
             task = RetraceTask(filename)
-        except:
+        except Exception:
             if CONFIG["UseFTPTasks"]:
                 ftp = ftp_init()
                 files = ftp_list_dir(CONFIG["FTPDir"], ftp)
@@ -551,7 +551,7 @@ def application(environ, start_response):
                 ftptask = True
                 try:
                     filesize = ftp.size(filename)
-                except:
+                except Exception:
                     pass
                 ftp_close(ftp)
             else:
@@ -776,7 +776,7 @@ def application(environ, start_response):
 
     try:
         filterexp = request.GET.getone("filter")
-    except:
+    except Exception:
         filterexp = None
 
     available = []
@@ -788,7 +788,7 @@ def application(environ, start_response):
 
         try:
             task = RetraceTask(taskdir.name)
-        except:
+        except Exception:
             continue
 
         if not task.get_managed():
@@ -818,7 +818,7 @@ def application(environ, start_response):
                         try:
                             link = url % task.get_caseno()
                             caseno = "<a href=\"%s\">%d</a>" % (link, task.get_caseno())
-                        except:
+                        except Exception:
                             pass
 
                 bugzillano = ""
@@ -866,7 +866,7 @@ def application(environ, start_response):
                         try:
                             link = url % task.get_caseno()
                             caseno = "<a href=\"%s\">%d</a>" % (link, task.get_caseno())
-                        except:
+                        except Exception:
                             pass
 
                 bugzillano = ""
