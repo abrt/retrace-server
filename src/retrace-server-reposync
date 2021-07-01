@@ -25,7 +25,7 @@ from retrace.retrace import (get_canon_arch,
                              log_info,
                              log_warn)
 
-from retrace.config import Config
+from retrace.config import Config, CREATEREPO_BIN
 from retrace.plugins import Plugins
 from retrace.util import lock, unlock, parse_rpm_name
 
@@ -327,7 +327,7 @@ if __name__ == "__main__":
         log_info("Running createrepo on '%s'..." % targetdir)
         sys.stdout.flush()
 
-        cmd = ["createrepo", targetdir]
+        cmd = [CREATEREPO_BIN, targetdir]
         if CONFIG["UseCreaterepoUpdate"]:
             cmd.append("--update")
 
