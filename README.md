@@ -33,7 +33,7 @@ These benefits are crucial when reporting bugs via ABRT.
 
 ## Development and Deployment
 * [Bug Reports and RFEs](https://github.com/abrt/retrace-server/issues)
-* IRC Channel: #abrt on freenode
+* IRC Channel: #abrt on [irc.libera.chat](https://libera.chat/)
 * [Contributing to Retrace Server](CONTRIBUTING.md)
 * [Deploying Retrace Server](DEPLOYING.md)
 
