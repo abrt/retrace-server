@@ -32,14 +32,12 @@ BuildRequires: texinfo
 BuildRequires: xmlto
 BuildRequires: xz
 
-# These packages are moreover required for the tests.
+# These packages are moreover required for the build or tests.
 BuildRequires: createrepo_c
-BuildRequires: dnf
-BuildRequires: dnf-plugins-core
-BuildRequires: gdb
 BuildRequires: podman
+BuildRequires: python3-dnf
 BuildRequires: python3-magic
-BuildRequires: rpm
+BuildRequires: python3-pytest
 
 # /usr/bin/df from coreutils is used to calculate free disk space.
 Requires: coreutils
@@ -81,6 +79,7 @@ Requires(post): /usr/bin/systemctl
 Recommends: httpd
 Recommends: logrotate
 Recommends: podman
+Recommends: rpm
 
 Obsoletes: abrt-retrace-server < 2.0.3
 Provides: abrt-retrace-server = 2.0.3

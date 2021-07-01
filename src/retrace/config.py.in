@@ -13,6 +13,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 import configparser
 
+CREATEREPO_BIN = "@CREATEREPO_BIN@"
 DF_BIN = "@DF_BIN@"
 GZIP_BIN = "@GZIP_BIN@"
 LSOF_BIN = "@LSOF_BIN@"

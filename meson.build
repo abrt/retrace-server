@@ -14,6 +14,7 @@ asciidoc = find_program('asciidoc',
   required: get_option('docs'),
   disabler: true,
 )
+createrepo = find_program('createrepo')
 date = find_program('date',
   required: get_option('docs'),
   disabler: true,
@@ -29,10 +30,7 @@ podman = find_program('podman',
   required: false,
   disabler: true,
 )
-pytest = find_program('pytest',
-  required: false,
-  disabler: true,
-)
+pytest = find_program('pytest-3')
 ps = find_program('ps')
 tar = find_program('tar')
 tito = find_program('tito',

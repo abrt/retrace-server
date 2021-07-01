@@ -3,6 +3,7 @@ subdir('hooks')
 
 configuration = configuration_data()
 
+configuration.set('CREATEREPO_BIN', createrepo.path())
 configuration.set('DF_BIN', df.path())
 configuration.set('GZIP_BIN', gzip.path())
 configuration.set('LSOF_BIN', lsof.path())
