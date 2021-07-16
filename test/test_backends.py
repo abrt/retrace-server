@@ -22,7 +22,7 @@ class TestPodmanContainer(TestCase):
         self.container.copy_to("/tmp/oldname", "/tmp/newname")
 
         mock_run.assert_called_once()
-        self.assertTupleEqual(mock_run.call_args.args,
+        self.assertTupleEqual(mock_run.call_args[0],
                               ([PODMAN_BIN, "cp", "/tmp/oldname",
                                 f"{self.CONTAINER_ID}:/tmp/newname"],))
 
@@ -33,7 +33,7 @@ class TestPodmanContainer(TestCase):
         self.container.exec(["uname", "-r"])
 
         mock_run.assert_called_once()
-        self.assertTupleEqual(mock_run.call_args.args,
+        self.assertTupleEqual(mock_run.call_args[0],
                               ([PODMAN_BIN, "exec", self.CONTAINER_ID,
                                 "uname", "-r"],))
 
@@ -44,7 +44,7 @@ class TestPodmanContainer(TestCase):
         self.container.exec(["uname", "-r"], user="retrace")
 
         mock_run.assert_called_once()
-        self.assertTupleEqual(mock_run.call_args.args,
+        self.assertTupleEqual(mock_run.call_args[0],
                               ([PODMAN_BIN, "exec", "--user=retrace",
                                 self.CONTAINER_ID, "uname", "-r"],))
 
