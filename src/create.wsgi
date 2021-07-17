@@ -82,6 +82,12 @@ def application(environ, start_response):
                         _("X-CoreFileDirectory header has been disabled "
                           "by server administrator"))
 
+    if (not CONFIG["DebuginfodEnable"] and
+            "X-Debuginfod" in request.headers):
+        return response(start_response, "403 Forbidden",
+                        _("X-Debuginfod header has been disabled "
+                          "by server administrator"))
+
     workdir = Path(CONFIG["SaveDir"])
 
     if not workdir.is_dir():
@@ -224,6 +230,9 @@ def application(environ, start_response):
         task.set_type(tasktype)
     else:
         task.set_type(TASK_RETRACE)
+
+    if "X-Debuginfod" in request.headers:
+        task.set_debuginfod_enabled(True)
 
     present_files = [f.name for f in files]
     for required_file in REQUIRED_FILES[task.get_type()]:

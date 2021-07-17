@@ -39,6 +39,8 @@ if __name__ == "__main__":
     parser.add_argument("action", help="Desired action (%s)" % "|".join(ACTIONS))
     parser.add_argument("-f", "--force", action="store_true", default=False,
                         help="Run `set-success` or `set-fail` action even if the task is still running")
+    parser.add_argument("-D", "--debuginfod", action="store_true", default=False,
+                        help="Use debuginfod to aquire debugging resources needed for corefile")
     args = parser.parse_args()
 
     if args.action not in ACTIONS:
@@ -54,6 +56,9 @@ if __name__ == "__main__":
 
     # touch the task directory
     task.reset_age()
+
+    if args.debuginfod:
+        task.set_debuginfod_enabled(True)
 
     if args.action == "printdir":
         sys.stdout.write("%s\n" % task.get_savedir())
@@ -106,8 +111,12 @@ if __name__ == "__main__":
                 sys.stderr.write("executable contains forbidden characters.\n")
                 sys.exit(1)
 
-            cmdline = ["/usr/bin/mock", "--configdir", str(task.get_savedir()), "shell",
-                       "gdb '%s' /var/spool/abrt/crash/coredump" % executable]
+            if task.get_debuginfod_enabled():
+                cmdline = ["/usr/bin/mock", "--configdir", str(task.get_savedir()), "shell",
+                           "gdb -c /var/spool/abrt/crash/coredump"]
+            else:
+                cmdline = ["/usr/bin/mock", "--configdir", str(task.get_savedir()), "shell",
+                           "gdb '%s' /var/spool/abrt/crash/coredump" % executable]
 
             print_cmdline(cmdline)
             os.execvp(cmdline[0], cmdline)

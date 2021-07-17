@@ -24,6 +24,8 @@ if __name__ == "__main__":
     cmdline_parser.add_argument("--kernelver", default=None,
                                 help="Kernel version (e.g. 2.6.32-287.el6), also needs --arch")
     cmdline_parser.add_argument("--arch", help="Architecture")
+    cmdline_parser.add_argument("--debuginfod", action="store_true", default=False,
+                                help="Use debuginfod to aquire debugging resources needed for corefile")
     cmdline = cmdline_parser.parse_args()
 
     log = cmdline._log
@@ -43,6 +45,9 @@ if __name__ == "__main__":
     except Exception:
         sys.stderr.write("Task '%d' does not exist\n" % cmdline.task_id)
         sys.exit(1)
+
+    if cmdline.debuginfod:
+        task.set_debuginfod_enabled(True)
 
     if task.has_status():
         if not cmdline.restart:

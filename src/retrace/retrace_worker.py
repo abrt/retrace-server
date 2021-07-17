@@ -450,9 +450,12 @@ class RetraceWorker:
                 gdb_exec = self.plugin.gdb_executable
                 gdbfile.write("#!/bin/sh\n"
                               f"{gdb_exec} -batch \\\n"
-                              "  -ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' \\\n"
-                              "  -ex 'file '$1 \\\n"
-                              "  -ex 'core-file /var/spool/abrt/crash/coredump' \\\n"
+                              "  -ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' \\\n")
+
+                if not self.task.get_debuginfod_enabled():
+                    gdbfile.write("  -ex 'file '$1 \\\n")
+
+                gdbfile.write("  -ex 'core-file /var/spool/abrt/crash/coredump' \\\n"
                               f"  -ex 'echo {PYTHON_LABEL_START}\\n' \\\n"
                               "  -ex 'py-bt' \\\n"
                               "  -ex 'py-list' \\\n"
@@ -523,7 +526,7 @@ class RetraceWorker:
         savedir = task.get_savedir()
         crashdir = task.get_crashdir()
         corepath = crashdir / RetraceTask.COREDUMP_FILE
-
+        debuginfod_enabled = self.task.get_debuginfod_enabled()
         try:
             self.stats["coresize"] = corepath.stat().st_size
         except OSError:
@@ -549,17 +552,20 @@ class RetraceWorker:
             release.version = "rawhide"
 
         releaseid = str(release)
-        if releaseid not in get_supported_releases():
+        if not debuginfod_enabled and releaseid not in get_supported_releases():
             log_error("Release ‘%s’ is not supported" % releaseid)
             self._fail()
 
-        if not is_package_known(crash_package, arch, releaseid):
+        if not debuginfod_enabled and not is_package_known(crash_package, arch, releaseid):
             log_error("Package ‘%s.%s’ was not recognized.\nIs it a part of "
                       "official %s repositories?" % (crash_package, arch, release.name))
             self._fail()
         self.hook.run("pre_prepare_debuginfo")
 
-        packages, missing = self.read_packages(crashdir, releaseid, crash_package, release.distribution)
+        if not debuginfod_enabled:
+            packages, missing = self.read_packages(crashdir, releaseid, crash_package, release.distribution)
+        else:
+            packages, missing = ([], [])
 
         self.hook.run("post_prepare_debuginfo")
         self.hook.run("pre_prepare_environment")
@@ -634,6 +640,7 @@ class RetraceWorker:
 
             self._retrace_run(27, ["/usr/bin/mock", "--configdir", str(savedir), "chroot",
                                    "--", "chgrp -R mock /var/spool/abrt/crash"])
+            image_tag = ""
         elif CONFIG["RetraceEnvironment"] == "podman":
             try:
                 image_tag = self.ensure_image_exists(release, repopath, gpg_keys_string)
@@ -650,7 +657,8 @@ class RetraceWorker:
 
         try:
             backtrace, exploitable = run_gdb(savedir, repopath, task.get_taskid(),
-                                             image_tag, packages, corepath, release)
+                                             image_tag, packages, corepath, release,
+                                             debuginfod_enabled, self.plugin)
         except Exception as ex:
             log_error("Could not run GDB: %s" % ex)
             self._fail()

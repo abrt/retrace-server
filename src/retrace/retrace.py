@@ -345,15 +345,15 @@ def get_supported_releases() -> List[str]:
 
 
 def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
-            packages: Iterable[str], corepath: Path, release: Release) \
-        -> Tuple[str, str]:
+            packages: Iterable[str], corepath: Path, release: Release,
+            debuginfod_enabled: bool, plugin) -> Tuple[str, str]:
     with (savedir / "crash" / "executable").open("r") as exec_file:
         executable = exec_file.read(ALLOWED_FILES["executable"])
 
     if '"' in executable or "'" in executable:
         raise Exception("Executable contains forbidden characters")
 
-    if CONFIG["RetraceEnvironment"] == "mock":
+    if CONFIG["RetraceEnvironment"] == "mock" and not debuginfod_enabled:
         output = run(["/usr/bin/mock", "chroot", "--configdir", savedir,
                       "--", "ls '%s'" % executable],
                      stdout=PIPE, stderr=DEVNULL, encoding='utf-8',
@@ -369,6 +369,26 @@ def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
 
     if CONFIG["RetraceEnvironment"] == "mock":
         batfile = savedir / "gdb.sh"
+        if debuginfod_enabled:
+            with batfile.open(mode="w") as gdbfile:
+                gdbfile.write("#!/usr/bin/sh\n\nenv DEBUGINFOD_URLS='%s' %s -batch "
+                    "-ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' \\\n"
+                    "                    -ex 'core-file /var/spool/abrt/crash/coredump' \\\n"
+                    "                    -ex 'echo %s\\n' \\\n"
+                    "                    -ex 'py-bt' \\\n"
+                    "                    -ex 'py-list' \\\n"
+                    "                    -ex 'py-locals' \\\n"
+                    "                    -ex 'echo %s\\n' \\\n"
+                    "                    -ex 'thread apply all -ascending backtrace full 2048' \\\n"
+                    "                    -ex 'info sharedlib' \\\n"
+                    "                    -ex 'print (char*)__abort_msg' \\\n"
+                    "                    -ex 'print (char*)__glib_assert_msg' \\\n"
+                    "                    -ex 'info registers' \\\n"
+                    "                    -ex 'disassemble' \\\n"
+                    "                    -ex 'echo %s\\n' \\\n"
+                    "                    -ex 'abrt-exploitable'"
+                    % (CONFIG["DebuginfodURLs"], plugin.gdb_executable,
+                       PYTHON_LABEL_START, PYTHON_LABEL_END, EXPLOITABLE_SEPARATOR))
 
         child = run(["/usr/bin/mock", "--configdir", savedir, "--copyin",
                      batfile, "/var/spool/abrt/gdb.sh"],
@@ -382,7 +402,11 @@ def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
         if child.returncode:
             raise Exception("Unable to chmod GDB launcher")
 
-        child = run(["/usr/bin/mock", "chroot", "--configdir", savedir,
+        network_opt = ""
+        if debuginfod_enabled:
+            network_opt = "--enable-network"
+
+        child = run(["/usr/bin/mock", "chroot", network_opt, "--configdir", savedir,
                      "--", "su mockbuild -c '/bin/sh /var/spool/abrt/gdb.sh' 2>&1"],
                     # redirect GDB's stderr, ignore mock's stderr
                     stdout=PIPE, stderr=DEVNULL, encoding="utf-8", check=False)
@@ -894,6 +918,7 @@ class RetraceTask:
         loads the task with given ID otherwise."""
 
         self.vmcore_file = self.VMCORE_FILE
+        self._debuginfod_enabled = False
 
         if taskid is None:
             # create a new task
@@ -951,6 +976,16 @@ class RetraceTask:
         """Verifies whether MOCK_SITE_DEFAULTS_CFG is present in the task directory."""
         return self.has(RetraceTask.MOCK_SITE_DEFAULTS_CFG)
 
+    def set_debuginfod_enabled(self, use_debuginfod: bool) -> None:
+        """Set whether debuginfod should be used to
+        aquire debugging resources for corefile."""
+        self._debuginfod_enabled = use_debuginfod
+
+    def get_debuginfod_enabled(self) -> bool:
+        """Returns true if debuginfod should be used to
+        aquire debugging resources for corefile."""
+        return self._debuginfod_enabled
+
     def _get_file_path(self, key: Union[str, Path]) -> Path:
         key_sanitized = str(key).replace("/", "_").replace(" ", "_")
         return self._savedir / key_sanitized
@@ -968,6 +1003,9 @@ class RetraceTask:
         if arch is not None:
             cmdline.append("--arch")
             cmdline.append(arch)
+
+        if self.get_debuginfod_enabled():
+            cmdline.append("--debuginfod")
 
         child = run(cmdline, check=False)
         return child.returncode

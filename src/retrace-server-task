@@ -207,6 +207,9 @@ def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
                    'X-Task-Type': str(task_type),
                    'Connection': 'close'}
 
+        if args['debuginfod']:
+            headers['X-Debuginfod'] = "1"
+
         request = requests.Request('POST',
                                    args['server'] + "/create",
                                    headers=headers)
@@ -533,6 +536,9 @@ if __name__ == "__main__":
                                 help="Retrace kernel vmcore")
         tmp.add_argument("COREFILE",
                          help="File to be retraced")
+        tmp.add_argument("-D", "--debuginfod", action="store_true",
+                         help=("Use debuginfod in order to aquire server-side "
+                               "debugging resources."))
 
         input_group = tmp.add_mutually_exclusive_group()
         input_group.add_argument("-t", "--http", action="store_const",

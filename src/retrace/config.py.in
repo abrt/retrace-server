@@ -67,6 +67,8 @@ class Config:
             "FTPPass": "",
             "FTPDir": "/",
             "FTPBufferSize": 16,
+            "DebuginfodEnable": 0,
+            "DebuginfodURLs": "debuginfod.fedoraproject.org",
             "WgetKernelDebuginfos": False,
             "KernelDebuginfoURL": "http://kojipkgs.fedoraproject.org/packages/kernel/$VERSION/$RELEASE/$ARCH/",
             "VmcoreDumpLevel": 0,

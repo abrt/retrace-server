@@ -100,6 +100,9 @@ CREATE OR BATCH OPTIONS
    Write the email field in the task to EMAIL.
    Available only for manager and ftp task.
 
+-D, --debuginfod::
+   Use debuginfod to aquire debugging resources needed for corefile.
+
 -d, --no-md5::
    Do not calculate md5sum on the task.
    Available only for manager and ftp task.

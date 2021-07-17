@@ -60,6 +60,9 @@ OPTIONS
 --priv::
    Use the chroot as privileged user.
 
+--debuginfod::
+   Use debuginfod to aquire debugging resources needed for corefile
+
 AUTHORS
 -------
 * Michal Toman <_mtoman@redhat.com_>

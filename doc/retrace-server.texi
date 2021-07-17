@@ -427,6 +427,15 @@ The files containing the debugging symbols for the binary and libraries
 (build-ids are used to find the pairs) need to be available to GDB.
 @end itemize
 
+Alternatively if GDB is built with @command{debuginfod} support and
+the @var{DebuginfodEnable} option is enabled in the Retrace Server's
+configuration, then GDB will query the @command{debuginfod} servers
+listed in @var{DebuginfodURLs} in the configuration file for all
+of the debugging resources needed to generate the backtrace. The
+task also needs to be created with the @var{X-Debuginfod} header.
+For more information regarding @command{debuginfod} see
+@uref{https://sourceware.org/elfutils/Debuginfod.html}.
+
 The chroot environments are created and managed by @command{mock}, and
 they reside in @file{/var/lib/mock/@var{taskid}}. The retrace worker
 generates a mock configuration file and then invokes @command{mock} to
@@ -1046,6 +1055,10 @@ Default 0,
 @var{UseFafPackages} boolean; experimental; whether to use FAF's
 package database for getting debuginfos. @xref{FAF integration}.
 Default 0.
+@var{DebuginfodEnable} boolean; whether to use debuginfod to aquire
+debugging resources for corefile.
+@var{DebuginfodURLs} string; space-separated URLs of debuginfod servers.
+Default @url{debuginfod.fedoraproject.org}.
 
 @end itemize
 
