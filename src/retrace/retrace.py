@@ -253,22 +253,23 @@ def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
 
         child = run(["/usr/bin/mock", "chroot", "--configdir", savedir,
                      "--", "/bin/chmod a+r '%s'" % executable],
-                    stdout=DEVNULL, check=False)
+                    stdout=DEVNULL, encoding="utf-8", check=False)
         if child.returncode:
             raise Exception("Unable to chmod the executable")
 
-    if CONFIG["RetraceEnvironment"] == "mock":
         batfile = savedir / "gdb.sh"
 
         child = run(["/usr/bin/mock", "--configdir", savedir, "--copyin",
                      batfile, "/var/spool/abrt/gdb.sh"],
-                    stdout=DEVNULL, stderr=DEVNULL, check=False)
+                    stdout=DEVNULL, stderr=DEVNULL, encoding="utf-8",
+                    check=False)
         if child.returncode:
             raise Exception("Unable to copy GDB launcher into chroot")
 
         child = run(["/usr/bin/mock", "--configdir", savedir, "chroot",
                      "--", "/bin/chmod a+rx /var/spool/abrt/gdb.sh"],
-                    stdout=DEVNULL, stderr=DEVNULL, check=False)
+                    stdout=DEVNULL, stderr=DEVNULL, encoding="utf-8",
+                    check=False)
         if child.returncode:
             raise Exception("Unable to chmod GDB launcher")
 
