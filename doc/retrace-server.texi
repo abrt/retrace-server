@@ -427,6 +427,8 @@ The files containing the debugging symbols for the binary and libraries
 (build-ids are used to find the pairs) need to be available to GDB.
 @end itemize
 
+// TODO: Describe debuginfod integration.
+
 The chroot environments are created and managed by @command{mock}, and
 they reside in @file{/var/lib/mock/@var{taskid}}. The retrace worker
 generates a mock configuration file and then invokes @command{mock} to
@@ -1046,6 +1048,13 @@ Default 0,
 @var{UseFafPackages} boolean; experimental; whether to use FAF's
 package database for getting debuginfos. @xref{FAF integration}.
 Default 0.
+@item
+@var{UseDebuginfod} boolean; whether to use debuginfod server(s) to
+obtain debuginfo and debugsource packages for retracing coredumps.
+Default 0.
+@item
+@var{DebuginfodServers} string; space-separated list of URLs of debuginfod
+servers. Default @url{https://debuginfod.fedoraproject.org}.
 
 @end itemize
 
