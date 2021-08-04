@@ -1,3 +1,4 @@
+import os.path
 from pathlib import Path
 from subprocess import CompletedProcess, DEVNULL, PIPE, run, STDOUT
 from typing import List, Optional, Union
@@ -57,16 +58,22 @@ class LocalPodmanBackend:
     def __init__(self, retrace_config: Config):
         self.config = retrace_config
 
-    def start_container(self, image_tag: str, taskid: int, repopath: str) \
-            -> PodmanContainer:
+    def start_container(self, image_tag: str, taskid: int, repopath: str,
+                        use_debuginfod: bool = False) -> PodmanContainer:
         run_call = [PODMAN_BIN, "run",
                     "--quiet",
                     "--detach",
                     "--interactive",
                     "--tty",
                     "--sdnotify=ignore",
-                    f"--name=retrace-{taskid}",
-                    f"--volume={repopath}:{repopath}:ro"]
+                    f"--name=retrace-{taskid}"]
+
+        if use_debuginfod:
+            # TODO: Do we want a special config variable for this path?
+            debuginfod_cache_dir = os.path.join(self.config["RepoDir"], "debuginfod")
+            run_call.append(f"--volume={debuginfod_cache_dir}:/tmp/debuginfod:z")
+        else:
+            run_call.append(f"--volume={repopath}:{repopath}:ro")
 
         if self.config["RequireGPGCheck"]:
             run_call.append("--volume={0}:{0}:ro".format(RETRACE_GPG_KEYS))

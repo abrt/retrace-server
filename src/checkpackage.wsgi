@@ -36,6 +36,7 @@ def application(environ, start_response):
         return response(start_response, "403 Forbidden",
                         _("OS release contains illegal characters"))
 
+    # TODO: How to check if a package is supported when using debuginfod?
     if is_package_known(request.headers["X-Package-NVR"],
                         request.headers["X-Package-Arch"],
                         request.headers["X-OS-Release"]):

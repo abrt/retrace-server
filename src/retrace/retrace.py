@@ -83,8 +83,8 @@ TASKPASS_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 
 
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \
-    STATUS_STATS, STATUS_FINISHING, STATUS_SUCCESS, STATUS_FAIL, \
-    STATUS_DOWNLOADING, STATUS_POSTPROCESS, STATUS_CALCULATING_MD5SUM = range(11)
+    STATUS_STATS, STATUS_SUCCESS, STATUS_FAIL, STATUS_DOWNLOADING, \
+    STATUS_POSTPROCESS, STATUS_CALCULATING_MD5SUM = range(10)
 
 STATUS = [
     "Analyzing crash data",
@@ -235,7 +235,8 @@ def get_supported_releases() -> List[str]:
 
 
 def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
-            packages: Iterable[str], corepath: Path, release: Release) \
+            debug_packages: Iterable[str], corepath: Path, release: Release,
+            use_debuginfod: bool = False) \
         -> Tuple[str, str]:
     with (savedir / "crash" / "executable").open("r") as exec_file:
         executable = exec_file.read(ALLOWED_FILES["executable"])
@@ -290,7 +291,7 @@ def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
         backend = LocalPodmanBackend(retrace_config=CONFIG)
 
         # Start container from prepared release-specific image.
-        with backend.start_container(image_tag, taskid, repopath) as container:
+        with backend.start_container(image_tag, taskid, repopath, use_debuginfod) as container:
             # Copy coredump from crash directory to container.
             container.copy_to(corepath, "/var/spool/abrt/crash/")
 
@@ -298,27 +299,28 @@ def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
             container.exec(["chown", "retrace:",
                             f"/var/spool/abrt/crash/{corepath.name}"])
 
-            # Install packages required for retracing the coredump.
-            dnf_call = ["dnf", "install",
-                        "--assumeyes",
-                        "--skip-broken",
-                        "--allowerasing",
-                        "--setopt=tsflags=nodocs",
-                        f"--releasever={release.version}",
-                        f"--repo=retrace-{release.distribution}"]
-            dnf_call.extend(packages)
+            if not use_debuginfod:
+                # Install separate debuginfo and debugsource packages required
+                # for retracing the coredump.
+                dnf_call = ["dnf", "install",
+                            "--assumeyes",
+                            "--skip-broken",
+                            "--allowerasing",
+                            "--setopt=tsflags=nodocs",
+                            f"--releasever={release.version}",
+                            f"--repo=retrace-{release.distribution}"]
+                dnf_call.extend(debug_packages)
 
-            child = container.exec(dnf_call)
+                child = container.exec(dnf_call)
 
-            if child.returncode:
-                raise RetraceError("Could not install required packages inside "
-                                   f"container: {child.stderr}")
+                if child.returncode:
+                    raise RetraceError("Could not install required packages inside "
+                                    f"container: {child.stderr}")
 
-            log_info("Required packages installed")
+                log_info("Required packages installed")
 
             # Run GDB inside container and collect output.
-            child = container.exec(["/var/spool/abrt/gdb.sh", executable],
-                                   user="retrace")
+            child = container.exec(["/var/spool/abrt/gdb.sh", executable])
 
             if child.returncode:
                 raise RetraceError(f"GDB failed inside container: {child.stdout}")

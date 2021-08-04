@@ -17,6 +17,7 @@ def application(environ, start_response):
         "max_packed_size %d" % CONFIG["MaxPackedSize"],
         "max_unpacked_size %d" % CONFIG["MaxUnpackedSize"],
         "supported_formats %s" % " ".join(get_supported_mime_types()),
+        # TODO: How to handle this with debuginfod on?
         "supported_releases %s" % " ".join(get_supported_releases()),
     ]
 
