@@ -1645,6 +1645,10 @@ class RetraceTask:
         if kerneldir.is_dir():
             shutil.rmtree(kerneldir)
 
+        if not self._savedir.is_dir():
+            log_warn(f"Task directory does not exist: {self._savedir}")
+            return
+
         shutil.rmtree(self._savedir)
 
     def create_worker(self):
