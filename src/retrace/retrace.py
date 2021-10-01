@@ -573,7 +573,7 @@ class RetraceTask:
 
     BACKTRACE_FILE = "retrace_backtrace"
     CASENO_FILE = "caseno"
-    C2P_LOG_FILE = "c2p"
+    C2P_LOG_FILE = "c2p_log"
     BUGZILLANO_FILE = "bugzillano"
     CRASHRC_FILE = "crashrc"
     CRASH_CMD_FILE = "crash_cmd"
@@ -1595,7 +1595,8 @@ class RetraceTask:
                              RetraceTask.TYPE_FILE, RetraceTask.RESULTS_DIR,
                              RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
                              RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
-                             RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE]:
+                             RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE,
+                             RetraceTask.C2P_LOG_FILE]:
                 continue
 
             try:
