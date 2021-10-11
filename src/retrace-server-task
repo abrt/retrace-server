@@ -649,6 +649,10 @@ if __name__ == "__main__":
 
     ARGS = vars(PARSER.parse_args())
 
+    if len(ARGS) == 1:
+        PARSER.print_help(sys.stderr)
+        sys.exit(1)
+
     # if not verifying certificates, suppress warning
     if ARGS['no_verify']:
         requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
