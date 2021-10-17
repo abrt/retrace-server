@@ -485,6 +485,9 @@ def application(environ, start_response):
     elif filename and filename == "__custom__":
         POST = request.POST
 
+        if "custom_url" in POST and len(POST["custom_url"]) == 0:
+            return response(start_response, "400 Bad Request", _("URL cannot be NULL string"))
+
         qs_base = []
         if "md5sum" in POST and POST["md5sum"] == "on":
             qs_base.append("md5sum=md5sum")
