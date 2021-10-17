@@ -7,14 +7,48 @@ retrace-server-worker - Executes the retrace job.
 
 SYNOPSIS
 --------
-'retrace-server-worker' task_id.
+'retrace-server-worker' [-h] [-v] [--restart] [--foreground]
+                        [--kernelver KERNELVER] [--arch ARCH]
+                        task_id
 
 DESCRIPTION
 -----------
-The tool uses mock to prepare a virtual environment for the retrace,
-runs GDB, saves backtrace and cleans up the virtual environment. The task_id
-argument is a number derived from the name of the directory where crash
-data is saved (by default '/var/spool/retrace-server/task_id').
+The tool creates a worker process which does the bulk of the processing
+of a retrace-server task.  The worker process handles processing slightly
+differently depending on the value of CONFIG["RetraceEnvironment"], and
+may use mock, podman, or the native environment to to prepare an environment
+for the processing of the coredump or vmcore.  The process then runs the
+debugger (gdb in the case of a coredump, or crash in the case of a vmcore),
+saves the backtrace, also calling hooks at various points in the processing,
+assuming hooks is configured (see /etc/retrace-server-hooks.conf).  Once all
+processing is complete, the worker process then cleans up environment.  Note
+that the task_id argument is a number derived from the name of the directory
+where crash data is saved, CONFIG["SaveDir"]/task_id.
+
+COMMON OPTIONS
+-------------
+-h, --help::
+   Display help and exit.
+
+-v, --verbose::
+   Be verbose.  Note this also turns on debug logging for create, batch or
+   restart operations.
+
+--restart::
+   Restart an existing task.  Useful for vmcore tasks where kernelver may
+   not have been detected and thus the task failed.  In such cases, using
+   this option along with --kernelver may allow a task to succeed.
+
+--foreground::
+   Run the worker task in the foreground rather than forking to the background.
+
+--kernelver::
+   For vmcore tasks, specify the version of the kernel rather than attempting
+   to detect it by scanning the vmcore file.
+
+--arch::
+   Architecture of the vmcore file.  This option should be used with the
+   kernelver option.
 
 AUTHORS
 -------
