@@ -708,8 +708,10 @@ if __name__ == "__main__":
             sys.exit(1)
         if req.status_code != 200:
             raise requests.exceptions.ConnectionError
-    except requests.exceptions.RequestException:
-        LOGGER.info("Could not connect to server ‘%s’. Falling back to ‘%s’",
+    except requests.exceptions.RequestException as ex:
+        if 'debug' in ARGS:
+            LOGGER.error("Requests generic exception: '%s'", str(ex))
+        LOGGER.error("Could not connect to server ‘%s’. Falling back to ‘%s’",
                     ARGS['server'], FALLBACK_SERVER)
         ARGS['server'] = FALLBACK_SERVER
 
