@@ -2120,11 +2120,15 @@ class KernelVMcore:
     # OS page cache.
     #
     # The following regex's are used for the 40% scenario
-    # 1. Look for 'OSRELEASE='.  For example:
+    # 1. Look for special strings for kernel releases
+    #    a) 'OSRELEASE='.  For example:
     # OSRELEASE=2.6.18-406.el5
     # NOTE: We can get "OSRELEASE=%" so we disallow the '%' character
     # after the '='
     OSRELEASE_VAR_PARSER = re.compile(b"OSRELEASE=([^%][^\x00\\s]+)")
+    #    b) 'BOOT_IMAGE=/vmlinuz-3.10.0-957.1.3.el7.x86_64'
+    #    NOTE: This is seen in vmware .vmsn files
+    BOOT_IMAGE_PARSER = re.compile(b"BOOT_IMAGE=/vmlinuz-([^%][^\x00\\s]+)")
     #
     # 2. Look for "Linux version" string.  Note that this was taken from
     # CAS 'fingerprint' database code.  For more info, see
@@ -2178,6 +2182,10 @@ class KernelVMcore:
             release = self.OSRELEASE_VAR_PARSER.search(b)
             if release:
                 release = release.group(1)
+            if not release:
+                release = self.BOOT_IMAGE_PARSER.search(b)
+                if release:
+                    release = release.group(1)
             if not release:
                 release = self.LINUX_VERSION_PARSER.search(b)
                 if release:
