@@ -1,19 +1,21 @@
 # Jakub Filak <jfilak@redhat.com>, 2016. #zanata
 # Zdenek <chmelarz@gmail.com>, 2016. #zanata
+# Josef Hruska <hrusjos@gmail.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2016-09-03 09:24+0000\n"
-"Last-Translator: Zdenek <chmelarz@gmail.com>\n"
-"Language-Team: Czech\n"
+"PO-Revision-Date: 2021-01-06 16:36+0000\n"
+"Last-Translator: Josef Hruska <hrusjos@gmail.com>\n"
+"Language-Team: Czech <https://translate.fedoraproject.org/projects/abrt/"
+"retrace-server/cs/>\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2\n"
-"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: Weblate 4.4\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -78,7 +80,7 @@ msgstr "Není možné vytvořit novou úlohu"
 
 #: ../src/create.wsgi:121
 msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr "Adresář specifikovaný v  'X-CoreFileDirectory'  neexistuje"
+msgstr "Adresář specifikovaný v 'X-CoreFileDirectory' neexistuje"
 
 #: ../src/create.wsgi:127
 #, c-format
@@ -140,19 +142,14 @@ msgid "Welcome to Retrace Server"
 msgstr "Vítejte na Retrace Serveru"
 
 #: ../src/index.wsgi:23
-#, fuzzy
-#| msgid ""
-#| "Retrace Server is a service that provides the possibility to analyze "
-#| "coredump and generate backtrace over network. You can find further "
-#| "information at Retrace Server&apos;s wiki:"
 msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s github:"
 msgstr ""
-"Retrace server je servis poskytující možnost analýzy obrazu paměti a "
-"generace výpisu volání po síti. Další informace lze nalézt na Wiki Retrace "
-"serveru:"
+"Retrace server je služba poskytující možnost analýzy obrazu paměti a "
+"generace výpisu volání po síti. Další informace lze nalézt na stránkách "
+"GitHub Retrace serveru:"
 
 #: ../src/index.wsgi:29
 msgid ""
@@ -213,7 +210,7 @@ msgstr ""
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
-msgstr "V tomto okamžiku je server vytížen na %d%% (%d z %d běžících úloh)"
+msgstr "V tomto okamžiku je server vytížen na %d%% (%d z %d běžících úloh)."
 
 #: ../src/log.wsgi:38
 msgid "There is no log for the specified task"
@@ -257,7 +254,7 @@ msgstr "Chybějící ID sestavení"
 
 #: ../src/stats.wsgi:45
 msgid "Name"
-msgstr "Jméno"
+msgstr "Název"
 
 #: ../src/stats.wsgi:46
 msgid "Release"

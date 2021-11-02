@@ -1,13 +1,14 @@
 # Davide Giunchi <davide@giunchi.net>, 2017. #zanata
 # Luca Ciavatta <luca.ciavatta@gmail.com>, 2017. #zanata
 # Tommaso Cammelli <tomm.cammelli@outlook.it>, 2020.
+# Nathan <nathan95@live.it>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2020-11-05 17:35+0000\n"
-"Last-Translator: Tommaso Cammelli <tomm.cammelli@outlook.it>\n"
+"PO-Revision-Date: 2021-06-26 19:04+0000\n"
+"Last-Translator: Nathan <nathan95@live.it>\n"
 "Language-Team: Italian <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/it/>\n"
 "Language: it\n"
@@ -15,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.3.2-dev\n"
+"X-Generator: Weblate 4.7\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -148,11 +149,6 @@ msgid "Welcome to Retrace Server"
 msgstr "Benvenuti al server Retrace"
 
 #: ../src/index.wsgi:23
-#, fuzzy
-#| msgid ""
-#| "Retrace Server is a service that provides the possibility to analyze "
-#| "coredump and generate backtrace over network. You can find further "
-#| "information at Retrace Server&apos;s wiki:"
 msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
@@ -160,7 +156,7 @@ msgid ""
 msgstr ""
 "Il server Retrace è un servizio che fonisce la possibilità di analizzare i "
 "coredump e generare  backtrace attraverso la rete. Potete trovare altre "
-"informazioni nel wiki del retrace server:"
+"informazioni nella pagina github del retrace server:"
 
 #: ../src/index.wsgi:29
 msgid ""
@@ -245,9 +241,8 @@ msgid "Count"
 msgstr "Conteggio"
 
 #: ../src/stats.wsgi:40
-#, fuzzy
 msgid "Denied jobs"
-msgstr "Lavori negati"
+msgstr "Lavori respinti"
 
 #: ../src/stats.wsgi:41
 msgid "Failed"

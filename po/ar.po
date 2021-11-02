@@ -3,13 +3,14 @@
 # This file is distributed under the same license as the retrace-server package.
 # Michal Toman <mtoman@redhat.com>, 2011.
 # Ahmed M. Farrag <a.m.farrag@gmail.com>, 2020.
+# Hakim Ais <kimy747@zohomail.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: retrace-server 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2020-04-08 12:40+0000\n"
-"Last-Translator: Ahmed M. Farrag <a.m.farrag@gmail.com>\n"
+"PO-Revision-Date: 2021-07-07 10:04+0000\n"
+"Last-Translator: Hakim Ais <kimy747@zohomail.com>\n"
 "Language-Team: Arabic <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/ar/>\n"
 "Language: ar\n"
@@ -18,40 +19,40 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
 "&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
-"X-Generator: Weblate 3.11.3\n"
+"X-Generator: Weblate 4.7.1\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
 msgid "You must use HTTPS"
-msgstr ""
+msgstr "يجب عليك استخدام HTTPS"
 
 #: ../src/backtrace.wsgi:23 ../src/log.wsgi:24 ../src/status.wsgi:24
 msgid "Invalid URL"
-msgstr ""
+msgstr "URL غير صحيح"
 
 #: ../src/backtrace.wsgi:29 ../src/log.wsgi:29 ../src/status.wsgi:30
 msgid "There is no such task"
-msgstr ""
+msgstr "لا توجد مثل هذه المهمة"
 
 #: ../src/backtrace.wsgi:34 ../src/log.wsgi:34 ../src/status.wsgi:35
 msgid "Invalid password"
-msgstr ""
+msgstr "رمز مرور خاطئ"
 
 #: ../src/backtrace.wsgi:38
 msgid "There is no backtrace for the specified task"
-msgstr ""
+msgstr "لا يوجد تتبع خلفي للمهمة المحددة"
 
 #: ../src/create.wsgi:60 ../src/create.wsgi:116
 msgid "Retrace server is fully loaded at the moment"
-msgstr ""
+msgstr "تم تحميل خادم الاستعادة بالكامل في الوقت الحالي"
 
 #: ../src/create.wsgi:64
 msgid "You must use POST method"
-msgstr ""
+msgstr "يجب عليك استخدام طريقة POST"
 
 #: ../src/create.wsgi:68
 msgid "Specified archive format is not supported"
-msgstr ""
+msgstr "تنسيق الأرشيف المحدد غير مدعوم"
 
 #: ../src/create.wsgi:72
 msgid "You need to set Content-Length header properly"
@@ -59,7 +60,7 @@ msgstr ""
 
 #: ../src/create.wsgi:76
 msgid "Specified archive is too large"
-msgstr ""
+msgstr "الأرشيف المحدد كبير جدًا"
 
 #: ../src/create.wsgi:81
 msgid "X-CoreFileDirectory header has been disabled by server administrator"
@@ -71,7 +72,7 @@ msgstr ""
 
 #: ../src/create.wsgi:97
 msgid "Unable to obtain disk free space"
-msgstr ""
+msgstr "تعذر الحصول على مساحة خالية على القرص"
 
 #: ../src/create.wsgi:101 ../src/create.wsgi:172
 msgid "There is not enough storage space on the server"
@@ -79,7 +80,7 @@ msgstr ""
 
 #: ../src/create.wsgi:109
 msgid "Unable to create new task"
-msgstr ""
+msgstr "غير قادر على إنشاء مهمة جديدة"
 
 #: ../src/create.wsgi:121
 msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
@@ -111,11 +112,11 @@ msgstr ""
 
 #: ../src/create.wsgi:184
 msgid "Unable to unpack archive"
-msgstr ""
+msgstr "تعذر فك ضغط الأرشيف"
 
 #: ../src/create.wsgi:197
 msgid "Symlinks are not allowed to be in the archive"
-msgstr ""
+msgstr "الارتباطات الرمزية غير مسموح لها أن تكون في الارشيف"
 
 #: ../src/create.wsgi:204
 #, c-format
@@ -125,7 +126,7 @@ msgstr ""
 #: ../src/create.wsgi:208
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr ""
+msgstr "الملف '٪ s' غير مسموح له بالتواجد في الأرشيف"
 
 #: ../src/create.wsgi:223
 msgid "Interactive tasks were disabled by server administrator"
@@ -142,7 +143,7 @@ msgstr ""
 
 #: ../src/index.wsgi:21
 msgid "Welcome to Retrace Server"
-msgstr ""
+msgstr "مرحبًا بك في Retrace Server"
 
 #: ../src/index.wsgi:23
 msgid ""

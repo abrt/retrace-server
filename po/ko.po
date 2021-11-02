@@ -2,144 +2,146 @@
 # Copyright (C) 2011 THE retrace-server'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the retrace-server package.
 # Michal Toman <mtoman@redhat.com>, 2011.
-#
+# simmon <simmon@nplob.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: retrace-server 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2011-05-17 09:53+0200\n"
-"Last-Translator: Michal Toman <mtoman@redhat.com>\n"
-"Language-Team: Korean\n"
-"Language: \n"
+"PO-Revision-Date: 2021-06-14 11:04+0000\n"
+"Last-Translator: simmon <simmon@nplob.com>\n"
+"Language-Team: Korean <https://translate.fedoraproject.org/projects/abrt/"
+"retrace-server/ko/>\n"
+"Language: ko\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ASCII\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 4.6.2\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
 msgid "You must use HTTPS"
-msgstr ""
+msgstr "HTTPS를 사용하여야 합니다"
 
 #: ../src/backtrace.wsgi:23 ../src/log.wsgi:24 ../src/status.wsgi:24
 msgid "Invalid URL"
-msgstr ""
+msgstr "잘못된 URL"
 
 #: ../src/backtrace.wsgi:29 ../src/log.wsgi:29 ../src/status.wsgi:30
 msgid "There is no such task"
-msgstr ""
+msgstr "그런 일이 없습니다"
 
 #: ../src/backtrace.wsgi:34 ../src/log.wsgi:34 ../src/status.wsgi:35
 msgid "Invalid password"
-msgstr ""
+msgstr "잘못된 비밀번호"
 
 #: ../src/backtrace.wsgi:38
 msgid "There is no backtrace for the specified task"
-msgstr ""
+msgstr "지정된 작업에 대해 역추적 하지 않습니다"
 
 #: ../src/create.wsgi:60 ../src/create.wsgi:116
 msgid "Retrace server is fully loaded at the moment"
-msgstr ""
+msgstr "역추적 서버는 완전히 준비되었습니다"
 
 #: ../src/create.wsgi:64
 msgid "You must use POST method"
-msgstr ""
+msgstr "POST 방법을 사용해야 합니다"
 
 #: ../src/create.wsgi:68
 msgid "Specified archive format is not supported"
-msgstr ""
+msgstr "지정된 보관소 형식을 지원하지 않습니다"
 
 #: ../src/create.wsgi:72
 msgid "You need to set Content-Length header properly"
-msgstr ""
+msgstr "내용-길이 머릿 말 부분을 적절히 설정해야 합니다"
 
 #: ../src/create.wsgi:76
 msgid "Specified archive is too large"
-msgstr ""
+msgstr "지정된 저장소가 너무 큽니다"
 
 #: ../src/create.wsgi:81
 msgid "X-CoreFileDirectory header has been disabled by server administrator"
-msgstr ""
+msgstr "서버 관리자에 의해 X-코어 파일 디렉토리 헤더를 비활성화했습니다"
 
 #: ../src/create.wsgi:91
 msgid "Unable to create working directory"
-msgstr ""
+msgstr "동작 디렉토리를 생성 할 수 없습니다"
 
 #: ../src/create.wsgi:97
 msgid "Unable to obtain disk free space"
-msgstr ""
+msgstr "디스크 여유 공간을 획득 할 수 없습니다"
 
 #: ../src/create.wsgi:101 ../src/create.wsgi:172
 msgid "There is not enough storage space on the server"
-msgstr ""
+msgstr "이 서버에 충분한 여유 공간이 없습니다"
 
 #: ../src/create.wsgi:109
 msgid "Unable to create new task"
-msgstr ""
+msgstr "새로운 일을 생성 할 수 없습니다"
 
 #: ../src/create.wsgi:121
 msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr ""
+msgstr "'X-코어파일디렉토리'에 지정한 디렉토리가 존재하지 않습니다"
 
 #: ../src/create.wsgi:127
 #, c-format
 msgid ""
 "There are %d files in the '%s' directory. Only a single archive is supported "
 "at the moment"
-msgstr ""
+msgstr "%d 파일들이(`%s` 디렉토리 안에서) 있습니다. 현재 단일 지정 저장소만 지원합니다"
 
 #: ../src/create.wsgi:136
 #, c-format
 msgid "You header specifies '%s' type, but the file type does not match"
-msgstr ""
+msgstr "헤더는 '%s'로 지정되었지만, 파일 유형은 일치하지 않았습니다"
 
 #: ../src/create.wsgi:154
 msgid "Unable to save archive"
-msgstr ""
+msgstr "지정 저정소에 저장 할 수 없습니다"
 
 #: ../src/create.wsgi:162
 msgid "Unable to obtain unpacked size"
-msgstr ""
+msgstr "압축해제 크기를 얻을 수 없습니다"
 
 #: ../src/create.wsgi:167
 msgid "Specified archive's content is too large"
-msgstr ""
+msgstr "지정된 저장 보관소의 내용이 너무 큽니다"
 
 #: ../src/create.wsgi:184
 msgid "Unable to unpack archive"
-msgstr ""
+msgstr "지정된 저장소에 풀 수 없습니다"
 
 #: ../src/create.wsgi:197
 msgid "Symlinks are not allowed to be in the archive"
-msgstr ""
+msgstr "심볼링링크는 지정 저장소에 위치하는 것을 허용하지 않습니다"
 
 #: ../src/create.wsgi:204
 #, c-format
 msgid "The '%s' file is larger than expected"
-msgstr ""
+msgstr "'%s'파일은 예상보다 큽니다"
 
 #: ../src/create.wsgi:208
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr ""
+msgstr "파일 '%s'는지정 저장소에 위치 할 수 없습니다"
 
 #: ../src/create.wsgi:223
 msgid "Interactive tasks were disabled by server administrator"
-msgstr ""
+msgstr "서버 관리자에 의하여 대화형 작업을 비활성화 하였습니다"
 
 #: ../src/create.wsgi:232
 #, c-format
 msgid "Required file '%s' is missing"
-msgstr ""
+msgstr "요구파일 '%s'가 없습니다"
 
 #: ../src/index.wsgi:20
 msgid "Retrace Server"
-msgstr ""
+msgstr "추적 서버"
 
 #: ../src/index.wsgi:21
 msgid "Welcome to Retrace Server"
-msgstr ""
+msgstr "추적 서버 방문을 환영합니다"
 
 #: ../src/index.wsgi:23
 msgid ""
@@ -147,23 +149,25 @@ msgid ""
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s github:"
 msgstr ""
+"추적 서버는 코어덤프를 분석하고 네트웍을 통해 역추적을 발생 할 수 있는 가능성을 제공하는 서비스입니다.추적 서버와 깃허브에서 보다 많은 "
+"정보를 찾을 수 있습니다:"
 
 #: ../src/index.wsgi:29
 msgid ""
 "Only the secure HTTPS connection is now allowed by the server. HTTP requests "
 "will be denied."
-msgstr ""
+msgstr "서버에서 보안HTTPS 연결에서만 허용됩니다. HTTP 요청은 거부 될 것입니다."
 
 #: ../src/index.wsgi:31
 msgid ""
 "Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
 "of security reasons."
-msgstr ""
+msgstr "HTTP와 HTTPS 둘 다 허용합니다. HTTPS 사용은 보안상 이유로 인해 강력히 권장됩니다."
 
 #: ../src/index.wsgi:32
 #, c-format
 msgid "The following releases are supported: %s"
-msgstr ""
+msgstr "다음 출시를 지원합니다:%s"
 
 #. CONFIG["MaxParallelTasks"], active, CONFIG["MaxParallelTasks"]))
 #: ../src/index.wsgi:36
@@ -177,6 +181,10 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
+"코어 덤프는 재추적 작업이 동작 할 때에 서버에 보관됩니다. 일단 작업이 끝나면, 서버는 재추적 기록과 역추적이 동작이 유지됩니다. 모든 "
+"다른 자료(코어 덤프를 포함하여)는 제거됩니다. 재추적 기록과 역추적은 단일 작업 ID와 비밀번호를 통해서만 접근 할 수 있으며, 그 "
+"누구도(작성자를 제외하고) 이를 볼 수 없습니다.모든 충돌 정보(역추적을 포함하여)는 비활성 %d 시간 후에 삭제됩니다. 개인 자료는 더 "
+"이상 서버에 보관하지 않습니다."
 
 #: ../src/index.wsgi:43
 msgid ""
@@ -186,89 +194,91 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
+"코어덤프는 재추적 목적으로만 사용합니다. 서버 관리자는 코어덤프와 역추적에서 사적인 자료를 가져 오려고 하지 않습니다. 보안 통신 "
+"채널(HTTPS)을 강력히 추천합니다. 서버관리자는 비보안 채널(HTTP와 같은)의 사용과 관련한 문제를 책임지지 않습니다."
 
 #: ../src/index.wsgi:34
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
-msgstr ""
+msgstr "현재 서버는 %d%%(%d 작업의 %d 실행 중에)가 적재됩니다."
 
 #: ../src/log.wsgi:38
 msgid "There is no log for the specified task"
-msgstr ""
+msgstr "해당 업무에 로그 기록이 없습니다"
 
 #: ../src/stats.wsgi:36
 msgid "Architecture"
-msgstr ""
+msgstr "구조"
 
 #: ../src/stats.wsgi:37
 msgid "Architectures"
-msgstr ""
+msgstr "구조"
 
 #: ../src/stats.wsgi:38
 msgid "Build-id"
-msgstr ""
+msgstr "빌드-id"
 
 #: ../src/stats.wsgi:39
 msgid "Count"
-msgstr ""
+msgstr "카운트"
 
 #: ../src/stats.wsgi:40
 msgid "Denied jobs"
-msgstr ""
+msgstr "거부 작업"
 
 #: ../src/stats.wsgi:41
 msgid "Failed"
-msgstr ""
+msgstr "실패하였습니다"
 
 #: ../src/stats.wsgi:42
 msgid "First retrace"
-msgstr ""
+msgstr "첫 번째 재추적"
 
 #: ../src/stats.wsgi:43
 msgid "Global statistics"
-msgstr ""
+msgstr "전세계 통계"
 
 #: ../src/stats.wsgi:44
 msgid "Missing build-ids"
-msgstr ""
+msgstr "빌드 ID가 누락되어 있습니다"
 
 #: ../src/stats.wsgi:45
 msgid "Name"
-msgstr ""
+msgstr "이름"
 
 #: ../src/stats.wsgi:46
 msgid "Release"
-msgstr ""
+msgstr "릴리즈"
 
 #: ../src/stats.wsgi:47
 msgid "Releases"
-msgstr ""
+msgstr "릴리즈"
 
 #: ../src/stats.wsgi:48
 msgid "Required packages"
-msgstr ""
+msgstr "필요한 꾸러미"
 
 #: ../src/stats.wsgi:49
 msgid "Retraced packages"
-msgstr ""
+msgstr "재추적 꾸러미"
 
 #: ../src/stats.wsgi:50
 msgid "Retrace Server statistics"
-msgstr ""
+msgstr "재추적 서버 통계"
 
 #: ../src/stats.wsgi:51
 msgid "Shared object name"
-msgstr ""
+msgstr "공유 객체 이름"
 
 #: ../src/stats.wsgi:52
 msgid "Successful"
-msgstr ""
+msgstr "성공"
 
 #: ../src/stats.wsgi:53
 msgid "Total"
-msgstr ""
+msgstr "합계"
 
 #: ../src/stats.wsgi:54
 msgid "Versions"
-msgstr ""
+msgstr "버전"
