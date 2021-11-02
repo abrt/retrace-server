@@ -1,0 +1,41 @@
+name: Coverage analysis
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+jobs:
+  coverage:
+    container:
+      image: fedora:latest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v2
+
+      - name: Install build environment
+        run: dnf --assumeyes install dnf-plugins-core
+
+      - name: Install build and test dependencies
+        run: |
+            dnf --assumeyes builddep --spec retrace-server.spec
+            # For the pyfaf imports.
+            dnf --assumeyes copr enable @abrt/faf-el8-devel
+            dnf --assumeyes install faf python3-pytest-cov
+
+      - name: Build the project
+        run: |
+          meson setup build -Dcoverage=true
+          ninja -C build -v
+
+      - name: Run tests and generate coverage report
+        run: |
+          meson test -C build -v
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v2
+        with:
+          directory: ./build
+          fail_ci_if_error: true
+          flags: unittests
+          verbose: true

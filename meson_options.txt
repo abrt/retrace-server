@@ -1,1 +1,8 @@
-option('docs', type: 'feature', value: 'enabled')
+option('coverage',
+       type: 'boolean',
+       value: false,
+       description: 'Generate code coverage report when running tests')
+option('docs',
+       type: 'feature',
+       value: 'enabled',
+       description: 'Build documentation')

@@ -34,8 +34,13 @@ foreach file: test_files
   )
 endforeach
 
+pytest_args = []
+if get_option('coverage')
+  pytest_args += ['--cov=./', '--cov-report=xml']
+endif
+
 test('Python unit tests',
   pytest,
-  args: [],
+  args: pytest_args,
   env: test_env,
 )
