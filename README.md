@@ -3,6 +3,7 @@
 [![Translation status](https://translate.fedoraproject.org/widgets/abrt/-/retrace-server/svg-badge.svg)](https://translate.fedoraproject.org/engage/abrt/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/abrt/retrace-server.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/abrt/retrace-server/context:python)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/abrt/retrace-server.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/abrt/retrace-server/alerts/)
+[![codecov](https://codecov.io/gh/abrt/retrace-server/branch/master/graph/badge.svg?token=AHUkZe3dV6)](https://codecov.io/gh/abrt/retrace-server)
 
 ---
 
