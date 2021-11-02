@@ -3,13 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 # Weblate <noreply@weblate.org>, 2020.
 # Doncho N. Gunchev <dgunchev@gmail.com>, 2020.
+# stefan stoilov <stefan@null.net>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2020-08-08 09:29+0000\n"
-"Last-Translator: Doncho N. Gunchev <dgunchev@gmail.com>\n"
+"PO-Revision-Date: 2021-03-23 09:01+0000\n"
+"Last-Translator: stefan stoilov <stefan@null.net>\n"
 "Language-Team: Bulgarian <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/bg/>\n"
 "Language: bg\n"
@@ -17,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.1.1\n"
+"X-Generator: Weblate 4.5.1\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -38,11 +39,11 @@ msgstr "Невалидна парола"
 
 #: ../src/backtrace.wsgi:38
 msgid "There is no backtrace for the specified task"
-msgstr "Няма backtrace за указаната задача"
+msgstr "Няма обратно проследяване за тази задача"
 
 #: ../src/create.wsgi:60 ../src/create.wsgi:116
 msgid "Retrace server is fully loaded at the moment"
-msgstr "Retrace сървъра е претоварен в момента"
+msgstr "Сървърът за обратно проследяване в момента е претоварен"
 
 #: ../src/create.wsgi:64
 msgid "You must use POST method"
@@ -142,7 +143,7 @@ msgstr "Retrace сървър"
 
 #: ../src/index.wsgi:21
 msgid "Welcome to Retrace Server"
-msgstr "Заповядайте на Retrace сървъра"
+msgstr "Добре дошли в сървъра за обратно проследяване"
 
 #: ../src/index.wsgi:23
 msgid ""

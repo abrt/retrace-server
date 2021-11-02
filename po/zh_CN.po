@@ -2,13 +2,15 @@
 # Charles Lee <lchopn@gmail.com>, 2017. #zanata, 2020.
 # Zamir SUN <sztsian@gmail.com>, 2017. #zanata
 # Tian Shixiong <tiansworld@gmail.com>, 2020.
+# Qiyu Yan <yanqiyu01@gmail.com>, 2021.
+# Whired Planck <fungdaat31@outlook.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2020-07-23 04:28+0000\n"
-"Last-Translator: Charles Lee <lchopn@gmail.com>\n"
+"PO-Revision-Date: 2021-04-19 06:02+0000\n"
+"Last-Translator: Whired Planck <fungdaat31@outlook.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
 "projects/abrt/retrace-server/zh_CN/>\n"
 "Language: zh_CN\n"
@@ -16,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.1.1\n"
+"X-Generator: Weblate 4.5.3\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -84,19 +86,16 @@ msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
 msgstr "'X-CoreFileDirectory' 所指定的目录不存在"
 
 #: ../src/create.wsgi:127
-#, fuzzy, c-format
-#| msgid ""
-#| "There are %d files in the '%s' directory. Only a single archive is "
-#| "supported at the moment"
+#, c-format
 msgid ""
 "There are %d files in the '%s' directory. Only a single archive is supported "
 "at the moment"
-msgstr "'%s'  目录内有 %d 个文件。当前只支持单一归档"
+msgstr "有 %d 个文件在 '%s' 个目录内。当前只支持一份存档"
 
 #: ../src/create.wsgi:136
 #, c-format
 msgid "You header specifies '%s' type, but the file type does not match"
-msgstr " 头信息设定了 '%s' 类型，但文件类型与之不匹配"
+msgstr "头信息指定了 '%s' 类型，但文件类型与之不匹配"
 
 #: ../src/create.wsgi:154
 msgid "Unable to save archive"
@@ -126,7 +125,7 @@ msgstr "'%s' 文件比预期大"
 #: ../src/create.wsgi:208
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr "归档中不允许出现文件 '%s' "
+msgstr "归档中不允许出现文件 '%s'"
 
 #: ../src/create.wsgi:223
 msgid "Interactive tasks were disabled by server administrator"
@@ -139,25 +138,18 @@ msgstr "缺少必须的文件 '%s'"
 
 #: ../src/index.wsgi:20
 msgid "Retrace Server"
-msgstr "Retrace 服务器"
+msgstr "回溯服务器"
 
 #: ../src/index.wsgi:21
 msgid "Welcome to Retrace Server"
-msgstr "欢迎来到 Retrace 服务器"
+msgstr "欢迎使用回溯服务器"
 
 #: ../src/index.wsgi:23
-#, fuzzy
-#| msgid ""
-#| "Retrace Server is a service that provides the possibility to analyze "
-#| "coredump and generate backtrace over network. You can find further "
-#| "information at Retrace Server&apos;s wiki:"
 msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s github:"
-msgstr ""
-"Retrace 服务器提供了在网络上分析核心转储和生成回溯的服务。 你可以在 Retrace "
-"服务器的维基页面找到更多信 : "
+msgstr "回溯服务器提供了在线分析核心转储和生成回溯服务。 你可以在回溯 服务器的 GitHub 页面找到更多信息："
 
 #: ../src/index.wsgi:29
 msgid ""
@@ -169,7 +161,7 @@ msgstr "服务器仅允许 HTTPS 连接。HTTP 请求将被禁止。"
 msgid ""
 "Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
 "of security reasons."
-msgstr "HTTP 和 HTTPS 都被允许。出于安全原因强烈建议使用 HTTPS。"
+msgstr "允许同时使用 HTTP 和 HTTPS。出于安全原因，强烈建议使用 HTTPS。"
 
 #: ../src/index.wsgi:32
 #, c-format
@@ -188,6 +180,9 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
+"只有在回溯作业运行期间，核心转储（Coredump）文件才会保留服务器上。一旦作业完成，服务器将保留下回溯日志和追溯记录。其他所有数据（包括核心转储文件）"
+"会被删除。回溯日志和追溯记录仅可通过唯一任务 ID 和密码才可访问，因此无人可以查看（作者除外）。所有崩溃信息（包括追溯记录）将在闲置 %d "
+"小时后删除。所有隐私数据将无可能继续留存在服务器上。"
 
 #: ../src/index.wsgi:43
 msgid ""
@@ -197,12 +192,14 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
+"核心转储（Coredump）文件仅用于回溯用途。服务器管理员不会试图从核心转储文件和追溯记录中获取您的隐私数据。强烈建议使用安全的连接（如 "
+"HTTPS）。对使用不安全连接（例如 HTTP）相关的问题，服务器管理员概不负责。"
 
 #: ../src/index.wsgi:34
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
-msgstr "服务器当前已加载 %d%% ( 正在运行 %d , 总计  %d 任务 )."
+msgstr "服务器当前已加载 %d%% ( 正在运行 %d , 总计 %d 任务 )."
 
 #: ../src/log.wsgi:38
 msgid "There is no log for the specified task"
@@ -218,7 +215,7 @@ msgstr "架构"
 
 #: ../src/stats.wsgi:38
 msgid "Build-id"
-msgstr ""
+msgstr "构建 ID"
 
 #: ../src/stats.wsgi:39
 msgid "Count"
@@ -250,11 +247,11 @@ msgstr "名称"
 
 #: ../src/stats.wsgi:46
 msgid "Release"
-msgstr ""
+msgstr "发行版"
 
 #: ../src/stats.wsgi:47
 msgid "Releases"
-msgstr ""
+msgstr "发行版"
 
 #: ../src/stats.wsgi:48
 msgid "Required packages"

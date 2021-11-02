@@ -1,90 +1,85 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# Weblate <noreply@weblate.org>, 2020.
-# Enes Bosnic <ebosnic@msn.com>, 2021.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2021-04-16 23:02+0000\n"
-"Last-Translator: Enes Bosnic <ebosnic@msn.com>\n"
-"Language-Team: Bosnian <https://translate.fedoraproject.org/projects/abrt/"
-"retrace-server/bs/>\n"
-"Language: bs\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: af\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.5.3\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
 msgid "You must use HTTPS"
-msgstr "Morate koristiti HTTPS"
+msgstr ""
 
 #: ../src/backtrace.wsgi:23 ../src/log.wsgi:24 ../src/status.wsgi:24
 msgid "Invalid URL"
-msgstr "Neispravan URL"
+msgstr ""
 
 #: ../src/backtrace.wsgi:29 ../src/log.wsgi:29 ../src/status.wsgi:30
 msgid "There is no such task"
-msgstr "Ovdje nema takvog zadatka"
+msgstr ""
 
 #: ../src/backtrace.wsgi:34 ../src/log.wsgi:34 ../src/status.wsgi:35
 msgid "Invalid password"
-msgstr "Pogrešna lozinka"
+msgstr ""
 
 #: ../src/backtrace.wsgi:38
 msgid "There is no backtrace for the specified task"
-msgstr "Ne postoji povratni trag za navedeni zadatak"
+msgstr ""
 
 #: ../src/create.wsgi:60 ../src/create.wsgi:116
 msgid "Retrace server is fully loaded at the moment"
-msgstr "Opslužitelj za ponovno praćenje je trenutno potpuno učitan"
+msgstr ""
 
 #: ../src/create.wsgi:64
 msgid "You must use POST method"
-msgstr "Morate koristiti POST metodu"
+msgstr ""
 
 #: ../src/create.wsgi:68
 msgid "Specified archive format is not supported"
-msgstr "Specificirani format arhive nije podržan"
+msgstr ""
 
 #: ../src/create.wsgi:72
 msgid "You need to set Content-Length header properly"
-msgstr "Trebate pravilno setovati zaglavlje Sadržaj-Dužina"
+msgstr ""
 
 #: ../src/create.wsgi:76
 msgid "Specified archive is too large"
-msgstr "Specificirana arhiva je prevelika"
+msgstr ""
 
 #: ../src/create.wsgi:81
 msgid "X-CoreFileDirectory header has been disabled by server administrator"
 msgstr ""
-"X-CoreFileDirectory zaglavlje je isključeno od administratora opslužitelja"
 
 #: ../src/create.wsgi:91
 msgid "Unable to create working directory"
-msgstr "Nije moguće kreirati radni direktorij"
+msgstr ""
 
 #: ../src/create.wsgi:97
 msgid "Unable to obtain disk free space"
-msgstr "Nije moguće dobiti slobodan prostor na disku"
+msgstr ""
 
 #: ../src/create.wsgi:101 ../src/create.wsgi:172
 msgid "There is not enough storage space on the server"
-msgstr "Na opslužitelju nema dovoljno prostora za pohranu"
+msgstr ""
 
 #: ../src/create.wsgi:109
 msgid "Unable to create new task"
-msgstr "Nije moguće kreirati novi zadatak"
+msgstr ""
 
 #: ../src/create.wsgi:121
 msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr "Direktorijum specificiran u 'X-CoreFileDirectory' ne postoji"
+msgstr ""
 
 #: ../src/create.wsgi:127
 #, c-format
@@ -92,61 +87,58 @@ msgid ""
 "There are %d files in the '%s' directory. Only a single archive is supported "
 "at the moment"
 msgstr ""
-"U direktorijumu '%d' nalazi se '%s' datoteka. Trenutno je podržana samo "
-"jedna arhiva"
 
 #: ../src/create.wsgi:136
 #, c-format
 msgid "You header specifies '%s' type, but the file type does not match"
-msgstr "Vaše zaglavlje navodi '%s' vrstu, ali vrsta datoteke se ne podudara"
+msgstr ""
 
 #: ../src/create.wsgi:154
 msgid "Unable to save archive"
-msgstr "Nije moguće sačuvati arhivu"
+msgstr ""
 
 #: ../src/create.wsgi:162
 msgid "Unable to obtain unpacked size"
-msgstr "Nije moguće dobiti raspakiranu veličinu"
+msgstr ""
 
 #: ../src/create.wsgi:167
 msgid "Specified archive's content is too large"
-msgstr "Sadržaj navedene arhive je prevelik"
+msgstr ""
 
 #: ../src/create.wsgi:184
 msgid "Unable to unpack archive"
-msgstr "Nije moguće raspakovati arhivu"
+msgstr ""
 
 #: ../src/create.wsgi:197
 msgid "Symlinks are not allowed to be in the archive"
-msgstr "Prečaci nisu dozvoljeni u arhvi"
+msgstr ""
 
 #: ../src/create.wsgi:204
 #, c-format
 msgid "The '%s' file is larger than expected"
-msgstr "Ova '%s' datoteka je veća od očekivane veličine datoteke"
+msgstr ""
 
 #: ../src/create.wsgi:208
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr "Datoteka '%s' nije dozvoljeno da bude u arhivi"
+msgstr ""
 
 #: ../src/create.wsgi:223
 msgid "Interactive tasks were disabled by server administrator"
 msgstr ""
-"Interaktivni zadatci su isključeni od strane administratora opslužitelja"
 
 #: ../src/create.wsgi:232
 #, c-format
 msgid "Required file '%s' is missing"
-msgstr "Nedostaje zahtjevana datoteka '%s'"
+msgstr ""
 
 #: ../src/index.wsgi:20
 msgid "Retrace Server"
-msgstr "Opslužitelj za ponovna praćenja"
+msgstr ""
 
 #: ../src/index.wsgi:21
 msgid "Welcome to Retrace Server"
-msgstr "Dobrodošli na opslužitelj za ponovna praćenja"
+msgstr ""
 
 #: ../src/index.wsgi:23
 msgid ""
@@ -154,30 +146,23 @@ msgid ""
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s github:"
 msgstr ""
-"Opslužitelj za ponovna praćenja je usluga koja pruža mogućnost analiziranja "
-"jezgrenih zapisa i njihova ponovna praćenja putem mreže. Više iniformacija o "
-"opslužitelju ponovnih praćenja možete pronaći na &apos;s github:"
 
 #: ../src/index.wsgi:29
 msgid ""
 "Only the secure HTTPS connection is now allowed by the server. HTTP requests "
 "will be denied."
 msgstr ""
-"Samo sigurne HTTPS konekcije su sada dozvoljene od strane opslužitelja. HTTP "
-"zahtjevi će biti odbijeni."
 
 #: ../src/index.wsgi:31
 msgid ""
 "Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
 "of security reasons."
 msgstr ""
-"Oba protokola HTTP i HTTPS su dozvoljena. Korištenje HTTPS-a se striknto "
-"preporučuje iz siguronosnih razloga."
 
 #: ../src/index.wsgi:32
 #, c-format
 msgid "The following releases are supported: %s"
-msgstr "Slijedeće verzije su podržane: %s"
+msgstr ""
 
 #. CONFIG["MaxParallelTasks"], active, CONFIG["MaxParallelTasks"]))
 #: ../src/index.wsgi:36
@@ -191,15 +176,6 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
-"Vaš jezgreni zapis se čuva na opslužitelju dok se zadatak ponovnog praćenja "
-"izvršava. Jednom kada je ovaj zadatak obavljen, opslužitelj čuva zapis o "
-"ponovnom praćenju i samo ponovno praćenje. Svi ostali podatci (uključujući i "
-"jezgreni zapis) bivaju obrisani. Ovaj zapis kao i samo ponovno praćenje su "
-"dostupni jedino putem jedinstvenog ID zadatka i lozinke, budući da niko ("
-"osim autora) nije autoriziran da isti pregleda. Svi zapisi o rušenju "
-"aplikacije (uključujući i jezgreni zapis) je obrisan nakon %d sati "
-"neaktivnosti. Nije moguće privatne podatke čuvati duže od tog specificiranog "
-"vremenskog perioda."
 
 #: ../src/index.wsgi:43
 msgid ""
@@ -209,97 +185,89 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
-"Vaš jezgreni zapis je korišten samo za svrhu ponovnog praćenja. "
-"Administratori opslužitelja ne pokušavaju da dobiju vaše privatne podatke iz "
-"ovih jezgrenih zapisa ili ponovnih praćenja. Koristeći osigurani "
-"komunikacijski protokol HTTPS se striktrno preporučuje. Administratori "
-"opslužitelja nisu odgovorni za eventualne probleme u slučaju korištenja "
-"neosiguranog protokola (kao što je HTTP)."
 
 #: ../src/index.wsgi:34
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
 msgstr ""
-"U ovom momentu opslužitelj je opterećen za %d%% (pokreće %d od ukupno %d "
-"zadataka)."
 
 #: ../src/log.wsgi:38
 msgid "There is no log for the specified task"
-msgstr "Ne postoji zapis za specificirani zadatak"
+msgstr ""
 
 #: ../src/stats.wsgi:36
 msgid "Architecture"
-msgstr "Arhitektura"
+msgstr ""
 
 #: ../src/stats.wsgi:37
 msgid "Architectures"
-msgstr "Arhitekture"
+msgstr ""
 
 #: ../src/stats.wsgi:38
 msgid "Build-id"
-msgstr "Ugrađeni-id"
+msgstr ""
 
 #: ../src/stats.wsgi:39
 msgid "Count"
-msgstr "Brojanje"
+msgstr ""
 
 #: ../src/stats.wsgi:40
 msgid "Denied jobs"
-msgstr "Odbijeni poslovi"
+msgstr ""
 
 #: ../src/stats.wsgi:41
 msgid "Failed"
-msgstr "Neuspjelo"
+msgstr ""
 
 #: ../src/stats.wsgi:42
 msgid "First retrace"
-msgstr "Prvi ponovni pregled"
+msgstr ""
 
 #: ../src/stats.wsgi:43
 msgid "Global statistics"
-msgstr "Globalne statistike"
+msgstr ""
 
 #: ../src/stats.wsgi:44
 msgid "Missing build-ids"
-msgstr "Nedostaju ugrađeni-id-ovi"
+msgstr ""
 
 #: ../src/stats.wsgi:45
 msgid "Name"
-msgstr "Ime"
+msgstr ""
 
 #: ../src/stats.wsgi:46
 msgid "Release"
-msgstr "Izdanje"
+msgstr ""
 
 #: ../src/stats.wsgi:47
 msgid "Releases"
-msgstr "Izdanja"
+msgstr ""
 
 #: ../src/stats.wsgi:48
 msgid "Required packages"
-msgstr "Potrebni paketi"
+msgstr ""
 
 #: ../src/stats.wsgi:49
 msgid "Retraced packages"
-msgstr "Ponovno praćeni paketi"
+msgstr ""
 
 #: ../src/stats.wsgi:50
 msgid "Retrace Server statistics"
-msgstr "Statistika opslužitelja za ponovna praćenja"
+msgstr ""
 
 #: ../src/stats.wsgi:51
 msgid "Shared object name"
-msgstr "Ime dijeljenog objekta"
+msgstr ""
 
 #: ../src/stats.wsgi:52
 msgid "Successful"
-msgstr "Uspješno"
+msgstr ""
 
 #: ../src/stats.wsgi:53
 msgid "Total"
-msgstr "Ukupno"
+msgstr ""
 
 #: ../src/stats.wsgi:54
 msgid "Versions"
-msgstr "Verzije"
+msgstr ""
