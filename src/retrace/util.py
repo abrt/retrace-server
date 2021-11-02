@@ -130,10 +130,9 @@ def ftp_list_dir(ftpdir: str = "/", ftp: Optional[ftplib.FTP] = None) -> List[st
 def human_readable_size(bytesize: SupportsFloat) -> str:
     size = float(bytesize)
     unit = 0
-    while size > 1024.0 and unit < len(UNITS) - 1:
+    while size >= 1024.0 and unit < len(UNITS) - 1:
         unit += 1
         size /= 1024.0
-
     return "%.2f %s" % (size, UNITS[unit])
 
 
