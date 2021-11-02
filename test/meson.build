@@ -24,6 +24,7 @@ test_env.set('RETRACE_SERVER_TESTING', '1')
 
 test_files = [
   'test_backends.py',
+  'test_util.py',
 ]
 
 foreach file: test_files
