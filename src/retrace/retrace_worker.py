@@ -18,7 +18,7 @@ from .retrace import (ALLOWED_FILES, EXPLOITABLE_SEPARATOR, PYTHON_LABEL_END,
                       PYTHON_LABEL_START, REPO_PREFIX, REQUIRED_FILES,
                       STATUS, STATUS_ANALYZE, STATUS_BACKTRACE, STATUS_CLEANUP,
                       STATUS_FAIL, STATUS_INIT, STATUS_STATS, STATUS_SUCCESS,
-                      TASK_DEBUG, TASK_RETRACE, TASK_RETRACE_INTERACTIVE, TASK_VMCORE,
+                      TASK_DEBUG, TASK_COREDUMP, TASK_COREDUMP_INTERACTIVE, TASK_VMCORE,
                       TASK_VMCORE_INTERACTIVE, RETRACE_GPG_KEYS, SNAPSHOT_SUFFIXES,
                       get_active_tasks,
                       get_supported_releases,
@@ -179,7 +179,7 @@ class RetraceWorker:
         except Exception as ex:
             log_warn("Failed to save crash statistics: %s" % str(ex))
 
-        if not task.get_type() in [TASK_DEBUG, TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
+        if not task.get_type() in [TASK_DEBUG, TASK_COREDUMP_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
             self.clean_task()
 
         self.hook.run("fail")
@@ -516,7 +516,7 @@ class RetraceWorker:
 
         return image_tag
 
-    def start_retrace(self, custom_arch: Optional[str] = None) -> bool:
+    def start_coredump(self, custom_arch: Optional[str] = None) -> bool:
         self.hook.run("start")
 
         task = self.task
@@ -664,7 +664,7 @@ class RetraceWorker:
         # does not work at the moment
         rootsize = 0
 
-        if not task.get_type() in [TASK_DEBUG, TASK_RETRACE_INTERACTIVE]:
+        if not task.get_type() in [TASK_DEBUG, TASK_COREDUMP_INTERACTIVE]:
             # clean up temporary data
             task.set_status(STATUS_CLEANUP)
             log_info(STATUS[STATUS_CLEANUP])
@@ -1122,8 +1122,8 @@ class RetraceWorker:
                 if not self._check_required_file(required_file, crashdir):
                     raise Exception("Crash directory does not contain required file '%s'" % required_file)
 
-            if tasktype in [TASK_RETRACE, TASK_DEBUG, TASK_RETRACE_INTERACTIVE]:
-                self.start_retrace(custom_arch=arch)
+            if tasktype in [TASK_COREDUMP, TASK_DEBUG, TASK_COREDUMP_INTERACTIVE]:
+                self.start_coredump(custom_arch=arch)
             elif tasktype in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
                 self.start_vmcore(custom_kernelver=kernelver)
             else:

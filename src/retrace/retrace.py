@@ -45,17 +45,17 @@ ALLOWED_FILES = {
     "vmcore.vmem": 0,
 }
 
-TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
+TASK_COREDUMP, TASK_DEBUG, TASK_VMCORE, TASK_COREDUMP_INTERACTIVE, \
   TASK_VMCORE_INTERACTIVE = range(5)
 
-TASK_TYPES = [TASK_RETRACE, TASK_DEBUG, TASK_VMCORE,
-              TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]
+TASK_TYPES = [TASK_COREDUMP, TASK_DEBUG, TASK_VMCORE,
+              TASK_COREDUMP_INTERACTIVE, TASK_VMCORE_INTERACTIVE]
 
 REQUIRED_FILES = {
-    TASK_RETRACE:             ["coredump", "executable", "package"],
+    TASK_COREDUMP:             ["coredump", "executable", "package"],
     TASK_DEBUG:               ["coredump", "executable", "package"],
     TASK_VMCORE:              ["vmcore"],
-    TASK_RETRACE_INTERACTIVE: ["coredump", "executable", "package"],
+    TASK_COREDUMP_INTERACTIVE: ["coredump", "executable", "package"],
     TASK_VMCORE_INTERACTIVE:  ["vmcore"],
 }
 
@@ -1154,17 +1154,17 @@ class RetraceTask:
 
     def get_type(self) -> int:
         """Returns task type. If TYPE_FILE is missing,
-        task is considered standard TASK_RETRACE."""
+        task is considered standard TASK_COREDUMP."""
         result = self.get(RetraceTask.TYPE_FILE, maxlen=8)
         if result is None:
-            return TASK_RETRACE
+            return TASK_COREDUMP
 
         return int(result)
 
     def set_type(self, newtype: int) -> None:
         """Atomically writes given type into TYPE_FILE."""
         if newtype not in TASK_TYPES:
-            newtype = TASK_RETRACE
+            newtype = TASK_COREDUMP
 
         self.set_atomic(RetraceTask.TYPE_FILE, str(newtype))
 
@@ -1495,7 +1495,7 @@ class RetraceTask:
                         unpack_vmcore(fullpath)
                     except Exception as ex:
                         errors.append((str(fullpath), str(ex)))
-                if self.get_type() in [TASK_RETRACE, TASK_RETRACE_INTERACTIVE]:
+                if self.get_type() in [TASK_COREDUMP, TASK_COREDUMP_INTERACTIVE]:
                     try:
                         unpack_coredump(fullpath)
                     except Exception as ex:
@@ -1554,7 +1554,7 @@ class RetraceTask:
 
                 file_path.unlink()
 
-        if self.get_type() in [TASK_RETRACE, TASK_RETRACE_INTERACTIVE]:
+        if self.get_type() in [TASK_COREDUMP, TASK_COREDUMP_INTERACTIVE]:
             coredump = crashdir / self.COREDUMP_FILE
             for file_path in crashdir.iterdir():
                 if file_path.is_dir():
