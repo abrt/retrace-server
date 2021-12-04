@@ -9,8 +9,8 @@ from tempfile import NamedTemporaryFile
 from retrace.retrace import (ALLOWED_FILES,
                              REQUIRED_FILES,
                              SNAPSHOT_SUFFIXES,
-                             TASK_RETRACE,
-                             TASK_RETRACE_INTERACTIVE,
+                             TASK_COREDUMP,
+                             TASK_COREDUMP_INTERACTIVE,
                              TASK_TYPES,
                              TASK_VMCORE,
                              TASK_VMCORE_INTERACTIVE,
@@ -211,19 +211,19 @@ def application(environ, start_response):
         try:
             tasktype = int(request.headers["X-Task-Type"])
         except TypeError:
-            tasktype = TASK_RETRACE
+            tasktype = TASK_COREDUMP
 
         if tasktype not in TASK_TYPES:
-            tasktype = TASK_RETRACE
+            tasktype = TASK_COREDUMP
 
-        if tasktype in [TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE] \
+        if tasktype in [TASK_COREDUMP_INTERACTIVE, TASK_VMCORE_INTERACTIVE] \
            and not CONFIG["AllowInteractive"]:
             task.remove()
             return response(start_response, "409 Conflict",
                             _("Interactive tasks were disabled by server administrator"))
         task.set_type(tasktype)
     else:
-        task.set_type(TASK_RETRACE)
+        task.set_type(TASK_COREDUMP)
 
     present_files = [f.name for f in files]
     for required_file in REQUIRED_FILES[task.get_type()]:

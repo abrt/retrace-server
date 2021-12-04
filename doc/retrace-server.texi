@@ -201,10 +201,10 @@ Large} HTTP error code. The limit can be checked by calling
 @indicateurl{https://server/settings}. The limit is changeable
 from the server configuration file. Client is allowed to specify
 an optional @var{X-Task-Type} header, identifying the task type.
-At the moment @code{TASK_RETRACE (0)}, @code{TASK_DEBUG (1)} and
-@code{TASK_RETRACE_INTERACTIVE (3)} can be used for binary crashes
+At the moment @code{TASK_COREDUMP (0)}, @code{TASK_DEBUG (1)} and
+@code{TASK_COREDUMP_INTERACTIVE (3)} can be used for binary crashes
 and @code{TASK_VMCORE (2)} and @code{TASK_VMCORE_INTERACTIVE (4)} for
-kernel crashes. If no @var{X-Task-Type} is specified, @code{TASK_RETRACE}
+kernel crashes. If no @var{X-Task-Type} is specified, @code{TASK_COREDUMP}
 is used.
 
 If unpacking the archive would result in having the free disk space
@@ -780,7 +780,7 @@ safely use it, as the data will also be signed.
 @section Overview
 
 When the task type specified by @var{X-Task-Type} header is either
-@code{TASK_RETRACE_INTERACTIVE} or @code{TASK_VMCORE_INTERACTIVE},
+@code{TASK_COREDUMP_INTERACTIVE} or @code{TASK_VMCORE_INTERACTIVE},
 the standard process is executed, but the chroot is not cleaned up.
 It can be later accessed by the @file{retrace-server-interact} tool,
 which is basically a wrapper over @file{mock}, @file{gdb}
@@ -922,8 +922,8 @@ Now FAF's package database is used for the following:
 @item @command{is_package_known} function to find out whether a
 package is supported for retracing.
 @item @command{find_kernel_debuginfo} function to get debuginfos for
-@code{TASK_VMCORE} and @code{TAS_VMCORE_INTERACTIVE} tasks.
-@item @code{TASK_RETRACE} and @code{TASK_RETRACE_INTERACTIVE} tasks.
+@code{TASK_VMCORE} and @code{TASK_VMCORE_INTERACTIVE} tasks.
+@item @code{TASK_COREDUMP} and @code{TASK_COREDUMP_INTERACTIVE} tasks.
 Every time a retracing environment is being created, the coredump is
 passed to FAF's @code{c2p} action (instead of Retrace Server's
 @code{coredump2packages} tool), which copies or links debuginfos to a

@@ -12,7 +12,7 @@ from subprocess import list2cmdline
 from retrace.retrace import (ALLOWED_FILES,
                              STATUS_FAIL,
                              STATUS_SUCCESS,
-                             TASK_RETRACE_INTERACTIVE,
+                             TASK_COREDUMP_INTERACTIVE,
                              TASK_VMCORE_INTERACTIVE,
                              KernelVMcore,
                              KernelVer,
@@ -94,7 +94,7 @@ if __name__ == "__main__":
             task.set_finished_time(int(time.time()))
         sys.exit(0)
 
-    if task.get_type() == TASK_RETRACE_INTERACTIVE:
+    if task.get_type() == TASK_COREDUMP_INTERACTIVE:
         if args.action == "shell":
             cmdline = ["/usr/bin/mock", "--configdir", str(task.get_savedir()), "shell"]
             print_cmdline(cmdline)

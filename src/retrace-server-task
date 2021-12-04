@@ -22,7 +22,7 @@ from retrace.retrace import add_snapshot_suffix
 
 
 FALLBACK_SERVER = 'https://retrace.fedoraproject.org'
-TASK_RETRACE, TASK_DEBUG, TASK_VMCORE, TASK_RETRACE_INTERACTIVE, \
+TASK_COREDUMP, TASK_DEBUG, TASK_VMCORE, TASK_COREDUMP_INTERACTIVE, \
     TASK_VMCORE_INTERACTIVE = range(5)
 
 
@@ -183,9 +183,9 @@ def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
         LOGGER.info("Starting new http task")
         if args['task_type'] == 'coredump':
             if args['interactive']:
-                task_type = TASK_RETRACE_INTERACTIVE
+                task_type = TASK_COREDUMP_INTERACTIVE
             else:
-                task_type = TASK_RETRACE
+                task_type = TASK_COREDUMP
         elif args['interactive']:
             task_type = TASK_VMCORE_INTERACTIVE
         else:

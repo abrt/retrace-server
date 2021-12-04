@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, List
 
 from retrace.retrace import (STATUS, STATUS_DOWNLOADING, STATUS_FAIL,
-                             STATUS_SUCCESS, TASK_DEBUG, TASK_RETRACE, TASK_RETRACE_INTERACTIVE,
+                             STATUS_SUCCESS, TASK_DEBUG, TASK_COREDUMP, TASK_COREDUMP_INTERACTIVE,
                              TASK_VMCORE, TASK_VMCORE_INTERACTIVE,
                              KernelVer,
                              RetraceTask)
@@ -30,10 +30,10 @@ FTP_SUPPORTED_EXTENSIONS = [".tar.gz", ".tgz", ".tarz", ".tar.bz2", ".tar.xz",
 MANAGER_URL_PARSER = re.compile(r"^(.*/manager)(/(([^/]+)(/(__custom__|start|restart|restart_confirm|backtrace|savenotes|caseno|"
                                 r"bugzillano|notify|delete(/(sure/?)?)?|results/([^/]+)/?)?)?)?)?$")
 
-LONG_TYPES = {TASK_RETRACE: "Coredump retrace",
+LONG_TYPES = {TASK_COREDUMP: "Coredump retrace",
               TASK_DEBUG: "Coredump retrace - debug",
               TASK_VMCORE: "VMcore retrace",
-              TASK_RETRACE_INTERACTIVE: "Coredump retrace - interactive",
+              TASK_COREDUMP_INTERACTIVE: "Coredump retrace - interactive",
               TASK_VMCORE_INTERACTIVE: "VMcore retrace - interactive"}
 
 
@@ -515,7 +515,7 @@ def application(environ, start_response):
             return response(start_response, "500 Internal Server Error", _("Unable to create a new task"))
 
         if "task_type" in POST and POST["task_type"] == "coredump":
-            task.set_type(TASK_RETRACE_INTERACTIVE)
+            task.set_type(TASK_COREDUMP_INTERACTIVE)
             if "package" in POST and POST["package"]:
                 task.set("custom_package", POST["package"])
             if "executable" in POST and POST["executable"]:
@@ -598,7 +598,7 @@ def application(environ, start_response):
                 backtrace = "<tr><td colspan=\"2\"><a href=\"%s/backtrace\">%s</a></td></tr>" \
                             % (request.path_url.rstrip("/"), _("Show raw backtrace"))
                 backtracewindow = "<h2>Backtrace</h2><textarea class=\"backtrace\">%s</textarea>" % task.get_backtrace()
-                if task.get_type() in [TASK_RETRACE_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
+                if task.get_type() in [TASK_COREDUMP_INTERACTIVE, TASK_VMCORE_INTERACTIVE]:
                     if task.get_type() == TASK_VMCORE_INTERACTIVE:
                         debugger = "crash"
                     else:
