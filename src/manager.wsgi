@@ -3,6 +3,7 @@ import fnmatch
 import re
 import time
 import urllib
+import stat
 from webob import Request
 from pathlib import Path
 from typing import Any, Dict, Optional, List
@@ -485,8 +486,23 @@ def application(environ, start_response):
     elif filename and filename == "__custom__":
         POST = request.POST
 
-        if "custom_url" in POST and len(POST["custom_url"]) == 0:
-            return response(start_response, "400 Bad Request", _("URL cannot be NULL string"))
+        if "custom_url" in POST:
+            url = POST["custom_url"]
+            if not url:
+                return response(start_response, "400 Bad Request", _("URL cannot be NULL string"))
+            if url.startswith("/") or url.startswith("file:///"):
+                if url.startswith("file://"):
+                    path = Path(urllib.parse.unquote(url[7:]))
+                else:
+                    path = Path(url)
+
+                # Just check the file exists and we can open it for binary read
+                # Read the file later in RetraceWorker:start_vmcore()
+                try:
+                    with open(path, "rb"):
+                        pass
+                except Exception as e:
+                    return response(start_response, "400 Bad Request", _("Cannot open URL for reading: '%s'" % e))
 
         qs_base = []
         if "md5sum" in POST and POST["md5sum"] == "on":
