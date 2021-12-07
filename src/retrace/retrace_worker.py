@@ -193,7 +193,7 @@ class RetraceWorker:
             output = child.stdout
         except Exception as ex:
             child = None
-            log_error("An unhandled exception occured: %s" % ex)
+            log_error("An unhandled exception occurred: %s" % ex)
 
         if not child or child.returncode != 0:
             exit_code = str(child.returncode) if child else 'unknown'
@@ -1029,7 +1029,7 @@ class RetraceWorker:
         if ret == 0 and crash_sys:
             task.add_results("sys", crash_sys)
         else:
-            # FIXME: Probably a better hueristic can be done here
+            # FIXME: Probably a better heuristic can be done here
             if len(kernellog) < 1024:
                 # If log < 1024 bytes, probably it is not useful so fail task
                 raise Exception("Failing task due to crash exiting with non-zero status and "
