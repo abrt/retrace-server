@@ -994,7 +994,7 @@ class RetraceTask:
         status = url.getcode()
         url.close()
 
-        # 1/0 just to be consitent with call() in _start_local
+        # 1/0 just to be consistent with call() in _start_local
         if status != 201:
             return 1
 
@@ -1701,7 +1701,7 @@ class RetraceTask:
             self.delete(RetraceTask.MANAGED_FILE)
 
     def has_downloaded(self) -> bool:
-        """Verifies whether DOWNLOAD_FILE exists"""
+        """Verifies whether DOWNLOADED_FILE exists"""
         return self.has(RetraceTask.DOWNLOADED_FILE)
 
     def get_downloaded(self) -> Optional[str]:

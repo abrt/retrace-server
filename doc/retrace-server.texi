@@ -56,7 +56,7 @@ Analyzing a program crash from a coredump is a difficult task. The GNU
 Debugger (GDB), that is commonly used to analyze coredumps on free
 operating systems, expects that the system analyzing the coredump is
 identical to the system where the program crashed. Software updates
-often break this assumption even on the system where the crash occured,
+often break this assumption even on the system where the crash occurred,
 making the coredump analyzable only with significant
 effort. Furthermore, older versions of software packages are often
 removed from software repositories, including the packages with

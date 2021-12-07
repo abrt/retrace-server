@@ -40,7 +40,7 @@ def application(environ, start_response):
         task.remove()
     except Exception:
         return response(start_response, "500 Internal Server Error",
-                        _("An error occured while deleting task data"))
+                        _("An error occurred while deleting task data"))
 
     return response(start_response, "200 OK",
                     _("All task data were deleted successfully"))
