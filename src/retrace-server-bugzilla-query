@@ -7,6 +7,7 @@ to a log and for tasks found in the comments set bugzillano field with bugzilla 
 import sys
 import re
 import time
+from datetime import datetime, timedelta
 
 from typing import Dict, List, Set
 from pathlib import Path
@@ -17,6 +18,7 @@ from retrace.retrace import BUGZILLA_STATUS, RetraceTask
 from retrace.config import Config
 
 CONFIG = Config()
+BUGZILLA_QUERY_LIMIT = 500
 
 if __name__ == "__main__":
 
@@ -47,37 +49,39 @@ if __name__ == "__main__":
         else:
             log.write("Not logged in. Continue as anonymous user.\n")
 
+        found_tasks: Dict[str, List[str]] = {}
         product_list = CONFIG.get_list("BugzillaProduct")
         component_list = CONFIG.get_list("BugzillaComponent")
-
-        query = bzapi.build_query(
-            product=product_list,
-            component=component_list,
-            include_fields=["id"])
-
-        # I don't want to run regex on each and every comment, at first try fast check
-        # if trigger word is in comment and if is, then use slower regex
+        config_status = CONFIG.get_list("BugzillaStatus")
         trigger_words = CONFIG.get_list("BugzillaTriggerWords")
         regexes = CONFIG.get_list("BugzillaRegExes")
+        delta = CONFIG["BugzillaQueryLastChangeDelta"]
 
-        config_status = CONFIG.get_list("BugzillaStatus")
+        query = bzapi.build_query(product=product_list,
+                                  component=component_list,
+                                  include_fields=["id", "comments"])
         query["status"] = list(set(BUGZILLA_STATUS).difference(config_status))
+        query["last_change_time"] = datetime.today() - timedelta(hours = delta)
+        bugzilla_offset = 0
+        bugzilla_bug_count = 0
+        while True:
+            bugzilla_offset += bugzilla_bug_count
+            query["offset"] = bugzilla_offset
+            query["limit"] = BUGZILLA_QUERY_LIMIT
+            bugs = bzapi.query(query)
 
-        found_tasks: Dict[str, List[str]] = {}
+            bugzilla_bug_count = len(bugs)
+            log.write("Query returned {0} bugs at offset {1}"
+                      "\n".format(bugzilla_bug_count, bugzilla_offset))
+            # Query until we get no bugs back, which indicates the end
+            if bugzilla_bug_count == 0:
+                break
 
-        bugs = [x.bug_id for x in bzapi.query(query)]
-
-        while bugs:
-            query = bzapi.build_query(
-                bug_id=bugs[:250],
-                include_fields=["id", "comments"])
-
-            cur_bugs = bzapi.query(query)
-            bugs = bugs[250:]
-            for bug in cur_bugs:
+            for bug in bugs:
                 found_ids: Set[str] = set()
                 for comment in bug.comments:
                     for i, trigger_word in enumerate(trigger_words):
+                        # Only if trigger word is in comment do we use slower regex
                         if trigger_word in comment["text"]:
                             m = re.findall(regexes[i], comment["text"])
                             found_ids.update(m)
