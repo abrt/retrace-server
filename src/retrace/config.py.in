@@ -90,6 +90,7 @@ class Config:
             "BugzillaComponent": "kernel",
             "BugzillaTriggerWords": "",
             "BugzillaRegExes": "",
+            "BugzillaQueryLastChangeDelta": 168,
             "ProcessCommunicateTimeout": 3600,
             "KernelDebuggerPath": "/usr/bin/crash",
         }
