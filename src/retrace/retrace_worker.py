@@ -784,7 +784,6 @@ class RetraceWorker:
             log_info("Converted size: %s" % human_readable_size(newsize))
             log_info("Makedumpfile took %d seconds and saved %s"
                      % (dur, human_readable_size(oldsize - newsize)))
-            oldsize = newsize
 
         if custom_kernelver is not None:
             kernelver = custom_kernelver
