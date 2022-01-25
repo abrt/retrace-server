@@ -38,4 +38,5 @@ jobs:
           directory: ./build
           fail_ci_if_error: true
           flags: unittests
+          root_dir: .
           verbose: true
