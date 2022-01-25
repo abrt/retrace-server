@@ -3,14 +3,14 @@ subdir('hooks')
 
 configuration = configuration_data()
 
-configuration.set('CREATEREPO_BIN', createrepo.full_path())
-configuration.set('DF_BIN', df.full_path())
-configuration.set('GZIP_BIN', gzip.full_path())
-configuration.set('LSOF_BIN', lsof.full_path())
-configuration.set('PODMAN_BIN', podman.full_path())
-configuration.set('PS_BIN', ps.full_path())
-configuration.set('TAR_BIN', tar.full_path())
-configuration.set('XZ_BIN', xz.full_path())
+configuration.set('CREATEREPO_BIN', createrepo.path())
+configuration.set('DF_BIN', df.path())
+configuration.set('GZIP_BIN', gzip.path())
+configuration.set('LSOF_BIN', lsof.path())
+configuration.set('PODMAN_BIN', podman.path())
+configuration.set('PS_BIN', ps.path())
+configuration.set('TAR_BIN', tar.path())
+configuration.set('XZ_BIN', xz.path())
 
 sources = [
   '__init__.py',
