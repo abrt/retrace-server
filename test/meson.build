@@ -1,11 +1,5 @@
-# TODO: build_root() is deprecated since Meson 0.56.0. Port to
-# project_build_root() once the version lands in all supported
-# releases.
-build_dir = meson.build_root()
-# TODO: source_root() is deprecated since Meson 0.56.0. Port to
-# project_source_root() once the version lands in all supported
-# releases.
-source_dir = meson.source_root()
+build_dir = meson.project_build_root()
+source_dir = meson.project_source_root()
 
 test_env = environment()
 test_env.set('PYTHONPATH',

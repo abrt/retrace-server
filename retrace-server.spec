@@ -23,7 +23,7 @@ BuildRequires: coreutils
 BuildRequires: gettext
 BuildRequires: gzip
 BuildRequires: lsof
-BuildRequires: meson
+BuildRequires: meson >= 0.59.0
 # /usr/bin/ps from procps-ng is used to monitor running workers.
 BuildRequires: procps-ng
 BuildRequires: python3-devel
