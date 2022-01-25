@@ -5,6 +5,8 @@ datadir = get_option('datadir')
 mandir = get_option('mandir')
 sysconfdir = get_option('sysconfdir')
 
+spec_name = '@0@.spec'.format(meson.project_name())
+
 i18n = import('i18n')
 python = import('python')
 
@@ -48,6 +50,14 @@ subdir('man')
 subdir('po')
 subdir('src')
 subdir('test')
+
+# Copy the spec file to the build directory so that Tito can run inside it to build
+# the rpm and srpm targets (below).
+configure_file(
+  copy: true,
+  input: spec_name,
+  output: spec_name,
+)
 
 # This will, naturally, fail if the build directory is outside the git repo,
 # since Tito does not provide a way to specify the working directory or the spec
