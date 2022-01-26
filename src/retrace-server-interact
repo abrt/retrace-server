@@ -28,7 +28,13 @@ def print_cmdline(cmd_line: List[str]):
     sys.stderr.write("$ %s\n\n" % list2cmdline(cmd_line))
 
 if __name__ == "__main__":
-    groups = [grp.getgrgid(g).gr_name for g in os.getgroups()]
+    groups = []
+    for g in os.getgroups():
+        try:
+            group = grp.getgrgid(g)
+            groups.append(group.gr_name)
+        except KeyError:
+            pass
     if not CONFIG["AuthGroup"] in groups:
         sys.stderr.write("You must be a member '%s' group in order to use "
                          "interactive debugging.\n" % CONFIG["AuthGroup"])
