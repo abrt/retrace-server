@@ -4,7 +4,7 @@
 
 Summary: Application for remote coredump analysis
 Name: retrace-server
-Version: 1.24.0
+Version: 1.24.1
 Release: 1%{?dist}
 License: GPLv2+
 URL: https://github.com/abrt/retrace-server
@@ -239,6 +239,24 @@ exit 0
 %license COPYING
 
 %changelog
+* Mon Feb 07 2022 Matěj Grabovský <mgrabovs@redhat.com> 1.24.1-1
+- retrace-server-interact: Fix traceback for non-existent gid
+  (dwysocha@redhat.com)
+- bugzilla-query: Use 'limit' and search only recently modified bugs
+  (dwysocha@redhat.com)
+- manager: Add existence and permissions check of custom_url to avoid failed
+  tasks (dwysocha@redhat.com)
+- Update translations
+- retrace-server-task: Improve verbose error message when 'create' fails
+  (dwysocha@redhat.com)
+- retrace: Handle vmware .vmsn kernel version detection with heuristic
+  (dwysocha@redhat.com)
+- manager: Disallow NULL string in custom core location on manager page
+  (dwysocha@redhat.com)
+- man: Cleanup retrace-server-worker man page (dwysocha@redhat.com)
+- retrace-server-task: Fix Traceback with no arguments (dwysocha@redhat.com)
+- Introduce new unit tests for Podman backend (mgrabovs@redhat.com)
+
 * Mon May 24 2021 Matěj Grabovský <mgrabovs@redhat.com> 1.24.0-1
 - Major refactoring of Podman backend code
 - Recommend httpd dependency
