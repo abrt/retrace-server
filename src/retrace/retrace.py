@@ -343,7 +343,6 @@ def get_supported_releases() -> List[str]:
 
     return result
 
-
 def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
             packages: Iterable[str], corepath: Path, release: Release) \
         -> Tuple[str, str]:
@@ -1348,11 +1347,9 @@ class RetraceTask:
         returncode = 0
         crashdir = self.get_crashdir()
         try:
-            t = 3600
-            if CONFIG["ProcessCommunicateTimeout"]:
-                t = CONFIG["ProcessCommunicateTimeout"]
+            timeout = CONFIG["ProcessCommunicateTimeout"]
             child = run(crash_start, stdout=PIPE, stderr=STDOUT,
-                        cwd=crashdir, timeout=t,
+                        cwd=crashdir, timeout=timeout,
                         input=crash_cmdline.encode(), check=False)
             cmd_output = child.stdout
         except OSError as err:
@@ -1362,7 +1359,7 @@ class RetraceTask:
         except TimeoutExpired:
             raise Exception("WARNING: crash command: '%s' exceeded %s "
                             " second timeout - damaged vmcore?" % (
-                                crash_cmdline.replace('\r', '; ').replace('\n', '; '), t))
+                                crash_cmdline.replace('\r', '; ').replace('\n', '; '), timeout))
         except Exception as err:
             log_warn("crash command: '%s' triggered Unknown exception %s" %
                      (crash_cmdline.replace('\r', '; ').replace('\n', '; '), err))
@@ -2019,9 +2016,11 @@ class KernelVMcore:
             log_error("Cannot convert a non-flattened vmcore")
             return False
         newvmcore = Path("%s.normal" % self._vmcore_path)
+        timeout = CONFIG["ProcessCommunicateTimeout"]
+        cmd = ["makedumpfile", "-R", str(newvmcore)]
         try:
             with open(self._vmcore_path) as fd:
-                child = run(["makedumpfile", "-R", str(newvmcore)], stdin=fd, check=False)
+                child = run(cmd, stdin=fd, timeout=timeout, check=False)
                 if child.returncode:
                     log_warn("makedumpfile -R exited with %d" % child.returncode)
                     if newvmcore.is_file():
@@ -2031,6 +2030,10 @@ class KernelVMcore:
         except IOError as e:
             log_error("Failed to convert flattened vmcore %s - errno(%d - '%s')" %
                       (self._vmcore_path, e.errno, e.strerror))
+            return False
+        except TimeoutExpired:
+            log_error("Command: '{}' exceeded {} second timeout - "
+                      "damaged vmcore?".format(" ".join(cmd), timeout))
             return False
 
         self._is_flattened_format = False
@@ -2050,8 +2053,17 @@ class KernelVMcore:
         cmd = ["makedumpfile", "-D", "--dump-dmesg", str(self._vmcore_path), str(dmesg_path)]
 
         result = None
-        lines = run(cmd, stdout=PIPE, stderr=DEVNULL,
-                    encoding='utf-8', check=False).stdout.splitlines()
+        timeout = CONFIG["ProcessCommunicateTimeout"]
+        log_info("Executing makedumpfile to obtain dump level")
+        try:
+            lines = run(cmd, stdout=PIPE, stderr=DEVNULL,
+                        encoding='utf-8', timeout=timeout,
+                        check=False).stdout.splitlines()
+        except TimeoutExpired:
+            log_error("Command: '{}' exceeded {} second timeout - "
+                      "damaged vmcore?".format(" ".join(cmd), timeout))
+            return None
+
         for line in lines:
             match = self.DUMP_LEVEL_PARSER.match(line)
             if match is None:
@@ -2095,9 +2107,17 @@ class KernelVMcore:
             return
 
         newvmcore: Path = Path("%s.stripped" % self._vmcore_path)
-        child = run(["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
-                     "-x", self._vmlinux, "--message-level", "0", str(self._vmcore_path),
-                     str(newvmcore)], check=False)
+        cmd = ["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
+               "-x", self._vmlinux, "--message-level", "0",
+               str(self._vmcore_path), str(newvmcore)]
+        timeout = CONFIG["ProcessCommunicateTimeout"]
+        try:
+            child = run(cmd, timeout=timeout, check=False)
+        except TimeoutExpired:
+            log_error("Command: '{}' exceeded {} second timeout - "
+                      "damaged vmcore?".format(" ".join(cmd), timeout))
+            return
+
         if child.returncode:
             log_warn("makedumpfile exited with %d" % child.returncode)
             if newvmcore.is_file():
