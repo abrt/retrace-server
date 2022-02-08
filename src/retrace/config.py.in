@@ -91,7 +91,7 @@ class Config:
             "BugzillaTriggerWords": "",
             "BugzillaRegExes": "",
             "BugzillaQueryLastChangeDelta": 168,
-            "ProcessCommunicateTimeout": 3600,
+            "ProcessCommunicateTimeout": 43200,
             "KernelDebuggerPath": "/usr/bin/crash",
         }
 
