@@ -60,7 +60,7 @@ def check_open_crash_file(retrace_task: RetraceTask) -> bool:
     else:
         return False
 
-    lsof = run([LSOF_BIN, "+wt", crash_path], stdout=PIPE, check=False, encoding='utf-8')
+    lsof = run([LSOF_BIN, "+wt", crash_path], stdout=PIPE, check=False, encoding="utf-8")
     pids = lsof.stdout
 
     if pids:
