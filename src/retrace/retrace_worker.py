@@ -338,8 +338,8 @@ class RetraceWorker:
 
         packagesfile = crashdir / "packages"
         if packagesfile.is_file():
-            with packagesfile.open() as f:
-                packages = f.read().split()
+            with packagesfile.open() as file:
+                packages = file.read().split()
         else:
             # read required packages from coredump
             try:

@@ -58,8 +58,8 @@ def sync_using_dnf(target_id: str, repo_url: str, global_dnf_cfg: str = "",
     dnftmp.write(local_dnf_cfg)
     dnftmp.close()
 
-    with Path(dnftmp.name).open("r") as f:
-        log_debug("Using dnf config from %s\n%s" % (dnftmp.name, f.read()))
+    with Path(dnftmp.name).open("r") as file:
+        log_debug("Using dnf config from %s\n%s" % (dnftmp.name, file.read()))
 
     pkg_dir = Path(CONFIG["RepoDir"], target_id, "Packages")
     cachedir = Path(CONFIG["RepoDir"], "temp", target_id)

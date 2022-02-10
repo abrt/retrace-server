@@ -403,8 +403,9 @@ def application(environ, start_response):
         except Exception:
             return response(start_response, "404 Not Found", _("There is no such task"))
 
-        with open("/usr/share/retrace-server/managertask.xhtml", "r") as f:
-            output = f.read(1 << 20) # 1MB
+        with open("/usr/share/retrace-server/managertask.xhtml", "r") as file:
+            # Read 1 MiB
+            output = file.read(1 << 20)
 
         title = "%s #%s - %s" % (_("Task"), task.get_taskid(), _("Retrace Server Task Manager"))
         taskno = "%s #%s" % (_("Task"), task.get_taskid())
@@ -576,8 +577,9 @@ def application(environ, start_response):
             else:
                 return response(start_response, "404 Not Found", _("There is no such task"))
 
-        with open("/usr/share/retrace-server/managertask.xhtml", "r") as f:
-            output = f.read(1 << 20) # 1MB
+        with open("/usr/share/retrace-server/managertask.xhtml", "r") as file:
+            # Read 1 MiB
+            output = file.read(1 << 20)
 
         start = ""
         if not ftptask and task.has_status():
@@ -784,8 +786,9 @@ def application(environ, start_response):
         return response(start_response, "200 OK", output, [("Content-Type", "text/html")])
 
     # menu
-    with open("/usr/share/retrace-server/manager.xhtml") as f:
-        output = f.read(1 << 20) # 1MB
+    with open("/usr/share/retrace-server/manager.xhtml") as file:
+        # Read 1 MiB
+        output = file.read(1 << 20)
 
     title = _("Retrace Server Task Manager")
 
@@ -951,14 +954,16 @@ def application(environ, start_response):
 
     vmcore_form = ""
     if CONFIG["AllowVMCoreTask"]:
-        with open("/usr/share/retrace-server/manager_vmcore_task_form.xhtml") as f:
-            vmcore_form = f.read(1 << 20) # 1MB
+        with open("/usr/share/retrace-server/manager_vmcore_task_form.xhtml") as file:
+            # Read 1 MiB
+            vmcore_form = file.read(1 << 20)
     output = output.replace("{vmcore_task_form}", vmcore_form)
 
     usrcore_form = ""
     if CONFIG["AllowUsrCoreTask"]:
-        with open("/usr/share/retrace-server/manager_usrcore_task_form.xhtml") as f:
-            usrcore_form = f.read(1 << 20) # 1MB
+        with open("/usr/share/retrace-server/manager_usrcore_task_form.xhtml") as file:
+            # Read 1 MiB
+            usrcore_form = file.read(1 << 20)
     output = output.replace("{usrcore_task_form}", usrcore_form)
 
     output = output.replace("{title}", title)

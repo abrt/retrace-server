@@ -13,8 +13,9 @@ def application(environ, start_response):
     _ = parse_http_gettext("%s" % request.accept_language,
                            "%s" % request.accept_charset)
 
-    with open("/usr/share/retrace-server/index.xhtml") as f:
-        output = f.read(1 << 20) # 1MB
+    with open("/usr/share/retrace-server/index.xhtml") as file:
+        # Read 1 MiB
+        output = file.read(1 << 20)
 
     title = _("Retrace Server")
     welcome = _("Welcome to Retrace Server")
