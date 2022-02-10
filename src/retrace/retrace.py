@@ -288,7 +288,7 @@ def get_canon_arch(arch: str) -> str:
 
 
 def guess_arch(coredump_path: Path) -> Optional[str]:
-    output = run(["file", str(coredump_path)], stdout=PIPE, encoding='utf-8',
+    output = run(["file", str(coredump_path)], stdout=PIPE, encoding="utf-8",
                  check=False).stdout
     match = CORE_ARCH_PARSER.search(output)
     if match:
@@ -313,7 +313,7 @@ def guess_arch(coredump_path: Path) -> Optional[str]:
 
     result = None
     lines = run(["strings", str(coredump_path)],
-                stdout=PIPE, stderr=STDOUT, encoding='utf-8',
+                stdout=PIPE, stderr=STDOUT, encoding="utf-8",
                 check=False).stdout.splitlines()
     for line in lines:
         for canon_arch, derived_archs in ARCH_MAP.items():
@@ -355,7 +355,7 @@ def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
     if CONFIG["RetraceEnvironment"] == "mock":
         output = run(["/usr/bin/mock", "chroot", "--configdir", savedir,
                       "--", "ls '%s'" % executable],
-                     stdout=PIPE, stderr=DEVNULL, encoding='utf-8',
+                     stdout=PIPE, stderr=DEVNULL, encoding="utf-8",
                      check=False).stdout
         if output.strip() != executable:
             raise Exception("The appropriate package set could not be installed")
@@ -741,7 +741,7 @@ def get_active_tasks() -> List[int]:
 
 
 def check_run(cmd: List[str]) -> None:
-    child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8', check=False)
+    child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding="utf-8", check=False)
     stdout = child.stdout
     if child.returncode:
         raise Exception("%s exited with %d: %s" % (cmd[0], child.returncode, stdout))
@@ -1100,7 +1100,7 @@ class RetraceTask:
             return None
 
         filename = self._get_file_path(key)
-        with open(filename, "r", encoding='utf-8', errors='replace') as f:
+        with open(filename, "r", encoding="utf-8", errors='replace') as f:
             result = f.read(maxlen)
 
         return result
@@ -1367,7 +1367,7 @@ class RetraceTask:
 
         try:
             if cmd_output is not None:
-                cmd_output.decode('utf-8')
+                cmd_output.decode("utf-8")
         except UnicodeDecodeError as err:
             log_warn("crash command: '%s' triggered UnicodeDecodeError " %
                      crash_cmdline.replace('\r', '; ').replace('\n', '; '))
@@ -1466,7 +1466,7 @@ class RetraceTask:
                     continue
 
                 child = run(["wget", "-nv", "-P", str(crashdir), url],
-                            stdout=PIPE, stderr=STDOUT, encoding='utf-8', check=False)
+                            stdout=PIPE, stderr=STDOUT, encoding="utf-8", check=False)
                 stdout = child.stdout
                 if child.returncode:
                     errors.append((url, "wget exited with %d: %s" % (child.returncode, stdout)))
@@ -2057,7 +2057,7 @@ class KernelVMcore:
         log_info("Executing makedumpfile to obtain dump level")
         try:
             lines = run(cmd, stdout=PIPE, stderr=DEVNULL,
-                        encoding='utf-8', timeout=timeout,
+                        encoding="utf-8", timeout=timeout,
                         check=False).stdout.splitlines()
         except TimeoutExpired:
             log_error("Command: '{}' exceeded {} second timeout - "
@@ -2178,7 +2178,7 @@ class KernelVMcore:
         save = getsignal(SIGPIPE)
         signal(SIGPIPE, SIG_DFL)
         child = run(crash_cmd + ["--osrelease", str(core_path)],
-                    stdout=PIPE, stderr=STDOUT, encoding='utf-8', check=False)
+                    stdout=PIPE, stderr=STDOUT, encoding="utf-8", check=False)
         release = child.stdout.strip()
         ret = child.returncode
         signal(SIGPIPE, save)
@@ -2215,7 +2215,7 @@ class KernelVMcore:
                 if release:
                     release = release.group(0)
             if release:
-                release = release.decode('utf-8')
+                release = release.decode("utf-8")
 
         # Clean up the release before returning or calling KernelVer
         if release is None or release == "unknown":
@@ -2322,7 +2322,7 @@ class KernelVMcore:
         vmlinux_path = None
         debugfiles = {}
         lines = run(["rpm", "-qpl", str(debuginfo)],
-                    stdout=PIPE, stderr=DEVNULL, encoding='utf-8', check=False).stdout.splitlines()
+                    stdout=PIPE, stderr=DEVNULL, encoding="utf-8", check=False).stdout.splitlines()
         for line in lines:
             if line.endswith(pattern):
                 vmlinux_path = line
@@ -2380,7 +2380,7 @@ class KernelVMcore:
             return vmlinux
 
         modules = []
-        for line in stdout.decode('utf-8').splitlines():
+        for line in stdout.decode("utf-8").splitlines():
             # skip header
             if "NAME" in line:
                 continue

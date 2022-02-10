@@ -189,7 +189,7 @@ class RetraceWorker:
     def _retrace_run(self, errorcode: int, cmd: List[str]) -> str:
         "Runs cmd using subprocess.Popen and kills script with errorcode on failure"
         try:
-            child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding='utf-8', check=False)
+            child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding="utf-8", check=False)
             output = child.stdout
         except Exception as ex:
             child = None
@@ -356,7 +356,7 @@ class RetraceWorker:
                              f"--repos={repoid}",
                              f"--config={dnfcfgpath}",
                              "--log=%s" % (self.task.get_savedir() / "c2p_log")],
-                            stdout=PIPE, stderr=PIPE, encoding='utf-8', check=False)
+                            stdout=PIPE, stderr=PIPE, encoding="utf-8", check=False)
                 section = 0
                 lines = child.stdout.split("\n")
                 libdb = False
@@ -505,7 +505,7 @@ class RetraceWorker:
                 log_debug("Using FAF repository")
                 build_call.append("--volume={0}:{0}:ro".format(CONFIG["FafLinkDir"]))
 
-            child = run(build_call, stdout=sys.stderr, stderr=PIPE, encoding='utf-8',
+            child = run(build_call, stdout=sys.stderr, stderr=PIPE, encoding="utf-8",
                         check=False)
 
             if child.returncode:
@@ -877,7 +877,7 @@ class RetraceWorker:
                 os.umask(old_umask)
 
             child = run(["/usr/bin/mock", "--configdir", str(cfgdir), "init"],
-                        stdout=PIPE, stderr=PIPE, encoding='utf-8', check=False)
+                        stdout=PIPE, stderr=PIPE, encoding="utf-8", check=False)
             stderr = child.stderr
             if child.returncode:
                 raise Exception("mock exited with %d:\n%s" % (child.returncode, stderr))

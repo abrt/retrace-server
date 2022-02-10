@@ -225,7 +225,7 @@ def application(environ, start_response):
         if not task.has_results(match.group(9)):
             return response(start_response, "404 Not Found", _("There is no such record"))
 
-        return response(start_response, "200 OK", task.get_results(match.group(9)).decode('utf-8','ignore'))
+        return response(start_response, "200 OK", task.get_results(match.group(9)).decode("utf-8",'ignore'))
 
     elif match.group(6) and match.group(6) == "start":
         # start
