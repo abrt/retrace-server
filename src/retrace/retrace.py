@@ -258,15 +258,16 @@ class RetraceWorkerError(RetraceError):
 
 
 def get_supported_releases() -> List[str]:
-    result = []
-    for f in Path(CONFIG["RepoDir"]).iterdir():
-        if not f.is_dir():
+    result: List[str] = []
+    for path in Path(CONFIG["RepoDir"]).iterdir():
+        if not path.is_dir():
             continue
 
-        if REPODIR_NAME_PARSER.match(f.name) and Path(f, "repodata").is_dir():
-            result.append(f.name)
+        if REPODIR_NAME_PARSER.match(path.name) and (path / "repodata").is_dir():
+            result.append(path.name)
 
     return result
+
 
 def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
             packages: Iterable[str], corepath: Path, release: Release) \
@@ -405,7 +406,7 @@ def is_package_known(package_nvr: str, arch: str, releaseid: Optional[str] = Non
     else:
         releases = [releaseid]
 
-    candidates = []
+    candidates: List[Path] = []
     package_nvr = remove_epoch(package_nvr)
     repodir = Path(CONFIG["RepoDir"])
 
@@ -446,7 +447,7 @@ def cache_files_from_debuginfo(debuginfo: Path, basedir: Path, files: List[str])
 
 
 def get_files_sizes(directory: Union[str, Path]) -> List[Tuple[Path, int]]:
-    result = []
+    result: List[Tuple[Path, int]] = []
 
     for f in Path(directory).iterdir():
         if f.is_file():
