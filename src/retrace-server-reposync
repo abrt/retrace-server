@@ -19,8 +19,8 @@ from typing import Iterator, Optional, TextIO
 import rpm
 import dnf
 
-from retrace.retrace import (get_canon_arch,
-                             log_debug,
+from retrace.architecture import get_canon_arch
+from retrace.retrace import (log_debug,
                              log_error,
                              log_info,
                              log_warn)

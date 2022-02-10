@@ -14,6 +14,7 @@ configuration.set('XZ_BIN', xz.path())
 
 sources = [
   '__init__.py',
+  'architecture.py',
   'argparser.py',
   'plugins.py',
   'retrace.py',
