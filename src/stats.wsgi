@@ -53,8 +53,9 @@ def application(environ, start_response):
         "{_Versions}": _("Versions"),
         }
 
-    with open("/usr/share/retrace-server/stats.xhtml") as f:
-        output = f.read(1 << 20) # 1 MB
+    with open("/usr/share/retrace-server/stats.xhtml") as file:
+        # Read 1 MiB
+        output = file.read(1 << 20)
 
     for key in strings:
         output = output.replace(key, strings[key])
