@@ -393,13 +393,13 @@ def is_package_known(package_nvr: str, arch: str, releaseid: Optional[str] = Non
         for derived_archs in ARCH_MAP.values():
             if arch not in derived_archs:
                 continue
-            for a in derived_archs:
-                p = get_package_by_nevra(db, n, e or 0, v, r, a)
-                if p is not None:
+            for derived_arch in derived_archs:
+                package = get_package_by_nevra(db, n, e or 0, v, r, derived_arch)
+                if package is not None:
                     return True
         # Try with noarch
-        p = get_package_by_nevra(db, n, e or 0, v, r, "noarch")
-        return p is not None
+        package = get_package_by_nevra(db, n, e or 0, v, r, "noarch")
+        return package is not None
 
     if releaseid is None:
         releases = get_supported_releases()
@@ -449,11 +449,11 @@ def cache_files_from_debuginfo(debuginfo: Path, basedir: Path, files: List[str])
 def get_files_sizes(directory: Union[str, Path]) -> List[Tuple[Path, int]]:
     result: List[Tuple[Path, int]] = []
 
-    for f in Path(directory).iterdir():
-        if f.is_file():
-            result.append((f, f.stat().st_size))
-        elif f.is_dir():
-            result += get_files_sizes(f)
+    for path in Path(directory).iterdir():
+        if path.is_file():
+            result.append((path, path.stat().st_size))
+        elif path.is_dir():
+            result += get_files_sizes(path)
 
     return sorted(result, key=lambda f_s: f_s[1], reverse=True)
 
@@ -551,9 +551,9 @@ def unpack_vmcore(path: Path) -> None:
             vmcore_candidate += 1
 
         # rename files with .vmem extension to vmcore.vmem
-        for f in Path(parentdir).iterdir():
-            if f.suffix == ".vmem":
-                f.rename(Path(parentdir, vmcore_file + f.suffix))
+        for path in Path(parentdir).iterdir():
+            if path.suffix == ".vmem":
+                path.rename(Path(parentdir, vmcore_file + path.suffix))
 
         if len(diff) > 1:
             archive = rename_with_suffix(newfiles[vmcore_candidate], archivebase)
@@ -994,8 +994,8 @@ class RetraceTask:
         if mode not in ["w", "a"]:
             raise ValueError("mode must be either 'w' or 'a'")
 
-        with open(self._get_file_path(key), mode) as f:
-            f.write(value)
+        with open(self._get_file_path(key), mode) as file:
+            file.write(value)
             self.chgrp(key)
             self.chmod(key)
 
@@ -1013,8 +1013,8 @@ class RetraceTask:
                 if ex.errno != errno.ENOENT:
                     raise
 
-        with open(tmpfilename, mode) as f:
-            f.write(value)
+        with open(tmpfilename, mode) as file:
+            file.write(value)
 
         tmpfilename.rename(filename)
         self.chgrp(key)
@@ -1026,8 +1026,8 @@ class RetraceTask:
             return None
 
         filename = self._get_file_path(key)
-        with open(filename, "r", encoding="utf-8", errors='replace') as f:
-            result = f.read(maxlen)
+        with open(filename, "r", encoding="utf-8", errors="replace") as file:
+            result = file.read(maxlen)
 
         return result
 
@@ -1069,7 +1069,7 @@ class RetraceTask:
     @staticmethod
     def calculate_md5(file_name: Union[str, Path], chunk_size: int = 65536):
         hash_md5 = hashlib.md5()
-        with open(file_name, "rb") as f:
+        with open(file_name, "rb") as file:
             while True:
                 chunk = f.read(chunk_size)
                 if not chunk:
@@ -1138,7 +1138,7 @@ class RetraceTask:
         try:
             return int(result)
         except ValueError as ex:
-            log_warn('Could not read task #%d status: %s' % (self.get_taskid(), ex))
+            log_warn("Could not read task #%d status: %s" % (self.get_taskid(), ex))
             return None
 
     def set_status(self, statuscode: int) -> None:
@@ -1280,15 +1280,15 @@ class RetraceTask:
             cmd_output = child.stdout
         except OSError as err:
             log_warn("crash command: '%s' triggered OSError " %
-                     crash_cmdline.replace('\r', '; ').replace('\n', '; '))
+                     crash_cmdline.replace("\r", "; ").replace("\n", "; "))
             log_warn("  %s" % err)
         except TimeoutExpired:
             raise Exception("WARNING: crash command: '%s' exceeded %s "
                             " second timeout - damaged vmcore?" % (
-                                crash_cmdline.replace('\r', '; ').replace('\n', '; '), timeout))
+                                crash_cmdline.replace("\r", "; ").replace("\n", "; "), timeout))
         except Exception as err:
             log_warn("crash command: '%s' triggered Unknown exception %s" %
-                     (crash_cmdline.replace('\r', '; ').replace('\n', '; '), err))
+                     (crash_cmdline.replace("\r", "; ").replace("\n", "; "), err))
             log_warn("  %s" % sys.exc_info()[0])
 
         try:
@@ -1296,11 +1296,11 @@ class RetraceTask:
                 cmd_output.decode("utf-8")
         except UnicodeDecodeError as err:
             log_warn("crash command: '%s' triggered UnicodeDecodeError " %
-                     crash_cmdline.replace('\r', '; ').replace('\n', '; '))
+                     crash_cmdline.replace("\r", "; ").replace("\n", "; "))
             log_warn("  %s" % err)
 
         if child.returncode:
-            log_warn("crash '%s' exited with %d" % (crash_cmdline.replace('\r', '; ').replace('\n', '; '),
+            log_warn("crash '%s' exited with %d" % (crash_cmdline.replace("\r", "; ").replace("\n", "; "),
                                                     child.returncode))
             returncode = child.returncode
 
@@ -1928,7 +1928,7 @@ class KernelVMcore:
                 fd.seek(0)
                 # Read 16 bytes (SIG_LEN_MDF from crash-utility makedumpfile.h)
                 b = fd.read(16)
-                self._is_flattened_format = b.startswith(b'makedumpfile')
+                self._is_flattened_format = b.startswith(b"makedumpfile")
         except IOError as e:
             log_error("Failed to get makedumpfile header - failed open/seek/read of "
                       "%s with errno(%d - '%s')" %
@@ -2148,7 +2148,7 @@ class KernelVMcore:
             log_error("Failed to get kernel release from file %s" %
                       core_path)
             return None
-        release = release.rstrip('\0 \t\n')
+        release = release.rstrip("\0 \t\n")
 
         # check whether architecture is present
         try:
