@@ -30,20 +30,21 @@ jobs:
 
       - name: Run mypy
         run: |
+          cd build
           stubgen --output mypy_stubs --package createrepo_c --package dnf --package hawkey \
             --package pyfaf
-          MYPYPATH=$(pwd)/mypy_stubs mypy --config-file=mypy.ini build/src
-          MYPYPATH=$(pwd)/mypy_stubs:$(pwd)/build/src mypy --config-file=mypy.ini --scripts-are-modules \
-            build/src/coredump2packages \
-            build/src/retrace-server-bugzilla-query \
-            build/src/retrace-server-bugzilla-refresh \
-            build/src/retrace-server-cleanup \
-            build/src/retrace-server-interact \
-            build/src/retrace-server-plugin-checker \
-            build/src/retrace-server-reposync \
-            build/src/retrace-server-reposync-faf \
-            build/src/retrace-server-task \
-            build/src/retrace-server-worker
+          MYPYPATH=$(pwd)/mypy_stubs mypy --config-file=../mypy.ini src/
+          MYPYPATH=$(pwd)/mypy_stubs:$(pwd)/src/ mypy --config-file=../mypy.ini --scripts-are-modules \
+            src/coredump2packages \
+            src/retrace-server-bugzilla-query \
+            src/retrace-server-bugzilla-refresh \
+            src/retrace-server-cleanup \
+            src/retrace-server-interact \
+            src/retrace-server-plugin-checker \
+            src/retrace-server-reposync \
+            src/retrace-server-reposync-faf \
+            src/retrace-server-task \
+            src/retrace-server-worker
   pylint:
     container:
       image: fedora:latest
@@ -65,15 +66,17 @@ jobs:
 
       - name: Run pylint
         run: |
+          cd build
           python3 -m pylint \
-            build/src \
-            build/src/coredump2packages \
-            build/src/retrace-server-bugzilla-query \
-            build/src/retrace-server-bugzilla-refresh \
-            build/src/retrace-server-cleanup \
-            build/src/retrace-server-interact \
-            build/src/retrace-server-plugin-checker \
-            build/src/retrace-server-reposync \
-            build/src/retrace-server-reposync-faf \
-            build/src/retrace-server-task \
-            build/src/retrace-server-worker
+            --rcfile=../pylintrc \
+            src \
+            src/coredump2packages \
+            src/retrace-server-bugzilla-query \
+            src/retrace-server-bugzilla-refresh \
+            src/retrace-server-cleanup \
+            src/retrace-server-interact \
+            src/retrace-server-plugin-checker \
+            src/retrace-server-reposync \
+            src/retrace-server-reposync-faf \
+            src/retrace-server-task \
+            src/retrace-server-worker
