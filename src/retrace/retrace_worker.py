@@ -14,6 +14,7 @@ from types import ModuleType
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from retrace.hooks.hooks import RetraceHook
+from .architecture import guess_arch
 from .retrace import (ALLOWED_FILES, EXPLOITABLE_SEPARATOR, PYTHON_LABEL_END,
                       PYTHON_LABEL_START, REPO_PREFIX, REQUIRED_FILES,
                       STATUS, STATUS_ANALYZE, STATUS_BACKTRACE, STATUS_CLEANUP,
@@ -22,7 +23,6 @@ from .retrace import (ALLOWED_FILES, EXPLOITABLE_SEPARATOR, PYTHON_LABEL_END,
                       TASK_VMCORE_INTERACTIVE, RETRACE_GPG_KEYS, SNAPSHOT_SUFFIXES,
                       get_active_tasks,
                       get_supported_releases,
-                      guess_arch,
                       is_package_known,
                       KernelVer,
                       KernelVMcore,

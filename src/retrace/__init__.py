@@ -1,5 +1,6 @@
-__all__ = ["argparser", "config", "plugins", "retrace", "retrace_worker", "util"]
+__all__ = ["architecture", "argparser", "config", "plugins", "retrace", "retrace_worker", "util"]
 
+from . import architecture
 from . import argparser
 from . import config
 from . import plugins
