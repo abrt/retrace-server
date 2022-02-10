@@ -49,7 +49,10 @@ def main() -> None:
             mirror_path = p.replace("$VER", args.VERSION).replace("$ARCH", args.ARCHITECTURE)
             if p.startswith("http:") or p.startswith("https:") or p.startswith("ftp:"):
                 try:
-                    urllib.request.urlopen(mirror_path)
+                    with urllib.request.urlopen(mirror_path) as _response:
+                        # Don't do anything. We only want to know whether the URL
+                        # works.
+                        pass
                     path_ok = True
                 except Exception:
                     pass

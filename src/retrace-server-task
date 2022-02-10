@@ -2,17 +2,17 @@
 
 """CLI for submitting tasks to Retrace Server."""
 
+import argparse
+import logging
 import os
-import sys
-import time
 import shutil
 import socket
+import sys
 import tarfile
-import logging
-import argparse
 import tempfile
-from typing import Any, Dict, Optional, Tuple
+import time
 from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
 
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -37,35 +37,34 @@ def prepare_tar(args: Dict[str, Any]) -> Path:
     corefile = Path(args['COREFILE'])
     tmpdir = Path(tempfile.mkdtemp())
     tar_name = tmpdir / "archive.tar.gz"
-    tar_file = tarfile.open(tar_name, "w:gz")
-    for itm in ["kernelver", "os_release", "package", "executable"]:
-        if itm in args.keys() and args[itm]:
-            LOGGER.info("Adding '%s' into tar", format(itm))
-            fl_path = tmpdir / itm
-            with fl_path.open("w") as fld:
-                fld.write(args[itm])
-            tar_file.add(str(fl_path), arcname=itm)
+    with tarfile.open(tar_name, "w:gz") as tar_file:
+        for itm in ["kernelver", "os_release", "package", "executable"]:
+            if itm in args.keys() and args[itm]:
+                LOGGER.info("Adding '%s' into tar", format(itm))
+                fl_path = tmpdir / itm
+                with fl_path.open("w") as fld:
+                    fld.write(args[itm])
+                tar_file.add(str(fl_path), arcname=itm)
 
-    LOGGER.info("Adding '%s' as '%s' into tar", corefile, args['task_type'])
-    if not corefile.is_file():
-        print("'{0}' does not exists".format(corefile))
-        sys.exit(1)
-
-    file_name = add_snapshot_suffix(args['task_type'], corefile)
-    tar_file.add(str(corefile), arcname=file_name)
-
-    if args['vmem']:
-        vmem = Path(args['vmem'])
-        vmem_file = args['task_type'] + ".vmem"
-        LOGGER.info("Adding '%s' as '%s' into tar", vmem, vmem_file)
-
-        if not vmem.is_file():
-            print("'{0}' does not exists".format(vmem))
+        LOGGER.info("Adding '%s' as '%s' into tar", corefile, args['task_type'])
+        if not corefile.is_file():
+            print("'{0}' does not exists".format(corefile))
             sys.exit(1)
 
-        tar_file.add(str(vmem), arcname=vmem_file)
+        file_name = add_snapshot_suffix(args['task_type'], corefile)
+        tar_file.add(str(corefile), arcname=file_name)
 
-    tar_file.close()
+        if args['vmem']:
+            vmem = Path(args['vmem'])
+            vmem_file = args['task_type'] + ".vmem"
+            LOGGER.info("Adding '%s' as '%s' into tar", vmem, vmem_file)
+
+            if not vmem.is_file():
+                print("'{0}' does not exists".format(vmem))
+                sys.exit(1)
+
+            tar_file.add(str(vmem), arcname=vmem_file)
+
     LOGGER.info("Tar file created as '%s'", tar_name)
     return tar_name
 

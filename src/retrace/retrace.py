@@ -915,9 +915,8 @@ class RetraceTask:
         if qs_text:
             starturl = "%s?%s" % (starturl, qs_text)
 
-        url = urllib.request.urlopen(starturl)
-        status = url.getcode()
-        url.close()
+        with urllib.request.urlopen(starturl) as response:
+            status = response.getcode()
 
         # 1/0 just to be consistent with call() in _start_local
         if status != 201:

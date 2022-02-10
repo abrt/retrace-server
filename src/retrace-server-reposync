@@ -52,11 +52,10 @@ def redirect_stderr(path: Path) -> Iterator[TextIO]:
 
 def sync_using_dnf(target_id: str, repo_url: str, global_dnf_cfg: str = "",
                    local_dnf_cfg: str = "") -> int:
-    dnftmp = tempfile.NamedTemporaryFile(mode="w", delete=False,
-                                         prefix="repo", suffix=".conf")
-    dnftmp.write(global_dnf_cfg)
-    dnftmp.write(local_dnf_cfg)
-    dnftmp.close()
+    with tempfile.NamedTemporaryFile(mode="w", delete=False,
+            prefix="repo", suffix=".conf") as dnftmp:
+        dnftmp.write(global_dnf_cfg)
+        dnftmp.write(local_dnf_cfg)
 
     with Path(dnftmp.name).open("r") as file:
         log_debug("Using dnf config from %s\n%s" % (dnftmp.name, file.read()))
