@@ -34,7 +34,9 @@ jobs:
           stubgen --output mypy_stubs --package createrepo_c --package dnf --package hawkey \
             --package pyfaf
           MYPYPATH=$(pwd)/mypy_stubs mypy --config-file=../mypy.ini src/
-          MYPYPATH=$(pwd)/mypy_stubs:$(pwd)/src/ mypy --config-file=../mypy.ini --scripts-are-modules \
+          MYPYPATH=$(pwd)/mypy_stubs:$(pwd)/src/ mypy \
+            --config-file=../mypy.ini \
+            --scripts-are-modules \
             src/coredump2packages \
             src/retrace-server-bugzilla-query \
             src/retrace-server-bugzilla-refresh \
@@ -81,4 +83,5 @@ jobs:
             src/retrace-server-reposync \
             src/retrace-server-reposync-faf \
             src/retrace-server-task \
-            src/retrace-server-worker
+            src/retrace-server-worker \
+            test
