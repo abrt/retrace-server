@@ -15,11 +15,11 @@ HOOK_TIMEOUT = 300
 
 def get_config_files(directory: Path) -> List[Path]:
     if not directory.is_dir():
-        log_warn(f'Configuration directory {directory} does not exist')
+        log_warn(f"Configuration directory {directory} does not exist")
         return []
 
     return [fname for fname in directory.iterdir()
-            if fname.suffix == '.conf']
+            if fname.suffix == ".conf"]
 
 
 def load_config_files(config_files: List[Path]) -> Dict[str, str]:

@@ -2,7 +2,7 @@ import itertools
 import multiprocessing as mp
 import os
 import shlex
-from typing import Iterable, List, Optional
+from typing import Iterable, Optional
 
 from pathlib import Path
 from subprocess import PIPE, CalledProcessError, run, TimeoutExpired
