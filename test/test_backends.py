@@ -1,6 +1,7 @@
 from unittest import mock, TestCase
 
-import retrace.backends.podman
+# The first import is required to make mock work correctly.
+import retrace.backends.podman # pylint: disable=unused-import
 from retrace.backends.podman import LocalPodmanBackend, PodmanContainer
 from retrace.config import PODMAN_BIN
 from retrace.retrace import RetraceError
@@ -71,7 +72,7 @@ class TestLocalPodmanBackend(TestCase):
     CONTAINER_ID = "7d191875746407d0e279d34e8627eb20dec4016ca592bd6b7f05273867e4eb2f"
 
     @mock.patch("retrace.backends.podman.run")
-    def test_start_container(self, mock_run, MockPodmanContainer):
+    def test_start_container(self, mock_run, MockPodmanContainer): # pylint: disable=invalid-name
         config = {
                 "FafLinkDir": "",
                 "RequireGPGCheck": False,
