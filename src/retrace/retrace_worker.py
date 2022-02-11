@@ -13,7 +13,7 @@ from tempfile import TemporaryDirectory
 from types import ModuleType
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from retrace.hooks.hooks import RetraceHook
+from .hooks.hooks import RetraceHook
 from .architecture import guess_arch
 from .retrace import (ALLOWED_FILES, EXPLOITABLE_SEPARATOR, PYTHON_LABEL_END,
                       PYTHON_LABEL_START, REPO_PREFIX, REQUIRED_FILES,
@@ -21,22 +21,22 @@ from .retrace import (ALLOWED_FILES, EXPLOITABLE_SEPARATOR, PYTHON_LABEL_END,
                       STATUS_FAIL, STATUS_INIT, STATUS_STATS, STATUS_SUCCESS,
                       TASK_DEBUG, TASK_COREDUMP, TASK_COREDUMP_INTERACTIVE, TASK_VMCORE,
                       TASK_VMCORE_INTERACTIVE, RETRACE_GPG_KEYS, SNAPSHOT_SUFFIXES,
+                      KernelVer,
+                      KernelVMcore,
+                      Release,
+                      RetraceTask,
+                      RetraceWorkerError,
                       get_active_tasks,
                       get_supported_releases,
                       is_package_known,
-                      KernelVer,
-                      KernelVMcore,
-                      log_exception,
-                      log_debug,
-                      log_error,
-                      log_info,
-                      log_warn,
-                      logger,
-                      run_gdb,
-                      Release,
-                      RetraceTask,
-                      RetraceWorkerError)
+                      run_gdb)
 from .config import Config, PODMAN_BIN
+from .logging import (log_debug,
+                      log_info,
+                      log_error,
+                      log_exception,
+                      log_warn,
+                      logger)
 from .plugins import Plugins
 from .stats import (init_crashstats_db,
                     save_crashstats,
