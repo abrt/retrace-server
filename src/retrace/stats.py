@@ -90,7 +90,9 @@ def save_crashstats_success(statsid: int, pre: int, post: int, rootsize: int,
         con.close()
 
 
-def save_crashstats_packages(statsid: int, packages: List[str], con: sqlite3.Connection = None) -> None:
+def save_crashstats_packages(statsid: int,
+                             packages: List[str],
+                             con: Optional[sqlite3.Connection] = None) -> None:
     close = False
     if con is None:
         con = init_crashstats_db()
@@ -142,7 +144,8 @@ def save_crashstats_build_ids(statsid: int, buildids: List[Tuple[str, str]],
         con.close()
 
 
-def save_crashstats_reportfull(ip, con=None):
+def save_crashstats_reportfull(ip_addr: str,
+                               con: Optional[sqlite3.Connection] = None) -> None:
     close = False
     if con is None:
         con = init_crashstats_db()
@@ -153,7 +156,7 @@ def save_crashstats_reportfull(ip, con=None):
       INSERT INTO reportfull (requesttime, ip)
       VALUES (?, ?)
       """,
-                  (int(time.time()), ip))
+                  (int(time.time()), ip_addr))
 
     con.commit()
     if close:
