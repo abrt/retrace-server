@@ -27,20 +27,17 @@ from .config import HOOK_PATH, HOOK_TIMEOUT, hooks_config
 #   post_clean_task -- After cleaning task
 
 
-def get_executables(path: Path) -> Iterable[Path]:
+def get_executables(directory: Path) -> Iterable[Path]:
     """
-    Scan `path` and return list of found executable scripts.
+    Scan `directory` and return list of found executable scripts.
     """
-    executables: List[Path] = []
+    if not directory.is_dir():
+        return []
 
-    if not path.is_dir():
-        return script_list
-
-    for entry in sorted(path.iterdir()):
-        if entry.is_file() and os.access(entry, os.X_OK):
-            executables.append(entry)
-
-    return executables
+    return (
+        entry for entry in sorted(directory.iterdir())
+        if entry.is_file() and os.access(entry, os.X_OK)
+    )
 
 
 class RetraceHook:
