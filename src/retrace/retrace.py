@@ -17,6 +17,7 @@ from typing import Iterable, List, Optional, Tuple, Union
 
 from .architecture import ARCH_MAP, ARCHITECTURES, get_canon_arch, guess_arch
 from .archive import (ARCHIVE_UNKNOWN,
+                      SNAPSHOT_SUFFIXES,
                       add_snapshot_suffix,
                       get_archive_type,
                       unpack_coredump,
@@ -58,8 +59,6 @@ REQUIRED_FILES = {
     TASK_COREDUMP_INTERACTIVE: ["coredump", "executable", "package"],
     TASK_VMCORE_INTERACTIVE:   ["vmcore"],
 }
-
-SNAPSHOT_SUFFIXES = [".vmss", ".vmsn", ".vmem"]
 
 BUGZILLA_STATUS = ["NEW", "ASSIGNED", "ON_DEV", "POST", "MODIFIED", "ON_QA", "VERIFIED",
                    "RELEASE_PENDING", "CLOSED"]

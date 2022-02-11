@@ -45,6 +45,8 @@ HANDLE_ARCHIVE: Dict[str, Any] = {
     },
 }
 
+SNAPSHOT_SUFFIXES = [".vmss", ".vmsn", ".vmem"]
+
 
 class UnknownArchiveTypeError(ValueError):
     pass
