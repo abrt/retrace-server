@@ -2,10 +2,10 @@
 # Gets list of packages necessary for processing of a coredump.
 # Uses eu-unstrip and dnf.
 
-import sys
 import argparse
 import logging
 import subprocess
+import sys
 from typing import List, Tuple, Union
 
 import dnf

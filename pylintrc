@@ -22,6 +22,9 @@ score=no
 max-line-length=100
 # Maximum number of lines in a module.
 max-module-lines=1000
+# Disallow body of class and if statements to be on one line.
+single-line-class-stmt=no
+single-line-if-stmt=no
 
 [TYPECHECK]
 ignored-classes=retrace.config.Config
@@ -33,73 +36,20 @@ init-import=no
 dummy-variables-rgx=_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)
 
 [BASIC]
-# Attributes required for all modules.
-required-attributes=__all__,__doc__
-# Regular expression for module names.
-module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
-# Regular expression for module-level names.
-const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
-# Regular expression for class names.
-class-rgx=[A-Z_][a-zA-Z0-9]+$
-# Regular expression for function names.
-function-rgx=[a-z_][a-z0-9_]{2,30}$
-# Regular expression for method names.
-method-rgx=[a-z_][a-z0-9_]{2,30}$
-# Regular expression for instance attribute names.
-attr-rgx=[a-z_][a-z0-9_]{1,30}$
-# Regular expression for argument names.
-argument-rgx=[a-z_][a-z0-9_]{1,30}$
-# Regular expression for variable names.
-variable-rgx=[a-z_][a-z0-9_]{1,30}$
-# Regular expression for list comprehensions/generator expressions.
-inlinevar-rgx=[A-Za-z_][A-Za-z0-9_]*$
+# Regular expression which for function and class names that do not require
+# a docstring.
+no-docstring-rgx=^_
 # Good variable names which should always be accepted.
 good-names=i,j,k,ex,e,n,v,r,a
 
 [CLASSES]
 # List of method names used to declare instance attributes.
 defining-attr-methods=__init__,__new__,setUp
+# List of members excluded from the protected access warnings.
+exclude-protected=_arch
 
-[DESIGN]
-# Maximum number of arguments for function / method
-max-args=10
-
-# Maximum number of return / yield for function / method body
-max-returns=6
-
-# Maximum number of branch for function / method body
-max-branchs=30
-
-# Maximum number of statements in function / method body
-max-statements=128
-
-# Maximum number of parents for a class (see R0901).
-max-parents=7
-
-# Maximum number of attributes for a class (see R0902).
-max-attributes=10
-
-# Minimum number of public methods for a class (see R0903).
-min-public-methods=1
-
-# Maximum number of public methods for a class (see R0904).
-max-public-methods=30
-
-[IMPORTS]
-# Deprecated modules which should not be used, separated by a comma
-deprecated-modules=regsub,string,TERMIOS,Bastion,rexec
-
-# Create a graph of every (i.e. internal and external) dependencies in the
-# given file (report RP0402 must not be disabled)
-import-graph=
-
-# Create a graph of external dependencies in the given file (report RP0402 must
-# not be disabled)
-ext-import-graph=
-
-# Create a graph of internal dependencies in the given file (report RP0402 must
-# not be disabled)
-int-import-graph=
+[STRING]
+check-quote-consistency=yes
 
 [MISCELLANEOUS]
 notes=FIXME,XXX,TODO

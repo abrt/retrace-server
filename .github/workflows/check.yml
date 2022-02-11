@@ -68,7 +68,8 @@ jobs:
         run: |
           cd build
           python3 -m pylint \
-            --rcfile=../pylintrc \
+            --rcfile=pylintrc \
+            --output-format=colorized \
             src \
             src/coredump2packages \
             src/retrace-server-bugzilla-query \
