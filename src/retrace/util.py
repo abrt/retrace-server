@@ -15,7 +15,9 @@ from .config import Config, DF_BIN
 
 GETTEXT_DOMAIN = "retrace-server"
 
-DF_OUTPUT_PARSER = re.compile(r"^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$")
+DF_OUTPUT_PARSER = re.compile(
+    r"^([^ ^\t]*)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+)[ \t]+([0-9]+%)[ \t]+(.*)$"
+)
 
 # architecture (i386, x86_64, armv7hl, mips4kec)
 INPUT_ARCH_PARSER = re.compile(r"^\w+$", re.ASCII)
@@ -172,7 +174,8 @@ def send_email(frm: str, to: Union[str, List[str]], subject: str, body: str) -> 
     smtp.close()
 
 
-def split_filename(filename: str) -> Union[Tuple[None, None, None, None, None], Tuple[str, str, str, str, str]]:
+def split_filename(filename: str) -> Union[Tuple[None, None, None, None, None],
+                                           Tuple[str, str, str, str, str]]:
     """
     Pass in a standard style rpm fullname
 
@@ -180,7 +183,7 @@ def split_filename(filename: str) -> Union[Tuple[None, None, None, None, None], 
         foo-1.0-1.i386.rpm returns foo, 1.0, 1, i386
     """
 
-    if filename.endswith('.rpm'):
+    if filename.endswith(".rpm"):
         filename = filename[:-4]
 
     subject = Subject(filename)

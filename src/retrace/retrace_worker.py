@@ -4,7 +4,7 @@ import datetime
 import errno
 import time
 import grp
-import logging
+import logging # lgtm [py/import-and-import-from]
 import shutil
 import stat
 from pathlib import Path
