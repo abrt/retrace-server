@@ -48,6 +48,9 @@ defining-attr-methods=__init__,__new__,setUp
 # List of members excluded from the protected access warnings.
 exclude-protected=_arch
 
+[DESIGN]
+min-public-methods=1
+
 [STRING]
 check-quote-consistency=yes
 

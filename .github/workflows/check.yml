@@ -70,7 +70,8 @@ jobs:
           python3 -m pylint \
             --rcfile=pylintrc \
             --output-format=colorized \
-            src \
+            src/plugins \
+            src/retrace \
             src/coredump2packages \
             src/retrace-server-bugzilla-query \
             src/retrace-server-bugzilla-refresh \
