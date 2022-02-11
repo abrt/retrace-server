@@ -59,6 +59,12 @@ configure_file(
   output: spec_name,
 )
 
+configure_file(
+  copy: true,
+  input: 'pylintrc',
+  output: 'pylintrc',
+)
+
 # This will, naturally, fail if the build directory is outside the git repo,
 # since Tito does not provide a way to specify the working directory or the spec
 # file using the CLI.
