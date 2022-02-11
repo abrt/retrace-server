@@ -1,36 +1,35 @@
 import errno
-import logging
-import os
 import grp
-import re
+import hashlib
+import os
 import random
+import re
 import shutil
 import stat
 import sys
 import time
-import hashlib
 import urllib.parse
 import urllib.request
 from pathlib import Path
 from signal import getsignal, signal, SIG_DFL, SIGPIPE
 from subprocess import DEVNULL, PIPE, STDOUT, TimeoutExpired, run
-from typing import Iterable, List, Optional, Set, Tuple, Union
-import magic
+from typing import Iterable, List, Optional, Tuple, Union
 
 from .architecture import ARCH_MAP, ARCHITECTURES, get_canon_arch, guess_arch
+from .archive import (ARCHIVE_UNKNOWN,
+                      add_snapshot_suffix,
+                      get_archive_type,
+                      unpack_coredump,
+                      unpack_vmcore)
 from .config import Config, PODMAN_BIN, PS_BIN
-from .util import (ARCHIVE_7Z,
-                   ARCHIVE_BZ2,
-                   ARCHIVE_GZ,
-                   ARCHIVE_LZOP,
-                   ARCHIVE_TAR,
-                   ARCHIVE_UNKNOWN,
-                   ARCHIVE_XZ,
-                   ARCHIVE_ZIP,
-                   ftp_init,
+from .logging import (log_debug,
+                      log_error,
+                      log_info,
+                      log_warn)
+from .util import (ftp_init,
                    ftp_close,
                    human_readable_size,
-                   splitFilename)
+                   split_filename)
 
 # filename: max_size (<= 0 unlimited)
 ALLOWED_FILES = {
@@ -47,28 +46,17 @@ ALLOWED_FILES = {
 }
 
 TASK_COREDUMP, TASK_DEBUG, TASK_VMCORE, TASK_COREDUMP_INTERACTIVE, \
-  TASK_VMCORE_INTERACTIVE = range(5)
+    TASK_VMCORE_INTERACTIVE = range(5)
 
 TASK_TYPES = [TASK_COREDUMP, TASK_DEBUG, TASK_VMCORE,
               TASK_COREDUMP_INTERACTIVE, TASK_VMCORE_INTERACTIVE]
 
 REQUIRED_FILES = {
     TASK_COREDUMP:             ["coredump", "executable", "package"],
-    TASK_DEBUG:               ["coredump", "executable", "package"],
-    TASK_VMCORE:              ["vmcore"],
+    TASK_DEBUG:                ["coredump", "executable", "package"],
+    TASK_VMCORE:               ["vmcore"],
     TASK_COREDUMP_INTERACTIVE: ["coredump", "executable", "package"],
-    TASK_VMCORE_INTERACTIVE:  ["vmcore"],
-}
-
-SUFFIX_MAP = {
-    ARCHIVE_GZ: ".gz",
-    ARCHIVE_BZ2: ".bz2",
-    ARCHIVE_XZ: ".xz",
-    ARCHIVE_ZIP: ".zip",
-    ARCHIVE_7Z: ".7z",
-    ARCHIVE_TAR: ".tar",
-    ARCHIVE_LZOP: ".lzop",
-    ARCHIVE_UNKNOWN: "",
+    TASK_VMCORE_INTERACTIVE:   ["vmcore"],
 }
 
 SNAPSHOT_SUFFIXES = [".vmss", ".vmsn", ".vmem"]
@@ -117,28 +105,6 @@ PYTHON_LABEL_START = "----------PYTHON-START--------"
 PYTHON_LABEL_END = "----------PYTHON--END---------"
 
 RETRACE_GPG_KEYS = "/usr/share/distribution-gpg-keys/"
-
-logger = logging.getLogger(__name__)
-
-
-def log_info(msg: str):
-    logger.info(msg)
-
-
-def log_debug(msg: str):
-    logger.debug(msg)
-
-
-def log_warn(msg: str):
-    logger.warning(msg)
-
-
-def log_error(msg: str):
-    logger.error(msg)
-
-
-def log_exception(msg: str):
-    logger.debug(msg, exc_info=True)
 
 
 class KernelVer:
@@ -318,6 +284,7 @@ def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
         backtrace = child.stdout.strip()
 
     elif CONFIG["RetraceEnvironment"] == "podman":
+        # pylint: disable=import-outside-toplevel
         from .backends.podman import LocalPodmanBackend
 
         backend = LocalPodmanBackend(retrace_config=CONFIG)
@@ -385,11 +352,12 @@ def remove_epoch(nvr: str) -> str:
 
 def is_package_known(package_nvr: str, arch: str, releaseid: Optional[str] = None):
     if CONFIG["UseFafPackages"]:
+        # pylint: disable=import-outside-toplevel
         from pyfaf.storage import getDatabase
         from pyfaf.queries import get_package_by_nevra
 
         db = getDatabase()
-        (n, v, r, e, _a) = splitFilename(f"{package_nvr}.mockarch.rpm")
+        (n, v, r, e, _a) = split_filename(f"{package_nvr}.mockarch.rpm")
         for derived_archs in ARCH_MAP.values():
             if arch not in derived_archs:
                 continue
@@ -446,181 +414,6 @@ def cache_files_from_debuginfo(debuginfo: Path, basedir: Path, files: List[str])
         input=rpm2cpio.stdout, cwd=basedir, stdout=DEVNULL, stderr=DEVNULL, check=False)
 
 
-def get_files_sizes(directory: Union[str, Path]) -> List[Tuple[Path, int]]:
-    result: List[Tuple[Path, int]] = []
-
-    for path in Path(directory).iterdir():
-        if path.is_file():
-            result.append((path, path.stat().st_size))
-        elif path.is_dir():
-            result += get_files_sizes(path)
-
-    return sorted(result, key=lambda f_s: f_s[1], reverse=True)
-
-
-def get_archive_type(path: Union[str, Path]) -> int:
-    ms = magic.open(magic.MAGIC_NONE)
-    ms.load()
-    filetype = ms.file(str(path)).lower()
-    log_debug("File type: %s" % filetype)
-
-    if "bzip2 compressed data" in filetype:
-        log_debug("bzip2 detected")
-        return ARCHIVE_BZ2
-    if "gzip compressed data" in filetype or \
-         "compress'd data" in filetype:
-        log_debug("gzip detected")
-        return ARCHIVE_GZ
-    if "xz compressed data" in filetype:
-        log_debug("xz detected")
-        return ARCHIVE_XZ
-    if "7-zip archive data" in filetype:
-        log_debug("7-zip detected")
-        return ARCHIVE_7Z
-    if "zip archive data" in filetype:
-        log_debug("zip detected")
-        return ARCHIVE_ZIP
-    if "tar archive" in filetype:
-        log_debug("tar detected")
-        return ARCHIVE_TAR
-    if "lzop compressed data" in filetype:
-        log_debug("lzop detected")
-        return ARCHIVE_LZOP
-
-    log_debug("unknown file type, unpacking finished")
-    return ARCHIVE_UNKNOWN
-
-def add_snapshot_suffix(filename: str, snapshot: Path) -> str:
-    """
-    Adds a snapshot suffix to the filename.
-    """
-    suffix = snapshot.suffix
-    if suffix in SNAPSHOT_SUFFIXES:
-        return filename + suffix
-
-    return filename
-
-def rename_with_suffix(frompath: Path, topath: Path) -> Path:
-    suffix = SUFFIX_MAP[get_archive_type(frompath)]
-
-    # check if the file has a snapshot suffix
-    # if it does, keep the suffix
-    if not suffix:
-        suffix = add_snapshot_suffix(suffix, frompath)
-
-    if not topath.suffix == suffix:
-        topath = topath.with_suffix(suffix)
-
-    frompath.rename(topath)
-
-    return topath
-
-def unpack_vmcore(path: Path) -> None:
-    vmcore_file = "vmcore"
-    parentdir = path.parent
-    archivebase = parentdir / "archive"
-    archive = rename_with_suffix(path, archivebase)
-    filetype = get_archive_type(archive)
-    while filetype != ARCHIVE_UNKNOWN:
-        files = set(f for (f, s) in get_files_sizes(parentdir))
-        if filetype == ARCHIVE_GZ:
-            check_run(["gunzip", str(archive)])
-        elif filetype == ARCHIVE_BZ2:
-            check_run(["bunzip2", str(archive)])
-        elif filetype == ARCHIVE_XZ:
-            check_run(["unxz", str(archive)])
-        elif filetype == ARCHIVE_ZIP:
-            check_run(["unzip", str(archive), "-d", str(parentdir)])
-        elif filetype == ARCHIVE_7Z:
-            check_run(["7za", "e", "-o%s" % parentdir, str(archive)])
-        elif filetype == ARCHIVE_TAR:
-            check_run(["tar", "-C", str(parentdir), "-xf", str(archive)])
-        elif filetype == ARCHIVE_LZOP:
-            check_run(["lzop", "-d", str(archive)])
-        else:
-            raise Exception("Unknown archive type")
-
-        if archive.is_file():
-            archive.unlink()
-
-        files_sizes = get_files_sizes(parentdir)
-        newfiles = [f for (f, s) in files_sizes if f.suffix != ".vmem"]
-        diff = set(newfiles) - files
-        vmcore_candidate = 0
-        while vmcore_candidate < len(newfiles) and newfiles[vmcore_candidate] not in diff:
-            vmcore_candidate += 1
-
-        # rename files with .vmem extension to vmcore.vmem
-        for path in Path(parentdir).iterdir():
-            if path.suffix == ".vmem":
-                path.rename(Path(parentdir, vmcore_file + path.suffix))
-
-        if len(diff) > 1:
-            archive = rename_with_suffix(newfiles[vmcore_candidate], archivebase)
-            for filename in newfiles:
-                if filename not in diff or \
-                   filename == newfiles[vmcore_candidate]:
-                    continue
-
-                filename.unlink()
-
-        elif len(diff) == 1:
-            archive = rename_with_suffix(diff.pop(), archivebase)
-
-        # just be explicit here - if no file changed, an archive
-        # has most probably been unpacked to a file with same name
-        else:
-            pass
-
-        for filename in Path(parentdir).iterdir():
-            if filename.is_dir():
-                shutil.rmtree(filename)
-
-        filetype = get_archive_type(archive)
-
-    vmcore_file = add_snapshot_suffix(vmcore_file, archive)
-    archive.rename(parentdir / vmcore_file)
-
-
-def unpack_coredump(path: Path) -> None:
-    processed: Set[Path] = set()
-    parentdir = path.parent
-    files = set(f for (f, s) in get_files_sizes(parentdir))
-    # Keep unpacking
-    while len(files - processed) > 0:
-        archive = list(files - processed)[0]
-        filetype = get_archive_type(archive)
-        archive_path = str(archive)
-        if filetype == ARCHIVE_GZ:
-            check_run(["gunzip", archive_path])
-        elif filetype == ARCHIVE_BZ2:
-            check_run(["bunzip2", archive_path])
-        elif filetype == ARCHIVE_XZ:
-            check_run(["unxz", archive_path])
-        elif filetype == ARCHIVE_ZIP:
-            check_run(["unzip", archive_path, "-d", str(parentdir)])
-        elif filetype == ARCHIVE_7Z:
-            check_run(["7za", "e", "-o%s" % parentdir, archive_path])
-        elif filetype == ARCHIVE_TAR:
-            check_run(["tar", "-C", str(parentdir), "-xf", archive_path])
-        elif filetype == ARCHIVE_LZOP:
-            check_run(["lzop", "-d", archive_path])
-
-        if archive.is_file() and filetype != ARCHIVE_UNKNOWN:
-            archive.unlink()
-        processed.add(archive)
-
-        files = set(f for (f, s) in get_files_sizes(parentdir))
-
-    # If coredump is not present, the biggest file becomes it
-    if "coredump" not in [f.name for f in parentdir.iterdir()]:
-        get_files_sizes(parentdir)[0][0].rename(parentdir / RetraceTask.COREDUMP_FILE)
-
-    for filename in Path(parentdir).iterdir():
-        if filename.is_dir():
-            shutil.rmtree(filename)
-
-
 def run_ps() -> List[str]:
     lines = run([PS_BIN, "-eo", "pid,ppid,etimes,cmd"],
                 stdout=PIPE, encoding="utf-8", check=False).stdout.splitlines()
@@ -666,13 +459,6 @@ def get_active_tasks() -> List[int]:
     return tasks
 
 
-def check_run(cmd: List[str]) -> None:
-    child = run(cmd, stdout=PIPE, stderr=STDOUT, encoding="utf-8", check=False)
-    stdout = child.stdout
-    if child.returncode:
-        raise Exception("%s exited with %d: %s" % (cmd[0], child.returncode, stdout))
-
-
 def move_dir_contents(source: Union[str, Path], dest: Union[str, Path]) -> None:
     for filename in Path(source).iterdir():
         if filename.is_dir():
@@ -707,6 +493,7 @@ def find_kernel_debuginfo(kernelver: KernelVer) -> Optional[Path]:
                 vers.append(cand)
 
     if CONFIG["UseFafPackages"]:
+        # pylint: disable=import-outside-toplevel
         from pyfaf.storage import getDatabase
         from pyfaf.queries import get_package_by_nevra
         db = getDatabase()
@@ -952,9 +739,9 @@ class RetraceTask:
         else:
             task_arch = arch
 
-        ARCH_HOSTS = CONFIG.get_arch_hosts()
-        if task_arch in ARCH_HOSTS:
-            return self._start_remote(ARCH_HOSTS[task_arch], debug=debug,
+        arch_hosts = CONFIG.get_arch_hosts()
+        if task_arch in arch_hosts:
+            return self._start_remote(arch_hosts[task_arch], debug=debug,
                                       kernelver=kernelver, arch=arch)
 
         return self._start_local(debug=debug, kernelver=kernelver, arch=arch)
@@ -1034,7 +821,7 @@ class RetraceTask:
         return self._get_file_path(key).is_file()
 
     def touch(self, key: Union[str, Path]):
-        open(self._get_file_path(key), "a").close()
+        self._get_file_path(key).touch()
 
     def delete(self, key: Union[str, Path]):
         if self.has(key):
@@ -1070,7 +857,7 @@ class RetraceTask:
         hash_md5 = hashlib.md5()
         with open(file_name, "rb") as file:
             while True:
-                chunk = f.read(chunk_size)
+                chunk = file.read(chunk_size)
                 if not chunk:
                     break
                 hash_md5.update(chunk)
@@ -1247,10 +1034,10 @@ class RetraceTask:
             filepath = self.get_crashdir()
 
         if not Path(filepath, self.VMCORE_FILE).exists():
-            for f in sorted(Path(filepath).iterdir(), reverse=True):
-                if f.stem == "vmcore" and (not f.suffix or f.suffix in SNAPSHOT_SUFFIXES):
-                    self.vmcore_file = f.name
-                    return f.name
+            for path in sorted(Path(filepath).iterdir(), reverse=True):
+                if path.stem == "vmcore" and (not path.suffix or path.suffix in SNAPSHOT_SUFFIXES):
+                    self.vmcore_file = path.name
+                    return path.name
 
         self.vmcore_file = self.VMCORE_FILE
         return self.VMCORE_FILE
@@ -1419,7 +1206,7 @@ class RetraceTask:
                         errors.append((str(fullpath), str(ex)))
                 if self.get_type() in [TASK_COREDUMP, TASK_COREDUMP_INTERACTIVE]:
                     try:
-                        unpack_coredump(fullpath)
+                        unpack_coredump(fullpath, self.COREDUMP_FILE)
                     except Exception as ex:
                         errors.append((str(fullpath), str(ex)))
                 st = crashdir.stat()
@@ -1790,24 +1577,24 @@ class RetraceTask:
         if not self._savedir.is_dir():
             return
 
-        for f in self._savedir.iterdir():
-            if f.name in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
-                          RetraceTask.BACKTRACE_FILE, RetraceTask.DOWNLOADED_FILE,
-                          RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
-                          RetraceTask.MANAGED_FILE, RetraceTask.NOTES_FILE,
-                          RetraceTask.NOTIFY_FILE, RetraceTask.PASSWORD_FILE,
-                          RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
-                          RetraceTask.TYPE_FILE, RetraceTask.RESULTS_DIR,
-                          RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
-                          RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
-                          RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE]:
+        for path in self._savedir.iterdir():
+            if path.name in [RetraceTask.REMOTE_FILE, RetraceTask.CASENO_FILE,
+                             RetraceTask.BACKTRACE_FILE, RetraceTask.DOWNLOADED_FILE,
+                             RetraceTask.FINISHED_FILE, RetraceTask.LOG_FILE,
+                             RetraceTask.MANAGED_FILE, RetraceTask.NOTES_FILE,
+                             RetraceTask.NOTIFY_FILE, RetraceTask.PASSWORD_FILE,
+                             RetraceTask.STARTED_FILE, RetraceTask.STATUS_FILE,
+                             RetraceTask.TYPE_FILE, RetraceTask.RESULTS_DIR,
+                             RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
+                             RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
+                             RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE]:
                 continue
 
             try:
-                if f.is_dir():
-                    shutil.rmtree(f)
+                if path.is_dir():
+                    shutil.rmtree(path)
                 else:
-                    f.unlink()
+                    path.unlink()
             except OSError:
                 # clean as much as possible
                 # ToDo advanced handling

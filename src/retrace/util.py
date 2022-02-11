@@ -1,18 +1,17 @@
-import copy
-import os
-import re
 import errno
 import ftplib
 import gettext
+import os
+import re
 import smtplib
-
 from pathlib import Path
 from subprocess import run, PIPE
-from typing import cast, Any, Callable, Dict, List, Optional, SupportsFloat, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, SupportsFloat, Tuple, Union
+
 from dnf.subject import Subject
 from hawkey import FORM_NEVRA
 
-from .config import Config, DF_BIN, GZIP_BIN, TAR_BIN, XZ_BIN
+from .config import Config, DF_BIN
 
 GETTEXT_DOMAIN = "retrace-server"
 
@@ -31,33 +30,6 @@ INPUT_RELEASEID_PARSER = re.compile(r"^[a-zA-Z0-9]+-[a-zA-Z0-9.]+-\w+$", re.ASCI
 
 UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB"]
 URL_PARSER = re.compile(r"^/([0-9]+)/?")
-
-ARCHIVE_UNKNOWN, ARCHIVE_GZ, ARCHIVE_ZIP, \
-  ARCHIVE_BZ2, ARCHIVE_XZ, ARCHIVE_TAR, \
-  ARCHIVE_7Z, ARCHIVE_LZOP = range(8)
-
-HANDLE_ARCHIVE = {
-    "application/x-xz-compressed-tar": {
-        "unpack": [TAR_BIN, "xJf"],
-        "size": ([XZ_BIN, "--list", "--robot"],
-                 re.compile(r"^totals[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+[0-9]+[ \t]+([0-9]+).*")),
-        "type": ARCHIVE_XZ,
-    },
-
-    "application/x-gzip": {
-        "unpack": [TAR_BIN, "xzf"],
-        "size": ([GZIP_BIN, "--list"], re.compile(r"^[^0-9]*[0-9]+[^0-9]+([0-9]+).*$")),
-        "type": ARCHIVE_GZ,
-    },
-
-    "application/x-tar": {
-        "unpack": [TAR_BIN, "xf"],
-        "size": (["ls", "-l"],
-                 re.compile(r"^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+([0-9]+).*$")),
-        "type": ARCHIVE_TAR,
-    },
-}
-
 
 def lock(lockfile: Path) -> bool:
     try:
@@ -93,15 +65,15 @@ def free_space(path: str) -> Optional[int]:
 
 
 def ftp_init() -> ftplib.FTP:
-    CONFIG = Config()
-    if CONFIG["FTPSSL"]:
-        ftp = ftplib.FTP_TLS(CONFIG["FTPHost"])
+    config = Config()
+    if config["FTPSSL"]:
+        ftp = ftplib.FTP_TLS(config["FTPHost"])
         ftp.prot_p()
     else:
-        ftp = ftplib.FTP(CONFIG["FTPHost"])
+        ftp = ftplib.FTP(config["FTPHost"])
 
-    ftp.login(CONFIG["FTPUser"], CONFIG["FTPPass"])
-    ftp.cwd(CONFIG["FTPDir"])
+    ftp.login(config["FTPUser"], config["FTPPass"])
+    ftp.cwd(config["FTPDir"])
 
     return ftp
 
@@ -142,9 +114,10 @@ def parse_http_gettext(lang: str, charset: str) -> Callable[[str], str]:
     charset_match = INPUT_CHARSET_PARSER.match(charset)
     if lang_match and charset_match:
         try:
-            result = gettext.translation(GETTEXT_DOMAIN,
-                                         languages=[lang_match.group(1)],
-                                         codeset=charset_match.group(1)).gettext
+            result = gettext.translation(
+                GETTEXT_DOMAIN,
+                languages=[lang_match.group(1)]
+            ).gettext
         except OSError:
             pass
 
@@ -163,7 +136,7 @@ def parse_rpm_name(name: str) -> Dict[str, Any]:
      result["version"],
      result["release"],
      result["epoch"],
-     result["arch"]) = splitFilename(name + ".mockarch.rpm")
+     result["arch"]) = split_filename(name + ".mockarch.rpm")
 
     return result
 
@@ -171,13 +144,14 @@ def parse_rpm_name(name: str) -> Dict[str, Any]:
 def response(start_response: Callable[[str, List[Tuple[str, str]]], None],
              status: str,
              body: Union[bytes, str] = "",
-             extra_headers: List[Tuple[str, str]] = []) -> List[bytes]:
+             extra_headers: Optional[List[Tuple[str, str]]] = None) -> List[bytes]:
     if isinstance(body, str):
         body = body.encode("utf-8")
 
     headers = [("Content-Type", "text/plain"),
                ("Content-Length", "%d" % len(body))]
-    headers.extend(extra_headers)
+    if extra_headers is not None:
+        headers.extend(extra_headers)
 
     start_response(status, headers)
     return [body]
@@ -198,7 +172,7 @@ def send_email(frm: str, to: Union[str, List[str]], subject: str, body: str) -> 
     smtp.close()
 
 
-def splitFilename(filename: str) -> Union[Tuple[None, None, None, None, None], Tuple[str, str, str, str, str]]:
+def split_filename(filename: str) -> Union[Tuple[None, None, None, None, None], Tuple[str, str, str, str, str]]:
     """
     Pass in a standard style rpm fullname
 
@@ -217,25 +191,3 @@ def splitFilename(filename: str) -> Union[Tuple[None, None, None, None, None], T
         return None, None, None, None, None
 
     return nevra.name, nevra.version, nevra.release, nevra.epoch, nevra.arch
-
-
-def unpack(archive: str, mime: str, targetdir: Optional[str] = None) -> int:
-    cmd = copy.copy(cast(List[str], HANDLE_ARCHIVE[mime]["unpack"]))
-    cmd.append(archive)
-    if targetdir is not None:
-        cmd.append("--directory")
-        cmd.append(targetdir)
-
-    child = run(cmd, check=False)
-    return child.returncode
-
-
-def unpacked_size(archive: str, mime: str) -> Optional[int]:
-    command, parser = HANDLE_ARCHIVE[mime]["size"]
-    lines = run(command + [archive], stdout=PIPE, encoding="utf-8", check=False).stdout.split("\n")
-    for line in lines:
-        match = parser.match(line)
-        if match:
-            return int(match.group(1))
-
-    return None

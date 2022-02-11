@@ -1,11 +1,16 @@
 import os
 import sys
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import List
 
-from pathlib import Path
 from webob import Request
-from tempfile import NamedTemporaryFile
 
+from retrace.archive import (check_archive_type,
+                             is_supported_mime_type,
+                             unpack,
+                             unpacked_size)
+from retrace.config import Config
 from retrace.retrace import (ALLOWED_FILES,
                              REQUIRED_FILES,
                              SNAPSHOT_SUFFIXES,
@@ -18,15 +23,10 @@ from retrace.retrace import (ALLOWED_FILES,
                              get_archive_type,
                              KernelVMcore,
                              RetraceTask)
-
-from retrace.config import Config
 from retrace.stats import save_crashstats_reportfull
-from retrace.util import (HANDLE_ARCHIVE,
-                          free_space,
+from retrace.util import (free_space,
                           parse_http_gettext,
-                          response,
-                          unpack,
-                          unpacked_size)
+                          response)
 
 CONFIG = Config()
 BUFSIZE = 1 << 20  # 1 MB
@@ -64,7 +64,7 @@ def application(environ, start_response):
         return response(start_response, "405 Method Not Allowed",
                         _("You must use POST method"))
 
-    if request.content_type not in HANDLE_ARCHIVE.keys():
+    if not is_supported_mime_type(request.content_type):
         return response(start_response, "415 Unsupported Media Type",
                         _("Specified archive format is not supported"))
 
@@ -130,9 +130,7 @@ def application(environ, start_response):
                             (len(files), coredir))
 
         filepath = files[0]
-        archive_meta = HANDLE_ARCHIVE[request.content_type]
-        if ("type" in archive_meta and
-                get_archive_type(filepath) != archive_meta["type"]):
+        if not check_archive_type(filepath, request.content_type):
             return response(start_response, "409 Conflict",
                             _("You header specifies '%s' type, but the file "
                               "type does not match") % request.content_type)

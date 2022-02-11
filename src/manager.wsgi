@@ -3,10 +3,10 @@ import fnmatch
 import re
 import time
 import urllib
-import stat
-from webob import Request
 from pathlib import Path
 from typing import Any, Dict, Optional, List
+
+from webob import Request
 
 from retrace.retrace import (STATUS, STATUS_DOWNLOADING, STATUS_FAIL,
                              STATUS_SUCCESS, TASK_DEBUG, TASK_COREDUMP, TASK_COREDUMP_INTERACTIVE,
@@ -74,8 +74,7 @@ def parse_start_options(task: RetraceTask, options: Dict[str, Any]):
 def get_current_kernelver(task: RetraceTask) -> str:
     if task and task.has_kernelver():
         return "value=\"%s\" " % task.get_kernelver()
-    else:
-        ""
+    return ""
 
 def get_start_content_kernelver(task: Optional[RetraceTask] = None) -> str:
     return "      Kernel version (empty to autodetect): <input name=\"kernelver\" " \
@@ -84,8 +83,7 @@ def get_start_content_kernelver(task: Optional[RetraceTask] = None) -> str:
 def get_current_caseno(task: RetraceTask) -> str:
     if task and task.has_caseno():
         return "value=\"%d\" " % task.get_caseno()
-    else:
-        return ""
+    return ""
 
 def get_start_content_caseno(task: Optional[RetraceTask] = None) -> str:
     return "      Case no.: <input name=\"caseno\" type=\"text\" id=\"caseno\" %s/><br />" % get_current_caseno(task)
@@ -93,8 +91,7 @@ def get_start_content_caseno(task: Optional[RetraceTask] = None) -> str:
 def get_current_bugzillano(task: RetraceTask) -> str:
     if task and task.has_bugzillano():
         return "value=\"%s\"" % ", ".join(task.get_bugzillano())
-    else:
-        return ""
+    return ""
 
 def get_start_content_bugzillano(task: Optional[RetraceTask] = None) -> str:
     return "      Bugzilla no.: <input name=\"bugzillano\" type=\"text\" id=\"bugzillano\" %s/><br />" % get_current_bugzillano(task)
@@ -102,8 +99,7 @@ def get_start_content_bugzillano(task: Optional[RetraceTask] = None) -> str:
 def get_current_notify(task: RetraceTask) -> str:
     if task and task.has_notify():
         return "value=\"%s\"" % ", ".join(task.get_notify())
-    else:
-        return ""
+    return ""
 
 def get_start_content_notify(task: Optional[RetraceTask] = None) -> str:
     return "      E-mail notification: <input name=\"notify\" type=\"text\" id=\"notify\" %s/><br />" % get_current_notify(task)
