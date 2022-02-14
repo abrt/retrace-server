@@ -5,7 +5,7 @@ from pathlib import Path
 from subprocess import PIPE, STDOUT, run
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
-import magic
+import magic as libmagic
 
 from .config import GZIP_BIN, TAR_BIN, XZ_BIN
 from .logging import log_debug, log_info
@@ -104,9 +104,9 @@ def extract_into(archive: Path, directory: Path) -> None:
 
 
 def get_archive_type(path: Union[str, Path]) -> int:
-    ms = magic.open(magic.MAGIC_NONE)
-    ms.load()
-    filetype = ms.file(str(path)).lower()
+    magic = libmagic.open(libmagic.MAGIC_NONE)
+    magic.load()
+    filetype = magic.file(str(path)).lower()
     log_debug("File type: %s" % filetype)
 
     if "bzip2 compressed data" in filetype:

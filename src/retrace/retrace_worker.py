@@ -1017,10 +1017,10 @@ class RetraceWorker:
                      % (dur, human_readable_size(oldsize - newsize)))
 
         if vmcore_path.is_file():
-            st = vmcore_path.stat()
-            if (st.st_mode & stat.S_IRGRP) == 0:
+            vmcore_stat = vmcore_path.stat()
+            if (vmcore_stat.st_mode & stat.S_IRGRP) == 0:
                 try:
-                    vmcore_path.chmod(st.st_mode | stat.S_IRGRP)
+                    vmcore_path.chmod(vmcore_stat.st_mode | stat.S_IRGRP)
                 except Exception:
                     log_warn("File '%s' is not group readable and chmod"
                              " failed. The process will continue but if"
