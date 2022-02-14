@@ -36,7 +36,7 @@ class Plugins:
             self.plugin_list = []
             self.plugins_read = True
             # if environment variable set, use rather that
-            env_plugin_dir = os.environ.get('RETRACE_SERVER_PLUGIN_DIR')
+            env_plugin_dir = os.environ.get("RETRACE_SERVER_PLUGIN_DIR")
             if env_plugin_dir:
                 plugin_dir = Path(env_plugin_dir)
             sys.path.insert(0, str(plugin_dir))
@@ -45,14 +45,14 @@ class Plugins:
                 files = list(plugin_dir.iterdir())
             except Exception as ex:
                 print("Unable to list directory '%s': %s" % (plugin_dir, ex))
-                raise ImportError(ex)
+                raise ImportError(ex) from ex
 
             for filepath in files:
                 if not filepath.name.startswith("_") and filepath.suffix == ".py":
                     pluginname = filepath.stem
                     try:
                         this = import_module(pluginname)
-                    except Exception:
+                    except Exception: # pylint: disable=broad-except
                         continue
                     if "distribution" in this.__dict__ and "repos" in this.__dict__:
                         self.plugin_list.append(this)

@@ -11,9 +11,9 @@ import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
-from signal import getsignal, signal, SIG_DFL, SIGPIPE
+from signal import SIG_DFL, SIGPIPE, getsignal, signal
 from subprocess import DEVNULL, PIPE, STDOUT, TimeoutExpired, run
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 from .architecture import ARCH_MAP, ARCHITECTURES, get_canon_arch, guess_arch
 from .archive import (ARCHIVE_UNKNOWN,
@@ -128,33 +128,33 @@ class KernelVer:
     def __init__(self, kernelver_str: str) -> None:
         log_debug("Parsing kernel version '%s'" % kernelver_str)
         self.kernelver_str = kernelver_str
-        self.flavour = None
-        for kf in KernelVer.FLAVOUR:
-            if kernelver_str.endswith(".%s" % kf):
-                self.flavour = kf
-                kernelver_str = kernelver_str[:-len(kf) - 1]
+        self.flavour: Optional[str] = None
+        for flavour in KernelVer.FLAVOUR:
+            if kernelver_str.endswith(f".{flavour}"):
+                self.flavour = flavour
+                kernelver_str = kernelver_str.removesuffix(f".{flavour}")
                 break
 
         self._arch = None
-        for ka in KernelVer.ARCH:
-            if kernelver_str.endswith(".%s" % ka):
-                self._arch = ka
-                kernelver_str = kernelver_str[:-len(ka) - 1]
+        for arch in KernelVer.ARCH:
+            if kernelver_str.endswith(f".{arch}"):
+                self._arch = arch
+                kernelver_str = kernelver_str.removesuffix(f".{arch}")
                 break
 
-        self.version, self.release = kernelver_str.split("-", 1)
+        self.version, self.release = kernelver_str.split("-", maxsplit=1)
 
         if self.flavour is None:
-            for kf in KernelVer.FLAVOUR:
-                if self.release.endswith(kf):
-                    self.flavour = kf
-                    self.release = self.release[:-len(kf)]
+            for flavour in KernelVer.FLAVOUR:
+                if self.release.endswith(flavour):
+                    self.flavour = flavour
+                    self.release = self.release.removesuffix(flavour)
                     break
 
-        self.rt = "rt" in self.release
+        self.realtime = "rt" in self.release
 
         log_debug("Version: '%s'; Release: '%s'; Arch: '%s'; Flavour: '%s'; Realtime: %s"
-                  % (self.version, self.release, self._arch, self.flavour, self.rt))
+                  % (self.version, self.release, self._arch, self.flavour, self.realtime))
 
     def __str__(self) -> str:
         result = "%s-%s" % (self.version, self.release)
@@ -172,7 +172,7 @@ class KernelVer:
 
     def package_name_base(self, debug: bool = False) -> str:
         base = "kernel"
-        if self.rt:
+        if self.realtime:
             base = "%s-rt" % base
 
         if self.flavour and not (debug and ".EL" in self.release):
@@ -524,7 +524,7 @@ def find_kernel_debuginfo(kernelver: KernelVer) -> Optional[Path]:
             if testfile.is_file():
                 return testfile
 
-    if ver is not None and ver.rt:
+    if ver is not None and ver.realtime:
         basename = "kernel-rt"
     else:
         basename = "kernel"
@@ -685,21 +685,21 @@ class RetraceTask:
 
     def _start_remote(self, host: str, debug: bool = False, kernelver: Optional[str] = None,
                       arch: Optional[str] = None) -> int:
-        starturl = "%s/%d/start" % (host, self.get_taskid())
-        qs = {}
+        starturl = f"{host}/{self.get_taskid()}/start"
+        query: Dict[str, str] = {}
         if debug:
-            qs["debug"] = ""
+            query["debug"] = ""
 
         if kernelver:
-            qs["kernelver"] = kernelver
+            query["kernelver"] = kernelver
 
         if arch:
-            qs["arch"] = arch
+            query["arch"] = arch
 
-        qs_text = urllib.parse.urlencode(qs)
+        query_text = urllib.parse.urlencode(query)
 
-        if qs_text:
-            starturl = "%s?%s" % (starturl, qs_text)
+        if query_text:
+            starturl = f"{starturl}?{query_text}"
 
         with urllib.request.urlopen(starturl) as response:
             status = response.getcode()
@@ -770,8 +770,9 @@ class RetraceTask:
             pass
 
     def chmod(self, key: Union[str, Path]) -> None:
+        mode = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
         try:
-            self._get_file_path(key).chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+            self._get_file_path(key).chmod(mode)
         except OSError:
             pass
 
@@ -981,8 +982,9 @@ class RetraceTask:
         return [email for email in set(n.strip() for n in result.split("\n")) if email]
 
     def set_notify(self, values: List[str]) -> None:
-        self.set_atomic(RetraceTask.NOTIFY_FILE,
-                        "%s\n" % "\n".join(filter(None, set(v.strip().replace("\n", " ") for v in values))))
+        unique_values = set(v.strip().replace("\n", " ") for v in values)
+        lines = filter(None, unique_values)
+        self.set_atomic(RetraceTask.NOTIFY_FILE, "%s\n" % "\n".join(lines))
 
     def has_url(self) -> bool:
         return self.has(RetraceTask.URL_FILE)
@@ -1053,7 +1055,8 @@ class RetraceTask:
                                        self._progress_total_str)
         self.set_atomic(RetraceTask.PROGRESS_FILE, progress)
 
-    def run_crash_cmdline(self, crash_start: List[str], crash_cmdline: str) -> Tuple[Optional[bytes], int]:
+    def run_crash_cmdline(self, crash_start: List[str], crash_cmdline: str) \
+            -> Tuple[Optional[bytes], int]:
         cmd_output = None
         returncode = 0
         crashdir = self.get_crashdir()
@@ -1067,10 +1070,12 @@ class RetraceTask:
             log_warn("crash command: '%s' triggered OSError " %
                      crash_cmdline.replace("\r", "; ").replace("\n", "; "))
             log_warn("  %s" % err)
-        except TimeoutExpired:
+        except TimeoutExpired as ex:
             raise Exception("WARNING: crash command: '%s' exceeded %s "
                             " second timeout - damaged vmcore?" % (
-                                crash_cmdline.replace("\r", "; ").replace("\n", "; "), timeout))
+                                crash_cmdline.replace("\r", "; ").replace("\n", "; "), timeout)) \
+                from ex
+        # pylint: disable=broad-except
         except Exception as err:
             log_warn("crash command: '%s' triggered Unknown exception %s" %
                      (crash_cmdline.replace("\r", "; ").replace("\n", "; "), err))
@@ -1208,11 +1213,12 @@ class RetraceTask:
                         unpack_coredump(fullpath, self.COREDUMP_FILE)
                     except Exception as ex:
                         errors.append((str(fullpath), str(ex)))
-                st = crashdir.stat()
-                if (st.st_mode & stat.S_IRGRP) == 0 or (st.st_mode & stat.S_IXGRP) == 0:
+                dir_stat = crashdir.stat()
+                if (dir_stat.st_mode & stat.S_IRGRP) == 0 \
+                        or (dir_stat.st_mode & stat.S_IXGRP) == 0:
                     try:
-                        crashdir.chmod(st.st_mode | stat.S_IRGRP | stat.S_IXGRP)
-                    except Exception:
+                        crashdir.chmod(dir_stat.st_mode | stat.S_IRGRP | stat.S_IXGRP)
+                    except OSError:
                         log_warn("Crashdir '%s' is not group readable and chmod"
                                  " failed. The process will continue but if"
                                  " it fails this is the likely cause."
@@ -1308,11 +1314,11 @@ class RetraceTask:
                 oldsize = coredump.stat().st_size
                 log_info("Coredump size: %s" % human_readable_size(oldsize))
 
-                st = coredump.stat()
-                if (st.st_mode & stat.S_IRGRP) == 0:
+                file_stat = coredump.stat()
+                if (file_stat.st_mode & stat.S_IRGRP) == 0:
                     try:
-                        coredump.chmod(st.st_mode | stat.S_IRGRP)
-                    except Exception:
+                        coredump.chmod(file_stat.st_mode | stat.S_IRGRP)
+                    except OSError:
                         log_warn("File '%s' is not group readable and chmod"
                                  " failed. The process will continue but if"
                                  " it fails this is the likely cause."
@@ -1639,7 +1645,9 @@ class RetraceTask:
 
     def create_worker(self):
         """Get default worker instance for this task"""
+        # We need the import here to avoid circular imports.
         # TODO: let it be configurable
+        # pylint: disable=import-outside-toplevel
         from .retrace_worker import RetraceWorker
         return RetraceWorker(self)
 
@@ -1704,7 +1712,7 @@ class KernelVMcore:
     def get_path(self) -> Path:
         return self._vmcore_path
 
-    def is_flattened_format(self) -> bool:
+    def is_flattened_format(self) -> Optional[bool]:
         """Returns True if vmcore is in makedumpfile flattened format"""
         if self._is_flattened_format is not None:
             return self._is_flattened_format
@@ -1712,8 +1720,8 @@ class KernelVMcore:
             with open(self._vmcore_path, "rb") as fd:
                 fd.seek(0)
                 # Read 16 bytes (SIG_LEN_MDF from crash-utility makedumpfile.h)
-                b = fd.read(16)
-                self._is_flattened_format = b.startswith(b"makedumpfile")
+                vmcore_bytes = fd.read(16)
+                self._is_flattened_format = vmcore_bytes.startswith(b"makedumpfile")
         except IOError as e:
             log_error("Failed to get makedumpfile header - failed open/seek/read of "
                       "%s with errno(%d - '%s')" %
@@ -1904,25 +1912,25 @@ class KernelVMcore:
             try:
                 with open(core_path, "rb") as fd:
                     fd.seek(0)
-                    b = fd.read(64000000)
+                    core_bytes = fd.read(64000000) # 64 MB
             except IOError as e:
                 log_error("Failed to get kernel release - failed "
                           "open/seek/read of file %s with errno(%d - '%s')"
                           % (core_path, e.errno, e.strerror))
                 return None
-            release = self.OSRELEASE_VAR_PARSER.search(b)
+            release = self.OSRELEASE_VAR_PARSER.search(core_bytes)
             if release:
                 release = release.group(1)
             if not release:
-                release = self.BOOT_IMAGE_PARSER.search(b)
+                release = self.BOOT_IMAGE_PARSER.search(core_bytes)
                 if release:
                     release = release.group(1)
             if not release:
-                release = self.LINUX_VERSION_PARSER.search(b)
+                release = self.LINUX_VERSION_PARSER.search(core_bytes)
                 if release:
                     release = release.group(1)
             if not release:
-                release = self.KERNEL_RELEASE_PARSER.search(b)
+                release = self.KERNEL_RELEASE_PARSER.search(core_bytes)
                 if release:
                     release = release.group(0)
             if release:
@@ -1935,20 +1943,14 @@ class KernelVMcore:
             return None
         release = release.rstrip("\0 \t\n")
 
-        # check whether architecture is present
-        try:
-            result = KernelVer(release)
-        except Exception as ex:
-            log_error("Failed to parse kernel release from file %s, release ="
-                      " %s: %s" % (core_path, release, str(ex)))
-            return None
+        result = KernelVer(release)
 
+        # check whether architecture is present
         if result.arch is None:
             result.arch = guess_arch(core_path)
             if not result.arch:
-                log_error("Unable to determine architecture from file %s, "
-                          "release = %s, arch result = %s" %
-                          (core_path, release, result))
+                log_error(f"Unable to determine architecture from file {core_path}, "
+                          f"release = {release}, arch result = {result}")
                 return None
 
         self._release = result
@@ -1981,7 +1983,7 @@ class KernelVMcore:
         log_info("Version: '%s'; Release: '%s'; Arch: '%s'; _arch: '%s'; "
                  "Flavour: '%s'; Realtime: %s"
                  % (kernelver.version, kernelver.release, kernelver.arch,
-                    kernelver._arch, kernelver.flavour, kernelver.rt))
+                    kernelver._arch, kernelver.flavour, kernelver.realtime))
         kernel_path = ""
         if kernelver.version is not None:
             kernel_path = kernel_path + str(kernelver.version)
@@ -2062,16 +2064,23 @@ class KernelVMcore:
             vmlinux_debuginfo = debugdir_base / vmlinux_path.lstrip("/")
             cache_files_from_debuginfo(debuginfo, debugdir_base, [vmlinux_path])
             if vmlinux_debuginfo.is_file():
-                log_info("Found cached vmlinux at new debuginfo location: {}".format(vmlinux_debuginfo))
+                log_info("Found cached vmlinux at new debuginfo location: {}"
+                         .format(vmlinux_debuginfo))
                 vmlinux = str(vmlinux_debuginfo)
                 task.set_vmlinux(vmlinux)
             else:
-                raise Exception("Failed vmlinux caching from debuginfo at location: {}".format(vmlinux_debuginfo))
+                raise Exception("Failed vmlinux caching from debuginfo at location: {}"
+                                .format(vmlinux_debuginfo))
 
         # Obtain the list of modules this vmcore requires
         if chroot:
-            crash_normal = ["/usr/bin/mock", "--configdir", str(chroot), "--cwd", str(task.get_crashdir()),
-                            "chroot", "--", "crash -s %s %s" % (self._vmcore_path, vmlinux)]
+            crash_normal = [
+                "/usr/bin/mock",
+                "--configdir", str(chroot),
+                "--cwd", str(task.get_crashdir()),
+                "chroot", "--",
+                f"crash -s {self._vmcore_path} {vmlinux}",
+            ]
         else:
             crash_normal = crash_cmd + ["-s", str(self._vmcore_path), vmlinux]
         stdout, returncode = task.run_crash_cmdline(crash_normal, "mod\nquit")

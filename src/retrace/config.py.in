@@ -35,6 +35,7 @@ class Config:
 
         ARCH_HOSTS: Dict[str, str] = {}
 
+        # pylint: disable=line-too-long
         GLOBAL: Dict[str, Any] = {
             "TaskIdLength": 9,
             "TaskPassLength": 32,
@@ -113,9 +114,9 @@ class Config:
             parser = configparser.ConfigParser()
             parser.read(filepath)
 
-            for key in self.GLOBAL:
-                vartype = type(self.GLOBAL[key])
-                get: Optional[Getter] = None
+            for key, value in self.GLOBAL.items():
+                vartype = type(value)
+                get: Getter = parser.get
 
                 if vartype is int:
                     get = parser.getint
@@ -124,10 +125,11 @@ class Config:
                 elif vartype is float:
                     get = parser.getfloat
                 elif vartype is list:
+                    # This is not _really_ a redefinition of an existing function.
+                    # It is better though of as an assignment just like the ones above.
+                    # pylint: disable=function-redefined
                     def get(section, key):
                         return parser.get(section, key).split()
-                else:
-                    get = parser.get
 
                 assert get is not None
 

@@ -40,7 +40,8 @@ HANDLE_ARCHIVE: Dict[str, Any] = {
     "application/x-tar": {
         "unpack": [TAR_BIN, "xf"],
         "size": (["ls", "-l"],
-                 re.compile(r"^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+([0-9]+).*$")),
+                 re.compile(r"^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+"
+                            "([0-9]+).*$")),
         "type": ARCHIVE_TAR,
     },
 }
@@ -74,6 +75,7 @@ def check_run(cmd: List[str]) -> None:
     stdout = child.stdout
     if child.returncode:
         raise Exception("%s exited with %d: %s" % (cmd[0], child.returncode, stdout))
+
 
 def extract_into(archive: Path, directory: Path) -> None:
     filetype = get_archive_type(archive)
@@ -147,7 +149,7 @@ def get_files_sizes(directory: Union[str, Path]) -> List[Tuple[Path, int]]:
 
 
 def get_supported_mime_types() -> List[str]:
-    return HANDLE_ARCHIVE.keys()
+    return list(HANDLE_ARCHIVE.keys())
 
 
 def is_supported_mime_type(media_type: str) -> bool:

@@ -22,20 +22,23 @@ from io import StringIO
 class ArgumentParser(argparse.ArgumentParser):
     def __init__(self, description=None, prog=sys.argv[0], usage=None,
                  add_help=True, argument_default=None, prefix_chars="-"):
-        argparse.ArgumentParser.__init__(self,
-                                         epilog="See 'man %(prog)s' for more information.",
-                                         description=description, prog=prog, usage=usage,
-                                         add_help=add_help, argument_default=argument_default,
-                                         prefix_chars=prefix_chars)
+        super().__init__(epilog="See 'man %(prog)s' for more information.",
+                         description=description,
+                         prog=prog,
+                         usage=usage,
+                         add_help=add_help,
+                         argument_default=argument_default,
+                         prefix_chars=prefix_chars)
         self.add_argument("-v", "--verbose", action="store_true", default=False, dest="verbose")
 
     def parse_args(self, args=None, namespace=None):
-        args = argparse.ArgumentParser.parse_args(self, args=args, namespace=namespace)
+        args = super().parse_args(args=args, namespace=namespace)
         if args.verbose:
             level = logging.DEBUG
         else:
             level = logging.INFO
 
+        # pylint: disable=protected-access
         if args.foreground:
             args._log = None
             logging.basicConfig(level=level)

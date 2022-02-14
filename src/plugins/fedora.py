@@ -20,6 +20,7 @@ versionlist = [
 #   https://fedoraproject.org/wiki/Infrastructure/Mirroring
 #
 # fedora-enchilada is /pub/fedora on http://dl.fedoraproject.org
+# pylint: disable=line-too-long
 repos = [
     [
         "rsync://dl.fedoraproject.org/fedora-enchilada/linux/releases/$VER/Everything/$ARCH/os/Packages/*/*.rpm",
@@ -27,8 +28,7 @@ repos = [
     ],
     [
         "rsync://dl.fedoraproject.org/fedora-enchilada/linux/releases/$VER/Everything/$ARCH/debug/*/*.rpm",
-        "rsync://dl.fedoraproject.org/fedora-enchilada/linux/development/$VER/" +
-        "Everything/$ARCH/debug/tree/Packages/*/*.rpm",
+        "rsync://dl.fedoraproject.org/fedora-enchilada/linux/development/$VER/Everything/$ARCH/debug/tree/Packages/*/*.rpm",
     ],
     [
         "rsync://dl.fedoraproject.org/fedora-enchilada/linux/updates/$VER/$ARCH/*.rpm",

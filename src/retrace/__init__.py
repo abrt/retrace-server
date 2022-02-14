@@ -1,4 +1,13 @@
-__all__ = ["architecture", "archive", "argparser", "config", "plugins", "retrace", "retrace_worker", "util"]
+__all__ = [
+    "architecture",
+    "archive",
+    "argparser",
+    "config",
+    "plugins",
+    "retrace",
+    "retrace_worker",
+    "util"
+]
 
 from . import architecture
 from . import archive
