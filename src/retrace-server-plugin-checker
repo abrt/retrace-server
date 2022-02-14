@@ -14,11 +14,11 @@ def main() -> None:
     argparser.add_argument("ARCHITECTURE", type=str, help="CPU architecture")
     argparser.add_argument("--plugin-dir", default="/usr/share/retrace-server/plugins",
                            help="Path to plugins.")
-    argparser.add_argument("--only-valid", action='store_true',
+    argparser.add_argument("--only-valid", action="store_true",
                            help="Print only valid mirrors")
-    argparser.add_argument("--only-invalid", action='store_true',
+    argparser.add_argument("--only-invalid", action="store_true",
                            help="Print only invalid mirrors")
-    argparser.add_argument("--first-valid", action='store_true',
+    argparser.add_argument("--first-valid", action="store_true",
                            help="Print first valid mirror per repository.")
 
     args = argparser.parse_args()
@@ -57,7 +57,7 @@ def main() -> None:
                 except Exception:
                     pass
             elif p.startswith("rsync:"):
-                rsync = run(['rsync', '--list-only', mirror_path], stdout=DEVNULL, stderr=DEVNULL, check=False)
+                rsync = run(["rsync", "--list-only", mirror_path], stdout=DEVNULL, stderr=DEVNULL, check=False)
                 path_ok = not rsync.returncode
             else:
                 path_ok = os.path.exists(mirror_path)
@@ -77,5 +77,5 @@ def main() -> None:
         if verbose:
             print("Repository {1} - {0}".format("OK" if repo_ok else "FAIL", i))
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
