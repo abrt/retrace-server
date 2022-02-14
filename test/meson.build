@@ -23,6 +23,7 @@ test_env.set('RETRACE_SERVER_PLUGIN_DIR',
 test_env.set('RETRACE_SERVER_TESTING', '1')
 
 test_files = [
+  'test_architecture.py',
   'test_backends.py',
   'test_util.py',
 ]

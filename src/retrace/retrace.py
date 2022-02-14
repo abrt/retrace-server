@@ -132,14 +132,14 @@ class KernelVer:
         for flavour in KernelVer.FLAVOUR:
             if kernelver_str.endswith(f".{flavour}"):
                 self.flavour = flavour
-                kernelver_str = kernelver_str.removesuffix(f".{flavour}")
+                kernelver_str = kernelver_str[:-len(flavour) - 1]
                 break
 
         self._arch = None
         for arch in KernelVer.ARCH:
             if kernelver_str.endswith(f".{arch}"):
                 self._arch = arch
-                kernelver_str = kernelver_str.removesuffix(f".{arch}")
+                kernelver_str = kernelver_str[:-len(arch) - 1]
                 break
 
         self.version, self.release = kernelver_str.split("-", maxsplit=1)
@@ -148,7 +148,7 @@ class KernelVer:
             for flavour in KernelVer.FLAVOUR:
                 if self.release.endswith(flavour):
                     self.flavour = flavour
-                    self.release = self.release.removesuffix(flavour)
+                    self.release = self.release[:-len(flavour)]
                     break
 
         self.realtime = "rt" in self.release
