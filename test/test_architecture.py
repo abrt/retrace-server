@@ -10,7 +10,7 @@ class TestGetCanonArch(TestCase):
 
     def test_armhfp(self):
         self.assertEqual(get_canon_arch("armhfp"), "armhfp")
-        self.assertEqual(get_canon_arch("armhfp"), "armv7hl")
+        self.assertEqual(get_canon_arch("armv7hl"), "armhfp")
 
     def test_x86_64(self):
         self.assertEqual(get_canon_arch("x86_64"), "x86_64")
