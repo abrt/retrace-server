@@ -35,9 +35,12 @@ BuildRequires: xz
 # These packages are moreover required for the build or tests.
 BuildRequires: createrepo_c
 BuildRequires: podman
+BuildRequires: python3-bugzilla
 BuildRequires: python3-dnf
 BuildRequires: python3-magic
 BuildRequires: python3-pytest
+BuildRequires: python3-requests
+BuildRequires: python3-requests-gssapi
 
 # /usr/bin/df from coreutils is used to calculate free disk space.
 Requires: coreutils
