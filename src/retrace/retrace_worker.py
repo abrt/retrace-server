@@ -89,7 +89,8 @@ class RetraceWorker:
         try:
             log_info("Sending e-mail to %s" % ", ".join(task.get_notify()))
 
-            message = "The task #%d started on %s %s\n\n" % (task.get_taskid(), os.uname()[1], disposition)
+            message = "The task #%d started on %s %s\n\n" % (task.get_taskid(), os.uname()[1],
+                                                             disposition)
 
             if task.has_url():
                 message += "URL: %s\n" % task.get_url()
@@ -123,33 +124,36 @@ class RetraceWorker:
 
                 message += "Remote file(s): %s\n" % files
 
-            if task.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE] and task.get_status() == STATUS_FAIL:
-                message += "\nIf kernel version detection failed (the log shows 'Unable to determine kernel " \
-                           "version'), and you know the kernel version, you may try re-starting the task " \
-                           "with the 'retrace-server-task restart' command.  Please check the log below " \
-                           "for more information on why the task failed.  The following example assumes " \
-                           "the vmcore's kernel version is 2.6.32-358.el6 on x86_64 arch: \n" \
-                           "$ retrace-server-task restart --kernelver 2.6.32-358.el6.x86_64 %d\n" \
-                           % task.get_taskid()
-                message += "\nIf this is a test kernel with a non-errata kernel version, or for some reason " \
-                           "the kernel-debuginfo repository is unavailable, you can place the kernel-debuginfo RPM " \
-                           "at %s/download/ and restart the task with: \n$ retrace-server-task restart %d\n" \
-                           % (CONFIG["RepoDir"], task.get_taskid())
-                message += "\nIf the retrace-log contains a message similar to 'Failing task due to crash " \
-                           "exiting with non-zero status and small kernellog size' then the vmcore may be " \
-                           "truncated or incomplete and not useable.  Check the md5sum on the manager page " \
-                           "and compare with the expected value, and possibly re-upload and resubmit the vmcore.\n"
+            if task.get_type() in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE] \
+                    and task.get_status() == STATUS_FAIL:
+                message += (
+                    "\nIf kernel version detection failed (the log shows 'Unable to determine "
+                    "kernel version'), and you know the kernel version, you may try re-starting "
+                    "the task with the 'retrace-server-task restart' command. Please check the log "
+                    "below for more information on why the task failed.  The following example "
+                    "assumes the vmcore's kernel version is 2.6.32-358.el6 on x86_64 arch:\n"
+                    "$ retrace-server-task restart --kernelver 2.6.32-358.el6.x86_64 "
+                    f"{task.get_taskid()}\n"
+                    "\nIf this is a test kernel with a non-errata kernel version, or for some "
+                    "reason the kernel-debuginfo repository is unavailable, you can place the "
+                    f"kernel-debuginfo RPM at {CONFIG['RepoDir']}/download/ and restart the task "
+                    f"with:\n$ retrace-server-task restart {task.get_taskid()}\n" \
+                    "\nIf the retrace-log contains a message similar to 'Failing task due to crash "
+                    "exiting with non-zero status and small kernellog size' then the vmcore may be "
+                    "truncated or incomplete and not useable.  Check the md5sum on the manager "
+                    "page and compare with the expected value, and possibly re-upload and resubmit "
+                    "the vmcore.\n"
+                )
 
             if task.has_log():
-                message += "\nLog:\n%s\n" % task.get_log()
+                message += f"\nLog:\n{task.get_log()}\n"
 
-            send_email("Retrace Server <%s>" % CONFIG["EmailNotifyFrom"],
+            send_email(f"Retrace Server <{CONFIG['EmailNotifyFrom']}>",
                        task.get_notify(),
-                       "Retrace Task #%d on %s %s" % (task.get_taskid(), os.uname()[1], disposition),
+                       f"Retrace Task #{task.get_taskid()} on {os.uname()[1]} {disposition}",
                        message)
-
         except Exception as ex:
-            log_error("Failed to send e-mail: %s" % ex)
+            log_error(f"Failed to send e-mail: {ex}")
 
     def _symlink_log(self) -> None:
         if self.task.has_log():
@@ -705,55 +709,57 @@ class RetraceWorker:
         return True
 
     # de-dup self.task's vmcore with md5_tasks's vmcore
-    def dedup_vmcore(self, md5_task):
+    def dedup_vmcore(self, md5_task: RetraceTask) -> int:
         task1 = md5_task   # primary
         task2 = self.task  # one we are going to try to hardlink and the one that gets logged to
-        v1 = task1.get_vmcore_path()
-        v2 = task2.get_vmcore_path()
+        path1 = task1.get_vmcore_path()
+        path2 = task2.get_vmcore_path()
         try:
-            s1 = v1.stat()
-            s2 = v2.stat()
+            file1_stat = path1.stat()
+            file2_stat = path2.stat()
         except OSError:
-            log_warn("Attempt to dedup %s and %s but 'stat' failed on one of the paths" % (v1, v2))
+            log_warn(f"Attempt to dedup {path1} and {path2} but 'stat' failed on one of the paths")
             return 0
 
-        if s1.st_ino == s2.st_ino:
+        if file1_stat.st_ino == file2_stat.st_ino:
             return 0
-        if s1.st_size != s2.st_size:
-            log_warn("Attempt to dedup %s and %s but sizes differ - size1 = %d size2 = %d"
-                     % (v1, v2, s1.st_size, s2.st_size))
+        if file1_stat.st_size != file2_stat.st_size:
+            log_warn(f"Attempt to dedup {path1} and {path2} but sizes differ - "
+                     f"size1 = {file1_stat.st_size} size2 = {file2_stat.st_size}")
             return 0
-        v1_md5 = str.split(task1.get_md5sum())[0]
-        v2_md5 = str.split(task2.get_md5sum())[0]
-        if len(v1_md5) != 32 or len(v2_md5) != 32:
+        file1_md5 = str.split(task1.get_md5sum(), maxsplit=1)[0]
+        file2_md5 = str.split(task2.get_md5sum(), maxsplit=1)[0]
+        if len(file1_md5) != 32 or len(file2_md5) != 32:
             return 0
-        if v1_md5 != v2_md5:
-            log_warn("Attempted to dedup %s and %s but md5sums are different - v1 = %s v2 = %s)"
-                     % (v1, v2, v1_md5, v2_md5))
+        if file1_md5 != file2_md5:
+            log_warn(f"Attempted to dedup {path1} and {path2} but md5sums are different - "
+                     f"v1 = {file1_md5} v2 = {file2_md5}")
             return 0
 
-        v2_link = v2.parent / (v2.name + "-link")
+        file2_link = path2.parent / (path2.name + "-link")
         try:
-            os.link(v1, v2_link)
+            os.link(path1, file2_link)
         except OSError:
-            log_warn("Failed to dedup %s and %s - failed to create hard link from %s to %s" % (v1, v2, v2_link, v1))
+            log_warn(f"Failed to dedup {path1} and {path2} - failed to create hard link from "
+                     f"{file2_link} to {path1}")
             return 0
         try:
-            v2.unlink()
+            path2.unlink()
         except OSError:
-            log_warn("Failed to dedup %s and %s - unlink of %s failed" % (v1, v2, v2))
-            os.unlink(v2_link)
+            log_warn(f"Failed to dedup {path1} and {path2} - unlink of {path2} failed")
+            os.unlink(file2_link)
             return 0
         try:
-            v2_link.rename(v2)
+            file2_link.rename(path2)
         except OSError:
-            log_error("ERROR: Failed to dedup %s and %s - rename hardlink %s to %s failed" % (v1, v2, v2_link, v2))
+            log_error(f"ERROR: Failed to dedup {path1} and {path2} - rename hardlink {file2_link} "
+                      f"to {path2} failed")
             return 0
 
         log_warn("Successful dedup - created hardlink from %s to %s saving %d MB"
-                 % (v2, v1, s1.st_size // 1024 // 1024))
+                 % (path2, path1, file1_stat.st_size // 1024 // 1024))
 
-        return s1.st_size
+        return file1_stat.st_size
 
     def start_vmcore(self, custom_kernelver: Optional[KernelVer] = None) -> None:
         self.hook.run("start")
@@ -816,7 +822,7 @@ class RetraceWorker:
             # if a non-retrace user in group mock executes
             # setgid /usr/bin/mock, he gets permission denied.
             # this is not a security thing - using mock gives you root anyway
-            cfgdir = Path(CONFIG["SaveDir"], "%d-kernel" % task.get_taskid())
+            cfgdir = Path(CONFIG["SaveDir"], f"{task.get_taskid()}-kernel")
 
             # if the directory exists, it is orphaned - nuke it
             if cfgdir.is_dir():
@@ -830,26 +836,26 @@ class RetraceWorker:
             try:
                 cfgfile = cfgdir / RetraceTask.MOCK_DEFAULT_CFG
                 with cfgfile.open("w") as mockcfg:
-                    mockcfg.write("config_opts['root'] = '%d-kernel'\n" % task.get_taskid())
-                    mockcfg.write("config_opts['target_arch'] = '%s'\n" % kernelver.arch)
+                    mockcfg.write(f"config_opts['root'] = '{task.get_taskid()}-kernel'\n")
+                    mockcfg.write(f"config_opts['target_arch'] = '{kernelver.arch}'\n")
                     mockcfg.write("config_opts['chroot_setup_cmd'] = 'install bash coreutils cpio "
                                   "crash findutils rpm shadow-utils'\n")
-                    mockcfg.write("config_opts['releasever'] = '%s'\n" % kernelver_str)
+                    mockcfg.write(f"config_opts['releasever'] = '{kernelver_str}'\n")
                     mockcfg.write("config_opts['package_manager'] = 'dnf'\n")
                     mockcfg.write("config_opts['plugin_conf']['ccache_enable'] = False\n")
                     mockcfg.write("config_opts['plugin_conf']['yum_cache_enable'] = False\n")
                     mockcfg.write("config_opts['plugin_conf']['root_cache_enable'] = False\n")
                     mockcfg.write("config_opts['plugin_conf']['bind_mount_enable'] = True\n")
                     mockcfg.write("config_opts['plugin_conf']['bind_mount_opts'] = { \n")
-                    mockcfg.write("    'dirs': [('%s', '%s'),\n" % (CONFIG["RepoDir"], CONFIG["RepoDir"]))
-                    mockcfg.write("             ('%s', '%s'),],\n" % (task.get_savedir(), task.get_savedir()))
+                    mockcfg.write("    'dirs': [('{0}', '{0}'),\n".format(CONFIG["RepoDir"]))
+                    mockcfg.write("             ('{0}', '{0}'),],\n".format(task.get_savedir()))
                     mockcfg.write("    'create_dirs': True, }\n")
                     mockcfg.write("\n")
                     mockcfg.write("config_opts['yum.conf'] = \"\"\"\n")
                     mockcfg.write("[main]\n")
                     mockcfg.write("cachedir=/var/cache/yum\n")
                     mockcfg.write("debuglevel=1\n")
-                    mockcfg.write("reposdir=%s\n" % os.devnull)
+                    mockcfg.write(f"reposdir={os.devnull}\n")
                     mockcfg.write("logfile=/var/log/yum.log\n")
                     mockcfg.write("retries=20\n")
                     mockcfg.write("obsoletes=1\n")
@@ -859,9 +865,9 @@ class RetraceWorker:
                     mockcfg.write("\n")
                     mockcfg.write("#repos\n")
                     mockcfg.write("\n")
-                    mockcfg.write("[kernel-%s]\n" % kernelver.arch)
-                    mockcfg.write("name=kernel-%s\n" % kernelver.arch)
-                    mockcfg.write("baseurl=%s\n" % CONFIG["KernelChrootRepo"].replace("$ARCH", kernelver.arch))
+                    mockcfg.write(f"[kernel-{0}]\nname=kernel-{0}\n".format(kernelver.arch))
+                    mockcfg.write("baseurl={}\n".format(
+                                    CONFIG["KernelChrootRepo"].replace("$ARCH", kernelver.arch)))
                     mockcfg.write("failovermethod=priority\n")
                     mockcfg.write("\"\"\"\n")
 
@@ -870,9 +876,10 @@ class RetraceWorker:
                 # symlink defaults from /etc/mock
                 (task.get_savedir() / RetraceTask.MOCK_SITE_DEFAULTS_CFG).symlink_to(
                     "/etc/mock/site-defaults.cfg")
-                (task.get_savedir() / RetraceTask.MOCK_LOGGING_INI).symlink_to("/etc/mock/logging.ini")
+                (task.get_savedir() / RetraceTask.MOCK_LOGGING_INI).symlink_to(
+                    "/etc/mock/logging.ini")
             except Exception as ex:
-                raise Exception("Unable to create mock config file: %s" % ex)
+                raise Exception(f"Unable to create mock config file: {ex}")
             finally:
                 os.umask(old_umask)
 
@@ -880,7 +887,7 @@ class RetraceWorker:
                         stdout=PIPE, stderr=PIPE, encoding="utf-8", check=False)
             stderr = child.stderr
             if child.returncode:
-                raise Exception("mock exited with %d:\n%s" % (child.returncode, stderr))
+                raise Exception(f"mock exited with {child.returncode}:\n{stderr}")
 
             self.hook.run("post_prepare_environment")
 
@@ -890,15 +897,21 @@ class RetraceWorker:
                 vmlinux = vmcore.prepare_debuginfo(task, cfgdir, kernelver=kernelver)
                 self.hook.run("post_prepare_debuginfo")
             except Exception as ex:
-                raise Exception("prepare_debuginfo failed: %s" % str(ex))
+                raise Exception(f"prepare_debuginfo failed: {ex}") from ex
 
             self.hook.run("pre_retrace")
             crash_cmd = task.get_crash_cmd()
             assert crash_cmd is not None
-            crash_normal = ["/usr/bin/mock", "--configdir", str(cfgdir), "--cwd", str(crashdir),
-                            "chroot", "--", crash_cmd + " -s %s %s" % (vmcore_path, vmlinux)]
-            crash_minimal = ["/usr/bin/mock", "--configdir", str(cfgdir), "--cwd", str(crashdir),
-                             "chroot", "--", crash_cmd + " -s --minimal %s %s" % (vmcore_path, vmlinux)]
+            crash_normal = ["/usr/bin/mock",
+                            "--configdir", str(cfgdir),
+                            "--cwd", str(crashdir),
+                            "chroot", "--",
+                            f"{crash_cmd} -s {vmcore_path} {vmlinux}"]
+            crash_minimal = ["/usr/bin/mock",
+                             "--configdir", str(cfgdir),
+                             "--cwd", str(crashdir),
+                             "chroot", "--",
+                             f"{crash_cmd} -s --minimal {vmcore_path} {vmlinux}"]
 
         elif CONFIG["RetraceEnvironment"] == "podman":
             savedir = task.get_savedir()
@@ -933,7 +946,7 @@ class RetraceWorker:
                     cntfile.write("USER retrace\n\n")
                     cntfile.write("CMD [\"/usr/bin/bash\"]")
             except Exception as ex:
-                log_error("Unable to create Containerfile: %s" % ex)
+                log_error(f"Unable to create Containerfile: {ex}")
                 self._fail()
 
             taskid = task.get_taskid()
@@ -1120,17 +1133,18 @@ class RetraceWorker:
 
             for required_file in REQUIRED_FILES[tasktype]:
                 if not self._check_required_file(required_file, crashdir):
-                    raise Exception("Crash directory does not contain required file '%s'" % required_file)
+                    raise Exception("Crash directory does not contain required file "
+                                    f"'{required_file}'")
 
             if tasktype in [TASK_COREDUMP, TASK_DEBUG, TASK_COREDUMP_INTERACTIVE]:
                 self.start_coredump(custom_arch=arch)
             elif tasktype in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
                 self.start_vmcore(custom_kernelver=kernelver)
             else:
-                raise Exception("Unsupported task type '%s'" % tasktype)
+                raise Exception(f"Unsupported task type '{tasktype}'")
         except Exception as ex:
-            log_error("Task failed: %s" % ex)
-            log_exception("Backtrace: %s" % ex)
+            log_error(f"Task failed: {ex}")
+            log_exception(f"Backtrace: {ex}")
             self._fail()
 
     def clean_task(self) -> None:

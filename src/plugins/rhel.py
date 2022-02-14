@@ -2,7 +2,8 @@ import re
 from typing import List
 
 distribution = "rhel"
-abrtparser = re.compile(r"^Red Hat Enterprise Linux(?:\s\w+)? release (\d+)(?:\.(\d+))?(?:\s\w+)? \(([^\)]+)\)$")
+abrtparser = re.compile(r"^Red Hat Enterprise Linux(?:\s\w+)? release (\d+)(?:\.(\d+))?(?:\s\w+)?"
+                        r" \(([^\)]+)\)$")
 guessparser = re.compile(r"\.el(\d+)")
 displayrelease = "Red Hat Enterprise Linux release"
 gpg_keys = [
