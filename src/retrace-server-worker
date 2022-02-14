@@ -28,8 +28,8 @@ if __name__ == "__main__":
 
     log = cmdline._log
 
-    if not os.environ.get('RETRACE_SERVER_TESTING') and \
-            pwd.getpwnam('retrace').pw_uid != os.getuid():
+    if not os.environ.get("RETRACE_SERVER_TESTING") and \
+            pwd.getpwnam("retrace").pw_uid != os.getuid():
         sys.stderr.write("Please use 'retrace-server-task' to restart or create a new task\n")
         sys.exit(1)
 

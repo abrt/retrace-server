@@ -21,7 +21,7 @@ from requests_gssapi import HTTPSPNEGOAuth, DISABLED
 from retrace.retrace import add_snapshot_suffix
 
 
-FALLBACK_SERVER = 'https://retrace.fedoraproject.org'
+FALLBACK_SERVER = "https://retrace.fedoraproject.org"
 TASK_COREDUMP, TASK_DEBUG, TASK_VMCORE, TASK_COREDUMP_INTERACTIVE, \
     TASK_VMCORE_INTERACTIVE = range(5)
 
@@ -34,7 +34,7 @@ def ticket_check() -> bool:
 def prepare_tar(args: Dict[str, Any]) -> Path:
     """Create tar file containg all necessary files."""
     LOGGER.info("Preparing tar")
-    corefile = Path(args['COREFILE'])
+    corefile = Path(args["COREFILE"])
     tmpdir = Path(tempfile.mkdtemp())
     tar_name = tmpdir / "archive.tar.gz"
     with tarfile.open(tar_name, "w:gz") as tar_file:
@@ -48,15 +48,15 @@ def prepare_tar(args: Dict[str, Any]) -> Path:
 
         LOGGER.info("Adding '%s' as '%s' into tar", corefile, args['task_type'])
         if not corefile.is_file():
-            print("'{0}' does not exists".format(corefile))
+            print(f"'{corefile}' does not exists")
             sys.exit(1)
 
-        file_name = add_snapshot_suffix(args['task_type'], corefile)
+        file_name = add_snapshot_suffix(args["task_type"], corefile)
         tar_file.add(str(corefile), arcname=file_name)
 
-        if args['vmem']:
-            vmem = Path(args['vmem'])
-            vmem_file = args['task_type'] + ".vmem"
+        if args["vmem"]:
+            vmem = Path(args["vmem"])
+            vmem_file = args["task_type"] + ".vmem"
             LOGGER.info("Adding '%s' as '%s' into tar", vmem, vmem_file)
 
             if not vmem.is_file():
@@ -114,7 +114,7 @@ def parse_md5sum(response) -> str:
 
 def parse_email(response) -> Optional[str]:
     """Parse email from manager page."""
-    key_string = 'Update e-mail(s)'
+    key_string = "Update e-mail(s)"
     lines = response.text.split("\n")
     for line in lines:
         if key_string in line:
@@ -129,7 +129,7 @@ def parse_email(response) -> Optional[str]:
 
 def parse_caseno(response) -> Optional[str]:
     """Parse caseno from manager page."""
-    key_string = 'Update case no.'
+    key_string = "Update case no."
     lines = response.text.split("\n")
     for line in lines:
         if key_string in line:
@@ -143,7 +143,7 @@ def parse_caseno(response) -> Optional[str]:
 
 def parse_bugzillano(response) -> Optional[str]:
     """Parse bugzillano from manager page."""
-    key_string = 'Update bugzilla no.'
+    key_string = "Update bugzilla no."
     lines = response.text.split("\n")
     for line in lines:
         if key_string in line:
@@ -158,42 +158,42 @@ def parse_bugzillano(response) -> Optional[str]:
 def restart_existing_task(args: Dict[str, Any]) -> None:
     """Restart exiting task."""
     LOGGER.info("Restarting task from server %s",
-                args['server'] + "/manager/" + args['TASK_ID'])
-    server = args['server'] + "/manager/" + args['TASK_ID'] + "/restart"
+                args["server"] + "/manager/" + args["TASK_ID"])
+    server = args["server"] + "/manager/" + args["TASK_ID"] + "/restart"
     payload = {}
     for itm in ["kernelver", "debug", "caseno", "bugzillano"]:
         if itm in args.keys():
             payload[itm] = args[itm]
-    if args['email']:
-        payload['notify'] = args['email']
+    if args["email"]:
+        payload["notify"] = args["email"]
     res = requests.post(server,
                         data=payload,
-                        verify=(not args['no_verify']),
-                        auth=args['kerberos'])
+                        verify=(not args["no_verify"]),
+                        auth=args["kerberos"])
 
     check_response(res)
 
     print("Restarted task '{0}'"
-          .format(args['TASK_ID']))
+          .format(args["TASK_ID"]))
 
 def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
     """Start new task."""
-    if args['task_input'] == "http":
+    if args["task_input"] == "http":
         LOGGER.info("Starting new http task")
-        if args['task_type'] == 'coredump':
-            if args['interactive']:
+        if args["task_type"] == "coredump":
+            if args["interactive"]:
                 task_type = TASK_COREDUMP_INTERACTIVE
             else:
                 task_type = TASK_COREDUMP
-        elif args['interactive']:
+        elif args["interactive"]:
             task_type = TASK_VMCORE_INTERACTIVE
         else:
             task_type = TASK_VMCORE
 
-        if args['vmem'] and task_type not in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
+        if args["vmem"] and task_type not in [TASK_VMCORE, TASK_VMCORE_INTERACTIVE]:
             LOGGER.warning("Ignoring: %s, option is only viable with vmcores.",
-                           args['vmem'])
-            args['vmem'] = None
+                           args["vmem"])
+            args["vmem"] = None
 
         LOGGER.info("Task_type: %s", task_type)
 
@@ -201,52 +201,52 @@ def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
         tar_size = tar_name.stat().st_size
         LOGGER.info("Tar size: %s", tar_size)
 
-        headers = {'Content-Type': 'application/x-tar',
-                   'Content-Length': str(tar_size),
-                   'X-Task-Type': str(task_type),
-                   'Connection': 'close'}
+        headers = {"Content-Type": "application/x-tar",
+                   "Content-Length": str(tar_size),
+                   "X-Task-Type": str(task_type),
+                   "Connection": "close"}
 
-        request = requests.Request('POST',
-                                   args['server'] + "/create",
+        request = requests.Request("POST",
+                                   args["server"] + "/create",
                                    headers=headers)
 
-        LOGGER.info("Connecting to %s", args['server'] + "/create")
+        LOGGER.info("Connecting to %s", args["server"] + "/create")
 
         prepped = request.prepare()
-        with open(tar_name, 'rb') as fld:
+        with open(tar_name, "rb") as fld:
             prepped.body = fld.read(tar_size)
 
         session = requests.Session()
 
         res = session.send(prepped,
                            stream=True,
-                           verify=(not args['no_verify']))
+                           verify=(not args["no_verify"]))
 
         shutil.rmtree(tar_name.parent)
 
         check_response(res)
 
-        task_id = res.headers['X-Task-ID']
-        task_password = res.headers['X-Task-Password']
+        task_id = res.headers["X-Task-ID"]
+        task_password = res.headers["X-Task-Password"]
 
         print("Task created")
         print("Task ID: {0}".format(task_id))
         print("Task password: {0}".format(task_password))
         return (task_id, task_password)
 
-    if args['task_input'] == "manager":
-        args['COREFILE'] = Path(args['COREFILE']).resolve().as_uri()
-        if args['vmem']:
-            args['vmem'] = Path(args['vmem']).resolve().as_uri()
+    if args["task_input"] == "manager":
+        args["COREFILE"] = Path(args["COREFILE"]).resolve().as_uri()
+        if args["vmem"]:
+            args["vmem"] = Path(args["vmem"]).resolve().as_uri()
 
         LOGGER.info("Starting new manager task")
-        server = args['server'] + "/manager/"
-        payload = {"custom_url": args['COREFILE']}
-        if args['vmem']:
-            payload['vmem-check'] = 'on' if args['vmem'] else 'off'
-            payload.update({"custom_vmem_url": args['vmem']})
+        server = args["server"] + "/manager/"
+        payload = {"custom_url": args["COREFILE"]}
+        if args["vmem"]:
+            payload["vmem-check"] = "on" if args["vmem"] else "off"
+            payload.update({"custom_vmem_url": args["vmem"]})
 
-        payload['md5sum'] = 'off' if args['no_md5'] else 'on'
+        payload["md5sum"] = "off" if args["no_md5"] else "on"
         for itm in ["debug", "kernelver", "task_type", "os_release", "package", "executable"]:
             if itm in args.keys():
                 payload[itm] = args[itm]
@@ -255,43 +255,43 @@ def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
 
         res = requests.post(server + "__custom__",
                             data=payload,
-                            verify=(not args['no_verify']),
-                            auth=args['kerberos'])
+                            verify=(not args["no_verify"]),
+                            auth=args["kerberos"])
 
-    elif args['task_input'] == "ftp":
+    elif args["task_input"] == "ftp":
         LOGGER.info("Starting new ftp task")
-        server = args['server'] + "/manager/"
-        payload = {'md5sum': 'off' if args['no_md5'] else 'on'}
+        server = args["server"] + "/manager/"
+        payload = {"md5sum": "off" if args["no_md5"] else "on"}
         for itm in ["debug", "kernelver", "task_type", "os_release", "package", "executable"]:
             if itm in args.keys():
                 payload[itm] = args[itm]
 
-        if args['vmem']:
-            payload['vmem-check'] = 'on' if args['vmem'] else 'off'
-            payload.update({"custom_vmem_url": args['vmem']})
+        if args["vmem"]:
+            payload["vmem-check"] = "on" if args["vmem"] else "off"
+            payload.update({"custom_vmem_url": args["vmem"]})
 
         LOGGER.info("Connecting to server %s",
-                    server + args['COREFILE'] + "/start")
-        res = requests.get(server + args['COREFILE'] + "/start",
+                    server + args["COREFILE"] + "/start")
+        res = requests.get(server + args["COREFILE"] + "/start",
                            params=payload,
-                           verify=(not args['no_verify']),
-                           auth=args['kerberos'])
+                           verify=(not args["no_verify"]),
+                           auth=args["kerberos"])
 
     check_response(res)
     task_id = parse_task_id(res)
     print("Task created on {0}"
           .format(server + task_id))
 
-    ARGS['TASK_ID'] = task_id
-    ARGS['password'] = None
+    ARGS["TASK_ID"] = task_id
+    ARGS["password"] = None
 
-    if ARGS['email']:
+    if ARGS["email"]:
         update_email(ARGS)
 
-    if ARGS['caseno']:
+    if ARGS["caseno"]:
         update_caseno(ARGS)
 
-    if ARGS['bugzillano']:
+    if ARGS["bugzillano"]:
         update_bugzillano(ARGS)
 
     return (task_id, None)
@@ -299,26 +299,26 @@ def create_new_task(args: Dict[str, Any]) -> Tuple[int, Optional[str]]:
 
 def get_status(args: Dict[str, Any]) -> str:
     """Get current task's status."""
-    if args['password']:
+    if args["password"]:
         LOGGER.info("Getting status from http task on server %s",
-                    args['server'] + "/" + args['TASK_ID'])
-        server = args['server'] + "/" + args['TASK_ID']
-        headers = {"X-Task-Password": args['password']}
+                    args["server"] + "/" + args["TASK_ID"])
+        server = args["server"] + "/" + args["TASK_ID"]
+        headers = {"X-Task-Password": args["password"]}
         res = requests.get(server,
                            headers=headers,
-                           verify=(not args['no_verify']),
-                           auth=args['kerberos'])
+                           verify=(not args["no_verify"]),
+                           auth=args["kerberos"])
 
         check_response(res)
         status = res.text
         return status
 
     LOGGER.info("Getting status from manager/ftp task on server %s",
-                args['server'] + "/manager/" + args['TASK_ID'])
-    server = args['server'] + "/manager/" + args['TASK_ID']
+                args["server"] + "/manager/" + args["TASK_ID"])
+    server = args["server"] + "/manager/" + args["TASK_ID"]
     res = requests.get(server,
-                       verify=(not args['no_verify']),
-                       auth=args['kerberos'])
+                       verify=(not args["no_verify"]),
+                       auth=args["kerberos"])
 
     check_response(res)
     status = parse_status(res)
@@ -328,17 +328,17 @@ def get_status(args: Dict[str, Any]) -> str:
 def get_md5sum(args: Dict[str, Any]) -> bool:
     """Get md5sum of uploaded file."""
     # Only supported for manager tasks
-    if args['password']:
+    if args["password"]:
         print("Md5sum are supported for manager and ftp tasks")
         sys.exit(1)
 
     LOGGER.info("Getting md5sum from server %s",
-                args['server'] + "/manager/" + args['TASK_ID'])
+                args["server"] + "/manager/" + args["TASK_ID"])
 
-    server = args['server'] + "/manager/" + args['TASK_ID']
+    server = args["server"] + "/manager/" + args["TASK_ID"]
     res = requests.get(server,
-                       verify=(not args['no_verify']),
-                       auth=args['kerberos'])
+                       verify=(not args["no_verify"]),
+                       auth=args["kerberos"])
 
     if check_response(res, False):
         print("Error: md5sum is only supported for manager and ftp tasks")
@@ -351,17 +351,17 @@ def get_md5sum(args: Dict[str, Any]) -> bool:
 def get_email(args: Dict[str, Any]) -> bool:
     """Get email of a task."""
     # Only supported for manager tasks
-    if args['password']:
+    if args["password"]:
         print("Emails are supported for manager and ftp tasks")
         sys.exit(1)
 
     LOGGER.info("Getting email from server %s",
-                args['server'] + "/manager/" + args['TASK_ID'])
+                args["server"] + "/manager/" + args["TASK_ID"])
 
-    server = args['server'] + "/manager/" + args['TASK_ID']
+    server = args["server"] + "/manager/" + args["TASK_ID"]
     res = requests.get(server,
-                       verify=(not args['no_verify']),
-                       auth=args['kerberos'])
+                       verify=(not args["no_verify"]),
+                       auth=args["kerberos"])
 
     if check_response(res, False):
         print("Error: email is only supported for manager and ftp tasks")
@@ -374,17 +374,17 @@ def get_email(args: Dict[str, Any]) -> bool:
 def get_caseno(args: Dict[str, Any]) -> bool:
     """Get case number of a task."""
     # Only supported for manager tasks
-    if args['password']:
+    if args["password"]:
         print("Case numbers are supported for manager and ftp tasks")
         sys.exit(1)
 
     LOGGER.info("Getting case number from server %s",
-                args['server'] + "/manager/" + args['TASK_ID'])
+                args["server"] + "/manager/" + args["TASK_ID"])
 
-    server = args['server'] + "/manager/" + args['TASK_ID']
+    server = args["server"] + "/manager/" + args["TASK_ID"]
     res = requests.get(server,
-                       verify=(not args['no_verify']),
-                       auth=args['kerberos'])
+                       verify=(not args["no_verify"]),
+                       auth=args["kerberos"])
 
     if check_response(res, False):
         print("Error: caseno is only supported for manager and ftp tasks")
@@ -396,17 +396,17 @@ def get_caseno(args: Dict[str, Any]) -> bool:
 def get_bugzillano(args: Dict[str, Any]) -> bool:
     """Get bugzilla number of a task."""
     # Only supported for manager tasks
-    if args['password']:
+    if args["password"]:
         print("Bugzilla numbers are supported for manager and ftp tasks")
         sys.exit(1)
 
     LOGGER.info("Getting bugzilla number from server %s",
-                args['server'] + "/manager/" + args['TASK_ID'])
+                args["server"] + "/manager/" + args["TASK_ID"])
 
-    server = args['server'] + "/manager/" + args['TASK_ID']
+    server = args["server"] + "/manager/" + args["TASK_ID"]
     res = requests.get(server,
-                       verify=(not args['no_verify']),
-                       auth=args['kerberos'])
+                       verify=(not args["no_verify"]),
+                       auth=args["kerberos"])
 
     if check_response(res, False):
         print("Error: bugzillano is only supported for manager and ftp tasks")
@@ -417,20 +417,20 @@ def get_bugzillano(args: Dict[str, Any]) -> bool:
 
 def get_backtrace(args: Dict[str, Any]) -> bool:
     """Get a backtrace of the task."""
-    if args['password']:
-        server = args['server'] + "/" + args['TASK_ID'] + "/backtrace"
-        headers = {"X-Task-Password": args['password']}
+    if args["password"]:
+        server = args["server"] + "/" + args["TASK_ID"] + "/backtrace"
+        headers = {"X-Task-Password": args["password"]}
 
     else:
-        server = args['server'] + "/manager/" + args['TASK_ID'] + "/backtrace"
+        server = args["server"] + "/manager/" + args["TASK_ID"] + "/backtrace"
         headers = {}
 
     LOGGER.info("Getting backtrace from server %s", server)
 
     res = requests.get(server,
                        headers=headers,
-                       verify=(not args['no_verify']),
-                       auth=args['kerberos'])
+                       verify=(not args["no_verify"]),
+                       auth=args["kerberos"])
 
     if check_response(res, False):
         if res.text == "There is no backtrace for the specified task":
@@ -449,8 +449,8 @@ def get_backtrace(args: Dict[str, Any]) -> bool:
 def run_batch(args: Dict[str, Any]) -> None:
     """Run the whole retrace process in one go."""
     task_id, password = create_new_task(args)
-    args['password'] = password
-    args['TASK_ID'] = task_id
+    args["password"] = password
+    args["TASK_ID"] = task_id
     last_status = ""
     new_status = get_status(args)
     while True:
@@ -470,58 +470,58 @@ def run_batch(args: Dict[str, Any]) -> None:
 def update_email(args: Dict[str, Any]) -> None:
     """Update the email address of the task."""
     # Only supported for manager tasks
-    if args['password']:
+    if args["password"]:
         print("Email notification only supported for manager and ftp tasks")
         sys.exit(1)
-    server = args['server'] + "/manager/" + args['TASK_ID'] + "/notify"
+    server = args["server"] + "/manager/" + args["TASK_ID"] + "/notify"
     res = requests.post(server,
-                        data={"notify": args['email']},
-                        verify=(not args['no_verify']),
-                        auth=args['kerberos'])
+                        data={"notify": args["email"]},
+                        verify=(not args["no_verify"]),
+                        auth=args["kerberos"])
 
     check_response(res)
     print("Added email address '{0}' to the task '{1}'"
-          .format(args['email'], args['TASK_ID']))
+          .format(args["email"], args["TASK_ID"]))
 
 
 def update_caseno(args: Dict[str, Any]) -> None:
     """Update case number of the task."""
     # Only supported for manager tasks
-    if args['password']:
+    if args["password"]:
         print("Case number is only supported for manager and ftp tasks")
         sys.exit(1)
-    server = args['server'] + "/manager/" + args['TASK_ID'] + "/caseno"
+    server = args["server"] + "/manager/" + args["TASK_ID"] + "/caseno"
     res = requests.post(server,
-                        data={"caseno": args['caseno']},
-                        verify=(not args['no_verify']),
-                        auth=args['kerberos'])
+                        data={"caseno": args["caseno"]},
+                        verify=(not args["no_verify"]),
+                        auth=args["kerberos"])
 
     check_response(res)
     print("Added case number '{0}' to the task '{1}'"
-          .format(args['caseno'], args['TASK_ID']))
+          .format(args["caseno"], args["TASK_ID"]))
 
 def update_bugzillano(args: Dict[str, Any]) -> None:
     """Update bugzilla number of the task."""
     # Only supported for manager tasks
-    if args['password']:
+    if args["password"]:
         print("Case number is only supported for manager and ftp tasks")
         sys.exit(1)
-    server = args['server'] + "/manager/" + args['TASK_ID'] + "/bugzillano"
+    server = args["server"] + "/manager/" + args["TASK_ID"] + "/bugzillano"
     res = requests.post(server,
-                        data={"bugzillano": args['bugzillano']},
-                        verify=(not args['no_verify']),
-                        auth=args['kerberos'])
+                        data={"bugzillano": args["bugzillano"]},
+                        verify=(not args["no_verify"]),
+                        auth=args["kerberos"])
 
     check_response(res)
     print("Added bugzilla number '{0}' to the task '{1}'"
-          .format(args['bugzillano'], args['TASK_ID']))
+          .format(args["bugzillano"], args["TASK_ID"]))
 
 if __name__ == "__main__":
     # parse arguments
     PARSER = argparse.ArgumentParser(description=("Create, watch and set"
                                                   "tasks through commandline"))
-    TASK_PARSER = PARSER.add_subparsers(dest='task_action')
-    for cmd in ['create', 'batch']:
+    TASK_PARSER = PARSER.add_subparsers(dest="task_action")
+    for cmd in ["create", "batch"]:
         tmp = TASK_PARSER.add_parser(cmd)
         type_group = tmp.add_mutually_exclusive_group()
         type_group.add_argument("-u", "--userspace_core", action="store_const",
@@ -579,7 +579,7 @@ if __name__ == "__main__":
                          help=("Set bugzillano to the task."
                                "Only takes affect with -f or -m"))
 
-    TMP = TASK_PARSER.add_parser('get')
+    TMP = TASK_PARSER.add_parser("get")
     TMP.add_argument("TASK_ID",
                      help="ID of existing task")
     TMP.add_argument("-p", "--password",
@@ -610,7 +610,7 @@ if __name__ == "__main__":
                           dest="get_type", const="bugzillano",
                           help="Get set bugzilla number of the task.")
 
-    TMP = TASK_PARSER.add_parser('set')
+    TMP = TASK_PARSER.add_parser("set")
     TMP.add_argument("TASK_ID",
                      help="ID of existing task")
     TMP.add_argument("-p", "--password",
@@ -628,7 +628,7 @@ if __name__ == "__main__":
     TMP.add_argument("-bz", "--bugzillano",
                      help="Set bugzilla number of the task.")
 
-    TMP = TASK_PARSER.add_parser('restart')
+    TMP = TASK_PARSER.add_parser("restart")
     TMP.add_argument("TASK_ID",
                      help="ID of existing task")
     TMP.add_argument("-n", "--no-verify", action="store_true",
@@ -653,94 +653,94 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # if not verifying certificates, suppress warning
-    if ARGS['no_verify']:
+    if ARGS["no_verify"]:
         requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
     # create logger
-    logging.basicConfig(level=ARGS['verbose'])
+    logging.basicConfig(level=ARGS["verbose"])
     LOGGER = logging.getLogger()
 
     # If verbose was given, turn on debug for task commands
-    if ARGS['verbose'] != logging.WARNING:
-        ARGS['debug'] = "on"
+    if ARGS["verbose"] != logging.WARNING:
+        ARGS["debug"] = "on"
 
     # check kerberos
     if ticket_check():
         LOGGER.info("Kerberos ticket is valid.")
-        ARGS['kerberos'] = HTTPSPNEGOAuth(mutual_authentication=DISABLED)
+        ARGS["kerberos"] = HTTPSPNEGOAuth(mutual_authentication=DISABLED)
     else:
-        ARGS['kerberos'] = None
+        ARGS["kerberos"] = None
 
     # Try guessing type of task if no specified
-    if ARGS['task_action'] in ['create', 'batch'] and not ARGS['task_input']:
+    if ARGS["task_action"] in ["create", "batch"] and not ARGS["task_input"]:
         # If the file does not exist locally
-        if not Path(ARGS['COREFILE']).is_file():
+        if not Path(ARGS["COREFILE"]).is_file():
             # and server not know
-            if not ARGS['server']:
+            if not ARGS["server"]:
                 LOGGER.info("Defaulting to ftp task")
-                ARGS['task_input'] = 'ftp'
+                ARGS["task_input"] = "ftp"
             else:
                 LOGGER.info("Defaulting to manager task")
-                ARGS['task_input'] = 'manager'
+                ARGS["task_input"] = "manager"
         else:
-            if not ARGS['server']:
+            if not ARGS["server"]:
                 LOGGER.info("Defaulting to manager task")
-                ARGS['task_input'] = 'manager'
+                ARGS["task_input"] = "manager"
             else:
                 LOGGER.info("Defaulting to http task")
-                ARGS['task_input'] = 'http'
+                ARGS["task_input"] = "http"
 
     # Default to localhost if no server was specified.
-    if not ARGS['server']:
-        ARGS['server'] = "https://" + socket.gethostname()
+    if not ARGS["server"]:
+        ARGS["server"] = "https://" + socket.gethostname()
 
     # Check that we are able to connect to the server.
-    LOGGER.info("Trying to connect to ‘%s’...", ARGS['server'])
+    LOGGER.info("Trying to connect to ‘%s’...", ARGS["server"])
     try:
-        req = requests.get(ARGS['server'],
-                           verify=(not ARGS['no_verify']),
-                           auth=ARGS['kerberos'])
+        req = requests.get(ARGS["server"],
+                           verify=(not ARGS["no_verify"]),
+                           auth=ARGS["kerberos"])
         if req.status_code == 401:
-            print("Authentication failed for ‘{}’".format(ARGS['server']))
+            print("Authentication failed for ‘{}’".format(ARGS["server"]))
             print("If the server requires Kerberos authentication, please use"
                   " the ‘kinit’ command to obtain a valid ticket first.")
             sys.exit(1)
         if req.status_code != 200:
             raise requests.exceptions.ConnectionError
     except requests.exceptions.RequestException as ex:
-        if 'debug' in ARGS:
+        if "debug" in ARGS:
             LOGGER.error("Requests generic exception: '%s'", str(ex))
         LOGGER.error("Could not connect to server ‘%s’. Falling back to ‘%s’",
-                    ARGS['server'], FALLBACK_SERVER)
-        ARGS['server'] = FALLBACK_SERVER
+                    ARGS["server"], FALLBACK_SERVER)
+        ARGS["server"] = FALLBACK_SERVER
 
-    if ARGS['task_action'] == "create":
+    if ARGS["task_action"] == "create":
         create_new_task(ARGS)
 
-    if ARGS['task_action'] == "batch":
+    if ARGS["task_action"] == "batch":
         run_batch(ARGS)
 
-    if ARGS['task_action'] == "get":
-        if ARGS['get_type'] == "md5sum":
+    if ARGS["task_action"] == "get":
+        if ARGS["get_type"] == "md5sum":
             get_md5sum(ARGS)
-        elif ARGS['get_type'] == "backtrace":
+        elif ARGS["get_type"] == "backtrace":
             get_backtrace(ARGS)
-        elif ARGS['get_type'] == "email":
+        elif ARGS["get_type"] == "email":
             get_email(ARGS)
-        elif ARGS['get_type'] == "caseno":
+        elif ARGS["get_type"] == "caseno":
             get_caseno(ARGS)
-        elif ARGS['get_type'] == "bugzillano":
+        elif ARGS["get_type"] == "bugzillano":
             get_bugzillano(ARGS)
         else:
             print("Status: {0}".format(get_status(ARGS)))
 
-    if ARGS['task_action'] == "set":
-        if ARGS['email']:
+    if ARGS["task_action"] == "set":
+        if ARGS["email"]:
             update_email(ARGS)
-        if ARGS['caseno']:
+        if ARGS["caseno"]:
             update_caseno(ARGS)
-        if ARGS['bugzillano']:
+        if ARGS["bugzillano"]:
             update_bugzillano(ARGS)
 
-    if ARGS['task_action'] == "restart":
+    if ARGS["task_action"] == "restart":
         restart_existing_task(ARGS)
