@@ -83,8 +83,8 @@ TASKPASS_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 
 
 STATUS_ANALYZE, STATUS_INIT, STATUS_BACKTRACE, STATUS_CLEANUP, \
-    STATUS_STATS, STATUS_FINISHING, STATUS_SUCCESS, STATUS_FAIL, \
-    STATUS_DOWNLOADING, STATUS_POSTPROCESS, STATUS_CALCULATING_MD5SUM = range(11)
+    STATUS_STATS, STATUS_SUCCESS, STATUS_FAIL, STATUS_DOWNLOADING, \
+    STATUS_POSTPROCESS, STATUS_CALCULATING_MD5SUM = range(10)
 
 STATUS = [
     "Analyzing crash data",
@@ -234,8 +234,14 @@ def get_supported_releases() -> List[str]:
     return result
 
 
-def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
-            packages: Iterable[str], corepath: Path, release: Release) \
+def run_gdb(savedir: Path,
+            repopath: str,
+            taskid: int,
+            image_tag: str,
+            debug_packages: Iterable[str],
+            corepath: Path,
+            release: Release,
+            use_debuginfod: bool = False) \
         -> Tuple[str, str]:
     with (savedir / "crash" / "executable").open("r") as exec_file:
         executable = exec_file.read(ALLOWED_FILES["executable"])
@@ -245,30 +251,31 @@ def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
 
     if CONFIG["RetraceEnvironment"] == "mock":
         output = run(["/usr/bin/mock", "chroot", "--configdir", savedir,
-                      "--", "ls '%s'" % executable],
+                      "--", f"ls '{executable}'"],
                      stdout=PIPE, stderr=DEVNULL, encoding="utf-8",
                      check=False).stdout
         if output.strip() != executable:
             raise Exception("The appropriate package set could not be installed")
 
         child = run(["/usr/bin/mock", "chroot", "--configdir", savedir,
-                     "--", "/bin/chmod a+r '%s'" % executable],
-                    stdout=DEVNULL, check=False)
+                     "--", f"/bin/chmod a+r '{executable}'"],
+                    stdout=DEVNULL, encoding="utf-8", check=False)
         if child.returncode:
             raise Exception("Unable to chmod the executable")
 
-    if CONFIG["RetraceEnvironment"] == "mock":
         batfile = savedir / "gdb.sh"
 
         child = run(["/usr/bin/mock", "--configdir", savedir, "--copyin",
                      batfile, "/var/spool/abrt/gdb.sh"],
-                    stdout=DEVNULL, stderr=DEVNULL, check=False)
+                    stdout=DEVNULL, stderr=DEVNULL, encoding="utf-8",
+                    check=False)
         if child.returncode:
             raise Exception("Unable to copy GDB launcher into chroot")
 
         child = run(["/usr/bin/mock", "--configdir", savedir, "chroot",
                      "--", "/bin/chmod a+rx /var/spool/abrt/gdb.sh"],
-                    stdout=DEVNULL, stderr=DEVNULL, check=False)
+                    stdout=DEVNULL, stderr=DEVNULL, encoding="utf-8",
+                    check=False)
         if child.returncode:
             raise Exception("Unable to chmod GDB launcher")
 
@@ -286,10 +293,14 @@ def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
         # pylint: disable=import-outside-toplevel
         from .backends.podman import LocalPodmanBackend
 
+        print(f"[{taskid}] Using Podman backend", file=sys.stderr)
+
         backend = LocalPodmanBackend(retrace_config=CONFIG)
 
         # Start container from prepared release-specific image.
-        with backend.start_container(image_tag, taskid, repopath) as container:
+        with backend.start_container(image_tag, taskid, repopath, use_debuginfod) as container:
+            print(f"[{taskid}] Container started", file=sys.stderr)
+
             # Copy coredump from crash directory to container.
             container.copy_to(corepath, "/var/spool/abrt/crash/")
 
@@ -297,32 +308,37 @@ def run_gdb(savedir: Path, repopath: str, taskid: int, image_tag: str,
             container.exec(["chown", "retrace:",
                             f"/var/spool/abrt/crash/{corepath.name}"])
 
-            # Install packages required for retracing the coredump.
-            dnf_call = ["dnf", "install",
-                        "--assumeyes",
-                        "--skip-broken",
-                        "--allowerasing",
-                        "--setopt=tsflags=nodocs",
-                        f"--releasever={release.version}",
-                        f"--repo=retrace-{release.distribution}"]
-            dnf_call.extend(packages)
+            if not use_debuginfod:
+                # Install separate debuginfo and debugsource packages required
+                # for retracing the coredump.
+                dnf_call = ["dnf", "install",
+                            "--assumeyes",
+                            "--skip-broken",
+                            "--allowerasing",
+                            "--setopt=tsflags=nodocs",
+                            f"--releasever={release.version}",
+                            f"--repo=retrace-{release.distribution}"]
+                dnf_call.extend(debug_packages)
 
-            child = container.exec(dnf_call)
+                child = container.exec(dnf_call)
 
-            if child.returncode:
-                raise RetraceError("Could not install required packages inside "
-                                   f"container: {child.stderr}")
+                if child.returncode:
+                    raise RetraceError("Could not install required packages inside "
+                                    f"container: {child.stderr}")
 
-            log_info("Required packages installed")
+                log_info("Required packages installed")
+
+            print(f"[{taskid}] Running gdb.sh", file=sys.stderr)
 
             # Run GDB inside container and collect output.
-            child = container.exec(["/var/spool/abrt/gdb.sh", executable],
-                                   user="retrace")
+            child = container.exec(["/var/spool/abrt/gdb.sh", executable])
 
             if child.returncode:
+                print(f"[{taskid}] GDB failed: {child.stdout}", file=sys.stderr)
                 raise RetraceError(f"GDB failed inside container: {child.stdout}")
 
             backtrace = child.stdout.strip()
+            print(f"[{taskid}] Backtrace generated", file=sys.stderr)
             log_info("Backtrace generated")
     elif CONFIG["RetraceEnvironment"] == "native":
         raise Exception("RetraceEnvironment == native not implemented for gdb")
@@ -570,7 +586,7 @@ class RetraceTask:
 
     BACKTRACE_FILE = "retrace_backtrace"
     CASENO_FILE = "caseno"
-    C2P_LOG_FILE = "c2p"
+    C2P_LOG_FILE = "c2p_log"
     BUGZILLANO_FILE = "bugzillano"
     CRASHRC_FILE = "crashrc"
     CRASH_CMD_FILE = "crash_cmd"
@@ -1592,7 +1608,8 @@ class RetraceTask:
                              RetraceTask.TYPE_FILE, RetraceTask.RESULTS_DIR,
                              RetraceTask.CRASHRC_FILE, RetraceTask.CRASH_CMD_FILE,
                              RetraceTask.URL_FILE, RetraceTask.MOCK_LOG_DIR,
-                             RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE]:
+                             RetraceTask.VMLINUX_FILE, RetraceTask.BUGZILLANO_FILE,
+                             RetraceTask.C2P_LOG_FILE]:
                 continue
 
             try:
@@ -1640,6 +1657,10 @@ class RetraceTask:
         kerneldir = Path(CONFIG["SaveDir"], "%d-kernel" % self._taskid)
         if kerneldir.is_dir():
             shutil.rmtree(kerneldir)
+
+        if not self._savedir.is_dir():
+            log_warn(f"Task directory does not exist: {self._savedir}")
+            return
 
         shutil.rmtree(self._savedir)
 
