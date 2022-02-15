@@ -58,8 +58,12 @@ class LocalPodmanBackend:
     def __init__(self, retrace_config: Config):
         self.config = retrace_config
 
-    def start_container(self, image_tag: str, taskid: int, repopath: str,
-                        use_debuginfod: bool = False) -> PodmanContainer:
+    def start_container(self,
+                        image_tag: str,
+                        taskid: int,
+                        repopath: str,
+                        use_debuginfod: bool = False) \
+            -> PodmanContainer:
         run_call = [PODMAN_BIN, "run",
                     "--quiet",
                     "--detach",

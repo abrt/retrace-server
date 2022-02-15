@@ -280,8 +280,9 @@ class RetraceWorker:
             with exec_path.open() as exec_file:
                 executable = exec_file.read(ALLOWED_FILES["executable"])
 
+            # TODO: What's going on here? Why are we transforming the path?
             if executable.startswith(rootdir):
-                with exec_path.open('w') as exec_file:
+                with exec_path.open("w") as exec_file:
                     exec_file.write(executable[len(rootdir):])
 
             rel_path = crashdir / "os_release_in_rootdir"
@@ -425,9 +426,11 @@ class RetraceWorker:
         """
 
         if use_debuginfod:
-            image_tag = f"localhost/retrace-image:{release}-debuginfod"
+            image_tag = f"localhost/retrace-image:fedora-35-{release.arch}-debuginfod"
         else:
             image_tag = f"localhost/retrace-image:{release}"
+
+        print(f"[xxx] Checking for image {image_tag}", file=sys.stderr)
 
         # Check if the image exists first.
         child = run([PODMAN_BIN, "image", "inspect", image_tag],
@@ -437,6 +440,8 @@ class RetraceWorker:
         if child.returncode == 0:
             log_info(f"Corresponding container image {image_tag} exists")
             return image_tag
+
+        print(f"[xxx] Image does not exist", file=sys.stderr)
 
         # Since the image does not exist, create the Containerfile and
         # other required files in a temporary directory, and run Podman
@@ -449,6 +454,8 @@ class RetraceWorker:
                 log_info(f"Created directory {tempdir_path} to build image for "
                          f"retracing {release}")
             tempdir = Path(tempdir_path)
+
+            print(f"[xxx] Created {tempdir} for image build", file=sys.stderr)
 
             if not use_debuginfod:
                 # When not using debuginfod, we rely on our own DNF repository
@@ -467,17 +474,19 @@ class RetraceWorker:
 
                 if use_debuginfod:
                     debuginfod_urls = shlex.quote(CONFIG["DebuginfodServers"])
-                    gdbfile.write("export DEBUGINFOD_TIMEOUT=30\n"
+                    gdbfile.write("export DEBUGINFOD_TIMEOUT=10\n"
+                                  "export DEBUGINFOD_MAXTIME=30\n"
                                   f"export DEBUGINFOD_URLS={debuginfod_urls}\n"
                                   "export DEBUGINFOD_CACHE_PATH=/tmp/debuginfod\n")
 
                 gdbfile.write(f"{gdb_exec} -batch \\\n"
                               "  -ex 'python exec(open(\"/usr/libexec/abrt-gdb-exploitable\").read())' \\\n")
 
-                if not use_debuginfod:
-                    gdbfile.write("  -ex 'file '$1 \\\n")
+                if use_debuginfod:
+                    gdbfile.write("  -ex 'set debuginfod enabled on' \\\n")
 
-                gdbfile.write("  -ex 'core-file /var/spool/abrt/crash/coredump' \\\n"
+                gdbfile.write("  -ex 'file '$1 \\\n"
+                              "  -ex 'core-file /var/spool/abrt/crash/coredump' \\\n"
                               f"  -ex 'echo {PYTHON_LABEL_START}\\n' \\\n"
                               "  -ex 'py-bt' \\\n"
                               "  -ex 'py-list' \\\n"
@@ -506,32 +515,19 @@ class RetraceWorker:
                 if not use_debuginfod:
                     dnf_flags.append(f"--repo=retrace-{release.distribution}")
 
-                # Import Aaron Merey's Copr repository for gdb with some cutting-edge
-                # modifications for complete debuginfod support.
-                # TODO: Remove this once gdb with full debuginfod support lands in
-                # official repositories.
-                gdb_repo_import_command = "true"
-                if use_debuginfod:
-                    gdb_repo_import_command = (
-                        "curl -o /etc/yum.repos.d/gdb-debuginfod-core.repo "
-                        "https://copr.fedorainfracloud.org/coprs/amerey/gdb-debuginfod-core/repo/"
-                        f"{release.distribution}-{release.version}/"
-                        f"amerey-gdb-debuginfod-core-{release.distribution}-{release.version}.repo"
-                    )
-
-                cntfile.write(f"FROM {release.distribution}:{release.version}\n\n"
-                              f"RUN useradd --no-create-home --no-log-init retrace && \\\n"
-                              f"    mkdir --parents /var/spool/abrt/crash/\n")
+                # cntfile.write(f"FROM {release.distribution}:{release.version}\n\n"
+                cntfile.write("FROM fedora:latest\n\n"
+                              "RUN useradd --no-create-home --no-log-init retrace && \\\n"
+                              "    mkdir --parents /var/spool/abrt/crash/\n")
 
                 if not use_debuginfod:
                     cntfile.write("COPY retrace-podman.repo /etc/yum.repos.d/\n")
 
                 cntfile.write("COPY --chown=retrace gdb.sh /var/spool/abrt/\n\n"
                               f"RUN {rpm_import_command} && \\\n"
-                              f"    {gdb_repo_import_command} && \\\n"
                               f"    dnf {' '.join(dnf_flags)} \\\n"
                               f"        install abrt-addon-ccpp {self.plugin.gdb_package} && \\\n"
-                              f"    dnf clean all")
+                              "    dnf clean all")
 
             # Build the image.
             build_call = [PODMAN_BIN, "build",
@@ -554,9 +550,11 @@ class RetraceWorker:
                         check=False)
 
             if child.returncode:
+                print(f"[xxx] Build failed", file=sys.stderr)
                 raise Exception("Could not build container image. Podman exited "
                                 f"with code {child.returncode}: {child.stderr}")
 
+        print(f"[xxx] Build OK", file=sys.stderr)
         log_info(f"Container image {image_tag} successfully created")
 
         return image_tag
@@ -569,6 +567,8 @@ class RetraceWorker:
         savedir = task.get_savedir()
         crashdir = task.get_crashdir()
         corepath = crashdir / RetraceTask.COREDUMP_FILE
+
+        print(f"[{task.get_taskid()}] Starting setup", file=sys.stderr)
 
         try:
             self.stats["coresize"] = corepath.stat().st_size
@@ -594,13 +594,17 @@ class RetraceWorker:
             pre_rawhide_version = int(release.version) - 1
             release.version = "rawhide"
 
+        print(f"[{task.get_taskid()}] Has release {release}", file=sys.stderr)
+
         releaseid = str(release)
         if releaseid not in get_supported_releases():
+            print(f"[{task.get_taskid()}] Release {releaseid} not supported", file=sys.stderr)
             log_error("Release ‘%s’ is not supported" % releaseid)
             self._fail()
 
         # TODO: What to do here with debuginfod support on?
         if not is_package_known(crash_package, arch, releaseid):
+            print(f"[{task.get_taskid()}] Package {crash_package} not recognized", file=sys.stderr)
             log_error("Package ‘%s.%s’ was not recognized.\nIs it a part of "
                       "official %s repositories?" % (crash_package, arch, release.name))
             self._fail()
@@ -608,7 +612,7 @@ class RetraceWorker:
 
         if use_debuginfod:
             # TODO: Improve the logic and data flow from here.
-            packages: List[str] = []
+            packages: List[str] = [crash_package]
             missing: List[Tuple[str, str]] = []
         else:
             packages, missing = self.read_packages(crashdir, releaseid, crash_package, release.distribution)
@@ -676,6 +680,11 @@ class RetraceWorker:
         task.set_status(STATUS_INIT)
         log_info(STATUS[STATUS_INIT])
 
+        print(f"[{task.get_taskid()}] Preparing environment", file=sys.stderr)
+
+        # TODO: Improve information flow. This variable is only needed for Podman
+        # backend.
+        image_tag = ""
         if CONFIG["RetraceEnvironment"] == "mock":
             self._retrace_run(25, ["/usr/bin/mock", "init", "--resultdir",
                                    str(savedir / "log"), "--configdir",
@@ -691,8 +700,11 @@ class RetraceWorker:
                 image_tag = self.ensure_image_exists(release, repopath, gpg_keys_string,
                                                      use_debuginfod=use_debuginfod)
             except Exception as ex:
+                print(f"[{task.get_taskid()}] Could not prepare image: {ex}", file=sys.stderr)
                 log_error("Could not ensure container image exists: %s" % ex)
                 raise
+
+            print(f"[{task.get_taskid()}] Container image for {release} ready", file=sys.stderr)
 
             self.hook.run("post_prepare_environment")
             self.hook.run("pre_retrace")
@@ -702,13 +714,17 @@ class RetraceWorker:
         log_info(STATUS[STATUS_BACKTRACE])
 
         try:
+            print(f"[{task.get_taskid()}] Running GDB", file=sys.stderr)
             # FIXME: image_tag might be undefined here if RetraceEnvironment != podman.
             backtrace, exploitable = run_gdb(savedir, repopath, task.get_taskid(),
                                              image_tag, packages, corepath, release,
                                              use_debuginfod)
         except Exception as ex:
+            print(f"[{task.get_taskid()}] Could not run GDB: {ex}", file=sys.stderr)
             log_error("Could not run GDB: %s" % ex)
             self._fail()
+
+        print(f"[{task.get_taskid()}] GDB finished", file=sys.stderr)
 
         task.set_backtrace(backtrace)
         if exploitable is not None:
