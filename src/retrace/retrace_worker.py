@@ -1034,7 +1034,9 @@ class RetraceWorker:
             # TODO: Remove container and image.
             pass
 
-        task.set_backtrace(kernellog, "wb")
+        if kernellog:
+            task.set_backtrace(kernellog, "wb")
+
         # If crash sys command exited with non-zero status,
         # we likely have a semi-useful vmcore
         crash_sys, ret = task.run_crash_cmdline(crash_normal, "sys\nquit\n")
@@ -1043,7 +1045,7 @@ class RetraceWorker:
             task.add_results("sys", crash_sys)
         else:
             # FIXME: Probably a better heuristic can be done here
-            if len(kernellog) < 1024:
+            if kernellog and len(kernellog) < 1024:
                 # If log < 1024 bytes, probably it is not useful so fail task
                 raise Exception("Failing task due to crash exiting with non-zero status and "
                                 "small kernellog size = %d bytes" % len(kernellog))
