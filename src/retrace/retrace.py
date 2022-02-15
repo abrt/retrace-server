@@ -889,7 +889,7 @@ class RetraceTask:
         # max 16 MB
         return self.get(RetraceTask.BACKTRACE_FILE, maxlen=1 << 24)
 
-    def set_backtrace(self, backtrace: str, mode: str = "w") -> None:
+    def set_backtrace(self, backtrace: Union[bytes, str], mode: str = "w") -> None:
         """Atomically writes given string into BACKTRACE_FILE."""
         self.set_atomic(RetraceTask.BACKTRACE_FILE, backtrace, mode)
 
