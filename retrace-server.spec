@@ -13,6 +13,9 @@ Source0: https://github.com/abrt/%{name}/archive/%{version}/%{name}-%{version}.t
 %if 0%{?fedora} >= 29
 # There are Python plugins in /usr/share/retrace-server/plugins
 %global _python_bytecompile_extra 0
+# https://docs.fedoraproject.org/en-US/packaging-guidelines/Python_Appendix/#_byte_compilation_reproducibility
+%global py_reproducible_pyc_path %{buildroot}%{python3_sitelib}
+BuildRequires: /usr/bin/marshalparser
 %endif
 
 BuildArch: noarch
