@@ -40,7 +40,7 @@ RUN rpm -Uvh /retrace-server/rpm/noarch/retrace-server-*.rpm && \
     download --resolve --destdir /var/tmp/local_repo/ abrt-addon-ccpp shadow-utils \
     gdb rpm will-crash
 
-COPY docker/files/plugins /usr/share/retrace-server/plugins
+COPY container/files/plugins /usr/share/retrace-server/plugins
 
 RUN sudo -u retrace retrace-server-reposync fedora $fedoraversion x86_64
 

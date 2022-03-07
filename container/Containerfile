@@ -35,8 +35,8 @@ LABEL summary="$SUMMARY" \
       maintainer="ABRT devel team <abrt-devel-list@redhat.com>"
 
 # Copy main run script
-COPY docker/files/usr/bin /usr/bin
-COPY docker/files/usr/libexec /usr/libexec
+COPY container/files/usr/bin /usr/bin
+COPY container/files/usr/libexec /usr/libexec
 
 RUN rm -rf /run/httpd && mkdir /run/httpd && chmod -R a+rwx /run/httpd && \
     sed -i -e"s/Listen\s*80/Listen 8181/i" /etc/httpd/conf/httpd.conf && \

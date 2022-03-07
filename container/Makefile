@@ -1,11 +1,11 @@
 MANAGER=docker
 
 build:
-	$(MANAGER) build -t retrace-server-image -f Dockerfile ../
+	$(MANAGER) build -t retrace-server-image -f Containerfile ../
 	$(MANAGER) tag retrace-server-image abrt/retrace-server-image
 
 build_local:
-	$(MANAGER) build -t retrace-server-image-local -f Dockerfile_local ../
+	$(MANAGER) build -t retrace-server-image-local -f Containerfile_local ../
 
 run:
 	$(MANAGER) run --privileged --name retrace-server -dit -p 8181:8181 abrt/retrace-server-image
