@@ -1,6 +1,6 @@
 FROM abrt/retrace-server-image
-MAINTAINER mmarusak@redhat.com
-ARG fedoraversion=32
+MAINTAINER abrt-devel-list@redhat.com
+ARG fedoraversion=35
 
 USER root
 
@@ -8,7 +8,7 @@ USER root
 COPY . /retrace-server
 
 # From not on work from retrace-server directory
-WORKDIR '/retrace-server'
+WORKDIR /retrace-server
 
 # Change owner of /retrace-server, clean git and install dependences
 RUN chown -R --silent retrace /retrace-server && \

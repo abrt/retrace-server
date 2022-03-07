@@ -1,4 +1,4 @@
-FROM fedora:32
+FROM fedora:35
 USER root
 RUN dnf --assumeyes install git-core tito && \
     git clone --quiet https://github.com/abrt/retrace-server.git /src && \
@@ -9,7 +9,7 @@ USER builder
 WORKDIR /src
 RUN tito build --output=rpm --rpm --test
 
-FROM fedora:32 as build
+FROM fedora:35 as build
 USER root
 COPY --from=0 /src/rpm/noarch/retrace-server-*.rpm rpm/
 RUN \
