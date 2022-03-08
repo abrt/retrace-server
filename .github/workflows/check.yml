@@ -5,7 +5,7 @@ on:
   push:
     branches: [master]
 jobs:
-  mypy:
+  lint_and_typing:
     container:
       image: fedora:latest
     runs-on: ubuntu-latest
@@ -14,21 +14,21 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install build environment
-        run: dnf --assumeyes install dnf-plugins-core python3-mypy
+        run: dnf --assumeyes install dnf-plugins-core python3-pylint python3-mypy
 
       - name: Install build dependencies
         run: |
             dnf --assumeyes builddep --spec retrace-server.spec
             # For the pyfaf imports.
             dnf --assumeyes copr enable @abrt/faf-el8-devel
-            dnf --assumeyes install faf
+            dnf --assumeyes install faf python3-createrepo_c
 
       - name: Build
         run: |
           meson build
           ninja -C build
 
-      - name: Run mypy
+      - name: Run Mypy
         run: |
           cd build
           stubgen --output mypy_stubs --package createrepo_c --package dnf --package hawkey \
@@ -47,31 +47,12 @@ jobs:
             src/retrace-server-reposync-faf \
             src/retrace-server-task \
             src/retrace-server-worker
-  pylint:
-    container:
-      image: fedora:latest
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out sources
-        uses: actions/checkout@v2
 
-      - name: Install build environment
-        run: dnf --assumeyes install dnf-plugins-core python3-pylint
-
-      - name: Install build dependencies
-        run: dnf --assumeyes builddep --spec retrace-server.spec
-
-      - name: Build
-        run: |
-          meson build
-          ninja -C build
-
-      - name: Run pylint
+      - name: Run Pylint
+        if: always()
         run: |
           cd build
-          python3 -m pylint \
-            --rcfile=pylintrc \
-            --output-format=colorized \
+          python3 -m pylint --rcfile=pylintrc --output-format=colorized \
             src/plugins \
             src/retrace \
             src/coredump2packages \
