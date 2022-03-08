@@ -172,12 +172,14 @@ def rename_with_suffix(frompath: Path, topath: Path) -> Path:
     return topath
 
 
-def unpack(archive: str, mime: str, targetdir: Optional[str] = None) -> int:
+def unpack(archive: str,
+           mime: str,
+           targetdir: Optional[Union[str, Path]] = None) -> int:
     cmd = copy.copy(cast(List[str], HANDLE_ARCHIVE[mime]["unpack"]))
     cmd.append(archive)
     if targetdir is not None:
         cmd.append("--directory")
-        cmd.append(targetdir)
+        cmd.append(str(targetdir))
 
     child = run(cmd, check=False)
     return child.returncode
