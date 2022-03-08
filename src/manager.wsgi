@@ -496,7 +496,7 @@ def application(environ, start_response):
                 # Just check the file exists and we can open it for binary read
                 # Read the file later in RetraceWorker:start_vmcore()
                 try:
-                    with open(path, "rb"):
+                    with path.open("rb"):
                         pass
                 except Exception as e:
                     return response(start_response, "400 Bad Request", _("Cannot open URL for reading: '%s'" % e))
