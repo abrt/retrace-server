@@ -1824,6 +1824,8 @@ class KernelVMcore:
         if self._vmlinux is None:
             log_error("Cannot strip pages if vmlinux is not known for vmcore")
             return
+        start = time.time()
+        oldsize = self.get_path().stat().st_size
 
         newvmcore: Path = Path("%s.stripped" % self._vmcore_path)
         cmd = ["makedumpfile", "-c", "-d", "%d" % CONFIG["VmcoreDumpLevel"],
@@ -1841,8 +1843,26 @@ class KernelVMcore:
             log_warn("makedumpfile exited with %d" % child.returncode)
             if newvmcore.is_file():
                 newvmcore.unlink()
+            return 
+        # Calculate the % of storage space saved with the new makedumpfile core created
+        if ((oldsize - newvmcore.stat().st_size) / oldsize * 100  
+            < CONFIG["VmcoreDumpSavePercent"]):
+            duration = int(time.time() - start)
+            log_warn("makedumpfile did not strip enough pages (needed to save at least "
+                     "{}%). Not saving new vmcore.".format(CONFIG["VmcoreDumpSavePercent"]))
+            saved_pct = (oldsize - newvmcore.stat().st_size) / oldsize * 100
+            log_info("makedumpfile took {} seconds. Would have saved {:.2f}% (or {}) "
+                     "if we kept the stripped vmcore.".format(duration, saved_pct,
+                     human_readable_size(oldsize - newvmcore.stat().st_size)))
         else:
+            # makedumpfile did strip enough pages so save the new core
             newvmcore.rename(self._vmcore_path)
+            dur = int(time.time() - start)
+            newsize = self.get_path().stat().st_size
+            log_info("Stripped size: %s" % human_readable_size(newsize))
+            log_info("Makedumpfile took %d seconds and saved %s"
+                     % (dur, human_readable_size(oldsize - newsize)))
+
 
     #
     # In real-world testing, approximately 60% of the time the kernel

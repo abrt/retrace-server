@@ -790,7 +790,6 @@ class RetraceWorker:
             log_info("Converted size: %s" % human_readable_size(newsize))
             log_info("Makedumpfile took %d seconds and saved %s"
                      % (dur, human_readable_size(oldsize - newsize)))
-            oldsize = newsize
 
         if custom_kernelver is not None:
             kernelver = custom_kernelver
@@ -1007,14 +1006,7 @@ class RetraceWorker:
 
         if vmcore.has_extra_pages(task):
             log_info("Executing makedumpfile to strip extra pages")
-            start = time.time()
-            # NOTE: We need to know the kernelver and vmlinux path here
             vmcore.strip_extra_pages()
-            dur = int(time.time() - start)
-            newsize = vmcore_path.stat().st_size
-            log_info("Stripped size: %s" % human_readable_size(newsize))
-            log_info("Makedumpfile took %d seconds and saved %s"
-                     % (dur, human_readable_size(oldsize - newsize)))
 
         if vmcore_path.is_file():
             vmcore_stat = vmcore_path.stat()
