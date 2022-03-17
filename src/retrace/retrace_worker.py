@@ -426,7 +426,7 @@ class RetraceWorker:
         """
 
         if use_debuginfod:
-            image_tag = f"localhost/retrace-image:fedora-35-{release.arch}-debuginfod"
+            image_tag = f"localhost/retrace-image:{release}-debuginfod"
         else:
             image_tag = f"localhost/retrace-image:{release}"
 
@@ -457,15 +457,14 @@ class RetraceWorker:
 
             print(f"[xxx] Created {tempdir} for image build", file=sys.stderr)
 
-            if not use_debuginfod:
-                # When not using debuginfod, we rely on our own DNF repository
-                # to pull (mainly debuginfo and debugsource) packages.
-                with (tempdir / "retrace-podman.repo").open("w") as repofile:
-                    repofile.write(f"[retrace-{release.distribution}]\n"
-                                   f"name=Retrace Server repository for {release}\n"
-                                   f"baseurl=file://{repopath}/\n"
-                                   f"gpgcheck={CONFIG['RequireGPGCheck']}\n"
-                                   f"gpgkey={gpg_keys}\n")
+            # When not using debuginfod, we rely on our own DNF repository
+            # to pull (mainly debuginfo and debugsource) packages.
+            with (tempdir / "retrace-podman.repo").open("w") as repofile:
+                repofile.write(f"[retrace-{release.distribution}]\n"
+                                f"name=Retrace Server repository for {release}\n"
+                                f"baseurl=file://{repopath}/\n"
+                                f"gpgcheck={CONFIG['RequireGPGCheck']}\n"
+                                f"gpgkey={gpg_keys}\n")
 
             # Create batch script for running GDB commands.
             with (tempdir / "gdb.sh").open("w") as gdbfile:
@@ -511,19 +510,16 @@ class RetraceWorker:
 
                 dnf_flags = ["--assumeyes",
                              "--setopt=tsflags=nodocs",
-                             f"--releasever={release.version}"]
-                if not use_debuginfod:
-                    dnf_flags.append(f"--repo=retrace-{release.distribution}")
+                             f"--releasever={release.version}",
+                             f"--repo=retrace-{release.distribution}"]
 
-                # cntfile.write(f"FROM {release.distribution}:{release.version}\n\n"
-                cntfile.write("FROM fedora:latest\n\n"
+                cntfile.write(f"FROM {release.distribution}:{release.version}\n\n"
+                # cntfile.write("FROM fedora:latest\n\n"
                               "RUN useradd --no-create-home --no-log-init retrace && \\\n"
                               "    mkdir --parents /var/spool/abrt/crash/\n")
 
-                if not use_debuginfod:
-                    cntfile.write("COPY retrace-podman.repo /etc/yum.repos.d/\n")
-
-                cntfile.write("COPY --chown=retrace gdb.sh /var/spool/abrt/\n\n"
+                cntfile.write("COPY retrace-podman.repo /etc/yum.repos.d/\n"
+                              "COPY --chown=retrace gdb.sh /var/spool/abrt/\n\n"
                               f"RUN {rpm_import_command} && \\\n"
                               f"    dnf {' '.join(dnf_flags)} \\\n"
                               f"        install abrt-addon-ccpp {self.plugin.gdb_package} && \\\n"
@@ -534,10 +530,8 @@ class RetraceWorker:
                           "--quiet",
                           "--force-rm",
                           "--file", str(tempdir / "Containerfile"),
-                          "--tag", image_tag]
-
-            if not use_debuginfod:
-                build_call.append(f"--volume={repopath}:{repopath}:ro")
+                          "--tag", image_tag,
+                          f"--volume={repopath}:{repopath}:ro"]
 
             if CONFIG["RequireGPGCheck"]:
                 build_call.append("--volume={0}:{0}:ro".format(RETRACE_GPG_KEYS))

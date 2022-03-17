@@ -68,7 +68,6 @@ class LocalPodmanBackend:
                     "--quiet",
                     "--detach",
                     "--interactive",
-                    "--tty",
                     "--sdnotify=ignore",
                     f"--name=retrace-{taskid}"]
 
