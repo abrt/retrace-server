@@ -86,6 +86,7 @@ Recommends: httpd
 Recommends: logrotate
 Recommends: rpm
 Suggests: podman
+Suggests: python3-prometheus_client
 Suggests: unar
 
 Obsoletes: abrt-retrace-server < 2.0.3
