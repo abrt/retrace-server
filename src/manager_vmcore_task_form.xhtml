@@ -1,6 +1,6 @@
 <div id="vmcore-wrapper">
     <h2>Create vmcore task (kernel memory dump)</h2>
-    <form method="post" action="{create_custom_url}" id="custom">
+    <form method="post" action="{create_custom_url}" id="custom" onsubmit="createButton.disabled = true; return true;">
             <span class="formsubhead">Kernel version:</span>
             <input type="text" name="kernelver" />
             <span>(e.g. 2.6.32-287.el6.x86_64, empty to autodetect)</span>
@@ -32,7 +32,7 @@
                 <span>(Any URL that wget can download or a local path, e.g. file:///foo/bar or just /foo/bar)</span>
                 <input type="text" name="custom_vmem_url" class="url" />
             </div>
-            <input type="submit" value="Create vmcore task" class="submit" />
+            <input type="submit" name="createButton" value="Create vmcore task" class="submit" />
     </form>
 
     <script type="text/javascript">
