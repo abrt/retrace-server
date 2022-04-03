@@ -948,6 +948,13 @@ def application(environ, start_response):
 
     custom_url = "%s/__custom__" % match.group(1)
 
+    ftp_box = ""
+    if CONFIG["UseFTPTasks"]:
+        ftp_box = "<div id=\"ftp-wrapper\">" \
+                  "  <h2><a href=\"ftp\">List FTP files (create vmcore task from FTP)</a></h2>" \
+                  "</div>"
+    output = output.replace("{ftp_box}", ftp_box)
+
     vmcore_form = ""
     if CONFIG["AllowVMCoreTask"]:
         with open("/usr/share/retrace-server/manager_vmcore_task_form.xhtml") as file:
