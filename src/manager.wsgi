@@ -250,7 +250,7 @@ def application(environ, start_response):
 
                 ftptask = True
             else:
-                return response(start_response, "404 Not Found", _("There is no such task"))
+                return response(start_response, "404 Not Found", _("There is no such task - UseFTPTasks set to 0"))
 
         if ftptask:
             try:
@@ -571,7 +571,7 @@ def application(environ, start_response):
                     pass
                 ftp_close(ftp)
             else:
-                return response(start_response, "404 Not Found", _("There is no such task"))
+                return response(start_response, "404 Not Found", _("There is no such task - UseFTPTasks set to 0"))
 
         with open("/usr/share/retrace-server/managertask.xhtml", "r") as file:
             # Read 1 MiB
