@@ -2,168 +2,174 @@
 # Copyright (C) 2011 THE retrace-server'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the retrace-server package.
 # Michal Toman <mtoman@redhat.com>, 2011.
-#
+# Yuto Nishiwaki <nishiwakiyuto.per@gmail.com>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: retrace-server 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2011-05-17 09:53+0200\n"
-"Last-Translator: Michal Toman <mtoman@redhat.com>\n"
-"Language-Team: Japanese\n"
-"Language: \n"
+"PO-Revision-Date: 2022-03-22 15:17+0000\n"
+"Last-Translator: Yuto Nishiwaki <nishiwakiyuto.per@gmail.com>\n"
+"Language-Team: Japanese <https://translate.fedoraproject.org/projects/abrt/"
+"retrace-server/ja/>\n"
+"Language: ja\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ASCII\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 4.11.2\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
 msgid "You must use HTTPS"
-msgstr ""
+msgstr "HTTPS接続が必要です"
 
 #: ../src/backtrace.wsgi:23 ../src/log.wsgi:24 ../src/status.wsgi:24
 msgid "Invalid URL"
-msgstr ""
+msgstr "無効なURL"
 
 #: ../src/backtrace.wsgi:29 ../src/log.wsgi:29 ../src/status.wsgi:30
 msgid "There is no such task"
-msgstr ""
+msgstr "そのようなタスクはありません"
 
 #: ../src/backtrace.wsgi:34 ../src/log.wsgi:34 ../src/status.wsgi:35
 msgid "Invalid password"
-msgstr ""
+msgstr "無効なパスワード"
 
 #: ../src/backtrace.wsgi:38
 msgid "There is no backtrace for the specified task"
-msgstr ""
+msgstr "指定されたタスクのバックトレースがありません"
 
 #: ../src/create.wsgi:60 ../src/create.wsgi:116
 msgid "Retrace server is fully loaded at the moment"
-msgstr ""
+msgstr "現在リトレースサーバーが満杯です"
 
 #: ../src/create.wsgi:64
 msgid "You must use POST method"
-msgstr ""
+msgstr "POSTメソッドが必要です"
 
 #: ../src/create.wsgi:68
 msgid "Specified archive format is not supported"
-msgstr ""
+msgstr "指定されたアーカイブ形式はサポートされていません"
 
 #: ../src/create.wsgi:72
 msgid "You need to set Content-Length header properly"
-msgstr ""
+msgstr "Content-Lengthヘッダーを正しく設定する必要があります"
 
 #: ../src/create.wsgi:76
 msgid "Specified archive is too large"
-msgstr ""
+msgstr "指定されたアーカイブは大きすぎます"
 
 #: ../src/create.wsgi:81
 msgid "X-CoreFileDirectory header has been disabled by server administrator"
-msgstr ""
+msgstr "X-CoreFileDirectoryヘッダーがサーバー管理者により無効化されています"
 
 #: ../src/create.wsgi:91
 msgid "Unable to create working directory"
-msgstr ""
+msgstr "作業ディレクトリを作成できません"
 
 #: ../src/create.wsgi:97
 msgid "Unable to obtain disk free space"
-msgstr ""
+msgstr "ディスクの空き容量を取得できません"
 
 #: ../src/create.wsgi:101 ../src/create.wsgi:172
 msgid "There is not enough storage space on the server"
-msgstr ""
+msgstr "サーバーに十分な保存容量がありません"
 
 #: ../src/create.wsgi:109
 msgid "Unable to create new task"
-msgstr ""
+msgstr "新しいタスクを作成できません"
 
 #: ../src/create.wsgi:121
 msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr ""
+msgstr "X-CoreFileDirectoryで指定されているディレクトリが存在しません"
 
 #: ../src/create.wsgi:127
 #, c-format
 msgid ""
 "There are %d files in the '%s' directory. Only a single archive is supported "
 "at the moment"
-msgstr ""
+msgstr "%d個のファイルがディレクトリ'%s'には存在します。ここでは単一のファイルのみが"
+"サポートされています"
 
 #: ../src/create.wsgi:136
 #, c-format
 msgid "You header specifies '%s' type, but the file type does not match"
-msgstr ""
+msgstr "ヘッダーは%s型を指定していますが、ファイル形式が一致しません"
 
 #: ../src/create.wsgi:154
 msgid "Unable to save archive"
-msgstr ""
+msgstr "アーカイブを保存できません"
 
 #: ../src/create.wsgi:162
 msgid "Unable to obtain unpacked size"
-msgstr ""
+msgstr "展開後のサイズを取得できません"
 
 #: ../src/create.wsgi:167
 msgid "Specified archive's content is too large"
-msgstr ""
+msgstr "指定されたアーカイブの内容が大きすぎます"
 
 #: ../src/create.wsgi:184
 msgid "Unable to unpack archive"
-msgstr ""
+msgstr "アーカイブを展開できません"
 
 #: ../src/create.wsgi:197
 msgid "Symlinks are not allowed to be in the archive"
-msgstr ""
+msgstr "シンボリックリンクはこのアーカイブでは使用できません"
 
 #: ../src/create.wsgi:204
 #, c-format
 msgid "The '%s' file is larger than expected"
-msgstr ""
+msgstr "ファイル%sが想定より大きいです"
 
 #: ../src/create.wsgi:208
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr ""
+msgstr "ファイル'%s'はアーカイブに含めることができません"
 
 #: ../src/create.wsgi:223
 msgid "Interactive tasks were disabled by server administrator"
-msgstr ""
+msgstr "双方向タスクはサーバー管理者により無効化されています"
 
 #: ../src/create.wsgi:232
 #, c-format
 msgid "Required file '%s' is missing"
-msgstr ""
+msgstr "要求されたファイル'%s'が見つかりません"
 
 #: ../src/index.wsgi:20
 msgid "Retrace Server"
-msgstr ""
+msgstr "リトレースサーバー"
 
 #: ../src/index.wsgi:21
 msgid "Welcome to Retrace Server"
-msgstr ""
+msgstr "リトレースサーバーへようこそ"
 
 #: ../src/index.wsgi:23
 msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s github:"
-msgstr ""
+msgstr "リトレースサーバーはネットワーク経由でコアダンプを分析しバックトレースを作成"
+"するサービスです。さらなる情報はgithubにあります："
 
 #: ../src/index.wsgi:29
 msgid ""
 "Only the secure HTTPS connection is now allowed by the server. HTTP requests "
 "will be denied."
-msgstr ""
+msgstr "現在サーバーでは安全なHTTPS接続のみが許可されています。HTTP接続は拒否されます"
+"。"
 
 #: ../src/index.wsgi:31
 msgid ""
 "Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
 "of security reasons."
-msgstr ""
+msgstr "HTTP接続とHTTPS接続の両方を利用できます。ただしセキュリティ上の理由によりHTTP"
+"S接続を使用することが強く推奨されます。"
 
 #: ../src/index.wsgi:32
 #, c-format
 msgid "The following releases are supported: %s"
-msgstr ""
+msgstr "次のリリースがサポートされています： %s"
 
 #. CONFIG["MaxParallelTasks"], active, CONFIG["MaxParallelTasks"]))
 #: ../src/index.wsgi:36
@@ -177,6 +183,12 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
+"再現ジョブの実行中コアダンプはサーバーにのみ保存されます。ジョブが完了した後"
+"は、ログとバックトレースがサーバーに保持されます。このときコアダンプを含んだ"
+"他のデータは削除されます。再現ログとバックトレースへのアクセスには固有タスクI"
+"Dとパスワードが必要であり、作成者以外は閲覧できません。バックトレースを含んだ"
+"クラッシュの情報は%d時間何もなければ削除されます。これ以降、プライベートであ"
+"る可能性があるデータはサーバーに保持されません。"
 
 #: ../src/index.wsgi:43
 msgid ""
@@ -186,89 +198,94 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
+"コアダンプは再現目的のみに使用されます。サーバー管理者はあなたの個人情報をコ"
+"アダンプやバックトレースから収集しようとしていません。安全な接続経路（HTTPS）"
+"を使用することが強く推奨されています。サーバー管理者は安全でない接続（HTTPな"
+"ど）を使用した場合の責任を負いません。"
 
 #: ../src/index.wsgi:34
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
-msgstr ""
+msgstr "現在サーバーには%d%%個のジョブがあります (現在 %d 個目のジョブを実行中： %d "
+"個中)."
 
 #: ../src/log.wsgi:38
 msgid "There is no log for the specified task"
-msgstr ""
+msgstr "指定されたタスクのログがありません"
 
 #: ../src/stats.wsgi:36
 msgid "Architecture"
-msgstr ""
+msgstr "アーキテクチャ"
 
 #: ../src/stats.wsgi:37
 msgid "Architectures"
-msgstr ""
+msgstr "アーキテクチャー"
 
 #: ../src/stats.wsgi:38
 msgid "Build-id"
-msgstr ""
+msgstr "ビルドID"
 
 #: ../src/stats.wsgi:39
 msgid "Count"
-msgstr ""
+msgstr "カウント"
 
 #: ../src/stats.wsgi:40
 msgid "Denied jobs"
-msgstr ""
+msgstr "拒否されたジョブ"
 
 #: ../src/stats.wsgi:41
 msgid "Failed"
-msgstr ""
+msgstr "失敗"
 
 #: ../src/stats.wsgi:42
 msgid "First retrace"
-msgstr ""
+msgstr "1回目の再現"
 
 #: ../src/stats.wsgi:43
 msgid "Global statistics"
-msgstr ""
+msgstr "全体的な統計"
 
 #: ../src/stats.wsgi:44
 msgid "Missing build-ids"
-msgstr ""
+msgstr "build idがありません"
 
 #: ../src/stats.wsgi:45
 msgid "Name"
-msgstr ""
+msgstr "名前"
 
 #: ../src/stats.wsgi:46
 msgid "Release"
-msgstr ""
+msgstr "リリース"
 
 #: ../src/stats.wsgi:47
 msgid "Releases"
-msgstr ""
+msgstr "リリース"
 
 #: ../src/stats.wsgi:48
 msgid "Required packages"
-msgstr ""
+msgstr "要求されたパッケージ"
 
 #: ../src/stats.wsgi:49
 msgid "Retraced packages"
-msgstr ""
+msgstr "再現済みパッケージ"
 
 #: ../src/stats.wsgi:50
 msgid "Retrace Server statistics"
-msgstr ""
+msgstr "リトレースサーバー情報"
 
 #: ../src/stats.wsgi:51
 msgid "Shared object name"
-msgstr ""
+msgstr "共有オブジェクト名"
 
 #: ../src/stats.wsgi:52
 msgid "Successful"
-msgstr ""
+msgstr "成功"
 
 #: ../src/stats.wsgi:53
 msgid "Total"
-msgstr ""
+msgstr "合計"
 
 #: ../src/stats.wsgi:54
 msgid "Versions"
-msgstr ""
+msgstr "バージョン"
