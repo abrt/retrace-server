@@ -1,6 +1,6 @@
 <div id="usrcore-wrapper">
     <h2>Create coredump task (userspace memory dump)</h2>
-    <form method="post" action="{create_custom_url}" id="custom">
+    <form method="post" action="{create_custom_url}" id="custom" onsubmit="createButton.disabled = true; return true;">
             <div>
                 <span class="formsubhead">Package:</span>
                 <input type="text" name="package" />
@@ -34,6 +34,6 @@
                 <input type="hidden" name="task_type" value="coredump">
             </div>
 
-            <input type="submit" value="Create coredump task" class="submit" />
+            <input type="submit" name="createButton" value="Create coredump task" class="submit" />
     </form>
 </div>
