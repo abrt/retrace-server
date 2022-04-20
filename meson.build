@@ -39,6 +39,10 @@ tito = find_program('tito',
   required: false,
   disabler: true,
 )
+unar = find_program('unar',
+  required: false,
+  disabler: true,
+)
 xmlto = find_program('xmlto',
   required: get_option('docs'),
   disabler: true,
