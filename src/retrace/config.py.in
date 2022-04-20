@@ -20,6 +20,7 @@ LSOF_BIN = "@LSOF_BIN@"
 PODMAN_BIN = "@PODMAN_BIN@"
 PS_BIN = "@PS_BIN@"
 TAR_BIN = "@TAR_BIN@"
+UNAR_BIN = "@UNAR_BIN@"
 XZ_BIN = "@XZ_BIN@"
 
 Getter = Union[Callable[[str, str], int],

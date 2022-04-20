@@ -10,6 +10,7 @@ configuration.set('LSOF_BIN', lsof.path())
 configuration.set('PODMAN_BIN', podman.path())
 configuration.set('PS_BIN', ps.path())
 configuration.set('TAR_BIN', tar.path())
+configuration.set('UNAR_BIN', unar.path())
 configuration.set('XZ_BIN', xz.path())
 
 sources = [

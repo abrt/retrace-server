@@ -7,12 +7,12 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import magic as libmagic
 
-from .config import GZIP_BIN, TAR_BIN, XZ_BIN
+from .config import GZIP_BIN, TAR_BIN, UNAR_BIN, XZ_BIN
 from .logging import log_debug, log_info
 
 ARCHIVE_UNKNOWN, ARCHIVE_GZ, ARCHIVE_ZIP, \
     ARCHIVE_BZ2, ARCHIVE_XZ, ARCHIVE_TAR, \
-    ARCHIVE_7Z, ARCHIVE_LZOP = range(8)
+    ARCHIVE_7Z, ARCHIVE_LZOP, ARCHIVE_RAR = range(9)
 
 SUFFIX_MAP: Dict[int, str] = {
     ARCHIVE_GZ: ".gz",
@@ -22,6 +22,7 @@ SUFFIX_MAP: Dict[int, str] = {
     ARCHIVE_7Z: ".7z",
     ARCHIVE_TAR: ".tar",
     ARCHIVE_LZOP: ".lzop",
+    ARCHIVE_RAR: ".rar",
     ARCHIVE_UNKNOWN: "",
 }
 
@@ -43,6 +44,13 @@ HANDLE_ARCHIVE: Dict[str, Any] = {
                  re.compile(r"^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+"
                             "([0-9]+).*$")),
         "type": ARCHIVE_TAR,
+    },
+    "application/x-rar-compressed": {
+        "unpack": [UNAR_BIN],
+        "size": (["ls", "-l"],
+                 re.compile(r"^[ \t]*[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+[^ ^\t]+[ \t]+"
+                            "([0-9]+).*$")),
+        "type": ARCHIVE_RAR,
     },
 }
 
@@ -96,6 +104,8 @@ def extract_into(archive: Path, directory: Path) -> None:
         check_run(["tar", "-C", dir_path, "-xf", archive_path])
     elif filetype == ARCHIVE_LZOP:
         check_run(["lzop", "-d", archive_path])
+    elif filetype == ARCHIVE_RAR:
+        check_run(["unar", archive_path, "-o", dir_path])
     else:
         raise UnknownArchiveTypeError
 
@@ -131,6 +141,9 @@ def get_archive_type(path: Union[str, Path]) -> int:
     if "lzop compressed data" in filetype:
         log_debug("lzop detected")
         return ARCHIVE_LZOP
+    if "rar archive data" in filetype:
+        log_debug("rar detected")
+        return ARCHIVE_RAR
 
     log_debug("unknown file type, unpacking finished")
     return ARCHIVE_UNKNOWN
