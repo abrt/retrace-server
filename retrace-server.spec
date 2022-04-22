@@ -84,8 +84,8 @@ Requires(post): /usr/bin/crontab
 Requires(post): /usr/bin/systemctl
 Recommends: httpd
 Recommends: logrotate
-Recommends: podman
 Recommends: rpm
+Suggests: podman
 
 Obsoletes: abrt-retrace-server < 2.0.3
 Provides: abrt-retrace-server = 2.0.3
