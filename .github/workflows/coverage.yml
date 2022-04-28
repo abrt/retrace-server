@@ -33,7 +33,7 @@ jobs:
           meson test -C build -v
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           directory: ./build
           fail_ci_if_error: true
