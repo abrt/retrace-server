@@ -4,13 +4,14 @@
 # Michal Toman <mtoman@redhat.com>, 2011.
 # Ahmed M. Farrag <a.m.farrag@gmail.com>, 2020.
 # Hakim Ais <kimy747@zohomail.com>, 2021.
+# Mostafa Gamal <mostafa.2c6@gmail.com>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: retrace-server 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2021-07-07 10:04+0000\n"
-"Last-Translator: Hakim Ais <kimy747@zohomail.com>\n"
+"PO-Revision-Date: 2022-05-23 17:18+0000\n"
+"Last-Translator: Mostafa Gamal <mostafa.2c6@gmail.com>\n"
 "Language-Team: Arabic <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/ar/>\n"
 "Language: ar\n"
@@ -19,7 +20,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
 "&& n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
-"X-Generator: Weblate 4.7.1\n"
+"X-Generator: Weblate 4.12.2\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -126,7 +127,7 @@ msgstr ""
 #: ../src/create.wsgi:208
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr "الملف '٪ s' غير مسموح له بالتواجد في الأرشيف"
+msgstr "الملف '‎%s' غير مسموح له بالتواجد في الأرشيف"
 
 #: ../src/create.wsgi:223
 msgid "Interactive tasks were disabled by server administrator"
@@ -203,7 +204,7 @@ msgstr ""
 
 #: ../src/stats.wsgi:36
 msgid "Architecture"
-msgstr ""
+msgstr "# بُنية"
 
 #: ../src/stats.wsgi:37
 msgid "Architectures"
@@ -223,7 +224,7 @@ msgstr ""
 
 #: ../src/stats.wsgi:41
 msgid "Failed"
-msgstr ""
+msgstr "فشل"
 
 #: ../src/stats.wsgi:42
 msgid "First retrace"
@@ -243,7 +244,7 @@ msgstr "اسم"
 
 #: ../src/stats.wsgi:46
 msgid "Release"
-msgstr ""
+msgstr "إطلاق"
 
 #: ../src/stats.wsgi:47
 msgid "Releases"
@@ -271,8 +272,8 @@ msgstr ""
 
 #: ../src/stats.wsgi:53
 msgid "Total"
-msgstr ""
+msgstr "المجموع"
 
 #: ../src/stats.wsgi:54
 msgid "Versions"
-msgstr ""
+msgstr "الإصدارات"
