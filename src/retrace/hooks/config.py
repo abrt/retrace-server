@@ -42,11 +42,17 @@ def load_hook_config() -> Dict[str, str]:
     main_hook_config_file = Path(MAIN_CONFIG_PATH, MAIN_HOOK_CONFIG_FILE)
     hook_configs.append(main_hook_config_file)
 
-    if USER_HOOK_CONFIGS_PATH.exists():
-        hook_configs += get_config_files(USER_HOOK_CONFIGS_PATH)
+    try:
+        if USER_HOOK_CONFIGS_PATH.exists():
+            hook_configs += get_config_files(USER_HOOK_CONFIGS_PATH)
+    except Exception as ex:
+        log_warn(f"USER_HOOK_CONFIGS_PATH {USER_HOOK_CONFIGS_PATH} does not exist: {ex}")
 
-    if USER_CONFIG_PATH.exists():
-        hook_configs.append(USER_CONFIG_PATH)
+    try:
+        if USER_CONFIG_PATH.exists():
+            hook_configs.append(USER_CONFIG_PATH)
+    except Exception as ex:
+        log_warn(f"USER_CONFIG_PATH {USER_CONFIG_PATH} does not exist: {ex}")
 
     cfgs = load_config_files(hook_configs)
 
