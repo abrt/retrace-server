@@ -763,11 +763,11 @@ class RetraceTask:
         return child.returncode
 
     def chgrp(self, key: Union[str, Path]) -> None:
-        gr = grp.getgrnam(CONFIG["AuthGroup"])
         try:
+            gr = grp.getgrnam(CONFIG["AuthGroup"])
             os.chown(self._get_file_path(key), -1, gr.gr_gid)
-        except OSError:
-            pass
+        except (OSError, KeyError) as ex:
+            raise ex
 
     def chmod(self, key: Union[str, Path]) -> None:
         mode = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
