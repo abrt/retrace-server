@@ -1018,13 +1018,20 @@ class RetraceWorker:
         if kernellog:
             task.set_backtrace(kernellog, "wb")
 
-        # If crash sys command exited with non-zero status,
-        # we likely have a semi-useful vmcore
         crash_sys, ret = task.run_crash_cmdline(crash_normal, "sys\nquit\n")
-
         if ret == 0 and crash_sys:
             task.add_results("sys", crash_sys)
-        else:
+
+        # If crash sys command exits with non-zero status, we likely have a
+        # partially usable vmcore.  Try other crash options like --zero_excluded
+        # before resorting to --minimal
+        if not task.has_results("sys"):
+            crash_sys, ret = task.run_crash_cmdline(crash_normal + ["--zero_excluded"], "sys\nquit\n")
+            if ret == 0 and crash_sys:
+                task.add_results("sys", crash_sys)
+                task.set_crash_cmd(task.get_crash_cmd() + " --zero_excluded")
+
+        if not task.has_results("sys"):
             # FIXME: Probably a better heuristic can be done here
             if kernellog and len(kernellog) < 1024:
                 # If log < 1024 bytes, probably it is not useful so fail task
