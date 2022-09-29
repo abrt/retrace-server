@@ -906,11 +906,6 @@ class RetraceWorker:
                             "--cwd", str(crashdir),
                             "chroot", "--",
                             f"{crash_cmd} -s {vmcore_path} {vmlinux}"]
-            crash_minimal = ["/usr/bin/mock",
-                             "--configdir", str(cfgdir),
-                             "--cwd", str(crashdir),
-                             "chroot", "--",
-                             f"{crash_cmd} -s --minimal {vmcore_path} {vmlinux}"]
 
         elif CONFIG["RetraceEnvironment"] == "podman":
             savedir = task.get_savedir()
@@ -978,12 +973,6 @@ class RetraceWorker:
                             "-s",
                             f"/var/spool/abrt/crash/{vmcore_path.name}",
                             vmlinux]
-            crash_minimal = [PODMAN_BIN, "exec", f"retrace-{taskid}",
-                             task.get_crash_cmd(),
-                             "-s",
-                             "--minimal",
-                             f"/var/spool/abrt/crash/{vmcore_path.name}",
-                             vmlinux]
         elif CONFIG["RetraceEnvironment"] == "native":
             try:
                 self.hook.run("pre_prepare_debuginfo")
@@ -999,7 +988,6 @@ class RetraceWorker:
             crash_cmd = task.get_crash_cmd()
             assert isinstance(crash_cmd, str)
             crash_normal = crash_cmd.split() + ["-s", str(vmcore_path), vmlinux]
-            crash_minimal = crash_cmd.split() + ["--minimal", "-s", str(vmcore_path), vmlinux]
 
         else:
             raise Exception("RetraceEnvironment set to invalid value")
@@ -1020,6 +1008,7 @@ class RetraceWorker:
                              % vmcore_path)
 
         # Generate the kernel log and run other crash commands
+        crash_minimal = crash_normal + ["--minimal"]
         kernellog, ret = task.run_crash_cmdline(crash_minimal, "log\nquit\n")
 
         if CONFIG["RetraceEnvironment"] == "podman":
