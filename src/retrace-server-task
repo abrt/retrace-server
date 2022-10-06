@@ -707,6 +707,12 @@ if __name__ == "__main__":
             sys.exit(1)
         if req.status_code != 200:
             raise requests.exceptions.ConnectionError
+    except requests.exceptions.SSLError as ex:
+        if "debug" in ARGS:
+            LOGGER.error("SSLError: '%s'", str(ex))
+        LOGGER.error("SSL error connecting to {}: try adding '-v' to see details"
+                     " or '--no-verify' for an expired certificate.".format(ARGS["server"]))
+        sys.exit(1)
     except requests.exceptions.RequestException as ex:
         if "debug" in ARGS:
             LOGGER.error("Requests generic exception: '%s'", str(ex))
