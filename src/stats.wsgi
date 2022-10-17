@@ -111,7 +111,7 @@ def application(environ, start_response):
     tablerows = []
     i = 1
     for key in versions.keys():
-        query.execute("SELECT COUNT(*) FROM tasks WHERE version LIKE '%"+key+"'")
+        query.execute("SELECT COUNT(*) FROM tasks WHERE version LIKE '%"+key+"%'")
         row = query.fetchone()
         retstr = str(versions[key]) + " " + str(key[2:])
 
