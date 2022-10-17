@@ -15,5 +15,6 @@ versionlist = [
     "el6",
     "el7",
     "el8",
+    "el9",
 ]
 repos: List[List[str]] = [[]]
