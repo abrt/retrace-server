@@ -6,17 +6,22 @@ upstream_package_name: retrace-server
 upstream_project_url: https://github.com/abrt/retrace-server
 downstream_package_name: retrace-server
 jobs:
-- job: propose_downstream
-  trigger: release
-  metadata:
-    dist_git_branches: fedora-all
-- job: propose_downstream
-  trigger: release
-  metadata:
-    dist_git_branches: epel8
+# Automatically start a Copr build for each pull request.
 - job: copr_build
   trigger: pull_request
-  metadata:
-    targets:
+  targets:
     - epel-8
+    - fedora-all
+# Automatically propose changes in downstream Dist-Git for active Fedora
+# branches and for EPEL 8.
+- job: propose_downstream
+  trigger: release
+  dist_git_branches:
+    - epel8
+    - fedora-all
+# Automatically submit Koji builds for commits that change the spec file.
+- job: koji_build
+  trigger: commit
+  dist_git_branches:
+    - epel8
     - fedora-all
