@@ -1,4 +1,4 @@
-project('retrace-server', license : 'GPL2+', meson_version : '>= 0.49.0', version : '1.24.1')
+project('retrace-server', license : 'GPL2+', meson_version : '>= 0.49.0', version : '1.24.2')
 
 bindir = get_option('bindir')
 datadir = get_option('datadir')

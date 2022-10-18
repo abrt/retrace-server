@@ -4,7 +4,7 @@
 
 Summary: Application for remote coredump analysis
 Name: retrace-server
-Version: 1.24.1
+Version: 1.24.2
 Release: 1%{?dist}
 License: GPLv2+
 URL: https://github.com/abrt/retrace-server
@@ -246,6 +246,19 @@ exit 0
 %license COPYING
 
 %changelog
+* Tue Oct 18 2022 Matěj Grabovský <mgrabovs@redhat.com> 1.24.2-1
+- Fix release counts in statistics (dwysocha@redhat.com)
+- Prevent crash if user's home directory is unavailable (dwysocha@redhat.com)
+- Make FTP file box configurable with UseFTPTasks (dwysocha@redhat.com)
+- Add support for RAR archives if the unar tool is installed
+  (dwysocha@redhat.com)
+- Improve HTTP response if UseFTPTasks is set to 0 (dwysocha@redhat.com)
+- Prevent double submit of vmcore or coredump tasks (dwysocha@redhat.com)
+- Add logic to determine if we save a stripped vmcore (audrabaker)
+- Update dockerfiles
+- Various code maintainability and infrastructure improvements
+- spec: Move podman to Suggests
+- Update translations
 * Mon Feb 07 2022 Matěj Grabovský <mgrabovs@redhat.com> 1.24.1-1
 - retrace-server-interact: Fix traceback for non-existent gid
   (dwysocha@redhat.com)
