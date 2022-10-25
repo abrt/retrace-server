@@ -19,6 +19,7 @@ sources = [
   'archive.py',
   'argparser.py',
   'logging.py',
+  'metrics.py',
   'plugins.py',
   'retrace.py',
   'retrace_worker.py',
