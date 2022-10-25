@@ -11,11 +11,12 @@ COPY . /retrace-server
 WORKDIR /retrace-server
 
 # Change owner of /retrace-server, clean git and install dependences
-RUN chown -R --silent retrace /retrace-server && \
-    chmod -R --silent g=u /retrace-server && \
-    dnf -y install git meson rpm-build sudo tito vim &&  \
+RUN dnf install --assumeyes git meson rpm-build sudo tito vim &&  \
+    git config --global --add safe.directory /retrace-server && \
     git clean -dfx && \
-    dnf --assumeyes builddep --spec /retrace-server/retrace-server.spec
+    dnf builddep --assumeyes --spec /retrace-server/retrace-server.spec && \
+    chown -R --silent retrace /retrace-server && \
+    chmod -R --silent g=u /retrace-server
 
 # Build as non root
 USER retrace
