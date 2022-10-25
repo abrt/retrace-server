@@ -1,6 +1,6 @@
 FROM abrt/retrace-server-image
 MAINTAINER abrt-devel-list@redhat.com
-ARG fedoraversion=35
+ARG fedoraversion=36
 
 USER root
 
@@ -45,4 +45,4 @@ COPY container/files/plugins /usr/share/retrace-server/plugins
 RUN sudo -u retrace retrace-server-reposync fedora $fedoraversion x86_64
 
 #Switch workdir back to /
-WORKDIR '/'
+WORKDIR /
