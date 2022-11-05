@@ -4,13 +4,14 @@
 # Tian Shixiong <tiansworld@gmail.com>, 2020.
 # Qiyu Yan <yanqiyu01@gmail.com>, 2021.
 # Whired Planck <fungdaat31@outlook.com>, 2021.
+# Jingge Chen <mariocanfly@hotmail.com>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2021-04-19 06:02+0000\n"
-"Last-Translator: Whired Planck <fungdaat31@outlook.com>\n"
+"PO-Revision-Date: 2022-10-31 11:19+0000\n"
+"Last-Translator: Jingge Chen <mariocanfly@hotmail.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
 "projects/abrt/retrace-server/zh_CN/>\n"
 "Language: zh_CN\n"
@@ -18,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.5.3\n"
+"X-Generator: Weblate 4.14.1\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -149,7 +150,8 @@ msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s github:"
-msgstr "回溯服务器提供了在线分析核心转储和生成回溯服务。 你可以在回溯 服务器的 GitHub 页面找到更多信息："
+msgstr "Retrace 服务器提供了在线分析核心转储和生成回溯服务。 你可以在Retrace "
+"服务器的 GitHub 页面找到更多信息："
 
 #: ../src/index.wsgi:29
 msgid ""

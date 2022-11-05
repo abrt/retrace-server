@@ -3,13 +3,14 @@
 # This file is distributed under the same license as the retrace-server package.
 # Michal Toman <mtoman@redhat.com>, 2011.
 # simmon <simmon@nplob.com>, 2021.
+# 김인수 <simmon@nplob.com>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: retrace-server 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2021-06-14 11:04+0000\n"
-"Last-Translator: simmon <simmon@nplob.com>\n"
+"PO-Revision-Date: 2022-11-03 04:19+0000\n"
+"Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/ko/>\n"
 "Language: ko\n"
@@ -17,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.6.2\n"
+"X-Generator: Weblate 4.14.1\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -229,7 +230,7 @@ msgstr "거부 작업"
 
 #: ../src/stats.wsgi:41
 msgid "Failed"
-msgstr "실패하였습니다"
+msgstr "실패함"
 
 #: ../src/stats.wsgi:42
 msgid "First retrace"
@@ -249,11 +250,11 @@ msgstr "이름"
 
 #: ../src/stats.wsgi:46
 msgid "Release"
-msgstr "릴리즈"
+msgstr "출시"
 
 #: ../src/stats.wsgi:47
 msgid "Releases"
-msgstr "릴리즈"
+msgstr "출시"
 
 #: ../src/stats.wsgi:48
 msgid "Required packages"
