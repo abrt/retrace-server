@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2022-06-14 15:18+0000\n"
+"PO-Revision-Date: 2022-11-23 17:19+0000\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/ka/>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.12.2\n"
+"X-Generator: Weblate 4.14.2\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -26,7 +26,7 @@ msgstr ""
 
 #: ../src/backtrace.wsgi:23 ../src/log.wsgi:24 ../src/status.wsgi:24
 msgid "Invalid URL"
-msgstr ""
+msgstr "არასწორი URL"
 
 #: ../src/backtrace.wsgi:29 ../src/log.wsgi:29 ../src/status.wsgi:30
 msgid "There is no such task"
@@ -34,7 +34,7 @@ msgstr ""
 
 #: ../src/backtrace.wsgi:34 ../src/log.wsgi:34 ../src/status.wsgi:35
 msgid "Invalid password"
-msgstr ""
+msgstr "არასწორი პაროლი"
 
 #: ../src/backtrace.wsgi:38
 msgid "There is no backtrace for the specified task"
@@ -201,11 +201,11 @@ msgstr ""
 
 #: ../src/stats.wsgi:36
 msgid "Architecture"
-msgstr ""
+msgstr "არქიტექტურა"
 
 #: ../src/stats.wsgi:37
 msgid "Architectures"
-msgstr ""
+msgstr "არქიტექტურები"
 
 #: ../src/stats.wsgi:38
 msgid "Build-id"
@@ -221,7 +221,7 @@ msgstr ""
 
 #: ../src/stats.wsgi:41
 msgid "Failed"
-msgstr ""
+msgstr "შეცდომა"
 
 #: ../src/stats.wsgi:42
 msgid "First retrace"
@@ -241,11 +241,11 @@ msgstr "სახელი"
 
 #: ../src/stats.wsgi:46
 msgid "Release"
-msgstr ""
+msgstr "გამოცემა"
 
 #: ../src/stats.wsgi:47
 msgid "Releases"
-msgstr ""
+msgstr "გამოცემა"
 
 #: ../src/stats.wsgi:48
 msgid "Required packages"
@@ -269,8 +269,8 @@ msgstr ""
 
 #: ../src/stats.wsgi:53
 msgid "Total"
-msgstr ""
+msgstr "სულ"
 
 #: ../src/stats.wsgi:54
 msgid "Versions"
-msgstr ""
+msgstr "ვერსიები"
