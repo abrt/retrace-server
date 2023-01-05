@@ -1,10 +1,14 @@
 specfile_path: retrace-server.spec
 synced_files:
-  - .packit.yml
-  - retrace-server.spec
+- .packit.yml
+- retrace-server.spec
 upstream_package_name: retrace-server
 upstream_project_url: https://github.com/abrt/retrace-server
 downstream_package_name: retrace-server
+
+# No extra dependencies are necessary to build the SRPM.
+srpm_build_deps: []
+
 jobs:
 # Automatically start a Copr build for each pull request.
 - job: copr_build
