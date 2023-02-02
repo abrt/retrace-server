@@ -6,7 +6,7 @@ Summary: Application for remote coredump analysis
 Name: retrace-server
 Version: 1.24.2
 Release: 1%{?dist}
-License: GPLv2+
+License: GPL-2.0-or-later
 URL: https://github.com/abrt/retrace-server
 Source0: https://github.com/abrt/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
 
