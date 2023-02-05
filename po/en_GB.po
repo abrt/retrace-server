@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2023-01-02 16:20+0000\n"
+"PO-Revision-Date: 2023-01-27 20:20+0000\n"
 "Last-Translator: Andi Chandler <andi@gowling.com>\n"
 "Language-Team: English (United Kingdom) <https://translate.fedoraproject.org/"
 "projects/abrt/retrace-server/en_GB/>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.15\n"
+"X-Generator: Weblate 4.15.2\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -97,7 +97,7 @@ msgstr ""
 #: ../src/create.wsgi:136
 #, c-format
 msgid "You header specifies '%s' type, but the file type does not match"
-msgstr ""
+msgstr "You header specifies '%s' type, but the file type does not match"
 
 #: ../src/create.wsgi:154
 msgid "Unable to save archive"
@@ -117,34 +117,34 @@ msgstr "Unable to unpack archive"
 
 #: ../src/create.wsgi:197
 msgid "Symlinks are not allowed to be in the archive"
-msgstr ""
+msgstr "Symlinks are not allowed to be in the archive"
 
 #: ../src/create.wsgi:204
 #, c-format
 msgid "The '%s' file is larger than expected"
-msgstr ""
+msgstr "The '%s' file is larger than expected"
 
 #: ../src/create.wsgi:208
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr ""
+msgstr "File '%s' is not allowed to be in the archive"
 
 #: ../src/create.wsgi:223
 msgid "Interactive tasks were disabled by server administrator"
-msgstr ""
+msgstr "Interactive tasks were disabled by server administrator"
 
 #: ../src/create.wsgi:232
-#, fuzzy, c-format
+#, c-format
 msgid "Required file '%s' is missing"
-msgstr "Required file \"%s\" is missing"
+msgstr "Required file '%s' is missing"
 
 #: ../src/index.wsgi:20
 msgid "Retrace Server"
-msgstr ""
+msgstr "Retrace Server"
 
 #: ../src/index.wsgi:21
 msgid "Welcome to Retrace Server"
-msgstr ""
+msgstr "Welcome to Retrace Server"
 
 #: ../src/index.wsgi:23
 msgid ""
@@ -152,23 +152,30 @@ msgid ""
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s github:"
 msgstr ""
+"Retrace Server is a service that provides the possibility to analyse "
+"coredump and generate backtrace over network. You can find further "
+"information at Retrace Server&apos;s github:"
 
 #: ../src/index.wsgi:29
 msgid ""
 "Only the secure HTTPS connection is now allowed by the server. HTTP requests "
 "will be denied."
 msgstr ""
+"Only the secure HTTPS connection is now allowed by the server. HTTP requests "
+"will be denied."
 
 #: ../src/index.wsgi:31
 msgid ""
 "Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
 "of security reasons."
 msgstr ""
+"Both HTTP and HTTPS are allowed. Using HTTPS is strictly recommended because "
+"of security reasons."
 
 #: ../src/index.wsgi:32
 #, c-format
 msgid "The following releases are supported: %s"
-msgstr ""
+msgstr "The following releases are supported: %s"
 
 #. CONFIG["MaxParallelTasks"], active, CONFIG["MaxParallelTasks"]))
 #: ../src/index.wsgi:36
@@ -182,6 +189,13 @@ msgid ""
 "(including backtrace) is deleted after %d hours of inactivity. No possibly "
 "private data are kept on the server any longer."
 msgstr ""
+"Your coredump is only kept on the server while the retrace job is running. "
+"Once the job is finished, the server keeps retrace log and backtrace. All "
+"the other data (including coredump) are deleted. The retrace log and "
+"backtrace are only accessible via unique task ID and password, thus no one ("
+"except the author) is allowed to view it. All the crash information ("
+"including backtrace) is deleted after %d hours of inactivity. No possibly "
+"private data are kept on the server any longer."
 
 #: ../src/index.wsgi:43
 msgid ""
@@ -191,12 +205,18 @@ msgid ""
 "administrators are not responsible for the problems related to the usage of "
 "an insecure channel (such as HTTP)."
 msgstr ""
+"Your coredump is only used for retrace purposes. Server administrators are "
+"not trying to get your private data from coredumps or backtraces. Using a "
+"secure communication channel (HTTPS) is strictly recommended. Server "
+"administrators are not responsible for the problems related to the usage of "
+"an insecure channel (such as HTTP)."
 
 #: ../src/index.wsgi:34
 #, c-format
 msgid ""
 "At the moment the server is loaded for %d%% (running %d out of %d jobs)."
 msgstr ""
+"At the moment the server is loaded for %d%% (running %d out of %d jobs)."
 
 #: ../src/log.wsgi:38
 msgid "There is no log for the specified task"
@@ -204,76 +224,76 @@ msgstr "There is no log for the specified task"
 
 #: ../src/stats.wsgi:36
 msgid "Architecture"
-msgstr ""
+msgstr "Architecture"
 
 #: ../src/stats.wsgi:37
 msgid "Architectures"
-msgstr ""
+msgstr "Architectures"
 
 #: ../src/stats.wsgi:38
 msgid "Build-id"
-msgstr ""
+msgstr "Build-id"
 
 #: ../src/stats.wsgi:39
 msgid "Count"
-msgstr ""
+msgstr "Count"
 
 #: ../src/stats.wsgi:40
 msgid "Denied jobs"
-msgstr ""
+msgstr "Denied jobs"
 
 #: ../src/stats.wsgi:41
 msgid "Failed"
-msgstr ""
+msgstr "Failed"
 
 #: ../src/stats.wsgi:42
 msgid "First retrace"
-msgstr ""
+msgstr "First retrace"
 
 #: ../src/stats.wsgi:43
 msgid "Global statistics"
-msgstr ""
+msgstr "Global statistics"
 
 #: ../src/stats.wsgi:44
 msgid "Missing build-ids"
-msgstr ""
+msgstr "Missing build-ids"
 
 #: ../src/stats.wsgi:45
 msgid "Name"
-msgstr ""
+msgstr "Name"
 
 #: ../src/stats.wsgi:46
 msgid "Release"
-msgstr ""
+msgstr "Release"
 
 #: ../src/stats.wsgi:47
 msgid "Releases"
-msgstr ""
+msgstr "Releases"
 
 #: ../src/stats.wsgi:48
 msgid "Required packages"
-msgstr ""
+msgstr "Required packages"
 
 #: ../src/stats.wsgi:49
 msgid "Retraced packages"
-msgstr ""
+msgstr "Retraced packages"
 
 #: ../src/stats.wsgi:50
 msgid "Retrace Server statistics"
-msgstr ""
+msgstr "Retrace Server statistics"
 
 #: ../src/stats.wsgi:51
 msgid "Shared object name"
-msgstr ""
+msgstr "Shared object name"
 
 #: ../src/stats.wsgi:52
 msgid "Successful"
-msgstr ""
+msgstr "Successful"
 
 #: ../src/stats.wsgi:53
 msgid "Total"
-msgstr ""
+msgstr "Total"
 
 #: ../src/stats.wsgi:54
 msgid "Versions"
-msgstr ""
+msgstr "Versions"

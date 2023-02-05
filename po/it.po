@@ -1,13 +1,13 @@
 # Davide Giunchi <davide@giunchi.net>, 2017. #zanata
 # Luca Ciavatta <luca.ciavatta@gmail.com>, 2017. #zanata
 # Tommaso Cammelli <tomm.cammelli@outlook.it>, 2020.
-# Nathan <nathan95@live.it>, 2021.
+# Nathan <nathan95@live.it>, 2021, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2021-06-26 19:04+0000\n"
+"PO-Revision-Date: 2023-01-07 20:20+0000\n"
 "Last-Translator: Nathan <nathan95@live.it>\n"
 "Language-Team: Italian <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/it/>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.7\n"
+"X-Generator: Weblate 4.15\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -28,7 +28,6 @@ msgid "Invalid URL"
 msgstr "URL non valido"
 
 #: ../src/backtrace.wsgi:29 ../src/log.wsgi:29 ../src/status.wsgi:30
-#, fuzzy
 msgid "There is no such task"
 msgstr "Non è presente tale compito"
 
@@ -277,7 +276,6 @@ msgid "Required packages"
 msgstr "Pacchetti richiesti"
 
 #: ../src/stats.wsgi:49
-#, fuzzy
 msgid "Retraced packages"
 msgstr "Pacchetti retraced"
 
