@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # Weblate <noreply@weblate.org>, 2020.
-# Fabio Tomat <f.t.public@gmail.com>, 2020.
+# Fabio Tomat <f.t.public@gmail.com>, 2020, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2020-04-21 13:40+0000\n"
+"PO-Revision-Date: 2023-02-22 21:20+0000\n"
 "Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/fur/>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.0.1\n"
+"X-Generator: Weblate 4.15.2\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -63,6 +63,8 @@ msgstr "L'archivi specificât al è masse grant"
 #: ../src/create.wsgi:81
 msgid "X-CoreFileDirectory header has been disabled by server administrator"
 msgstr ""
+"La intestazion X-CoreFileDirectory e je stade disabilitade dal aministradôr "
+"dal servidôr"
 
 #: ../src/create.wsgi:91
 msgid "Unable to create working directory"
@@ -82,7 +84,7 @@ msgstr "Impussibil creâ un gnûf compit"
 
 #: ../src/create.wsgi:121
 msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr ""
+msgstr "La cartele specificade in 'X-CoreFileDirectory' no esist"
 
 #: ../src/create.wsgi:127
 #, c-format
@@ -90,11 +92,15 @@ msgid ""
 "There are %d files in the '%s' directory. Only a single archive is supported "
 "at the moment"
 msgstr ""
+"A son %d files te cartele '%s'. Pal moment al è supuartât dome un singul "
+"archivi"
 
 #: ../src/create.wsgi:136
 #, c-format
 msgid "You header specifies '%s' type, but the file type does not match"
 msgstr ""
+"La intestazion e specifiche il gjenar '%s', ma il gjenar di file nol "
+"concuarde"
 
 #: ../src/create.wsgi:154
 msgid "Unable to save archive"
@@ -129,6 +135,8 @@ msgstr "Tal archivi nol è permetût il file '%s'"
 #: ../src/create.wsgi:223
 msgid "Interactive tasks were disabled by server administrator"
 msgstr ""
+"Lis ativitâts interativis a son stadis disabilitadis dal aministradôr dal "
+"servidôr"
 
 #: ../src/create.wsgi:232
 #, c-format
@@ -144,20 +152,15 @@ msgid "Welcome to Retrace Server"
 msgstr "Benvignûts tal servidôr Retrace"
 
 #: ../src/index.wsgi:23
-#, fuzzy
-#| msgid ""
-#| "Retrace Server is a service that provides the possibility to analyze "
-#| "coredump and generate backtrace over network. You can find further "
-#| "information at Retrace Server&apos;s wiki:"
 msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s github:"
 msgstr ""
 "Il servidôr Retrace al è un servizi che al furnìs la pussibilitât di analizâ "
-"i nucleis di memorie salvâts (coredump) e gjenerâ lis olmis che cun chês lâ "
-"indaûr a mieç de rêt. Tu puedis cjatâ plui informazions tal wiki dal "
-"servidôr Retrace:"
+"i nucleis di memorie salvâts (coredump) e gjenerâ lis olmis che ti permetin "
+"di tornâ indaûr midiant la rêt. Tu puedis cjatâ plui informazions tal "
+"servidôr github di Retrace:"
 
 #: ../src/index.wsgi:29
 msgid ""
