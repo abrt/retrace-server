@@ -238,7 +238,6 @@ def unpack_vmcore(path: Path) -> None:
         try:
             extract_into(archive, parentdir)
         except UnknownArchiveTypeError:
-            log_info(f"File {archive} is not an archive")
             break
 
         files_sizes = get_files_sizes(parentdir)
