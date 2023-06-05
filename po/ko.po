@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the retrace-server package.
 # Michal Toman <mtoman@redhat.com>, 2011.
 # simmon <simmon@nplob.com>, 2021.
-# 김인수 <simmon@nplob.com>, 2022.
+# 김인수 <simmon@nplob.com>, 2022, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: retrace-server 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2022-11-03 04:19+0000\n"
+"PO-Revision-Date: 2023-05-19 06:20+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/ko/>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.14.1\n"
+"X-Generator: Weblate 4.17\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -63,11 +63,11 @@ msgstr "지정된 저장소가 너무 큽니다"
 
 #: ../src/create.wsgi:81
 msgid "X-CoreFileDirectory header has been disabled by server administrator"
-msgstr "서버 관리자에 의해 X-코어 파일 디렉토리 헤더를 비활성화했습니다"
+msgstr "서버 관리자에 의해 X-코어파일디렉토리 헤더를 비활성화했습니다"
 
 #: ../src/create.wsgi:91
 msgid "Unable to create working directory"
-msgstr "동작 디렉토리를 생성 할 수 없습니다"
+msgstr "동작 중인 디렉토리를 생성 할 수 없습니다"
 
 #: ../src/create.wsgi:97
 msgid "Unable to obtain disk free space"
@@ -75,7 +75,7 @@ msgstr "디스크 여유 공간을 획득 할 수 없습니다"
 
 #: ../src/create.wsgi:101 ../src/create.wsgi:172
 msgid "There is not enough storage space on the server"
-msgstr "이 서버에 충분한 여유 공간이 없습니다"
+msgstr "이 서버에 충분한 저장 공간이 없습니다"
 
 #: ../src/create.wsgi:109
 msgid "Unable to create new task"
@@ -90,16 +90,16 @@ msgstr "'X-코어파일디렉토리'에 지정한 디렉토리가 존재하지 �
 msgid ""
 "There are %d files in the '%s' directory. Only a single archive is supported "
 "at the moment"
-msgstr "%d 파일들이(`%s` 디렉토리 안에서) 있습니다. 현재 단일 지정 저장소만 지원합니다"
+msgstr "%d 파일들이('%s' 디렉토리에) 있습니다. 현재 단일 지정 저장소만 지원합니다"
 
 #: ../src/create.wsgi:136
 #, c-format
 msgid "You header specifies '%s' type, but the file type does not match"
-msgstr "헤더는 '%s'로 지정되었지만, 파일 유형은 일치하지 않았습니다"
+msgstr "헤더는 '%s' 유형으로 지정되었지만, 파일 유형은 일치하지 않습니다"
 
 #: ../src/create.wsgi:154
 msgid "Unable to save archive"
-msgstr "지정 저정소에 저장 할 수 없습니다"
+msgstr "저장소에 저장 할 수 없습니다"
 
 #: ../src/create.wsgi:162
 msgid "Unable to obtain unpacked size"
@@ -120,12 +120,12 @@ msgstr "심볼링링크는 지정 저장소에 위치하는 것을 허용하지 
 #: ../src/create.wsgi:204
 #, c-format
 msgid "The '%s' file is larger than expected"
-msgstr "'%s'파일은 예상보다 큽니다"
+msgstr "'%s' 파일은 예상보다 큽니다"
 
 #: ../src/create.wsgi:208
 #, c-format
 msgid "File '%s' is not allowed to be in the archive"
-msgstr "파일 '%s'는지정 저장소에 위치 할 수 없습니다"
+msgstr "파일 '%s'는 지정 저장소에 위치 할 수 없습니다"
 
 #: ../src/create.wsgi:223
 msgid "Interactive tasks were disabled by server administrator"
@@ -134,7 +134,7 @@ msgstr "서버 관리자에 의하여 대화형 작업을 비활성화 하였습
 #: ../src/create.wsgi:232
 #, c-format
 msgid "Required file '%s' is missing"
-msgstr "요구파일 '%s'가 없습니다"
+msgstr "필수적인 파일 '%s'가 누락되었습니다"
 
 #: ../src/index.wsgi:20
 msgid "Retrace Server"
@@ -258,7 +258,7 @@ msgstr "출시"
 
 #: ../src/stats.wsgi:48
 msgid "Required packages"
-msgstr "필요한 꾸러미"
+msgstr "필수 꾸러미"
 
 #: ../src/stats.wsgi:49
 msgid "Retraced packages"
