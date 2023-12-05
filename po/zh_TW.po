@@ -1,18 +1,19 @@
-# Cheng-Chia Tseng <pswo10680@gmail.com>, 2017. #zanata
+# Cheng-Chia Tseng <pswo10680@gmail.com>, 2017. #zanata, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2017-09-06 03:04+0000\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
-"Language-Team: Chinese (Taiwan)\n"
+"PO-Revision-Date: 2023-11-10 11:30+0000\n"
+"Last-Translator: Cheng-Chia Tseng <pswo10680@gmail.com>\n"
+"Language-Team: Chinese (Traditional) <https://translate.fedoraproject.org/"
+"projects/abrt/retrace-server/zh_TW/>\n"
 "Language: zh_TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Zanata 4.6.2\n"
+"X-Generator: Weblate 5.1.1\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -139,18 +140,12 @@ msgid "Welcome to Retrace Server"
 msgstr "歡迎使用追溯伺服器"
 
 #: ../src/index.wsgi:23
-#, fuzzy
-#| msgid ""
-#| "Retrace Server is a service that provides the possibility to analyze "
-#| "coredump and generate backtrace over network. You can find further "
-#| "information at Retrace Server&apos;s wiki:"
 msgid ""
 "Retrace Server is a service that provides the possibility to analyze "
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s github:"
-msgstr ""
-"追溯伺服器是個提供核心傾印分析並透過網路生成回溯資料的可能性。您可以在追溯伺"
-"服器的 wiki 上找到更深入的資訊："
+msgstr "追溯伺服器是個提供核心傾印分析，並透過網路生成回溯資料可能性的服務。"
+"您可以在追溯伺服器的 github 上找到更深入的資訊："
 
 #: ../src/index.wsgi:29
 msgid ""

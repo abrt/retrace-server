@@ -3,13 +3,14 @@
 # This file is distributed under the same license as the retrace-server package.
 # Michal Toman <mtoman@redhat.com>, 2011.
 # Aniket Kumar <aniket.jnv@yahoo.com>, 2020.
+# Ajay Chauhan <exactlyajay.chauhan@gmail.com>, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: retrace-server 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2020-08-04 16:29+0000\n"
-"Last-Translator: Aniket Kumar <aniket.jnv@yahoo.com>\n"
+"PO-Revision-Date: 2023-07-11 16:21+0000\n"
+"Last-Translator: Ajay Chauhan <exactlyajay.chauhan@gmail.com>\n"
 "Language-Team: Hindi <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/hi/>\n"
 "Language: hi\n"
@@ -17,24 +18,24 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.1.1\n"
+"X-Generator: Weblate 4.18.2\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
 msgid "You must use HTTPS"
-msgstr ""
+msgstr "आपको HTTPS का उपयोग करना चाहिए"
 
 #: ../src/backtrace.wsgi:23 ../src/log.wsgi:24 ../src/status.wsgi:24
 msgid "Invalid URL"
-msgstr ""
+msgstr "अमान्य URL"
 
 #: ../src/backtrace.wsgi:29 ../src/log.wsgi:29 ../src/status.wsgi:30
 msgid "There is no such task"
-msgstr ""
+msgstr "ऐसा कोई कार्य नहीं है"
 
 #: ../src/backtrace.wsgi:34 ../src/log.wsgi:34 ../src/status.wsgi:35
 msgid "Invalid password"
-msgstr ""
+msgstr "अमान्य पासवर्ड"
 
 #: ../src/backtrace.wsgi:38
 msgid "There is no backtrace for the specified task"
