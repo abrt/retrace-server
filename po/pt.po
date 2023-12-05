@@ -1,12 +1,13 @@
 # Manuela Silva <mmsrs@sky.com>, 2019. #zanata
 # Tiago João Mateus de Almeida <tjamadeira@gmail.com>, 2020.
+# Marcelo Moreira <marcelomoreira1905@gmail.com>, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-05-27 21:44+0200\n"
-"PO-Revision-Date: 2020-02-24 23:38+0000\n"
-"Last-Translator: Tiago João Mateus de Almeida <tjamadeira@gmail.com>\n"
+"PO-Revision-Date: 2023-08-09 17:21+0000\n"
+"Last-Translator: Marcelo Moreira <marcelomoreira1905@gmail.com>\n"
 "Language-Team: Portuguese <https://translate.fedoraproject.org/projects/abrt/"
 "retrace-server/pt/>\n"
 "Language: pt\n"
@@ -14,7 +15,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Weblate 3.11.2\n"
+"X-Generator: Weblate 4.18.2\n"
 
 #: ../src/backtrace.wsgi:18 ../src/create.wsgi:55 ../src/log.wsgi:19
 #: ../src/status.wsgi:19
@@ -27,7 +28,7 @@ msgstr "URL inválido"
 
 #: ../src/backtrace.wsgi:29 ../src/log.wsgi:29 ../src/status.wsgi:30
 msgid "There is no such task"
-msgstr "Não existe tal tarefa."
+msgstr "Tarefa inexistente"
 
 #: ../src/backtrace.wsgi:34 ../src/log.wsgi:34 ../src/status.wsgi:35
 msgid "Invalid password"
@@ -35,11 +36,11 @@ msgstr "Palavra-passe inválida"
 
 #: ../src/backtrace.wsgi:38
 msgid "There is no backtrace for the specified task"
-msgstr ""
+msgstr "Não há backtrace para a tarefa específica"
 
 #: ../src/create.wsgi:60 ../src/create.wsgi:116
 msgid "Retrace server is fully loaded at the moment"
-msgstr ""
+msgstr "O servidor Retrace está totalmente carregado no momento"
 
 #: ../src/create.wsgi:64
 msgid "You must use POST method"
@@ -51,35 +52,36 @@ msgstr "O formato de ficheiro especificado não é suportado"
 
 #: ../src/create.wsgi:72
 msgid "You need to set Content-Length header properly"
-msgstr ""
+msgstr "Você precisa definir o cabeçalho Content-Length corretamente"
 
 #: ../src/create.wsgi:76
 msgid "Specified archive is too large"
-msgstr ""
+msgstr "arquivo especificado é muito grande"
 
 #: ../src/create.wsgi:81
 msgid "X-CoreFileDirectory header has been disabled by server administrator"
 msgstr ""
+"O cabeçalho X-CoreFileDirectory foi desativado pelo administrador do servidor"
 
 #: ../src/create.wsgi:91
 msgid "Unable to create working directory"
-msgstr ""
+msgstr "Não foi possível criar o diretório de trabalho"
 
 #: ../src/create.wsgi:97
 msgid "Unable to obtain disk free space"
-msgstr ""
+msgstr "Não é possível obter espaço livre em disco"
 
 #: ../src/create.wsgi:101 ../src/create.wsgi:172
 msgid "There is not enough storage space on the server"
-msgstr ""
+msgstr "Não há espaço de armazenamento suficiente no servidor"
 
 #: ../src/create.wsgi:109
 msgid "Unable to create new task"
-msgstr ""
+msgstr "Não foi possível criar uma nova tarefa"
 
 #: ../src/create.wsgi:121
 msgid "The directory specified in 'X-CoreFileDirectory' does not exist"
-msgstr ""
+msgstr "O diretório especificado em 'X-CoreFileDirectory' não existe"
 
 #: ../src/create.wsgi:127
 #, c-format
@@ -87,36 +89,39 @@ msgid ""
 "There are %d files in the '%s' directory. Only a single archive is supported "
 "at the moment"
 msgstr ""
+"Existem %d arquivos no diretório '%s'. Apenas um único arquivo é suportado "
+"no momento"
 
 #: ../src/create.wsgi:136
 #, c-format
 msgid "You header specifies '%s' type, but the file type does not match"
 msgstr ""
+"Seu cabeçalho especifica o tipo '%s', mas o tipo de arquivo não corresponde"
 
 #: ../src/create.wsgi:154
 msgid "Unable to save archive"
-msgstr ""
+msgstr "Não foi possível salvar o arquivo"
 
 #: ../src/create.wsgi:162
 msgid "Unable to obtain unpacked size"
-msgstr ""
+msgstr "Não foi possível obter o tamanho descompactado"
 
 #: ../src/create.wsgi:167
 msgid "Specified archive's content is too large"
-msgstr ""
+msgstr "O conteúdo do arquivo especificado é muito grande"
 
 #: ../src/create.wsgi:184
 msgid "Unable to unpack archive"
-msgstr ""
+msgstr "Não foi possível descompactar o arquivo"
 
 #: ../src/create.wsgi:197
 msgid "Symlinks are not allowed to be in the archive"
-msgstr ""
+msgstr "Symlinks não podem estar no arquivo"
 
 #: ../src/create.wsgi:204
 #, c-format
 msgid "The '%s' file is larger than expected"
-msgstr ""
+msgstr "O arquivo '%s' é maior que o esperado"
 
 #: ../src/create.wsgi:208
 #, c-format
@@ -125,7 +130,7 @@ msgstr ""
 
 #: ../src/create.wsgi:223
 msgid "Interactive tasks were disabled by server administrator"
-msgstr ""
+msgstr "As tarefas interativas foram desativadas pelo administrador do servidor"
 
 #: ../src/create.wsgi:232
 #, c-format
@@ -134,11 +139,11 @@ msgstr ""
 
 #: ../src/index.wsgi:20
 msgid "Retrace Server"
-msgstr ""
+msgstr "Retrace Server"
 
 #: ../src/index.wsgi:21
 msgid "Welcome to Retrace Server"
-msgstr ""
+msgstr "Boas vindas ao Retrace Server"
 
 #: ../src/index.wsgi:23
 msgid ""
@@ -146,6 +151,9 @@ msgid ""
 "coredump and generate backtrace over network. You can find further "
 "information at Retrace Server&apos;s github:"
 msgstr ""
+"O Retrace Server é um serviço que oferece a possibilidade de analisar "
+"coredump e gerar backtrace pela rede. Você pode encontrar mais informações "
+"no github do Retrace Server:"
 
 #: ../src/index.wsgi:29
 msgid ""
